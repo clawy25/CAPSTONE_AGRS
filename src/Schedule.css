@@ -1,0 +1,108 @@
+/* src/Schedule.css */
+
+.schedule-container {
+    display: flex;
+    height: 100vh;
+  }
+  
+  /* Sidebar styling */
+  .sidebar {
+    width: 250px;
+    background-color: #004d00;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+  }
+  
+  .college-logo {
+    width: 80px;
+    margin-bottom: 20px;
+  }
+  
+  .welcome-message {
+    font-size: 18px;
+    margin-bottom: 40px;
+  }
+  
+  .menu {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .menu-item {
+    color: #ffeb3b;
+    text-decoration: none;
+    padding: 10px 0;
+    text-align: left;
+    width: 100%;
+    margin-left: 10px;
+  }
+  
+  .menu-item.active {
+    font-weight: bold;
+  }
+  
+  .logout-button {
+    margin-top: auto;
+    background: transparent;
+    border: none;
+    color: #ffeb3b;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  
+  /* Main content styling */
+  .main-content {
+    flex: 1;
+    padding: 20px;
+  }
+  
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  
+  .schedule-section {
+    padding: 20px;
+    border: 1px solid #004d00;
+    background-color: #f5f5f5;
+  }
+  
+  /* src/FacultySchedulePage.css */
+
+.schedule-table {
+  width: 100%; /* Full width of the container */
+  max-width: 1200px; /* Increase max-width to enlarge the table */
+  border-collapse: collapse;
+  margin: 20px 0;
+}
+
+.schedule-table th, .schedule-table td {
+  border: 1px solid #ddd;
+  padding: 10px; /* Increase padding to make cells larger */
+  text-align: left;
+}
+
+.schedule-table th {
+  background-color: #f4f4f4; /* Light gray background for header */
+}
+
+.schedule-table tr:nth-child(even) {
+  background-color: #f9f9f9; /* Alternating row colors */
+}
+
+.schedule-table tr:hover {
+  background-color: #f1f1f1; /* Highlight row on hover */
+}
+
+.no-schedule-message {
+  font-size: 16px;
+  color: #666; /* Light gray for no schedule message */
+}
+
+  

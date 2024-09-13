@@ -1,0 +1,1296 @@
+/* src/Dashboard.css */
+
+.dashboard-container {
+  display: flex;
+}
+
+.sidebar {
+  width: 20%;
+  background-color: #004400;
+  padding: 20px;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.logout-button {
+  background-color: #006600;
+  color: white;
+  padding: 10px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  margin-top: auto; /* Ensures it stays at the bottom */
+  margin-bottom: 50px;
+}
+
+.logout-button:hover {
+  background-color: #006600;
+}
+
+.main-content {
+  width: 80%;
+  padding: 20px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  background-color: #ffffff;
+  border-bottom: 2px solid #ccc;
+}
+
+.classes-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 0;
+}
+
+.add-class-button {
+  background-color: #006600;
+  color: white;
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.add-class-button:hover {
+  background-color: #006600;
+}
+
+.class-box-container {
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  background-color: #004400;
+  border-radius: 10px;
+}
+
+.class-box {
+  background-color: #006600;
+  color: white;
+  padding: 15px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.class-box:hover {
+  background-color: #008800;
+}
+
+.change-password-section {
+    padding: 20px;
+    border: 1px solid #004d00;
+    background-color: #f5f5f5;
+  }
+  
+  .change-password-section h2 {
+    margin-bottom: 20px;
+    font-size: 18px;
+    color: #004d00;
+  }
+
+.profile-section {
+    padding: 20px;
+    border: 1px solid #004d00;
+    background-color: #f5f5f5;
+  }
+  
+  .profile-info {
+    margin-bottom: 20px;
+    font-size: 16px;
+    color: #004d00;
+  }
+  
+  .profile-input {
+    display: block;
+    width: 97%;
+    margin-bottom: 10px;
+    padding: 10px;
+    font-size: 14px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+  }
+  
+  .save-button {
+    background-color: #004d00;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 14px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.3s;
+  }
+  
+  .save-button:hover {
+    background-color: #003300;
+  }
+  
+.user-info {
+    display: flex;
+    align-items: center;
+    position: relative; /* Relative position to position the dropdown */
+  }
+  
+  .user-icon {
+    margin-left: 10px;
+    cursor: pointer;
+    font-size: 18px;
+    color: #004d00; /* Match icon color with your theme */
+  }
+  
+  .dropdown-menu {
+    position: absolute;
+    top: 30px;
+    right: 0;
+    background-color: white;
+    border: 1px solid #ddd;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    width: 150px;
+    z-index: 1000;
+    border-radius: 4px;
+  }
+
+  .dropdown-item {
+    padding: 10px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .dropdown-item:hover {
+    background-color: #f1f1f1;
+  }
+
+.dashboard-container {
+    display: flex;
+    height: 100vh;
+  }
+  
+  /* Sidebar styling */
+  .sidebar {
+    width: 250px;
+    background-color: #004d00;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+  }
+  
+  .college-logo {
+    width: 80px;
+    margin-bottom: 20px;
+  }
+  
+  .welcome-message {
+    font-size: 18px;
+    margin-bottom: 40px;
+  }
+  
+  .menu {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .menu-item {
+    color: #ffeb3b;
+    text-decoration: none;
+    padding: 10px 0;
+    text-align: left;
+    width: 100%;
+    margin-left: 10px;
+  }
+  
+  .menu-item.active {
+    font-weight: bold;
+  }
+  
+  .logout-button {
+    margin-top: auto;
+    background: transparent;
+    border: none;
+    color: #ffeb3b;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  
+  /* Main content styling */
+  .main-content {
+    flex: 1;
+    padding: 20px;
+  }
+  
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  
+  .enrollment-status {
+    padding: 20px;
+    border: 1px solid #004d00;
+    background-color: #f5f5f5;
+  }
+  
+  .status-bar {
+    background-color: #004d00;
+    color: white;
+    padding: 5px 10px;
+    margin-bottom: 20px;
+  }
+  
+  .enrollment-message {
+    font-size: 18px;
+    color: #004d00;
+  }
+
+/* src/FacultySchedulePage.css */
+
+.faculty-schedule-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+.faculty-schedule-page h1 {
+  color: #004d00; /* Dark green, matching the theme */
+  font-size: 24px;
+  margin-bottom: 10px;
+}
+
+.faculty-schedule-page p {
+  font-size: 18px;
+  margin-bottom: 20px;
+  color: #333; /* Dark gray text color */
+}
+
+.schedule-table {
+  width: 100%; /* Full width of the container */
+  max-width: 1200px; /* Increase max-width to enlarge the table */
+  border-collapse: collapse;
+  margin: 20px 0;
+}
+
+.schedule-table th, .schedule-table td {
+  border: 1px solid #ddd;
+  padding: 20px; /* Increase padding to make cells larger */
+  text-align: center;
+}
+
+.schedule-table th {
+  background-color: #f4f4f4; /* Light gray background for header */
+}
+
+.schedule-table tr:nth-child(even) {
+  background-color: #f9f9f9; /* Alternating row colors */
+}
+
+.schedule-table tr:hover {
+  background-color: #f1f1f1; /* Highlight row on hover */
+}
+
+.no-schedule-message {
+  font-size: 16px;
+  color: #666; /* Light gray for no schedule message */
+}
+.submenu {
+  display: flex;
+  flex-direction: column;
+  background-color: #f9f9f9;
+  padding: 10px;
+  border-radius: 4px;
+}
+
+.submenu-item {
+  padding: 10px;
+  cursor: pointer;
+}
+
+.submenu-item:hover {
+  background-color: #ddd;
+}
+
+/* Styles for the sidebar menu */
+.menu-item {
+  padding: 10px;
+  cursor: pointer;
+  text-decoration: none;
+  color: black; /* Default text color */
+  font-weight: normal;
+}
+
+.menu-item.active {
+  color: yellow; /* Highlight color */
+  font-weight: bold; /* Make text bold */
+}
+
+.submenu {
+  display: flex;
+  flex-direction: column;
+  background-color: #008800;
+  padding: 10px;
+  border-radius: 4px;
+}
+
+.submenu-item {
+  padding: 10px;
+  cursor: pointer;
+}
+
+.submenu-item:hover {
+  background-color: #ddd;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.dropdown-item {
+  padding: 10px;
+  cursor: pointer;
+}
+
+.dropdown-item:hover {
+  background-color: #f0f0f0;
+}
+
+.class-details {
+  margin: 20px;
+  font-family: Arial, sans-serif;
+}
+
+.details-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0;
+}
+
+.details-table th, .details-table td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-align: center;
+}
+
+.details-table th {
+  background-color: #f4f4f4;
+  font-weight: bold;
+}
+
+.details-table td {
+  background-color: #fff;
+}
+
+.details-table thead th {
+  background-color: #f4f4f4;
+}
+
+.details-table tbody tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+.details-table tbody tr:hover {
+  background-color: #f1f1f1;
+}
+
+/* src/Dashboard.css */
+
+.dashboard-container {
+  display: flex;
+}
+
+.sidebar {
+  width: 20%;
+  background-color: #004400;
+  padding: 20px;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.logout-button {
+  background-color: #006600;
+  color: white;
+  padding: 10px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  margin-top: auto; /* Ensures it stays at the bottom */
+  margin-bottom: 50px;
+}
+
+.logout-button:hover {
+  background-color: #006600;
+}
+
+.main-content {
+  width: 80%;
+  padding: 20px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  background-color: #ffffff;
+  border-bottom: 2px solid #ccc;
+}
+
+.classes-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 0;
+}
+
+.add-class-button {
+  background-color: #006600;
+  color: white;
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.add-class-button:hover {
+  background-color: #006600;
+}
+
+.class-box-container {
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  background-color: #004400;
+  border-radius: 10px;
+}
+
+.class-box {
+  background-color: #006600;
+  color: white;
+  padding: 15px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.class-box:hover {
+  background-color: #008800;
+}
+
+.change-password-section {
+    padding: 20px;
+    border: 1px solid #004d00;
+    background-color: #f5f5f5;
+  }
+  
+  .change-password-section h2 {
+    margin-bottom: 20px;
+    font-size: 18px;
+    color: #004d00;
+  }
+
+.profile-section {
+    padding: 20px;
+    border: 1px solid #004d00;
+    background-color: #f5f5f5;
+  }
+  
+  .profile-info {
+    margin-bottom: 20px;
+    font-size: 16px;
+    color: #004d00;
+  }
+  
+  .profile-input {
+    display: block;
+    width: 97%;
+    margin-bottom: 10px;
+    padding: 10px;
+    font-size: 14px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+  }
+  
+  .save-button {
+    background-color: #004d00;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 14px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.3s;
+  }
+  
+  .save-button:hover {
+    background-color: #003300;
+  }
+  
+.user-info {
+    display: flex;
+    align-items: center;
+    position: relative; /* Relative position to position the dropdown */
+  }
+  
+  .user-icon {
+    margin-left: 10px;
+    cursor: pointer;
+    font-size: 18px;
+    color: #004d00; /* Match icon color with your theme */
+  }
+  
+  .dropdown-menu {
+    position: absolute;
+    top: 30px;
+    right: 0;
+    background-color: white;
+    border: 1px solid #ddd;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    width: 150px;
+    z-index: 1000;
+    border-radius: 4px;
+  }
+
+  .dropdown-item {
+    padding: 10px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .dropdown-item:hover {
+    background-color: #f1f1f1;
+  }
+
+.dashboard-container {
+    display: flex;
+    height: 100vh;
+  }
+  
+  /* Sidebar styling */
+  .sidebar {
+    width: 250px;
+    background-color: #004d00;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+  }
+  
+  .college-logo {
+    width: 80px;
+    margin-bottom: 20px;
+  }
+  
+  .welcome-message {
+    font-size: 18px;
+    margin-bottom: 40px;
+  }
+  
+  .menu {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .menu-item {
+    color: #ffeb3b;
+    text-decoration: none;
+    padding: 10px 0;
+    text-align: left;
+    width: 100%;
+    margin-left: 10px;
+  }
+  
+  .menu-item.active {
+    font-weight: bold;
+  }
+  
+  .logout-button {
+    margin-top: auto;
+    background: transparent;
+    border: none;
+    color: #ffeb3b;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  
+  /* Main content styling */
+  .main-content {
+    flex: 1;
+    padding: 20px;
+  }
+  
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  
+  .enrollment-status {
+    padding: 20px;
+    border: 1px solid #004d00;
+    background-color: #f5f5f5;
+  }
+  
+  .status-bar {
+    background-color: #004d00;
+    color: white;
+    padding: 5px 10px;
+    margin-bottom: 20px;
+  }
+  
+  .enrollment-message {
+    font-size: 18px;
+    color: #004d00;
+  }
+
+/* src/FacultySchedulePage.css */
+
+.faculty-schedule-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+.faculty-schedule-page h1 {
+  color: #004d00; /* Dark green, matching the theme */
+  font-size: 24px;
+  margin-bottom: 10px;
+}
+
+.faculty-schedule-page p {
+  font-size: 18px;
+  margin-bottom: 20px;
+  color: #333; /* Dark gray text color */
+}
+
+.schedule-table {
+  width: 100%; /* Full width of the container */
+  max-width: 1200px; /* Increase max-width to enlarge the table */
+  border-collapse: collapse;
+  margin: 20px 0;
+}
+
+.schedule-table th, .schedule-table td {
+  border: 1px solid #ddd;
+  padding: 20px; /* Increase padding to make cells larger */
+  text-align: center;
+}
+
+.schedule-table th {
+  background-color: #f4f4f4; /* Light gray background for header */
+}
+
+.schedule-table tr:nth-child(even) {
+  background-color: #f9f9f9; /* Alternating row colors */
+}
+
+.schedule-table tr:hover {
+  background-color: #f1f1f1; /* Highlight row on hover */
+}
+
+.no-schedule-message {
+  font-size: 16px;
+  color: #666; /* Light gray for no schedule message */
+}
+
+
+/* src/Dashboard.css */
+
+.dashboard-container {
+display: flex;
+}
+
+.sidebar {
+width: 20%;
+background-color: #004400;
+padding: 20px;
+height: 100vh;
+display: flex;
+flex-direction: column;
+justify-content: space-between;
+}
+
+.logout-button {
+background-color: #006600;
+color: white;
+padding: 10px;
+border: none;
+border-radius: 10px;
+cursor: pointer;
+transition: background-color 0.3s ease;
+margin-top: auto; /* Ensures it stays at the bottom */
+margin-bottom: 50px;
+}
+
+.logout-button:hover {
+background-color: #006600;
+}
+
+.main-content {
+width: 80%;
+padding: 20px;
+}
+
+.header {
+display: flex;
+justify-content: space-between;
+align-items: center;
+padding: 10px;
+background-color: #ffffff;
+border-bottom: 2px solid #ccc;
+}
+
+.classes-header {
+display: flex;
+justify-content: space-between;
+align-items: center;
+padding: 20px 0;
+}
+
+.add-class-button {
+background-color: #006600;
+color: white;
+padding: 10px;
+border: none;
+border-radius: 5px;
+cursor: pointer;
+transition: background-color 0.3s ease;
+}
+
+.add-class-button:hover {
+background-color: #006600;
+}
+
+.class-box-container {
+display: flex;
+flex-direction: column;
+padding: 20px;
+background-color: #004400;
+border-radius: 10px;
+}
+
+.class-box {
+background-color: #006600;
+color: white;
+padding: 15px;
+margin-bottom: 10px;
+border-radius: 5px;
+text-align: left;
+cursor: pointer;
+transition: background-color 0.3s ease;
+}
+
+.class-box:hover {
+background-color: #008800;
+}
+
+.change-password-section {
+  padding: 20px;
+  border: 1px solid #004d00;
+  background-color: #f5f5f5;
+}
+
+.change-password-section h2 {
+  margin-bottom: 20px;
+  font-size: 18px;
+  color: #004d00;
+}
+
+.profile-section {
+  padding: 20px;
+  border: 1px solid #004d00;
+  background-color: #f5f5f5;
+}
+
+.profile-info {
+  margin-bottom: 20px;
+  font-size: 16px;
+  color: #004d00;
+}
+
+.profile-input {
+  display: block;
+  width: 97%;
+  margin-bottom: 10px;
+  padding: 10px;
+  font-size: 14px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.save-button {
+  background-color: #004d00;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  font-size: 14px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.3s;
+}
+
+.save-button:hover {
+  background-color: #003300;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  position: relative; /* Relative position to position the dropdown */
+}
+
+.user-icon {
+  margin-left: 10px;
+  cursor: pointer;
+  font-size: 18px;
+  color: #004d00; /* Match icon color with your theme */
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 30px;
+  right: 0;
+  background-color: white;
+  border: 1px solid #ddd;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  width: 150px;
+  z-index: 1000;
+  border-radius: 4px;
+}
+
+.dropdown-item {
+  padding: 10px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.dropdown-item:hover {
+  background-color: #f1f1f1;
+}
+
+.dashboard-container {
+  display: flex;
+  height: 100vh;
+}
+
+/* Sidebar styling */
+.sidebar {
+  width: 250px;
+  background-color: #004d00;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+}
+
+.college-logo {
+  width: 80px;
+  margin-bottom: 20px;
+}
+
+.welcome-message {
+  font-size: 18px;
+  margin-bottom: 40px;
+}
+
+.menu {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.menu-item {
+  color: #ffeb3b;
+  text-decoration: none;
+  padding: 10px 0;
+  text-align: left;
+  width: 100%;
+  margin-left: 10px;
+}
+
+.menu-item.active {
+  font-weight: bold;
+}
+
+.logout-button {
+  margin-top: auto;
+  background: transparent;
+  border: none;
+  color: #ffeb3b;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+/* Main content styling */
+.main-content {
+  flex: 1;
+  padding: 20px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.enrollment-status {
+  padding: 20px;
+  border: 1px solid #004d00;
+  background-color: #f5f5f5;
+}
+
+.status-bar {
+  background-color: #004d00;
+  color: white;
+  padding: 5px 10px;
+  margin-bottom: 20px;
+}
+
+.enrollment-message {
+  font-size: 18px;
+  color: #004d00;
+}
+
+/* src/FacultySchedulePage.css */
+
+.faculty-schedule-page {
+display: flex;
+flex-direction: column;
+align-items: center;
+padding: 20px;
+font-family: Arial, sans-serif;
+}
+
+.faculty-schedule-page h1 {
+color: #004d00; /* Dark green, matching the theme */
+font-size: 24px;
+margin-bottom: 10px;
+}
+
+.faculty-schedule-page p {
+font-size: 18px;
+margin-bottom: 20px;
+color: #333; /* Dark gray text color */
+}
+
+.schedule-table {
+width: 100%; /* Full width of the container */
+max-width: 1200px; /* Increase max-width to enlarge the table */
+border-collapse: collapse;
+margin: 20px 0;
+}
+
+.schedule-table th, .schedule-table td {
+border: 1px solid #ddd;
+padding: 20px; /* Increase padding to make cells larger */
+text-align: center;
+}
+
+.schedule-table th {
+background-color: #f4f4f4; /* Light gray background for header */
+}
+
+.schedule-table tr:nth-child(even) {
+background-color: #f9f9f9; /* Alternating row colors */
+}
+
+.schedule-table tr:hover {
+background-color: #f1f1f1; /* Highlight row on hover */
+}
+
+.no-schedule-message {
+font-size: 16px;
+color: #666; /* Light gray for no schedule message */
+}
+.submenu {
+display: flex;
+flex-direction: column;
+background-color: #f9f9f9;
+padding: 10px;
+border-radius: 4px;
+}
+
+.submenu-item {
+padding: 10px;
+cursor: pointer;
+}
+
+.submenu-item:hover {
+background-color: #ddd;
+}
+
+/* Styles for the sidebar menu */
+.menu-item {
+padding: 10px;
+cursor: pointer;
+text-decoration: none;
+color: black; /* Default text color */
+font-weight: normal;
+}
+
+.menu-item.active {
+color: yellow; /* Highlight color */
+font-weight: bold; /* Make text bold */
+}
+
+.submenu {
+display: flex;
+flex-direction: column;
+background-color: #008800;
+padding: 10px;
+border-radius: 4px;
+}
+
+.submenu-item {
+padding: 10px;
+cursor: pointer;
+}
+
+.submenu-item:hover {
+background-color: #ddd;
+}
+
+.dropdown-menu {
+position: absolute;
+top: 100%;
+right: 0;
+background-color: #fff;
+border: 1px solid #ddd;
+border-radius: 4px;
+box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.dropdown-item {
+padding: 10px;
+cursor: pointer;
+}
+
+.dropdown-item:hover {
+background-color: #f0f0f0;
+}
+
+/* Dashboard.css */
+.class-details {
+  padding: 20px;
+}
+
+.table-container {
+  max-height: 500px; /* Adjust height as needed */
+  overflow-y: auto;
+  border: 1px solid #ddd; /* Optional: adds a border around the scrollable area */
+  padding: 10px; /* Optional: adds some padding inside the scrollable area */
+}
+
+.details-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.details-table th, .details-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+
+.details-table th {
+  background-color: #f4f4f4;
+}
+
+.search-container {
+  display: flex;
+  align-items: center;
+  margin: 10px 0;
+}
+
+.search-input {
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 5px 10px;
+  font-size: 16px;
+  width: 200px;
+}
+
+.search-icon {
+  color: #666;
+  margin-left: -30px;
+  cursor: pointer;
+  font-size: 18px;
+}
+
+/* Dashboard.css */
+
+/* Styles for actions container */
+.actions-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px; /* Adjust as needed */
+}
+
+.search-container {
+  display: flex;
+  align-items: center;
+}
+
+.search-input {
+  padding: 8px;
+  margin-right: 8px;
+}
+
+.search-icon {
+  cursor: pointer;
+}
+
+.button-container {
+  display: flex;
+  gap: 10px; /* Adjust spacing between buttons */
+}
+
+.add-button {
+  padding: 8px 12px;
+  font-size: 14px;
+  border: none;
+  border-radius: 4px;
+  background-color: #004d00; /* Adjust color as needed */
+  color: white;
+  cursor: pointer;
+}
+
+.add-button:hover {
+  background-color: #004d00; /* Adjust hover color as needed */
+}
+
+/* Styles for period buttons */
+/* Styles for period buttons */
+.buttons-container {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.period-button {
+  padding: 10px 20px;
+  border: none;
+  background-color: #f0f0f0;
+  color: #333;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.period-button.active {
+  background-color: #004d00;
+  color: #fff;
+}
+
+.period-button:hover {
+  background-color: #ddd;
+}
+
+/* Styles for search container */
+.search-container {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.search-input {
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 16px;
+  flex-grow: 1;
+}
+
+.search-icon {
+  margin-left: -30px;
+  color: #333;
+}
+
+/* Styles for class details title */
+.class-details h2 {
+  margin-top: 0;
+  margin-bottom: 20px;
+}
+
+/* Styles for table container */
+.table-container {
+  position: relative;
+}
+
+/* Styles for table actions */
+.table-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 10px;
+}
+
+.add-button {
+  padding: 10px 20px;
+  border: none;
+  background-color: #004d00;
+  color: white;
+  cursor: pointer;
+  font-size: 16px;
+  margin-left: 10px;
+}
+
+.add-button:hover {
+  background-color: #004d00;
+}
+
+/* Ensure table is not affected by actions container */
+.details-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.details-table th, .details-table td {
+  padding: 10px;
+  border: 1px solid #ddd;
+  text-align: left;
+}
+
+.details-table th {
+  background-color: #f2f2f2;
+}
+
+
+
+
+
+
+
+

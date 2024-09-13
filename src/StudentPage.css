@@ -1,0 +1,79 @@
+/* src/StudentPage.css */
+
+.student-page {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+  }
+  
+  /* Left side image styling */
+  .left-section {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .background-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  /* Right side form styling */
+  .right-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: #004d00; /* Dark green */
+    position: relative;
+  }
+  
+  .login-form {
+    text-align: center;
+    color: white;
+    padding: 20px;
+  }
+  
+  .login-form h1, .login-form h2 {
+    margin: 0;
+  }
+  
+  .input-field {
+    width: 400px;
+    height: 40px;
+    margin: 10px 0;
+    padding: 0 10px;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    background-color: white;
+    color: #b3b3b3; /* Placeholder color */
+    display: block;
+  }
+  
+  .login-button {
+    width: 300px;
+    height: 40px;
+    background-color: #ffeb3b; /* Yellow */
+    border: none;
+    border-radius: 5px;
+    font-size: 18px;
+    color: black;
+    margin-top: 20px;
+    cursor: pointer;
+  }
+  
+  .back-button {
+    background-color: transparent;
+    border: none;
+    color: #ffeb3b; /* Yellow */
+    font-size: 16px;
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    cursor: pointer;
+  }
+  

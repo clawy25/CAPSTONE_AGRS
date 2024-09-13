@@ -1,0 +1,52 @@
+/* src/FacultySchedulePage.css */
+
+.faculty-schedule-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+  }
+  
+  .faculty-schedule-page h1 {
+    color: #004d00; /* Dark green, matching the theme */
+    font-size: 24px;
+    margin-bottom: 10px;
+  }
+  
+  .faculty-schedule-page p {
+    font-size: 18px;
+    margin-bottom: 20px;
+    color: #333; /* Dark gray text color */
+  }
+  
+  .schedule-table {
+    width: 100%;
+    max-width: 800px;
+    border-collapse: collapse;
+    margin: 20px 0;
+  }
+  
+  .schedule-table th, .schedule-table td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: center;
+  }
+  
+  .schedule-table th {
+    background-color: #f4f4f4; /* Light gray background for header */
+  }
+  
+  .schedule-table tr:nth-child(even) {
+    background-color: #f9f9f9; /* Alternating row colors */
+  }
+  
+  .schedule-table tr:hover {
+    background-color: #f1f1f1; /* Highlight row on hover */
+  }
+  
+  .no-schedule-message {
+    font-size: 16px;
+    color: #666; /* Light gray for no schedule message */
+  }
+  
