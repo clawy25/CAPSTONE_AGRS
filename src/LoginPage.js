@@ -1,9 +1,10 @@
 // src/LoginPage.js
 import React from 'react';
 import { useNavigate } from 'react-router-dom'; // Import useNavigate hook
-import './LoginPage.css';
+import './App.css';
 
-const LoginPage = () => {
+
+export default function LoginPage () {
   const navigate = useNavigate(); // Initialize the useNavigate hook
 
   const handleStudentClick = () => {
@@ -15,21 +16,30 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="login-page">
-      <div className="logo-section">
-        <img 
-          src={`${process.env.PUBLIC_URL}/pcc.png`} 
-          alt="Parañaque City College Logo" 
-          style={{ width: 'auto', height: 'auto' }} // Apply inline styles here
-        />
-      </div>
-      <div className="login-section">
-        <h1>Select your destination.</h1>
-        <button className="login-button" onClick={handleStudentClick}>Student</button>
-        <button className="login-button" onClick={handleFacultyClick}>Faculty</button>
-      </div>
-    </div>
+    <div className="container-fluid">
+            <div className="row">
+                <div className="col container">
+                    <img className="img-fluid rounded mx-auto d-block mt-5 pt-5" src='pcc.png'alt="PCC Logo" width="477px" height="480px" />
+                </div>
+                <div className="col bg-custom-color-green">
+                    <div className="container d-flex flex-column justify-content-center align-items-center min-vh-100">
+                        <h1 className="custom-font text-light fs-1 fw-bold text-center">
+                            Select your <br />destination.
+                        </h1>
+
+                        <div className="d-grid gap-2 col-8 mx-auto mt-2">
+                            <button className="btn bg-custom-color-yellow custom-font custom-button fs-5" type="button" onClick={handleStudentClick}>
+                                Student
+                            </button>
+                            <button className="btn bg-custom-color-yellow custom-font custom-button fs-5" type="button" onClick={handleFacultyClick}>
+                                Faculty
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
   );
 };
 
-export default LoginPage;
+

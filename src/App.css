@@ -1,38 +1,64 @@
-.App {
-  text-align: center;
-}
-/*THIS IS A COMMENT*/
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+
+@import url('https://fonts.googleapis.com/css2?family=Josefin+Sans:ital,wght@0,100..700;1,100..700&display=swap');
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+.bg-custom-color-green {
+    background-color: #0E630E !important; 
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+.bg-custom-color-yellow {
+    background-color: #F7FE28 !important; 
 }
 
-.App-link {
-  color: #61dafb;
+.custom-font {
+    font-family: 'Josefin Sans', sans-serif;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.custom-button {
+    padding: 10px;
+    font-size: 1.5rem;  
+    width: 100%;        
+    height: 3rem;
+    cursor: pointer;       
 }
+
+.custom-input {
+    padding: 10px;
+    padding-right: 5px;
+    font-size: 1.5rem;  
+    width: 100%;        
+    height: 3rem;       
+}
+
+.logo {
+    position: absolute;
+    left: 15px; 
+    top: 10px; 
+    width: 60px; 
+    height: auto;
+}
+
+.btn-back {
+    position: absolute;
+    bottom: 10px;
+    right: 20px;
+    background-color: transparent;
+    border: none;
+    color: #F7FE28;
+    cursor: pointer;
+    padding: 10px;
+}
+
+
+
+
+
+
+
+
+
+  
