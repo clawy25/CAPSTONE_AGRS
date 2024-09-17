@@ -1,51 +1,84 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import './StudentPage.css';
+import './App.css';
+import { useState } from 'react';
 
-const StudentPage = () => {
+export default function StudentPage() {
   const navigate = useNavigate();
 
-  const handleLogin = () => {
-    // Here you can add your login logic before navigating
-    navigate('/dashboard');
-  };
+  const [studentId, setStudentId] = useState('');
+  const [password, setPassword] = useState('');
+    
+
+    const handleLogin = (e) => {
+        e.preventDefault();
+        console.log('Student ID:', studentId);
+        console.log('Password:', password);
+        navigate('/dashboard');
+    };
 
   const handleBackClick = () => {
     navigate('/login'); // Navigate back to the LoginPage
   };
 
   return (
-    <div className="student-page">
-      {/* Left side with image */}
-      <div className="left-section">
-        <img 
-          src="pccCover.jpg" 
-          alt="Parañaque City College" 
-          className="background-image"
-        />
-      </div>
+    <div className="container-fluid">
+            <div className="row">
+                <div className="col-6 p-0 position-relative">
+                    <img 
+                        className="PCC-Building img-fluid w-100 h-100" 
+                        src='pccCover.jpg'
+                        alt="PCC Building" 
+                        style={{ objectFit: 'cover', minHeight: '100vh' }} 
+                    />
+                    <img 
+                        src='pcc.png' 
+                        alt="PCC Logo" 
+                        className="logo" 
+                    />
+                </div>
 
-      {/* Right side with form */}
-      <div className="right-section">
-        <div className="login-form">
-          <h1>PARCOL-SIS</h1>
-          <h2>Student Module</h2>
-          <input 
-            type="text" 
-            placeholder="Student Number" 
-            className="input-field"
-          />
-          <input 
-            type="password" 
-            placeholder="Password" 
-            className="input-field"
-          />
-          <button className="login-button" onClick={handleLogin}>LOGIN</button>
+                <div className="col-6 bg-custom-color-green position-relative">
+                    <div className="container d-flex flex-column justify-content-center align-items-center min-vh-100">
+                        <h1 className="custom-font text-light fs-1 fw-bold text-center">
+                           PARCOL-SIS <br />Student Module
+                        </h1>
+
+                        <form className="col-8 mx-auto mt-2 gap-2" onSubmit={handleLogin}>
+                            <input 
+                                type="text" 
+                                className="form-control custom-input custom-font fs-5 mb-2" 
+                                id="studentId" 
+                                placeholder="Student ID" 
+                                value={studentId} 
+                                onChange={(e) => setStudentId(e.target.value)} 
+                                required 
+                            />
+                            <input 
+                                type="password" 
+                                className="form-control custom-input custom-font fs-5 mb-2" 
+                                id="password" 
+                                placeholder="Password" 
+                                value={password} 
+                                onChange={(e) => setPassword(e.target.value)} 
+                                required
+                            />
+                            <button 
+                                className="btn bg-custom-color-yellow custom-font custom-button fs-5" 
+                                type="submit">
+                                Login
+                            </button>
+                        </form>
+                    </div>
+                    <button 
+                        className="btn btn-back custom-font fs-6" 
+                        onClick={handleBackClick}>
+                        BACK
+                    </button>
+                </div>
+            </div>
         </div>
-        <button className="back-button" onClick={handleBackClick}>BACK</button>
-      </div>
-    </div>
   );
 };
 
-export default StudentPage;
+

@@ -15,7 +15,7 @@ import ErrorPage from './ErrorPage';
 const App = () => {
   return (
     <Routes>
-      <Route path="/" element={<LoginPage />} />
+      <Route path="/login" element={<LoginPage />} />
       <Route path="/student" element={<StudentPage />} /> {/* Define the student route */}
       <Route path="/faculty" element={<FacultyPage />} /> {/* Define the faculty route */}
       <Route path="/dashboard" element={<Dashboard />} /> {/* Dashboard route */}
