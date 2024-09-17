@@ -103,9 +103,16 @@ const ClassDetails = ({ className }) => {
           <h2>{className} {selectedPeriod === 'midterm' ? 'Midterm' : 'Finals'}</h2>
 
           <div className="table-container">
+            {/* Buttons positioned at the top right corner */}
             <div className="table-actions">
               <button className="add-button">Add New Student</button>
               <button className="add-button">Add New Column</button>
+              <button className="add-button">Export</button>
+              <button className="add-button">Print</button>
+            </div>
+            {/* Buttons positioned at the bottom right corner */}
+            <div className="new-buttons">
+              <button className="new-action-button">SUMMARY OF GRADES</button>
             </div>
 
             <table className="details-table">

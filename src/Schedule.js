@@ -77,6 +77,7 @@ const Schedule = () => {
         {/* Conditionally render content based on the selected section */}
         {selectedSection === 'schedule' && (
           <>
+          <section className="grades-section">
             <h2>Schedule</h2>
             <table className="schedule-table">
               <thead>
@@ -108,6 +109,7 @@ const Schedule = () => {
                 </tr>
               </tbody>
             </table>
+            </section>
           </>
         )}
 

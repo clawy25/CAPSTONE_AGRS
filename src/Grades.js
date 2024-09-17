@@ -82,11 +82,79 @@ const Grades = () => {
         {/* Conditionally render content based on the selected section */}
         {selectedSection === 'grades' && (
           <section className="grades-section">
-            <h2>Grades</h2>
-            <p>Your grades for the current semester will be displayed here.</p>
-            {/* Add more details as needed */}
+            <h2>Grades AY 2024-2025</h2>
+            <table className="schedule-table">
+              <thead>
+                <tr>
+                  <th>Code</th>
+                  <th>Subject</th>
+                  <th>Total Units</th>
+                  <th>Grade</th>
+                  <th>Remarks</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>IT101</td>
+                  <td>Introduction to Information Technology</td>
+                  <td>3</td>
+                  <td>1.5</td>
+                  <td>P</td>
+                </tr>
+                <tr>
+                  <td>CS102</td>
+                  <td>Computer Programming</td>
+                  <td>3</td>
+                  <td>1.2</td>
+                  <td>P</td>
+                </tr>
+                <tr>
+                  <td>DM103</td>
+                  <td>Discrete Mathematics</td>
+                  <td>3</td>
+                  <td>1.0</td>
+                  <td>P</td>
+                </tr>
+                <tr>
+                  <td>DB104</td>
+                  <td>Database Systems</td>
+                  <td>3</td>
+                  <td>1.7</td>
+                  <td>P</td>
+                </tr>
+                <tr>
+                  <td>OS105</td>
+                  <td>Operating Systems</td>
+                  <td>3</td>
+                  <td>2.0</td>
+                  <td>P</td>
+                </tr>
+                <tr>
+                  <td>WN106</td>
+                  <td>Web Development</td>
+                  <td>3</td>
+                  <td>1.3</td>
+                  <td>P</td>
+                </tr>
+                <tr>
+                  <td>SE107</td>
+                  <td>Software Engineering</td>
+                  <td>3</td>
+                  <td>1.4</td>
+                  <td>P</td>
+                </tr>
+                <tr>
+                  <td>AE108</td>
+                  <td>Advanced Algorithms</td>
+                  <td>3</td>
+                  <td>1.6</td>
+                  <td>P</td>
+                </tr>
+              </tbody>
+            </table>
           </section>
         )}
+
 
         {selectedSection === 'profile' && (
           <section className="profile-section">
