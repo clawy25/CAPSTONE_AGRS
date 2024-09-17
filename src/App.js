@@ -10,11 +10,12 @@ import Grades from './Grades'; // Your grades page component
 import FacultyDashboard from './FacultyDashboard';
 import FacultySchedulePage from './FacultySchedulePage';
 import ClassDetails from './ClassDetails';
+import ErrorPage from './ErrorPage';
 
 const App = () => {
   return (
     <Routes>
-      <Route path="/login" element={<LoginPage />} />
+      <Route path="/" element={<LoginPage />} />
       <Route path="/student" element={<StudentPage />} /> {/* Define the student route */}
       <Route path="/faculty" element={<FacultyPage />} /> {/* Define the faculty route */}
       <Route path="/dashboard" element={<Dashboard />} /> {/* Dashboard route */}
@@ -23,6 +24,7 @@ const App = () => {
       <Route path="/faculty-dashboard" element={<FacultyDashboard />} /> {/* New faculty dashboard route */}
       <Route path="/grades" element={<Grades />} /> {/* Grades route */}
       <Route path="/class-details/:className" element={<ClassDetails />} />
+      <Route path="*" element={<ErrorPage />} />
     </Routes>
   );
 };
