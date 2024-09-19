@@ -21,10 +21,10 @@ export default function FacultyPage() {
 
   return (
     <div className="container-fluid">
-            <div className="row">
-                <div className="col-6 p-0 position-relative">
+            <div className="row no-gutters">
+                <div className="col-12 col-md-6 p-0 position-relative d-none d-md-block">
                     <img 
-                        className="PCC-Building img-fluid w-100 h-100" 
+                        className="img-fluid w-100 h-100" 
                         src='pccCover.jpg' 
                         alt="PCC Building" 
                         style={{ objectFit: 'cover', minHeight: '100vh' }} 
@@ -32,20 +32,20 @@ export default function FacultyPage() {
                     <img 
                         src='pcc.png' 
                         alt="PCC Logo" 
-                        className="logo" 
+                        className="logo position-absolute top-0 start-0 m-3" 
                     />
                 </div>
 
-                <div className="col-6 bg-custom-color-green position-relative">
-                    <div className="container d-flex flex-column justify-content-center align-items-center min-vh-100">
-                        <h1 className="custom-font text-light fs-1 fw-bold text-center">
+             
+                    <div className="col-12 col-md-6 bg-custom-color-green d-flex flex-column justify-content-center align-items-center min-vh-100 order-1 order-md-2">
+                        <h1 className="custom-font text-light fs-1 fw-bold text-center mb-4">
                            PARCOL-SIS <br />Faculty Module
                         </h1>
 
-                        <form className="col-8 mx-auto mt-2 gap-2" onSubmit={handleLogin}>
+                        <form className="d-grid gap-2 col-8 mx-auto mt-2" onSubmit={handleLogin}>
                             <input 
                                 type="text" 
-                                className="form-control custom-input custom-font fs-5 mb-2" 
+                                className="form-control custom-input custom-font fs-5 " 
                                 id="accountNumber" 
                                 placeholder="Account Number" 
                                 value={accountNumber} 
@@ -54,7 +54,7 @@ export default function FacultyPage() {
                             />
                             <input 
                                 type="password" 
-                                className="form-control custom-input custom-font fs-5 mb-2" 
+                                className="form-control custom-input custom-font fs-5 " 
                                 id="password" 
                                 placeholder="Password" 
                                 value={password} 
@@ -67,16 +67,17 @@ export default function FacultyPage() {
                                 Login
                             </button>
                         </form>
-                    </div>
-                    <button 
-                        className="btn btn-back custom-font fs-6" 
+                        <button 
+                        className="btn btn-back custom-font fs-6 mt-3" 
                         onClick={handleBackClick}
                     >
                         BACK
                     </button>
+                    </div>
+                    
                 </div>
             </div>
-        </div>
+       
   );
 };
 

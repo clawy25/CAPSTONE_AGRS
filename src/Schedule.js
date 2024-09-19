@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUser } from '@fortawesome/free-solid-svg-icons';
+import { faUser, faCalendarAlt, faGraduationCap, faSignOutAlt, faEdit, faKey } from '@fortawesome/free-solid-svg-icons';
 import './Schedule.css';
+import './App.css';
 
 const Schedule = () => {
   const navigate = useNavigate();
@@ -48,11 +49,23 @@ const Schedule = () => {
         <img src="pcc.png" alt="Logo" className="college-logo" />
         <div className="welcome-message">Hello, Abigail!</div>
         <nav className="menu">
-          <Link to="/dashboard" className="menu-item">ENROLLMENT</Link>
-          <Link to="/schedule" className="menu-item active">SCHEDULE</Link>
-          <Link to="/grades" className="menu-item">GRADES</Link>
+          <Link to="/dashboard" className="menu-item">
+            <FontAwesomeIcon icon={faUser} className="me-2" />
+            ENROLLMENT
+          </Link>
+          <Link to="/schedule" className="menu-item active">
+            <FontAwesomeIcon icon={faCalendarAlt} className="me-2" />
+            SCHEDULE
+          </Link>
+          <Link to="/grades" className="menu-item">
+            <FontAwesomeIcon icon={faGraduationCap} className="me-2" />
+            GRADES
+          </Link>
         </nav>
-        <button className="logout-button" onClick={handleLogout}>LOGOUT</button>
+        <button className="logout-button" onClick={handleLogout}>
+          <FontAwesomeIcon icon={faSignOutAlt} className="me-2" />
+          LOGOUT
+        </button>
       </div>
 
       <div className="main-content">
@@ -67,8 +80,14 @@ const Schedule = () => {
             />
             {showDropdown && (
               <div className="dropdown-menu">
-                <div className="dropdown-item" onClick={handleProfileClick}>Profile</div>
-                <div className="dropdown-item" onClick={handleChangePasswordClick}>Change Password</div>
+                <div className="dropdown-item" onClick={handleProfileClick}>
+                  <FontAwesomeIcon icon={faEdit} className="me-2" />
+                  Profile
+                </div>
+                <div className="dropdown-item" onClick={handleChangePasswordClick}>
+                  <FontAwesomeIcon icon={faKey} className="me-2" />
+                  Change Password
+                </div>
               </div>
             )}
           </div>
@@ -77,38 +96,38 @@ const Schedule = () => {
         {/* Conditionally render content based on the selected section */}
         {selectedSection === 'schedule' && (
           <>
-          <section className="grades-section">
-            <h2>Schedule</h2>
-            <table className="schedule-table">
-              <thead>
-                <tr>
-                  <th>Subject</th>
-                  <th>Class</th>
-                  <th>Time</th>
-                  <th>Hours</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>Introduction to Information Technology</td>
-                  <td>BSIT 3-1</td>
-                  <td>08:00 AM - 09:30 AM (Mon, Wed)</td>
-                  <td>1.5</td>
-                </tr>
-                <tr>
-                  <td>Computer Programming</td>
-                  <td>BSIT 3-1</td>
-                  <td>09:40 AM - 11:10 AM (Mon, Wed)</td>
-                  <td>1.5</td>
-                </tr>
-                <tr>
-                  <td>Discrete Mathematics</td>
-                  <td>BSIT 3-1</td>
-                  <td>02:00 PM - 03:00 PM (Mon, Wed)</td>
-                  <td>1.5</td>
-                </tr>
-              </tbody>
-            </table>
+            <section className="grades-section">
+              <h2>Schedule</h2>
+              <table className="schedule-table">
+                <thead>
+                  <tr>
+                    <th>Subject</th>
+                    <th>Class</th>
+                    <th>Time</th>
+                    <th>Hours</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Introduction to Information Technology</td>
+                    <td>BSIT 3-1</td>
+                    <td>08:00 AM - 09:30 AM (Mon, Wed)</td>
+                    <td>1.5</td>
+                  </tr>
+                  <tr>
+                    <td>Computer Programming</td>
+                    <td>BSIT 3-1</td>
+                    <td>09:40 AM - 11:10 AM (Mon, Wed)</td>
+                    <td>1.5</td>
+                  </tr>
+                  <tr>
+                    <td>Discrete Mathematics</td>
+                    <td>BSIT 3-1</td>
+                    <td>02:00 PM - 03:00 PM (Mon, Wed)</td>
+                    <td>1.5</td>
+                  </tr>
+                </tbody>
+              </table>
             </section>
           </>
         )}

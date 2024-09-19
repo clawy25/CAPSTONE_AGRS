@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUser } from '@fortawesome/free-solid-svg-icons';
+import { faUser, faBook, faCalendarAlt, faGraduationCap, faSignOutAlt } from '@fortawesome/free-solid-svg-icons';
 import './Grades.css';
 
 const Grades = () => {
@@ -53,11 +53,19 @@ const Grades = () => {
         <img src="pcc.png" alt="Logo" className="college-logo" />
         <div className="welcome-message">Hello, Abigail!</div>
         <nav className="menu">
-          <Link to="/dashboard" className="menu-item">ENROLLMENT</Link>
-          <Link to="/schedule" className="menu-item">SCHEDULE</Link>
-          <Link to="/grades" className="menu-item active">GRADES</Link>
+          <Link to="/dashboard" className="menu-item">
+           <FontAwesomeIcon icon={faBook} className="me-2" /> ENROLLMENT
+          </Link>
+          <Link to="/schedule" className="menu-item">
+            <FontAwesomeIcon icon={faCalendarAlt} className="me-2" /> SCHEDULE
+          </Link>
+          <Link to="/grades" className="menu-item active">
+            <FontAwesomeIcon icon={faGraduationCap} className="me-2" /> GRADES
+          </Link>
         </nav>
-        <button className="logout-button" onClick={handleLogout}>LOGOUT</button>
+        <button className="logout-button" onClick={handleLogout}>
+          <FontAwesomeIcon icon={faSignOutAlt} className="me-2" />  LOGOUT
+        </button>
       </div>
 
       <div className="main-content">
@@ -154,7 +162,6 @@ const Grades = () => {
             </table>
           </section>
         )}
-
 
         {selectedSection === 'profile' && (
           <section className="profile-section">

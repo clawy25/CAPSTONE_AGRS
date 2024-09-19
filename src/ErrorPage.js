@@ -9,4 +9,4 @@ export default function ErrorPage() {
             <h1 className='p-5 fs-1'>Nawawala ka na</h1>
         </div>
     )
-}
+} 

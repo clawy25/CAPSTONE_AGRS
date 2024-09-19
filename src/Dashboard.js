@@ -1,42 +1,37 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUser } from '@fortawesome/free-solid-svg-icons';
+import { faUser, faCalendarAlt, faGraduationCap, faSignOutAlt } from '@fortawesome/free-solid-svg-icons';
 import './Dashboard.css';
+import './App.css';
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const [showDropdown, setShowDropdown] = useState(false);
-  const [selectedSection, setSelectedSection] = useState('enrollment'); // State to track the selected section
+  const [selectedSection, setSelectedSection] = useState('enrollment');
 
-  // Function to handle logout
   const handleLogout = () => {
     navigate('/login');
   };
 
-  // Function to toggle dropdown visibility
   const toggleDropdown = () => {
     setShowDropdown((prevState) => !prevState);
   };
 
-  // Function to handle Profile section display
   const handleProfileClick = () => {
-    setSelectedSection('profile'); // Set the selected section to 'profile'
-    setShowDropdown(false); // Hide the dropdown menu
+    setSelectedSection('profile');
+    setShowDropdown(false);
   };
 
-  // Function to handle Change Password section display
   const handleChangePasswordClick = () => {
-    setSelectedSection('change-password'); // Set the selected section to 'change-password'
-    setShowDropdown(false); // Hide the dropdown menu
+    setSelectedSection('change-password');
+    setShowDropdown(false);
   };
 
-  // Function to handle save button click for profile
   const handleSaveProfile = () => {
     alert('Profile information saved!');
   };
 
-  // Function to handle save button click for change password
   const handleSavePassword = () => {
     alert('Password changed successfully!');
   };
@@ -44,15 +39,27 @@ const Dashboard = () => {
   return (
     <div className="dashboard-container">
       {/* Sidebar with user info and menu */}
-      <div className="sidebar">
+      <div className="sidebar bg-custom-color-green">
         <img src="pcc.png" alt="Logo" className="college-logo" />
         <div className="welcome-message">Hello, Abigail!</div>
         <nav className="menu">
-          <Link to="/dashboard" className="menu-item active">ENROLLMENT</Link>
-          <Link to="/schedule" className="menu-item">SCHEDULE</Link>
-          <Link to="/grades" className="menu-item">GRADES</Link>
+          <Link to="/dashboard" className="menu-item active">
+            <FontAwesomeIcon icon={faUser} className="me-2" />
+            ENROLLMENT
+          </Link>
+          <Link to="/schedule" className="menu-item">
+            <FontAwesomeIcon icon={faCalendarAlt} className="me-2" />
+            SCHEDULE
+          </Link>
+          <Link to="/grades" className="menu-item">
+            <FontAwesomeIcon icon={faGraduationCap} className="me-2" />
+            GRADES
+          </Link>
         </nav>
-        <button className="logout-button" onClick={handleLogout}>LOGOUT</button>
+        <button className="logout-button" onClick={handleLogout}>
+          <FontAwesomeIcon icon={faSignOutAlt} className="me-2" />
+          LOGOUT
+        </button>
       </div>
 
       <div className="main-content">
@@ -67,8 +74,12 @@ const Dashboard = () => {
             />
             {showDropdown && (
               <div className="dropdown-menu">
-                <div className="dropdown-item" onClick={handleProfileClick}>Profile</div>
-                <div className="dropdown-item" onClick={handleChangePasswordClick}>Change Password</div>
+                <div className="dropdown-item" onClick={handleProfileClick}>
+                  Profile
+                </div>
+                <div className="dropdown-item" onClick={handleChangePasswordClick}>
+                  Change Password
+                </div>
               </div>
             )}
           </div>
@@ -76,12 +87,16 @@ const Dashboard = () => {
 
         {/* Conditionally render content based on the selected section */}
         {selectedSection === 'enrollment' && (
-          <section className="enrollment-status">
-            <h2>Enrollment</h2>
-            <div className="status-bar">
-              <span>STATUS: Grades not complete</span>
+          <section className="card enrollment-status border-3 rounded">
+            <h2 className='custom-font'>Enrollment</h2>
+            <div className="card bg-custom-color-green text-white fw-bold border-1 rounded">
+              <span className="card-header">STATUS: Grades not complete</span>
             </div>
-            <div className="enrollment-message">Online Enrollment is not open yet.</div>
+            <div className="card-body d-flex justify-content-center align-items-center">
+              <p className="card-text custom-font fs-2 border-1 fw-bold text-success m-0">
+                Online Enrollment is not open yet.
+              </p>
+            </div>
           </section>
         )}
 
