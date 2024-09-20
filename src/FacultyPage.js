@@ -62,13 +62,13 @@ export default function FacultyPage() {
                                 required
                             />
                             <button 
-                                className="btn bg-custom-color-yellow custom-font custom-button fs-5" 
+                                className="btn bg-custom-color-yellow custom-font custom-button fs-5 fw-semibold" 
                                 type="submit">
                                 Login
                             </button>
                         </form>
                         <button 
-                        className="btn btn-back custom-font fs-6 mt-3" 
+                        className="btn btn-back custom-font fs-6 mt-3 custom-color-font fw-semibold" 
                         onClick={handleBackClick}
                     >
                         BACK

@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUser, faCalendarAlt, faGraduationCap, faSignOutAlt, faEdit, faKey } from '@fortawesome/free-solid-svg-icons';
+import { faUser, faCalendarAlt, faGraduationCap, faSignOutAlt, faEdit, faKey, faBars } from '@fortawesome/free-solid-svg-icons';
 import './Schedule.css';
 import './App.css';
 
 const Schedule = () => {
   const navigate = useNavigate();
   const [showDropdown, setShowDropdown] = useState(false);
+  const [showSidebar, setShowSidebar] = useState(false); // State to control sidebar visibility
   const [selectedSection, setSelectedSection] = useState('schedule'); // State to track the selected section
 
   // Function to handle logout
@@ -42,52 +43,67 @@ const Schedule = () => {
     alert('Password changed successfully!');
   };
 
+  const toggleSidebar = () => {
+    setShowSidebar(!showSidebar);
+  };
+
+
   return (
     <div className="schedule-container">
       {/* Sidebar with user info and menu */}
-      <div className="sidebar">
-        <img src="pcc.png" alt="Logo" className="college-logo" />
-        <div className="welcome-message">Hello, Abigail!</div>
-        <nav className="menu">
-          <Link to="/dashboard" className="menu-item">
+      <div
+        className={`sidebar bg-custom-color-green ${showSidebar ? 'd-block' : 'd-none d-md-block'}`}
+      >
+        <img src="pcc.png" alt="Logo" className="college-logo align-items-center ms-5 mb-3 " />
+        <div className="welcome-message mb-3 text-center">Hello, Abigail!</div>
+        <nav className="menu mb-3">
+          <Link to="/dashboard" className="menu-item d-flex align-items-center mb-2">
             <FontAwesomeIcon icon={faUser} className="me-2" />
             ENROLLMENT
           </Link>
-          <Link to="/schedule" className="menu-item active">
+          <Link to="/schedule" className="menu-item active d-flex align-items-center mb-2">
             <FontAwesomeIcon icon={faCalendarAlt} className="me-2" />
             SCHEDULE
           </Link>
-          <Link to="/grades" className="menu-item">
+          <Link to="/grades" className="menu-item d-flex align-items-center mb-2">
             <FontAwesomeIcon icon={faGraduationCap} className="me-2" />
             GRADES
           </Link>
         </nav>
-        <button className="logout-button" onClick={handleLogout}>
+        <div className='container mt-5 pt-5'>
+          <button className="btn bg-transparent custom-color-font mb-auto" onClick={handleLogout}>
           <FontAwesomeIcon icon={faSignOutAlt} className="me-2" />
-          LOGOUT
-        </button>
+        LOGOUT
+      </button>
+        </div>
+        
       </div>
 
-      <div className="main-content">
-        <header className="header">
-          <h1>PARAÑAQUE CITY COLLEGE</h1>
-          <div className="user-info">
-            CRUZ, ABIGAIL (2020-00202-PQ-O)
+      <div className="main-content flex-grow-1">
+        <header className="header d-flex justify-content-between align-items-center p-3 border-bottom">
+          {/* Show H1 on larger screens and burger icon on smaller screens */}
+          <h1 className="m-0 custom-color-green-font custom-font d-none d-md-block">
+            PARAÑAQUE CITY COLLEGE
+          </h1>
+          <button className="btn btn-link text-dark d-md-none" onClick={toggleSidebar}>
+            <FontAwesomeIcon icon={faBars} size="lg" />
+          </button>
+
+          <div className="user-info d-flex align-items-center">
+            <span className="me-2">CRUZ, ABIGAIL (2020-00202-PQ-O)</span>
             <FontAwesomeIcon
               icon={faUser}
               className="user-icon"
               onClick={toggleDropdown}
             />
             {showDropdown && (
-              <div className="dropdown-menu">
-                <div className="dropdown-item" onClick={handleProfileClick}>
-                  <FontAwesomeIcon icon={faEdit} className="me-2" />
+              <div className="dropdown-menu position-absolute end-0 mt-2">
+                <button className="dropdown-item" onClick={handleProfileClick}>
                   Profile
-                </div>
-                <div className="dropdown-item" onClick={handleChangePasswordClick}>
-                  <FontAwesomeIcon icon={faKey} className="me-2" />
+                </button>
+                <button className="dropdown-item" onClick={handleChangePasswordClick}>
                   Change Password
-                </div>
+                </button>
               </div>
             )}
           </div>
@@ -96,58 +112,64 @@ const Schedule = () => {
         {/* Conditionally render content based on the selected section */}
         {selectedSection === 'schedule' && (
           <>
-            <section className="grades-section">
-              <h2>Schedule</h2>
-              <table className="schedule-table">
-                <thead>
+            <section className="m-3">
+              <h2 className='custom-font custom-color-green-font'>Schedule</h2>
+              <div className='card card-success border-success rounded'>
+              <table className="table">
+                <thead className='table-success'>
                   <tr>
-                    <th>Subject</th>
-                    <th>Class</th>
-                    <th>Time</th>
-                    <th>Hours</th>
+                    <th className='text-success custom-font'>Subject</th>
+                    <th className='text-success custom-font'>Class</th>
+                    <th className='text-success custom-font'>Time</th>
+                    <th className='text-success custom-font'>Hours</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr>
-                    <td>Introduction to Information Technology</td>
-                    <td>BSIT 3-1</td>
-                    <td>08:00 AM - 09:30 AM (Mon, Wed)</td>
-                    <td>1.5</td>
+                    <td className='custom-font'>Introduction to Information Technology</td>
+                    <td className='custom-font'>BSIT 3-1</td>
+                    <td className='custom-font'>08:00 AM - 09:30 AM (Mon, Wed)</td>
+                    <td className='custom-font'>1.5</td>
                   </tr>
                   <tr>
-                    <td>Computer Programming</td>
-                    <td>BSIT 3-1</td>
-                    <td>09:40 AM - 11:10 AM (Mon, Wed)</td>
-                    <td>1.5</td>
+                    <td className='custom-font'>Computer Programming</td>
+                    <td className='custom-font'>BSIT 3-1</td>
+                    <td className='custom-font'>09:40 AM - 11:10 AM (Mon, Wed)</td>
+                    <td className='custom-font'>1.5</td>
                   </tr>
                   <tr>
-                    <td>Discrete Mathematics</td>
-                    <td>BSIT 3-1</td>
-                    <td>02:00 PM - 03:00 PM (Mon, Wed)</td>
-                    <td>1.5</td>
+                    <td className='custom-font'>Discrete Mathematics</td>
+                    <td className='custom-font'>BSIT 3-1</td>
+                    <td className='custom-font'>02:00 PM - 03:00 PM (Mon, Wed)</td>
+                    <td className='custom-font'>1.5</td>
                   </tr>
                 </tbody>
               </table>
+              </div>
             </section>
           </>
         )}
 
         {selectedSection === 'profile' && (
-          <section className="profile-section">
-            <h2>Profile</h2>
-            <div className="profile-info">Student Number: 2020-00202-PQ-O</div>
-            <input type="text" placeholder="First Name" className="profile-input" />
-            <input type="text" placeholder="Last Name" className="profile-input" />
-            <input type="email" placeholder="Email" className="profile-input" />
-            <button className="save-button" onClick={handleSaveProfile}>Save</button>
+          <section className="card border-success p-3">
+            <h2 className='custom-color-green-font custom-font'>Profile</h2>
+            <div className="custome-font custom-color-green-font fs-6 mb-2">Student Number: 2020-00202-PQ-O</div>
+            <input type="text" placeholder="First Name" className="form-control custom-color-green-font mb-2" required />
+            <input type="text" placeholder="Last Name" className="form-control custom-color-green-font mb-2" required />
+            <input type="email" placeholder="Email" className="form-control custom-color-green-font mb-2" required />
+            <button className="btn custom-color-font bg-custom-color-green p-2" onClick={() => alert('Profile information saved!')}>
+              Save
+            </button>
           </section>
         )}
 
         {selectedSection === 'change-password' && (
-          <section className="change-password-section">
-            <h2>Change Password</h2>
-            <input type="password" placeholder="New Password" className="profile-input" />
-            <button className="save-button" onClick={handleSavePassword}>Save</button>
+          <section className="card border-success p-3">
+            <h2 className='custom-color-green-font custom-font'>Change Password</h2>
+            <input type="password" placeholder="New Password" className="form-control custom-color-green-font mb-2" required />
+            <button className="btn custom-color-font bg-custom-color-green p-2" onClick={() => alert('Password changed successfully!')}>
+              Save
+            </button>
           </section>
         )}
       </div>
