@@ -15,13 +15,12 @@ export default function StudentPage() {
   };
 
   const handleBackClick = () => {
-    navigate('/login'); // Navigate back to the LoginPage
+    navigate('/login'); 
   };
 
   return (
     <div className="container-fluid">
       <div className="row no-gutters">
-        {/* Column for image and logo, shown on larger screens only */}
         <div className="col-12 col-md-6 p-0 position-relative d-none d-md-block">
           <img 
             className="img-fluid w-100 h-100" 
@@ -33,11 +32,10 @@ export default function StudentPage() {
             src='pcc.png' 
             alt="PCC Logo" 
             className="logo position-absolute top-0 start-0 m-3" 
-            style={{ maxWidth: '150px' }} // Adjust size as needed
+            style={{ maxWidth: '150px' }}
           />
         </div>
 
-        {/* Column for input and buttons, displayed on all screen sizes */}
         <div className="col-12 col-md-6 bg-custom-color-green d-flex flex-column justify-content-center align-items-center min-vh-100 order-1 order-md-2">
           <h1 className="custom-font text-light fs-1 fw-bold text-center mb-4">
             PARCOL-SIS <br />Student Module

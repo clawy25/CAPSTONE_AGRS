@@ -16,7 +16,7 @@ export default function FacultyPage() {
     };
 
   const handleBackClick = () => {
-    navigate('/login'); // Navigate back to the LoginPage
+    navigate('/login'); 
   };
 
   return (

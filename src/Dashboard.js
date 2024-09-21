@@ -11,7 +11,7 @@ const Dashboard = () => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
   const [selectedSection, setSelectedSection] = useState('enrollment');
-  const dropdownRef = useRef(null); // Ref to handle clicks outside the dropdown
+  const dropdownRef = useRef(null); 
 
   const handleLogout = () => {
     navigate('/login');
@@ -35,7 +35,7 @@ const Dashboard = () => {
     setShowSidebar(!showSidebar);
   };
 
-  // Close dropdown if clicked outside
+
   useEffect(() => {
     const handleOutsideClick = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -56,7 +56,6 @@ const Dashboard = () => {
 
   return (
     <div className="dashboard-container d-flex">
-      {/* Sidebar */}
       <div className={`sidebar bg-custom-color-green ${showSidebar ? 'd-block' : 'd-none d-md-block'}`}>
         <img src="pcc.png" alt="Logo" className="college-logo align-items-center ms-5 mb-3" />
         <div className="welcome-message mb-3 text-center">Hello, Abigail!</div>
@@ -82,7 +81,6 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Main Content */}
       <div className="main-content flex-grow-1">
         <header className="header d-flex justify-content-between align-items-center p-3 border-bottom">
           <h1 className="m-0 custom-color-green-font custom-font d-none d-md-block">
@@ -114,7 +112,6 @@ const Dashboard = () => {
           </div>
         </header>
 
-        {/* Conditional Sections */}
         {selectedSection === 'enrollment' && (
           <section className="m-3">
             <h2 className="custom-font custom-color-green-font">Enrollment</h2>

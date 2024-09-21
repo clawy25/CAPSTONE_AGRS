@@ -48,7 +48,7 @@
     left: 15px; 
     top: 10px; 
   
-      width: 100px; /* Adjust logo size if needed */
+      width: 100px; 
     
     height: auto;
 }
@@ -72,24 +72,21 @@
     padding: 10px;
 }
 
-/*LOGIN PAGE*/
+/*LOGIN PAGE PHONE VIEW*/
 
 @media (max-width: 767.98px) {
-    /* Hide the logo image on phone screens */
     .PCClogo {
       display: none;
     }
     
-    /* Make sure the buttons and text remain visible and properly aligned */
     .col-md-6 {
       display: flex;
       justify-content: center;
       align-items: center;
     }
   
-    /* Adjust the min-height of the content column for mobile */
     .min-vh-100 {
-      min-height: 50vh; /* You can adjust the height as necessary */
+      min-height: 50vh; 
     }
   }
 

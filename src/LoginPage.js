@@ -1,22 +1,21 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate hook
+import { useNavigate } from 'react-router-dom'; 
 import './App.css';
 
 export default function LoginPage() {
-  const navigate = useNavigate(); // Initialize the useNavigate hook
+  const navigate = useNavigate(); 
 
   const handleStudentClick = () => {
-    navigate('/student'); // Navigate to the student page
+    navigate('/student'); 
   };
 
   const handleFacultyClick = () => {
-    navigate('/faculty'); // Navigate to the faculty login page
+    navigate('/faculty'); 
   };
 
   return (
     <div className="container-fluid">
       <div className="row d-flex flex-column flex-md-row">
-        {/* Logo Column */}
         <div className="col-12 col-md-6 d-flex justify-content-center align-items-center flex-column order-2 order-md-1">
           <img
             className="PCClogo img-fluid rounded mt-4 pt-md-3"
@@ -25,7 +24,7 @@ export default function LoginPage() {
             style={{ maxWidth: '100%', height: 'auto' }}
           />
         </div>
-        {/* Content Column */}
+        
         <div className="col-12 col-md-6 bg-custom-color-green d-flex flex-column justify-content-center align-items-center min-vh-100 order-1 order-md-2">
           <h1 className="custom-font text-light fs-1 fw-bold text-center mb-4">
             Select your <br />

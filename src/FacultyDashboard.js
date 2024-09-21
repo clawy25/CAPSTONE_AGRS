@@ -1,179 +1,164 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUser } from '@fortawesome/free-solid-svg-icons';
+import { faUser, faSignOutAlt, faBars, faChalkboardTeacher, faCalendar } from '@fortawesome/free-solid-svg-icons';
 import './Dashboard.css';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 const FacultyDashboard = () => {
   const navigate = useNavigate();
   const [showDropdown, setShowDropdown] = useState(false);
+  const [showSidebar, setShowSidebar] = useState(false);
   const [selectedSection, setSelectedSection] = useState('classes');
   const [showClassesSubmenu, setShowClassesSubmenu] = useState(false);
   const [selectedClass, setSelectedClass] = useState(null);
+  const dropdownRef = useRef(null);
 
-  // Function to handle logout
   const handleLogout = () => {
     navigate('/login');
   };
 
-  // Function to toggle dropdown visibility
   const toggleDropdown = () => {
     setShowDropdown((prevState) => !prevState);
   };
 
-  // Function to handle Profile section display
   const handleProfileClick = () => {
     setSelectedSection('profile');
-    setShowClassesSubmenu(false); // Hide submenu
-    setShowDropdown(false); // Hide dropdown
+    setShowDropdown(false);
   };
 
-  // Function to handle Change Password section display
   const handleChangePasswordClick = () => {
     setSelectedSection('change-password');
-    setShowClassesSubmenu(false); // Hide submenu
-    setShowDropdown(false); // Hide dropdown
+    setShowDropdown(false);
   };
 
-  // Function to handle save button click for profile
-  const handleSaveProfile = () => {
-    alert('Profile information saved!');
-  };
-
-  // Function to handle save button click for change password
-  const handleSavePassword = () => {
-    alert('Password changed successfully!');
-  };
-
-  // Function to navigate to a specific class when clicked
   const handleClassClick = (className) => {
     setSelectedClass(className);
     navigate(`/class-details/${className}`);
   };
 
-  // Function to handle adding a new class
-  const handleAddNewClass = () => {
-    alert('Add new class functionality here');
+  const toggleSidebar = () => {
+    setShowSidebar(!showSidebar);
   };
 
-  // Function to handle the menu item click and toggle submenu
-  const handleMenuClick = (section) => {
-    if (section === 'classes') {
-      setSelectedSection('classes');
-      setShowClassesSubmenu(true); // Show submenu
+  useEffect(() => {
+    const handleOutsideClick = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    };
+
+    if (showDropdown) {
+      document.addEventListener('click', handleOutsideClick);
     } else {
-      setSelectedSection(section);
-      setShowClassesSubmenu(false); // Hide submenu if not 'classes'
+      document.removeEventListener('click', handleOutsideClick);
     }
-  };
+
+    return () => {
+      document.removeEventListener('click', handleOutsideClick);
+    };
+  }, [showDropdown]);
 
   return (
-    <div className="dashboard-container">
-      <div className="sidebar">
-        <img src="pcc.png" alt="Logo" className="college-logo" />
-        <div className="welcome-message">Hello, John Doe!</div>
-        <nav className="menu">
-          <div
-            className={`menu-item ${selectedSection === 'classes' ? 'active' : ''}`}
-            onClick={() => handleMenuClick('classes')}
-          >
+    <div className="dashboard-container d-flex">
+      <div className={`sidebar bg-custom-color-green ${showSidebar ? 'd-block' : 'd-none d-md-block'}`}>
+        <img src="pcc.png" alt="Logo" className="college-logo align-items-center ms-5 mb-3" />
+        <div className="welcome-message mb-3 text-center">Hello, John Doe!</div>
+        <nav className="menu mb-3">
+          <Link to="/faculty-dashboard" className="menu-item active d-flex align-items-center mb-2">
+            <FontAwesomeIcon icon={faChalkboardTeacher} className="me-2" />
             CLASSES
-          </div>
-          {selectedSection === 'classes' && showClassesSubmenu && (
-            <div className="submenu">
-              <div className="submenu-item" onClick={() => handleClassClick('BSIT1-1')}>BSIT 1-1</div>
-              <div className="submenu-item" onClick={() => handleClassClick('BSIT1-2')}>BSIT 1-2</div>
-              <div className="submenu-item" onClick={() => handleClassClick('BSIT2-1')}>BSIT 2-1</div>
-              <div className="submenu-item" onClick={() => handleClassClick('BSIT2-2')}>BSIT 2-2</div>
-              <div className="submenu-item" onClick={() => handleClassClick('BSIT3-1')}>BSIT 3-1</div>
-              <div className="submenu-item" onClick={() => handleClassClick('BSIT3-2')}>BSIT 3-2</div>
-              <div className="submenu-item" onClick={() => handleClassClick('BSIT4-1')}>BSIT 4-1</div>
-              <div className="submenu-item" onClick={() => handleClassClick('BSIT4-2')}>BSIT 4-2</div>
-              <div className="submenu-item" onClick={handleAddNewClass}>+ Add new class</div>
-            </div>
-          )}
-          <Link
-            to="/faculty-schedule"
-            className={`menu-item ${selectedSection === 'schedule' ? 'active' : ''}`}
-            onClick={() => handleMenuClick('schedule')}
-          >
+          </Link>
+          <Link to="/faculty-schedule" className="menu-item d-flex align-items-center mb-2">
+            <FontAwesomeIcon icon={faCalendar} className="me-2" />
             SCHEDULE
           </Link>
-          <Link
-            to="/hris"
-            className={`menu-item ${selectedSection === 'hris' ? 'active' : ''}`}
-            onClick={() => handleMenuClick('hris')}
-          >
+          <Link to="/hris" className="menu-item d-flex align-items-center mb-2">
+            <FontAwesomeIcon icon={faUser} className="me-2" />
             HRIS
           </Link>
         </nav>
-        <button className="logout-button" onClick={handleLogout}>LOGOUT</button>
+        <div className="container mt-5 pt-5">
+          <button className="btn bg-transparent custom-color-font mb-auto" onClick={handleLogout}>
+            <FontAwesomeIcon icon={faSignOutAlt} className="me-2" />
+            LOGOUT
+          </button>
+        </div>
       </div>
 
-      <div className="main-content">
-        <header className="header">
-          <h1>PARAÑAQUE CITY COLLEGE</h1>
-          <div className="user-info">
-            JOHN DOE (Faculty ID: 2020-00123)
+      <div className="main-content flex-grow-1">
+        <header className="header d-flex justify-content-between align-items-center p-3 border-bottom">
+          <h1 className="m-0 custom-color-green-font custom-font d-none d-md-block">
+            PARAÑAQUE CITY COLLEGE
+          </h1>
+          <button className="btn btn-link text-dark d-md-none" onClick={toggleSidebar} aria-label="Toggle Sidebar">
+            <FontAwesomeIcon icon={faBars} size="lg" />
+          </button>
+
+          <div className="user-info d-flex align-items-center position-relative" ref={dropdownRef}>
+            <span className="me-2">JOHN DOE (Faculty ID: 2020-00123)</span>
             <FontAwesomeIcon
               icon={faUser}
               className="user-icon"
               onClick={toggleDropdown}
+              aria-label="User Menu"
+              style={{ cursor: 'pointer' }}
             />
             {showDropdown && (
-              <div className="dropdown-menu">
-                <div className="dropdown-item" onClick={handleProfileClick}>Profile</div>
-                <div className="dropdown-item" onClick={handleChangePasswordClick}>Change Password</div>
+              <div className="dropdown-menu position-absolute end-0 mt-2 show">
+                <button className="dropdown-item" onClick={handleProfileClick}>
+                  Profile
+                </button>
+                <button className="dropdown-item" onClick={handleChangePasswordClick}>
+                  Change Password
+                </button>
               </div>
             )}
           </div>
         </header>
 
-        {/* Conditionally render content based on the selected section */}
         {selectedSection === 'classes' && (
           <section className="classes-section">
-            <div className="classes-header">
-              <h2>Class Records</h2>
-              <button className="add-class-button" onClick={handleAddNewClass}>+ Add new class</button>
-            </div>
-            <div className="class-box-container">
-              {selectedClass ? (
-                <div className="class-details">
-                  {/* Display details for the selected class */}
-                  <h3>Details for {selectedClass}</h3>
-                </div>
-              ) : (
-                <>
-                  <div className="class-box" onClick={() => handleClassClick('BSIT1-1')}>BSIT 1-1</div>
-                  <div className="class-box" onClick={() => handleClassClick('BSIT1-2')}>BSIT 1-2</div>
-                  <div className="class-box" onClick={() => handleClassClick('BSIT2-1')}>BSIT 2-1</div>
-                  <div className="class-box" onClick={() => handleClassClick('BSIT2-2')}>BSIT 2-2</div>
-                  <div className="class-box" onClick={() => handleClassClick('BSIT3-1')}>BSIT 3-1</div>
-                  <div className="class-box" onClick={() => handleClassClick('BSIT3-2')}>BSIT 3-2</div>
-                  <div className="class-box" onClick={() => handleClassClick('BSIT4-1')}>BSIT 4-1</div>
-                  <div className="class-box" onClick={() => handleClassClick('BSIT4-2')}>BSIT 4-2</div>
-                </>
-              )}
-            </div>
+            <h2 className="custom-font custom-color-green-font">Class Records</h2>
+            {selectedClass ? (
+              <div className="class-details">
+                <h3>Details for {selectedClass}</h3>
+              </div>
+            ) : (
+              <div className="class-box-container">
+                <div className="class-box" onClick={() => handleClassClick('BSIT1-1')}>BSIT 1-1</div>
+                <div className="class-box" onClick={() => handleClassClick('BSIT1-2')}>BSIT 1-2</div>
+                <div className="class-box" onClick={() => handleClassClick('BSIT1-1')}>BSIT 2-1</div>
+                <div className="class-box" onClick={() => handleClassClick('BSIT1-2')}>BSIT 2-2</div>
+                <div className="class-box" onClick={() => handleClassClick('BSIT1-1')}>BSIT 3-1</div>
+                <div className="class-box" onClick={() => handleClassClick('BSIT1-2')}>BSIT 3-2</div>
+                <div className="class-box" onClick={() => handleClassClick('BSIT1-1')}>BSIT 4-1</div>
+                <div className="class-box" onClick={() => handleClassClick('BSIT1-2')}>BSIT 4-2</div>
+              </div>
+            )}
           </section>
         )}
 
         {selectedSection === 'profile' && (
-          <section className="profile-section">
-            <h2>Profile</h2>
-            <div className="profile-info">Faculty ID: 12345</div>
-            <input type="text" placeholder="First Name" className="profile-input" />
-            <input type="text" placeholder="Last Name" className="profile-input" />
-            <input type="email" placeholder="Email" className="profile-input" />
-            <button className="save-button" onClick={handleSaveProfile}>Save</button>
+          <section className="card border-success p-3">
+            <h2 className='custom-color-green-font custom-font'>Profile</h2>
+            <div className="custome-font custom-color-green-font fs-6 mb-2">Faculty ID: 2020-00202-PQ-O</div>
+            <input type="text" placeholder="First Name" className="form-control custom-color-green-font mb-2" required />
+            <input type="text" placeholder="Last Name" className="form-control custom-color-green-font mb-2" required />
+            <input type="email" placeholder="Email" className="form-control custom-color-green-font mb-2" required />
+            <button className="btn custom-color-font bg-custom-color-green p-2" onClick={() => alert('Profile information saved!')}>
+              Save
+            </button>
           </section>
         )}
 
         {selectedSection === 'change-password' && (
-          <section className="change-password-section">
-            <h2>Change Password</h2>
-            <input type="password" placeholder="New Password" className="profile-input" />
-            <button className="save-button" onClick={handleSavePassword}>Save</button>
+          <section className="card border-success p-3">
+            <h2 className='custom-color-green-font custom-font'>Change Password</h2>
+            <input type="password" placeholder="New Password" className="form-control custom-color-green-font mb-2" required />
+            <button className="btn custom-color-font bg-custom-color-green p-2" onClick={() => alert('Password changed successfully!')}>
+              Save
+            </button>
           </section>
         )}
       </div>

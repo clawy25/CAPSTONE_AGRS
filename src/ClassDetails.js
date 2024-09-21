@@ -1,14 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUser, faSearch } from '@fortawesome/free-solid-svg-icons';
+import { faUser, faSignOutAlt, faBars, faChalkboardTeacher, faCalendar, faSearch } from '@fortawesome/free-solid-svg-icons';
 import './Dashboard.css';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
-const ClassDetails = ({ className }) => {
-  const [selectedPeriod, setSelectedPeriod] = useState('midterm');
+
+const ClassDetails = () => {
   const navigate = useNavigate();
   const [showDropdown, setShowDropdown] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [showSidebar, setShowSidebar] = useState(false);
+  const [selectedSection, setSelectedSection] = useState('classes');
+  const [showClassesSubmenu, setShowClassesSubmenu] = useState(false);
+  const [selectedClass, setSelectedClass] = useState(null);
+  const [selectedPeriod, setSelectedPeriod] = useState('midterm'); 
+  const [searchTerm, setSearchTerm] = useState(''); 
+  const dropdownRef = useRef(null);
 
   const handleLogout = () => {
     navigate('/login');
@@ -19,65 +26,108 @@ const ClassDetails = ({ className }) => {
   };
 
   const handleProfileClick = () => {
-    navigate('/profile');
+    setSelectedSection('profile');
     setShowDropdown(false);
   };
 
   const handleChangePasswordClick = () => {
-    navigate('/change-password');
+    setSelectedSection('change-password');
     setShowDropdown(false);
   };
 
-  const handleSearchChange = (e) => {
-    setSearchTerm(e.target.value);
+  const handleClassClick = (className) => {
+    setSelectedClass(className);
+    navigate(`/class-details/${className}`);
+  };
+
+  const toggleSidebar = () => {
+    setShowSidebar(!showSidebar);
   };
 
   const handlePeriodChange = (period) => {
     setSelectedPeriod(period);
   };
 
+  const handleSearchChange = (event) => {
+    setSearchTerm(event.target.value);
+  };
+
+  useEffect(() => {
+    const handleOutsideClick = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    };
+
+    if (showDropdown) {
+      document.addEventListener('click', handleOutsideClick);
+    } else {
+      document.removeEventListener('click', handleOutsideClick);
+    }
+
+    return () => {
+      document.removeEventListener('click', handleOutsideClick);
+    };
+  }, [showDropdown]);
+
   return (
-    <div className="dashboard-container">
-      <div className="sidebar">
-        <img src="/pcc.png" alt="Logo" className="college-logo" />
-        <div className="welcome-message">Hello, John Doe!</div>
-        <nav className="menu">
-          <Link
-            to="/faculty-dashboard"
-            className="menu-item"
-          >
+    <div className="dashboard-container d-flex">
+      <div className={`sidebar bg-custom-color-green ${showSidebar ? 'd-block' : 'd-none d-md-block'}`}>
+        <img src="/pcc.png" alt="Logo" className="college-logo align-items-center ms-5 mb-3" />
+        <div className="welcome-message mb-3 text-center">Hello, John Doe!</div>
+        <nav className="menu mb-3">
+          <Link to="/faculty-dashboard" className="menu-item active d-flex align-items-center mb-2">
+            <FontAwesomeIcon icon={faChalkboardTeacher} className="me-2" />
             CLASSES
           </Link>
-          <Link
-            to="/faculty-schedule"
-            className="menu-item"
-          >
+          <Link to="/faculty-schedule" className="menu-item d-flex align-items-center mb-2">
+            <FontAwesomeIcon icon={faCalendar} className="me-2" />
             SCHEDULE
           </Link>
-          <Link
-            to="/hris"
-            className="menu-item"
-          >
+          <Link to="/hris" className="menu-item d-flex align-items-center mb-2">
+            <FontAwesomeIcon icon={faUser} className="me-2" />
             HRIS
           </Link>
         </nav>
-        <button className="logout-button" onClick={handleLogout}>LOGOUT</button>
+        <div className="container mt-5 pt-5">
+          <button className="btn bg-transparent custom-color-font mb-auto" onClick={handleLogout}>
+            <FontAwesomeIcon icon={faSignOutAlt} className="me-2" />
+            LOGOUT
+          </button>
+        </div>
       </div>
 
-      <div className="main-content">
-        <header className="header">
-          <h1>PARAÑAQUE CITY COLLEGE</h1>
-          <div className="user-info">
-            JOHN DOE (Faculty ID: 2020-00123)
-            <FontAwesomeIcon icon={faUser} className="user-icon" onClick={toggleDropdown} />
+      <div className="main-content flex-grow-1">
+        <header className="header d-flex justify-content-between align-items-center p-3 border-bottom">
+          <h1 className="m-0 custom-color-green-font custom-font d-none d-md-block">
+            PARAÑAQUE CITY COLLEGE
+          </h1>
+          <button className="btn btn-link text-dark d-md-none" onClick={toggleSidebar} aria-label="Toggle Sidebar">
+            <FontAwesomeIcon icon={faBars} size="lg" />
+          </button>
+
+          <div className="user-info d-flex align-items-center position-relative" ref={dropdownRef}>
+            <span className="me-2">JOHN DOE (Faculty ID: 2020-00123)</span>
+            <FontAwesomeIcon
+              icon={faUser}
+              className="user-icon"
+              onClick={toggleDropdown}
+              aria-label="User Menu"
+              style={{ cursor: 'pointer' }}
+            />
             {showDropdown && (
-              <div className="dropdown-menu">
-                <div className="dropdown-item" onClick={handleProfileClick}>Profile</div>
-                <div className="dropdown-item" onClick={handleChangePasswordClick}>Change Password</div>
+              <div className="dropdown-menu position-absolute end-0 mt-2 show">
+                <button className="dropdown-item" onClick={handleProfileClick}>
+                  Profile
+                </button>
+                <button className="dropdown-item" onClick={handleChangePasswordClick}>
+                  Change Password
+                </button>
               </div>
             )}
           </div>
         </header>
+        
 
         <div className="class-details">
           <div className="buttons-container">
@@ -96,21 +146,25 @@ const ClassDetails = ({ className }) => {
           </div>
 
           <div className="search-container">
-            <input type="text" placeholder="Search..." value={searchTerm} onChange={handleSearchChange} className="search-input" />
+            <input
+              type="text"
+              placeholder="Search..."
+              value={searchTerm}
+              onChange={handleSearchChange}
+              className="search-input"
+            />
             <FontAwesomeIcon icon={faSearch} className="search-icon" />
           </div>
 
-          <h2>{className} {selectedPeriod === 'midterm' ? 'Midterm' : 'Finals'}</h2>
+          <h2>{selectedClass} {selectedPeriod === 'midterm' ? 'Midterm' : 'Finals'}</h2>
 
           <div className="table-container">
-            {/* Buttons positioned at the top right corner */}
             <div className="table-actions">
               <button className="add-button">Add New Student</button>
               <button className="add-button">Add New Column</button>
               <button className="add-button">Export</button>
               <button className="add-button">Print</button>
             </div>
-            {/* Buttons positioned at the bottom right corner */}
             <div className="new-buttons">
               <button className="new-action-button">SUMMARY OF GRADES</button>
             </div>
@@ -329,6 +383,7 @@ const ClassDetails = ({ className }) => {
         </div>
       </div>
     </div>
+    
   );
 };
 

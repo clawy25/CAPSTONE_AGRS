@@ -8,44 +8,44 @@ import './App.css';
 export default function Grades() {
   const navigate = useNavigate();
   const [showDropdown, setShowDropdown] = useState(false);
-  const [showSidebar, setShowSidebar] = useState(false); // State to control sidebar visibility
-  const [selectedSection, setSelectedSection] = useState('grades'); // State to track the selected section
+  const [showSidebar, setShowSidebar] = useState(false); 
+  const [selectedSection, setSelectedSection] = useState('grades'); 
 
-  // Function to handle logout
+
   const handleLogout = () => {
     navigate('/login');
   };
 
-  // Function to toggle dropdown visibility
+
   const toggleDropdown = () => {
     setShowDropdown((prevState) => !prevState);
   };
 
-  // Function to handle Profile section display
+
   const handleProfileClick = () => {
-    setSelectedSection('profile'); // Set the selected section to 'profile'
-    setShowDropdown(false); // Hide the dropdown menu
+    setSelectedSection('profile'); 
+    setShowDropdown(false); 
   };
 
-  // Function to handle Change Password section display
+
   const handleChangePasswordClick = () => {
-    setSelectedSection('change-password'); // Set the selected section to 'change-password'
-    setShowDropdown(false); // Hide the dropdown menu
+    setSelectedSection('change-password'); 
+    setShowDropdown(false); 
   };
 
-  // Function to handle save button click for profile
+
   const handleSaveProfile = () => {
     alert('Profile information saved!');
   };
 
-  // Function to handle save button click for change password
+ 
   const handleSavePassword = () => {
     alert('Password changed successfully!');
   };
 
-  // Function to handle print certificate of grades button click
+ 
   const handlePrintCertificate = () => {
-    window.print(); // For demonstration, you can implement custom print logic here
+    window.print(); 
   };
 
   const toggleSidebar = () => {
@@ -56,7 +56,6 @@ export default function Grades() {
 
   return (
     <div className="grades-container">
-      {/* Sidebar with user info and menu */}
       <div
         className={`sidebar bg-custom-color-green ${showSidebar ? 'd-block' : 'd-none d-md-block'}`}
       >
@@ -87,7 +86,6 @@ export default function Grades() {
 
       <div className="main-content flex-grow-1">
         <header className="header d-flex justify-content-between align-items-center p-3 border-bottom">
-          {/* Show H1 on larger screens and burger icon on smaller screens */}
           <h1 className="m-0 custom-color-green-font custom-font d-none d-md-block">
             PARAÑAQUE CITY COLLEGE
           </h1>
@@ -117,7 +115,6 @@ export default function Grades() {
           </div>
         </header>
 
-        {/* Conditionally render content based on the selected section */}
         {selectedSection === 'grades' && (
           <section className="m-3">
             <h2 className='custom-font custom-color-green-font'>Grades AY 2024-2025</h2>
@@ -218,7 +215,6 @@ export default function Grades() {
           </section>
         )}
 
-        {/* Add the Print Certificate button */}
         <div className='row'>
   <div className='col-12 col-md-4'>
     <button className="btn custom-font custom-color-font bg-custom-color-green mt-2 ms-md-3 mt-md-0 w-100 w-md-auto p-2" onClick={handlePrintCertificate}>

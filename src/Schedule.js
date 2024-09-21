@@ -8,37 +8,37 @@ import './App.css';
 const Schedule = () => {
   const navigate = useNavigate();
   const [showDropdown, setShowDropdown] = useState(false);
-  const [showSidebar, setShowSidebar] = useState(false); // State to control sidebar visibility
-  const [selectedSection, setSelectedSection] = useState('schedule'); // State to track the selected section
+  const [showSidebar, setShowSidebar] = useState(false); 
+  const [selectedSection, setSelectedSection] = useState('schedule'); 
 
-  // Function to handle logout
+
   const handleLogout = () => {
     navigate('/login');
   };
 
-  // Function to toggle dropdown visibility
+
   const toggleDropdown = () => {
     setShowDropdown((prevState) => !prevState);
   };
 
-  // Function to handle Profile section display
+
   const handleProfileClick = () => {
-    setSelectedSection('profile'); // Set the selected section to 'profile'
-    setShowDropdown(false); // Hide the dropdown menu
+    setSelectedSection('profile'); 
+    setShowDropdown(false); 
   };
 
-  // Function to handle Change Password section display
+
   const handleChangePasswordClick = () => {
-    setSelectedSection('change-password'); // Set the selected section to 'change-password'
-    setShowDropdown(false); // Hide the dropdown menu
+    setSelectedSection('change-password'); 
+    setShowDropdown(false); 
   };
 
-  // Function to handle save button click for profile
+
   const handleSaveProfile = () => {
     alert('Profile information saved!');
   };
 
-  // Function to handle save button click for change password
+
   const handleSavePassword = () => {
     alert('Password changed successfully!');
   };
@@ -50,10 +50,7 @@ const Schedule = () => {
 
   return (
     <div className="schedule-container">
-      {/* Sidebar with user info and menu */}
-      <div
-        className={`sidebar bg-custom-color-green ${showSidebar ? 'd-block' : 'd-none d-md-block'}`}
-      >
+      <div className={`sidebar bg-custom-color-green ${showSidebar ? 'd-block' : 'd-none d-md-block'}`}>
         <img src="pcc.png" alt="Logo" className="college-logo align-items-center ms-5 mb-3 " />
         <div className="welcome-message mb-3 text-center">Hello, Abigail!</div>
         <nav className="menu mb-3">
@@ -73,15 +70,13 @@ const Schedule = () => {
         <div className='container mt-5 pt-5'>
           <button className="btn bg-transparent custom-color-font mb-auto" onClick={handleLogout}>
           <FontAwesomeIcon icon={faSignOutAlt} className="me-2" />
-        LOGOUT
-      </button>
-        </div>
-        
+          LOGOUT
+        </button>
+       </div>
       </div>
 
       <div className="main-content flex-grow-1">
         <header className="header d-flex justify-content-between align-items-center p-3 border-bottom">
-          {/* Show H1 on larger screens and burger icon on smaller screens */}
           <h1 className="m-0 custom-color-green-font custom-font d-none d-md-block">
             PARAÑAQUE CITY COLLEGE
           </h1>
@@ -109,7 +104,6 @@ const Schedule = () => {
           </div>
         </header>
 
-        {/* Conditionally render content based on the selected section */}
         {selectedSection === 'schedule' && (
           <>
             <section className="m-3">
