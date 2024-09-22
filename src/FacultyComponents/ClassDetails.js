@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUser, faSignOutAlt, faBars, faChalkboardTeacher, faCalendar, faSearch } from '@fortawesome/free-solid-svg-icons';
-import './Dashboard.css';
+import '../StudentComponents/Dashboard.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 

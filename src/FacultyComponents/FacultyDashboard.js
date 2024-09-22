@@ -1,17 +1,18 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUser, faCalendarAlt, faGraduationCap, faSignOutAlt, faBars } from '@fortawesome/free-solid-svg-icons';
-import './Dashboard.css';
-import './App.css';
+import { faUser, faSignOutAlt, faBars, faChalkboardTeacher, faCalendar } from '@fortawesome/free-solid-svg-icons';
+import '../StudentComponents/Dashboard.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
-const Dashboard = () => {
+const FacultyDashboard = () => {
   const navigate = useNavigate();
   const [showDropdown, setShowDropdown] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
-  const [selectedSection, setSelectedSection] = useState('enrollment');
-  const dropdownRef = useRef(null); 
+  const [selectedSection, setSelectedSection] = useState('classes');
+  const [showClassesSubmenu, setShowClassesSubmenu] = useState(false);
+  const [selectedClass, setSelectedClass] = useState(null);
+  const dropdownRef = useRef(null);
 
   const handleLogout = () => {
     navigate('/login');
@@ -31,10 +32,14 @@ const Dashboard = () => {
     setShowDropdown(false);
   };
 
+  const handleClassClick = (className) => {
+    setSelectedClass(className);
+    navigate(`/class-details/${className}`);
+  };
+
   const toggleSidebar = () => {
     setShowSidebar(!showSidebar);
   };
-
 
   useEffect(() => {
     const handleOutsideClick = (event) => {
@@ -58,19 +63,19 @@ const Dashboard = () => {
     <div className="dashboard-container d-flex">
       <div className={`sidebar bg-custom-color-green ${showSidebar ? 'd-block' : 'd-none d-md-block'}`}>
         <img src="pcc.png" alt="Logo" className="college-logo align-items-center ms-5 mb-3" />
-        <div className="welcome-message mb-3 text-center">Hello, Abigail!</div>
+        <div className="welcome-message mb-3 text-center">Hello, John Doe!</div>
         <nav className="menu mb-3">
-          <Link to="/dashboard" className="menu-item active d-flex align-items-center mb-2">
-            <FontAwesomeIcon icon={faUser} className="me-2" />
-            ENROLLMENT
+          <Link to="/faculty-dashboard" className="menu-item active d-flex align-items-center mb-2">
+            <FontAwesomeIcon icon={faChalkboardTeacher} className="me-2" />
+            CLASSES
           </Link>
-          <Link to="/schedule" className="menu-item d-flex align-items-center mb-2">
-            <FontAwesomeIcon icon={faCalendarAlt} className="me-2" />
+          <Link to="/faculty-schedule" className="menu-item d-flex align-items-center mb-2">
+            <FontAwesomeIcon icon={faCalendar} className="me-2" />
             SCHEDULE
           </Link>
-          <Link to="/grades" className="menu-item d-flex align-items-center mb-2">
-            <FontAwesomeIcon icon={faGraduationCap} className="me-2" />
-            GRADES
+          <Link to="/hris" className="menu-item d-flex align-items-center mb-2">
+            <FontAwesomeIcon icon={faUser} className="me-2" />
+            HRIS
           </Link>
         </nav>
         <div className="container mt-5 pt-5">
@@ -91,7 +96,7 @@ const Dashboard = () => {
           </button>
 
           <div className="user-info d-flex align-items-center position-relative" ref={dropdownRef}>
-            <span className="me-2">CRUZ, ABIGAIL (2020-00202-PQ-O)</span>
+            <span className="me-2">JOHN DOE (Faculty ID: 2020-00123)</span>
             <FontAwesomeIcon
               icon={faUser}
               className="user-icon"
@@ -112,24 +117,32 @@ const Dashboard = () => {
           </div>
         </header>
 
-        {selectedSection === 'enrollment' && (
-          <section className="m-3">
-            <h2 className="custom-font custom-color-green-font">Enrollment</h2>
-            <div className="card bg-custom-color-green text-white fw-bold border-1 rounded mb-2">
-              <span className="card-header">STATUS: Grades not complete</span>
-              <div className="card-body bg-white rounded border-2 border-success d-flex justify-content-center align-items-center">
-                <p className="card-text custom-font fs-2 border-1 fw-bold text-success m-0">
-                  Online Enrollment is not open yet.
-                </p>
+        {selectedSection === 'classes' && (
+          <section className="classes-section">
+            <h2 className="custom-font custom-color-green-font">Class Records</h2>
+            {selectedClass ? (
+              <div className="class-details">
+                <h3>Details for {selectedClass}</h3>
               </div>
-            </div>
+            ) : (
+              <div className="class-box-container">
+                <div className="class-box" onClick={() => handleClassClick('BSIT1-1')}>BSIT 1-1</div>
+                <div className="class-box" onClick={() => handleClassClick('BSIT1-2')}>BSIT 1-2</div>
+                <div className="class-box" onClick={() => handleClassClick('BSIT1-1')}>BSIT 2-1</div>
+                <div className="class-box" onClick={() => handleClassClick('BSIT1-2')}>BSIT 2-2</div>
+                <div className="class-box" onClick={() => handleClassClick('BSIT1-1')}>BSIT 3-1</div>
+                <div className="class-box" onClick={() => handleClassClick('BSIT1-2')}>BSIT 3-2</div>
+                <div className="class-box" onClick={() => handleClassClick('BSIT1-1')}>BSIT 4-1</div>
+                <div className="class-box" onClick={() => handleClassClick('BSIT1-2')}>BSIT 4-2</div>
+              </div>
+            )}
           </section>
         )}
 
         {selectedSection === 'profile' && (
           <section className="card border-success p-3">
             <h2 className='custom-color-green-font custom-font'>Profile</h2>
-            <div className="custome-font custom-color-green-font fs-6 mb-2">Student Number: 2020-00202-PQ-O</div>
+            <div className="custome-font custom-color-green-font fs-6 mb-2">Faculty ID: 2020-00202-PQ-O</div>
             <input type="text" placeholder="First Name" className="form-control custom-color-green-font mb-2" required />
             <input type="text" placeholder="Last Name" className="form-control custom-color-green-font mb-2" required />
             <input type="email" placeholder="Email" className="form-control custom-color-green-font mb-2" required />
@@ -153,4 +166,4 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard;
+export default FacultyDashboard;

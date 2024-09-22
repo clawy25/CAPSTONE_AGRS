@@ -2,16 +2,14 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUser, faSignOutAlt, faBars, faChalkboardTeacher, faCalendar } from '@fortawesome/free-solid-svg-icons';
-import './Dashboard.css';
+import '../StudentComponents/Dashboard.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
-const FacultyDashboard = () => {
+const FacultySchedulePage = () => {
   const navigate = useNavigate();
   const [showDropdown, setShowDropdown] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
-  const [selectedSection, setSelectedSection] = useState('classes');
-  const [showClassesSubmenu, setShowClassesSubmenu] = useState(false);
-  const [selectedClass, setSelectedClass] = useState(null);
+  const [selectedSection, setSelectedSection] = useState('schedule');
   const dropdownRef = useRef(null);
 
   const handleLogout = () => {
@@ -30,11 +28,6 @@ const FacultyDashboard = () => {
   const handleChangePasswordClick = () => {
     setSelectedSection('change-password');
     setShowDropdown(false);
-  };
-
-  const handleClassClick = (className) => {
-    setSelectedClass(className);
-    navigate(`/class-details/${className}`);
   };
 
   const toggleSidebar = () => {
@@ -65,11 +58,11 @@ const FacultyDashboard = () => {
         <img src="pcc.png" alt="Logo" className="college-logo align-items-center ms-5 mb-3" />
         <div className="welcome-message mb-3 text-center">Hello, John Doe!</div>
         <nav className="menu mb-3">
-          <Link to="/faculty-dashboard" className="menu-item active d-flex align-items-center mb-2">
+          <Link to="/faculty-dashboard" className="menu-item d-flex align-items-center mb-2">
             <FontAwesomeIcon icon={faChalkboardTeacher} className="me-2" />
             CLASSES
           </Link>
-          <Link to="/faculty-schedule" className="menu-item d-flex align-items-center mb-2">
+          <Link to="/faculty-schedule" className="menu-item active d-flex align-items-center mb-2">
             <FontAwesomeIcon icon={faCalendar} className="me-2" />
             SCHEDULE
           </Link>
@@ -117,25 +110,90 @@ const FacultyDashboard = () => {
           </div>
         </header>
 
-        {selectedSection === 'classes' && (
-          <section className="classes-section">
-            <h2 className="custom-font custom-color-green-font">Class Records</h2>
-            {selectedClass ? (
-              <div className="class-details">
-                <h3>Details for {selectedClass}</h3>
-              </div>
-            ) : (
-              <div className="class-box-container">
-                <div className="class-box" onClick={() => handleClassClick('BSIT1-1')}>BSIT 1-1</div>
-                <div className="class-box" onClick={() => handleClassClick('BSIT1-2')}>BSIT 1-2</div>
-                <div className="class-box" onClick={() => handleClassClick('BSIT1-1')}>BSIT 2-1</div>
-                <div className="class-box" onClick={() => handleClassClick('BSIT1-2')}>BSIT 2-2</div>
-                <div className="class-box" onClick={() => handleClassClick('BSIT1-1')}>BSIT 3-1</div>
-                <div className="class-box" onClick={() => handleClassClick('BSIT1-2')}>BSIT 3-2</div>
-                <div className="class-box" onClick={() => handleClassClick('BSIT1-1')}>BSIT 4-1</div>
-                <div className="class-box" onClick={() => handleClassClick('BSIT1-2')}>BSIT 4-2</div>
-              </div>
-            )}
+        {selectedSection === 'schedule' && (
+          <section className="m-3">
+            <h2 className='custom-font custom-color-green-font'>Schedule</h2>
+            <div className='card card-success border-success rounded'>
+              <table className="table">
+                <thead className='table-success'>
+                  <tr>
+                    <th className='text-success custom-font'>Subject</th>
+                    <th className='text-success custom-font'>Class</th>
+                    <th className='text-success custom-font'>Time</th>
+                    <th className='text-success custom-font'>Hours</th>
+                  </tr>
+                </thead>
+                <tbody>
+                <tr>
+                  <td className='custom-font'>Introduction to Information Technology</td>
+                  <td className='custom-font'>BSIT 3-1</td>
+                  <td className='custom-font'>08:00 AM - 09:30 AM (Mon, Wed)</td>
+                  <td className='custom-font'>1.5</td>
+                </tr>
+                <tr>
+                  <td className='custom-font'>Computer Programming</td>
+                  <td className='custom-font'>BSIT 3-1</td>
+                  <td className='custom-font'>09:40 AM - 11:10 AM (Mon, Wed)</td>
+                  <td className='custom-font'>1.5</td>
+                </tr>
+                <tr>
+                  <td className='custom-font'>Discrete Mathematics</td>
+                  <td className='custom-font'>BSIT 3-1</td>
+                  <td className='custom-font'>02:00 PM - 03:00 PM (Mon, Wed)</td>
+                  <td className='custom-font'>1.5</td>
+                </tr>
+                <tr>
+                  <td className='custom-font'>Data Structures and Algorithm</td>
+                  <td className='custom-font'>BSIT 3-1</td>
+                  <td className='custom-font'>08:00 AM - 09:30 AM (Tue, Thu)</td>
+                  <td className='custom-font'>1.5</td>
+                </tr>
+                <tr>
+                  <td className='custom-font'>Web Development</td>
+                  <td className='custom-font'>BSIT 3-1</td>
+                  <td className='custom-font'>01:00 PM - 02:30 PM (Tue)</td>
+                  <td className='custom-font'>1.5</td>
+                </tr>
+                <tr>
+                  <td className='custom-font'>Object Oriented Programming</td>
+                  <td className='custom-font'>BSIT 3-1</td>
+                  <td className='custom-font'>08:00 AM - 11:00 AM (Fri)</td>
+                  <td className='custom-font'>3</td>
+                </tr>
+                <tr>
+                  <td className='custom-font'>Human Computer Interaction</td>
+                  <td className='custom-font'>BSIT 3-1</td>
+                  <td className='custom-font'>07:00 AM - 09:30 AM (Sat)</td>
+                  <td className='custom-font'>2</td>
+                </tr>
+                <tr>
+                  <td className='custom-font'>Network Administration</td>
+                  <td className='custom-font'>BSIT 3-1</td>
+                  <td className='custom-font'>01:00 PM - 02:30 PM (Wed, Fri)</td>
+                  <td className='custom-font'>1.5</td>
+                </tr>
+                <tr>
+                  <td className='custom-font'>People and the Earth's Ecosystem</td>
+                  <td className='custom-font'>BSIT 3-1</td>
+                  <td className='custom-font'>11:20 AM - 12:50 PM (Mon, Thu)</td>
+                  <td className='custom-font'>1.5</td>
+                </tr>
+                <tr>
+                  <td className='custom-font'>Database Administration</td>
+                  <td className='custom-font'>BSIT 3-1</td>
+                  <td className='custom-font'>02:40 PM - 04:10 PM (Tue, Thu)</td>
+                  <td className='custom-font'>1.5</td>
+                </tr>
+                <tr>
+                  <td className='custom-font'>Multimedia</td>
+                  <td className='custom-font'>BSIT 3-1</td>
+                  <td className='custom-font'>08:00 AM - 11:00 AM (Fri)</td>
+                  <td className='custom-font'>3</td>
+                </tr>
+
+                </tbody>
+              </table>
+            </div>
           </section>
         )}
 
@@ -166,4 +224,4 @@ const FacultyDashboard = () => {
   );
 };
 
-export default FacultyDashboard;
+export default FacultySchedulePage;

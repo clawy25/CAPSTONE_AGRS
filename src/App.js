@@ -2,14 +2,14 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import LoginPage from './LoginPage';
-import StudentPage from './StudentPage'; 
-import FacultyPage from './FacultyPage'; 
-import Dashboard from './Dashboard'; 
-import Schedule from './Schedule';
-import Grades from './Grades'; 
-import FacultyDashboard from './FacultyDashboard';
-import FacultySchedulePage from './FacultySchedulePage';
-import ClassDetails from './ClassDetails';
+import StudentPage from './StudentComponents/StudentPage'; 
+import FacultyPage from './FacultyComponents/FacultyPage'; 
+import Dashboard from './StudentComponents/Dashboard'; 
+import Schedule from './StudentComponents/Schedule';
+import Grades from './StudentComponents/Grades'; 
+import FacultyDashboard from './FacultyComponents/FacultyDashboard';
+import FacultySchedulePage from './FacultyComponents/FacultySchedulePage';
+import ClassDetails from './FacultyComponents/ClassDetails';
 import ErrorPage from './ErrorPage';
 
 const App = () => {
