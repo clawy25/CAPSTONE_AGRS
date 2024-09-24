@@ -2,6 +2,7 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import LoginPage from './LoginPage';
+import LoginPage2 from './LoginPage2';
 import StudentPage from './StudentComponents/StudentPage'; 
 import FacultyPage from './FacultyComponents/FacultyPage'; 
 import Dashboard from './StudentComponents/StudentDashboard'; 
@@ -12,7 +13,9 @@ import FacultySchedulePage from './FacultyComponents/FacultySchedulePage';
 import ClassDetails from './FacultyComponents/ClassDetails';
 import RegistrarDashboard from './RegistrarComponents/RegistrarDashboard';
 import RegistrarStudents from './RegistrarComponents/RegistrarStudents';
+import RegistrarPage from './RegistrarComponents/RegistrarPage';
 import ProgramHeadDashboard from './ProgramHeadComponents/ProgramHeadDashboard';
+import ProgramHeadPage from './ProgramHeadComponents/ProgramHeadPage';
 import ErrorPage from './ErrorPage';
 
 
@@ -20,8 +23,11 @@ const App = () => {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/login2" element={<LoginPage2 />} />
       <Route path="/student" element={<StudentPage />} /> 
       <Route path="/faculty" element={<FacultyPage />} /> 
+      <Route path="/registrar" element={<RegistrarPage />} /> 
+      <Route path="/programHead" element={<ProgramHeadPage />} /> 
       <Route path="/dashboard" element={<Dashboard />} /> 
       <Route path="/schedule" element={<Schedule />} /> 
       <Route path="/faculty-schedule" element={<FacultySchedulePage />} /> 

@@ -7,7 +7,6 @@ export default function ErrorPage() {
         <div className="container-fluid p-5">
 
             <h1 className='p-5 fs-1'>Nawawala ka na</h1>
-            <h4>Disregard yung Registrar and Program head button sa LoginPage, for testing purposes lang</h4>
         </div>
     )
 } 

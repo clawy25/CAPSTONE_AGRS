@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom'; 
 import './App.css';
 
-export default function LoginPage() {
+export default function LoginPage2() {
   const navigate = useNavigate(); 
 
   const handleStudentClick = () => {
@@ -11,6 +11,14 @@ export default function LoginPage() {
 
   const handleFacultyClick = () => {
     navigate('/faculty'); 
+  };
+
+  const handleRegistrarClick = () => {
+    navigate('/registrar'); 
+  };
+
+  const handleProgramHeadClick = () => {
+    navigate('/programHead'); 
   };
 
   return (
@@ -41,18 +49,17 @@ export default function LoginPage() {
             <button
               className="btn bg-custom-color-yellow custom-font custom-button fs-5 fw-semibold"
               type="button"
-              onClick={handleStudentClick}
+              onClick={handleRegistrarClick}
             >
-              Student
+              Registrar
             </button>
             <button
               className="btn bg-custom-color-yellow custom-font custom-button fs-5 fw-semibold"
               type="button"
-              onClick={handleFacultyClick}
+              onClick={handleProgramHeadClick}
             >
-              Faculty
+              Program Head
             </button>
-            
           </div>
         </div>
       </div>
