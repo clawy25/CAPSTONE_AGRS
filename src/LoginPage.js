@@ -13,6 +13,14 @@ export default function LoginPage() {
     navigate('/faculty'); 
   };
 
+  const handleRegistrarClick = () => {
+    navigate('/registrar-dashboard'); 
+  };
+
+  const handleProgramHeadClick = () => {
+    navigate('/programHead-dashboard'); 
+  };
+
   return (
     <div className="container-fluid">
       <div className="row d-flex flex-column flex-md-row">
@@ -26,6 +34,12 @@ export default function LoginPage() {
         </div>
         
         <div className="col-12 col-md-6 bg-custom-color-green d-flex flex-column justify-content-center align-items-center min-vh-100 order-1 order-md-2">
+        <img
+            className="miniPCClogo img-fluid rounded mt-4 mb-3 pt-md-3"
+            src="pcc.png"
+            alt="PCC Logo"
+            style={{ maxWidth: '17%', height: 'auto' }}
+          />
           <h1 className="custom-font text-light fs-1 fw-bold text-center mb-4">
             Select your <br />
             destination.
@@ -45,6 +59,20 @@ export default function LoginPage() {
               onClick={handleFacultyClick}
             >
               Faculty
+            </button>
+            <button
+              className="btn bg-custom-color-yellow custom-font custom-button fs-5 fw-semibold"
+              type="button"
+              onClick={handleRegistrarClick}
+            >
+              Registrar
+            </button>
+            <button
+              className="btn bg-custom-color-yellow custom-font custom-button fs-5 fw-semibold"
+              type="button"
+              onClick={handleProgramHeadClick}
+            >
+              Program Head
             </button>
           </div>
         </div>

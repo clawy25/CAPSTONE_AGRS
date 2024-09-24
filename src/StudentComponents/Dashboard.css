@@ -2,17 +2,22 @@
 
 .dashboard-container {
   display: flex;
+  min-height: 100vh; /* Ensure the container takes the full height of the viewport */
 }
 
 .sidebar {
-  width: 20%;
-  background-color: #004400;
+  flex-shrink: 0; /* Ensure the sidebar doesn't shrink */
+  width: 250px; /* Set a width for the sidebar */
+  background-color: #4CAF50; /* Example color */
   padding: 20px;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
 }
+
+.main-content {
+  flex-grow: 1; /* This makes the main content take the remaining space */
+  background-color: #f5f5f5; /* Example color */
+  padding: 20px;
+}
+
 
 .logout-button {
   background-color: #006600;
@@ -30,10 +35,7 @@
   background-color: #006600;
 }
 
-.main-content {
-  width: 80%;
-  padding: 20px;
-}
+
 
 .header {
   display: flex;

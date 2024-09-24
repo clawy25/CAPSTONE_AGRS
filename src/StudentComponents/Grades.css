@@ -1,90 +1,129 @@
-/* src/Grades.css */
+/* src/Schedule.css */
 
-.grades-container {
-    display: flex;
-    height: 100vh;
-  }
-  
-  .sidebar {
-    width: 250px;
-    background-color: #004d00;
-    color: white;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 20px;
-  }
-  
-  .college-logo {
-    width: 80px;
-    margin-bottom: 20px;
-  }
-  
-  .welcome-message {
-    font-size: 18px;
-    margin-bottom: 40px;
-  }
-  
-  .menu {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-  }
-  
-  .menu-item {
-    color: #ffeb3b;
-    text-decoration: none;
-    padding: 10px 0;
-    text-align: left;
-    width: 100%;
-    margin-left: 10px;
-  }
-  
-  .menu-item.active {
-    font-weight: bold;
-  }
-  
-  .logout-button {
-    margin-top: auto;
-    background: transparent;
-    border: none;
-    color: #ffeb3b;
-    font-size: 14px;
-    cursor: pointer;
-  }
-  
-  .main-content {
-    flex: 1;
-    padding: 20px;
-  }
-  
-  .header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-  }
-  
-  .grades-section {
-    padding: 20px;
-    border: 1px solid #004d00;
-    background-color: #f5f5f5;
-  }
+.schedule-container {
+  display: flex;
+  height: 100vh;
+}
 
-  .print-button {
-    position: absolute;
-    bottom: 200px;
-    right: 20px;
-    background-color: #004d00;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 5px;
-    font-size: 16px;
-    cursor: pointer;
-  }
-  
-  .print-button:hover {
-    background-color: #003300;
-  }
-  
+
+.sidebar {
+  width: 250px;
+  background-color: #004d00;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+}
+
+.college-logo {
+  width: 80px;
+  margin-bottom: 20px;
+}
+
+.welcome-message {
+  font-size: 18px;
+  margin-bottom: 40px;
+}
+
+.menu {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.menu-item {
+  color: #ffeb3b;
+  text-decoration: none;
+  padding: 10px 0;
+  text-align: left;
+  width: 100%;
+  margin-left: 10px;
+}
+
+.menu-item.active {
+  font-weight: bold;
+}
+
+.logout-button {
+  margin-top: auto;
+  background: transparent;
+  border: none;
+  color: #ffeb3b;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+
+.main-content {
+  flex: 1;
+  padding: 20px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.schedule-section {
+  padding: 20px;
+  border: 1px solid #004d00;
+  background-color: #f5f5f5;
+}
+
+
+.schedule-table {
+width: 100%; 
+max-width: 1200px; 
+border-collapse: collapse;
+margin: 20px 0;
+}
+
+.schedule-table th, .schedule-table td {
+border: 1px solid #ddd;
+padding: 10px;
+text-align: left;
+}
+
+.schedule-table th {
+background-color: #f4f4f4; 
+}
+
+.schedule-table tr:nth-child(even) {
+background-color: #f9f9f9; 
+}
+
+.schedule-table tr:hover {
+background-color: #f1f1f1; 
+}
+
+.no-schedule-message {
+font-size: 16px;
+color: #666; 
+}
+
+.user-info {
+position: relative;
+}
+
+.dropdown-menu {
+position: absolute;
+right: 0;
+top: 100%;
+background-color: white;
+border: 1px solid #ccc;
+z-index: 1000;
+}
+
+.dropdown-item {
+padding: 10px;
+cursor: pointer;
+}
+
+.dropdown-item:hover {
+background-color: #f1f1f1;
+}
+
+

@@ -1,17 +1,25 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUser, faCalendarAlt, faGraduationCap, faSignOutAlt, faBars } from '@fortawesome/free-solid-svg-icons';
+import { faUser, faCalendarAlt, faGraduationCap, faBars } from '@fortawesome/free-solid-svg-icons';
 import './Dashboard.css';
 import '../App.css';
-import 'bootstrap/dist/css/bootstrap.min.css';
+import StudentEnrollment from './StudentEnrollment';
+import StudentSchedule from './StudentSchedule';
+import StudentGrades from './StudentGrades';
 
-const Dashboard = () => {
+export default function StudentDashboard() {
   const navigate = useNavigate();
   const [showDropdown, setShowDropdown] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
-  const [selectedSection, setSelectedSection] = useState('enrollment');
-  const dropdownRef = useRef(null); 
+  const [selectedSection, setSelectedSection] = useState('enrollment'); // Default section
+  const dropdownRef = useRef(null);
+
+  const SECTIONS = {
+    ENROLLMENT: 'enrollment',
+    SCHEDULE: 'schedule',
+    GRADES: 'grades',
+  };
 
   const handleLogout = () => {
     navigate('/login');
@@ -19,6 +27,10 @@ const Dashboard = () => {
 
   const toggleDropdown = () => {
     setShowDropdown((prevState) => !prevState);
+  };
+
+  const toggleSidebar = () => {
+    setShowSidebar(!showSidebar);
   };
 
   const handleProfileClick = () => {
@@ -30,11 +42,6 @@ const Dashboard = () => {
     setSelectedSection('change-password');
     setShowDropdown(false);
   };
-
-  const toggleSidebar = () => {
-    setShowSidebar(!showSidebar);
-  };
-
 
   useEffect(() => {
     const handleOutsideClick = (event) => {
@@ -57,30 +64,51 @@ const Dashboard = () => {
   return (
     <div className="dashboard-container d-flex">
       <div className={`sidebar bg-custom-color-green ${showSidebar ? 'd-block' : 'd-none d-md-block'}`}>
-        <img src="pcc.png" alt="Logo" className="college-logo align-items-center ms-5 mb-3" />
-        <div className="welcome-message mb-3 text-center">Hello, Abigail!</div>
-        <nav className="menu mb-3">
-          <Link to="/dashboard" className="menu-item active d-flex align-items-center mb-2">
-            <FontAwesomeIcon icon={faUser} className="me-2" />
-            ENROLLMENT
-          </Link>
-          <Link to="/schedule" className="menu-item d-flex align-items-center mb-2">
-            <FontAwesomeIcon icon={faCalendarAlt} className="me-2" />
-            SCHEDULE
-          </Link>
-          <Link to="/grades" className="menu-item d-flex align-items-center mb-2">
-            <FontAwesomeIcon icon={faGraduationCap} className="me-2" />
-            GRADES
-          </Link>
-        </nav>
+        {/* Close button (X) */}
+        <button 
+          className="close-sidebar-btn" 
+          onClick={() => setShowSidebar(false)}
+          aria-label="Close Sidebar"
+        >
+          &times;
+        </button>
+              <img src="pcc.png" alt="Logo" className="college-logo align-items-center ms-5 mb-3" />
+              <div className="welcome-message mb-3 text-center">Hello, Abigail!</div>
+              <nav className="menu mb-3">
+              <Link
+                to=""
+                className={`menu-item d-flex align-items-center mb-2 ${selectedSection === SECTIONS.ENROLLMENT ? 'active' : ''}`}
+                onClick={() => {setSelectedSection(SECTIONS.ENROLLMENT); setShowSidebar(false);}}
+              >
+                <FontAwesomeIcon icon={faUser} className="me-2" />
+                ENROLLMENT
+            </Link>
+            <Link
+                to=""
+                className={`menu-item d-flex align-items-center mb-2 ${selectedSection === SECTIONS.SCHEDULE ? 'active' : ''}`}
+                onClick={() => {setSelectedSection(SECTIONS.SCHEDULE); setShowSidebar(false);}}
+              >
+                <FontAwesomeIcon icon={faCalendarAlt} className="me-2" />
+                SCHEDULE
+            </Link>
+            <Link
+                to=""
+                className={`menu-item d-flex align-items-center mb-2 ${selectedSection === SECTIONS.GRADES ? 'active' : ''}`}
+                onClick={() => {setSelectedSection(SECTIONS.GRADES); setShowSidebar(false);}}
+              >
+                <FontAwesomeIcon icon={faGraduationCap} className="me-2" />
+                GRADES
+            </Link>
+</nav>
+
       </div>
 
       <div className="main-content flex-grow-1">
-        <header className="header d-flex justify-content-between align-items-center p-3 border-bottom">
+        <header className="header d-flex justify-content-between align-items-center p-3 border-bottom rounded">
           <h1 className="m-0 custom-color-green-font custom-font d-none d-md-block">
             PARAÑAQUE CITY COLLEGE
           </h1>
-          <button className="btn btn-link text-dark d-md-none" onClick={toggleSidebar} aria-label="Toggle Sidebar">
+          <button className="btn btn-link custom-color-green-font d-md-none" onClick={toggleSidebar} aria-label="Toggle Sidebar">
             <FontAwesomeIcon icon={faBars} size="lg" />
           </button>
 
@@ -110,23 +138,30 @@ const Dashboard = () => {
         </header>
 
         {selectedSection === 'enrollment' && (
-          <section className="m-3">
+          <section className="mt-3 ms-0">
             <h2 className="custom-font custom-color-green-font">Enrollment</h2>
-            <div className="card bg-custom-color-green text-white fw-bold border-1 rounded mb-2">
-              <span className="card-header">STATUS: Grades not complete</span>
-              <div className="card-body bg-white rounded border-2 border-success d-flex justify-content-center align-items-center">
-                <p className="card-text custom-font fs-2 border-1 fw-bold text-success m-0">
-                  Online Enrollment is not open yet.
-                </p>
-              </div>
-            </div>
+            <StudentEnrollment />
+          </section>
+        )}
+
+        {selectedSection === 'schedule' && (
+          <section className="m-3 ms-0">
+            <h2 className="custom-font custom-color-green-font">Schedule</h2>
+           <StudentSchedule />
+          </section>
+        )}
+
+        {selectedSection === 'grades' && (
+          <section className="m-3 ms-0">
+            <h2 className="custom-font custom-color-green-font">Grades</h2>
+            <StudentGrades />
           </section>
         )}
 
         {selectedSection === 'profile' && (
           <section className="card border-success p-3">
-            <h2 className='custom-color-green-font custom-font'>Profile</h2>
-            <div className="custome-font custom-color-green-font fs-6 mb-2">Student Number: 2020-00202-PQ-O</div>
+            <h2 className="custom-color-green-font custom-font">Profile</h2>
+            <div className="custom-font custom-color-green-font fs-6 mb-2">Student Number: 2020-00202-PQ-O</div>
             <input type="text" placeholder="First Name" className="form-control custom-color-green-font mb-2" required />
             <input type="text" placeholder="Last Name" className="form-control custom-color-green-font mb-2" required />
             <input type="email" placeholder="Email" className="form-control custom-color-green-font mb-2" required />
@@ -138,7 +173,7 @@ const Dashboard = () => {
 
         {selectedSection === 'change-password' && (
           <section className="card border-success p-3">
-            <h2 className='custom-color-green-font custom-font'>Change Password</h2>
+            <h2 className="custom-color-green-font custom-font">Change Password</h2>
             <input type="password" placeholder="New Password" className="form-control custom-color-green-font mb-2" required />
             <button className="btn custom-color-font bg-custom-color-green p-2" onClick={() => alert('Password changed successfully!')}>
               Save
@@ -148,6 +183,4 @@ const Dashboard = () => {
       </div>
     </div>
   );
-};
-
-export default Dashboard;
+}

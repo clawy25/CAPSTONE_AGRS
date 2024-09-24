@@ -38,6 +38,12 @@ export default function FacultyPage() {
 
              
                     <div className="col-12 col-md-6 bg-custom-color-green d-flex flex-column justify-content-center align-items-center min-vh-100 order-1 order-md-2">
+                        <img
+                            className="miniPCClogo img-fluid rounded mt-4 mb-3 pt-md-3"
+                            src="pcc.png"
+                            alt="PCC Logo"
+                            style={{ maxWidth: '17%', height: 'auto' }}
+                        />
                         <h1 className="custom-font text-light fs-1 fw-bold text-center mb-4">
                            PARCOL-SIS <br />Faculty Module
                         </h1>
