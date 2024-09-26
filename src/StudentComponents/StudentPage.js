@@ -6,32 +6,68 @@ export default function StudentPage() {
   const navigate = useNavigate();
   const [studentId, setStudentId] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false); 
 
   const handleLogin = (e) => {
     e.preventDefault();
+
+    // Reset error message
+    setError('');
+
+    // Student ID validation
+    const studentIdPattern = /^\d{4}-\d{5}-PCC-\d{1}$/;
+    if (!studentIdPattern.test(studentId)) {
+      setError('Student ID must follow the format (e.g., 2024-00123-PCC-4)');
+      return;
+    }
+
+    // Password validation
+    if (/\s/.test(password)) {
+      // If password contains any space, prevent form submission
+      setError('Password must not have spaces.');
+      return;
+    }
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters long.');
+      return;
+    }
+    if (!/\d/.test(password)) {
+      setError('Password must contain at least one digit.');
+      return;
+    }
+    if (!/[A-Z]/.test(password)) {
+      setError('Password must contain at least one uppercase letter.');
+      return;
+    }
+
     console.log('Student ID:', studentId);
     console.log('Password:', password);
-    navigate('/dashboard');
+    navigate('/dashboard'); // Proceed to dashboard if validation passes
   };
 
   const handleBackClick = () => {
-    navigate('/login'); 
+    navigate('/login');
+  };
+
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword); // Toggle the password visibility
   };
 
   return (
     <div className="container-fluid">
       <div className="row no-gutters">
         <div className="col-12 col-md-6 p-0 position-relative d-none d-md-block">
-          <img 
-            className="img-fluid w-100 h-100" 
+          <img
+            className="img-fluid w-100 h-100"
             src='pccCover.jpg'
-            alt="PCC Building" 
-            style={{ objectFit: 'cover', minHeight: '100vh' }} 
+            alt="PCC Building"
+            style={{ objectFit: 'cover', minHeight: '100vh' }}
           />
-          <img 
-            src='pcc.png' 
-            alt="PCC Logo" 
-            className="logo position-absolute top-0 start-0 m-3" 
+          <img
+            src='pcc.png'
+            alt="PCC Logo"
+            className="logo position-absolute top-0 start-0 m-3"
             style={{ maxWidth: '150px' }}
           />
         </div>
@@ -47,33 +83,50 @@ export default function StudentPage() {
             PARCOL-SIS <br />Student Module
           </h1>
 
+          {error && ( // Conditionally render error message
+            <div className="alert alert-danger" role="alert">
+              {error}
+            </div>
+          )}
+
           <form className="d-grid gap-2 col-8 mx-auto mt-2" onSubmit={handleLogin}>
-            <input 
-              type="text" 
-              className="form-control custom-input custom-font fs-5" 
-              id="studentId" 
-              placeholder="Student ID" 
-              value={studentId} 
-              onChange={(e) => setStudentId(e.target.value)} 
-              required 
-            />
-            <input 
-              type="password" 
-              className="form-control custom-input custom-font fs-5" 
-              id="password" 
-              placeholder="Password" 
-              value={password} 
-              onChange={(e) => setPassword(e.target.value)} 
+            <input
+              type="text"
+              className="form-control custom-input custom-font fs-5"
+              id="studentId"
+              placeholder="Student ID"
+              value={studentId}
+              onChange={(e) => setStudentId(e.target.value)}
               required
             />
-            <button 
-              className="btn bg-custom-color-yellow custom-font custom-button fs-5 fw-semibold" 
+
+            <div className="input-group">
+              <input
+                type={showPassword ? 'text' : 'password'} // Toggle between 'text' and 'password'
+                className="form-control custom-input custom-font fs-5"
+                id="password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+              <button
+                type="button"
+                className="btn btn-outline-secondary"
+                onClick={togglePasswordVisibility}
+              >
+                {showPassword ? 'Hide' : 'Show'}
+              </button>
+            </div>
+
+            <button
+              className="btn bg-custom-color-yellow custom-font custom-button fs-5 fw-semibold"
               type="submit">
               Login
             </button>
           </form>
-          <button 
-            className="btn btn-back custom-font fs-6 mt-3 custom-color-font fw-semibold" 
+          <button
+            className="btn btn-back custom-font fs-6 mt-3 custom-color-font fw-semibold"
             onClick={handleBackClick}>
             BACK
           </button>
