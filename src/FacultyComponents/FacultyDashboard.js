@@ -2,17 +2,25 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUser, faSignOutAlt, faBars, faChalkboardTeacher, faCalendar } from '@fortawesome/free-solid-svg-icons';
+import FacultySchedulePage from './FacultySchedulePage';
 import '../StudentComponents/Dashboard.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
-const FacultyDashboard = () => {
+export default function FacultyDashboard (){
   const navigate = useNavigate();
   const [showDropdown, setShowDropdown] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
-  const [selectedSection, setSelectedSection] = useState('classes');
+  const [selectedSection, setSelectedSection] = useState('classes'); // Default section
   const [showClassesSubmenu, setShowClassesSubmenu] = useState(false);
   const [selectedClass, setSelectedClass] = useState(null);
   const dropdownRef = useRef(null);
+
+  const SECTIONS = {
+    CLASSES: 'classes',
+    SCHEDULE: 'schedule',
+    HRIS: 'hris',
+  };
+
 
   const handleLogout = () => {
     navigate('/login');
@@ -65,15 +73,25 @@ const FacultyDashboard = () => {
         <img src="pcc.png" alt="Logo" className="college-logo align-items-center ms-5 mb-3" />
         <div className="welcome-message mb-3 text-center">Hello, John Doe!</div>
         <nav className="menu mb-3">
-          <Link to="/faculty-dashboard" className="menu-item active d-flex align-items-center mb-2">
+          <Link
+              to=""
+              className={`menu-item d-flex align-items-center mb-2 ${selectedSection === SECTIONS.CLASSES ? 'active' : ''}`}
+              onClick={() => {setSelectedSection(SECTIONS.CLASSES); setShowSidebar(false);}}
+            >
             <FontAwesomeIcon icon={faChalkboardTeacher} className="me-2" />
             CLASSES
           </Link>
-          <Link to="/faculty-schedule" className="menu-item d-flex align-items-center mb-2">
+          <Link to=""
+              className={`menu-item d-flex align-items-center mb-2 ${selectedSection === SECTIONS.SCHEDULE ? 'active' : ''}`}
+              onClick={() => {setSelectedSection(SECTIONS.SCHEDULE); setShowSidebar(false);}}
+            >
             <FontAwesomeIcon icon={faCalendar} className="me-2" />
             SCHEDULE
           </Link>
-          <Link to="/hris" className="menu-item d-flex align-items-center mb-2">
+          <Link to=""
+              className={`menu-item d-flex align-items-center mb-2 ${selectedSection === SECTIONS.HRIS ? 'active' : ''}`}
+              onClick={() => {setSelectedSection(SECTIONS.HRIS); setShowSidebar(false);}}
+            >
             <FontAwesomeIcon icon={faUser} className="me-2" />
             HRIS
           </Link>
@@ -137,6 +155,26 @@ const FacultyDashboard = () => {
           </section>
         )}
 
+      {selectedSection === 'schedule' && (
+        <section className="m-3 ms-0">
+          <h2 className='custom-color-green-font custom-font ms-3'>Schedule</h2>
+          <FacultySchedulePage />
+        </section>
+
+        
+                
+        )}
+
+      {selectedSection === 'hris' && (
+              <section className="m-3 ms-0">
+                <h2 className='custom-color-green-font custom-font ms-3'>HRIS</h2>
+                
+              </section>
+
+              
+                      
+              )}
+
         {selectedSection === 'profile' && (
           <section className="card border-success p-3">
             <h2 className='custom-color-green-font custom-font'>Profile</h2>
@@ -164,4 +202,4 @@ const FacultyDashboard = () => {
   );
 };
 
-export default FacultyDashboard;
+

@@ -75,31 +75,31 @@ export default function StudentDashboard() {
               <img src="pcc.png" alt="Logo" className="college-logo align-items-center ms-5 mb-3" />
               <div className="welcome-message mb-3 text-center">Hello, Abigail!</div>
               <nav className="menu mb-3">
-              <Link
-                to=""
-                className={`menu-item d-flex align-items-center mb-2 ${selectedSection === SECTIONS.ENROLLMENT ? 'active' : ''}`}
-                onClick={() => {setSelectedSection(SECTIONS.ENROLLMENT); setShowSidebar(false);}}
-              >
-                <FontAwesomeIcon icon={faUser} className="me-2" />
-                ENROLLMENT
-            </Link>
-            <Link
-                to=""
-                className={`menu-item d-flex align-items-center mb-2 ${selectedSection === SECTIONS.SCHEDULE ? 'active' : ''}`}
-                onClick={() => {setSelectedSection(SECTIONS.SCHEDULE); setShowSidebar(false);}}
-              >
-                <FontAwesomeIcon icon={faCalendarAlt} className="me-2" />
-                SCHEDULE
-            </Link>
-            <Link
-                to=""
-                className={`menu-item d-flex align-items-center mb-2 ${selectedSection === SECTIONS.GRADES ? 'active' : ''}`}
-                onClick={() => {setSelectedSection(SECTIONS.GRADES); setShowSidebar(false);}}
-              >
-                <FontAwesomeIcon icon={faGraduationCap} className="me-2" />
-                GRADES
-            </Link>
-</nav>
+                <Link
+                    to=""
+                    className={`menu-item d-flex align-items-center mb-2 ${selectedSection === SECTIONS.ENROLLMENT ? 'active' : ''}`}
+                    onClick={() => {setSelectedSection(SECTIONS.ENROLLMENT); setShowSidebar(false);}}
+                  >
+                    <FontAwesomeIcon icon={faUser} className="me-2" />
+                    ENROLLMENT
+                </Link>
+                <Link
+                    to=""
+                    className={`menu-item d-flex align-items-center mb-2 ${selectedSection === SECTIONS.SCHEDULE ? 'active' : ''}`}
+                    onClick={() => {setSelectedSection(SECTIONS.SCHEDULE); setShowSidebar(false);}}
+                  >
+                    <FontAwesomeIcon icon={faCalendarAlt} className="me-2" />
+                    SCHEDULE
+                </Link>
+                <Link
+                    to=""
+                    className={`menu-item d-flex align-items-center mb-2 ${selectedSection === SECTIONS.GRADES ? 'active' : ''}`}
+                    onClick={() => {setSelectedSection(SECTIONS.GRADES); setShowSidebar(false);}}
+                  >
+                    <FontAwesomeIcon icon={faGraduationCap} className="me-2" />
+                    GRADES
+                </Link>
+            </nav>
 
       </div>
 
@@ -152,10 +152,10 @@ export default function StudentDashboard() {
         )}
 
         {selectedSection === 'grades' && (
-          <section className="m-3 ms-0">
-            <h2 className="custom-font custom-color-green-font">Grades</h2>
-            <StudentGrades />
-          </section>
+           <section className="m-3 ms-0">
+           <h2 className="custom-font custom-color-green-font">Grades</h2>
+           <StudentGrades />
+         </section>
         )}
 
         {selectedSection === 'profile' && (

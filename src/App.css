@@ -43,6 +43,22 @@
   background-color: #dfe625 !important; /* Darker shade for hover */
 }
 
+.card-success {
+  max-height: 70vh; /* Restrict table height */
+  overflow-y: auto; /* Scrollable if content exceeds height */
+  overflow-x: hidden; /* Prevent horizontal scrolling */
+}
+
+.table {
+  width: 100%;
+  table-layout: auto;
+}
+
+tbody {
+  overflow-y: auto;
+}
+
+
 
 
 
