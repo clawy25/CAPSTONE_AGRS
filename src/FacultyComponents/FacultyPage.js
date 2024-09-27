@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 import '../App.css';
 
 export default function FacultyPage() {
   const navigate = useNavigate();
   const [accountNumber, setAccountNumber] = useState('');
   const [password, setAccountPassword] = useState('');
+  
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
     
@@ -41,6 +44,8 @@ export default function FacultyPage() {
       setError('Password must contain at least one uppercase letter.');
       return;
     }
+
+    //API for account validation
 
         console.log('Account Number:', accountNumber);
         console.log('Password:', password);
@@ -99,22 +104,24 @@ export default function FacultyPage() {
                     required />
                     
                 <div className="input-group">
-                    <input
-                        type={showPassword ? 'text' : 'password'} // Toggle between 'text' and 'password'
-                        className="form-control custom-input custom-font fs-5"
-                        id="password"
-                        placeholder="Password"
-                        value={password}
-                        onChange={(e) => setAccountPassword(e.target.value)}
-                        required />
-                    
-                    <button
-                        type="button"
-                        className="btn btn-outline-secondary"
-                        onClick={togglePasswordVisibility}>
-                            {showPassword ? 'Hide' : 'Show'}
-                    </button>
-                </div>
+                <input
+                  type={showPassword ? 'text' : 'password'} // Toggle between 'text' and 'password'
+                  className="form-control custom-input custom-font fs-5"
+                  id="password"
+                  placeholder="Password"
+                  value={password}
+                  onChange={(e) => setAccountPassword(e.target.value)}
+                  required
+                />
+                <button
+                  type="button"
+                  className="btn "
+                  onClick={togglePasswordVisibility}
+                  style={{ backgroundColor: 'white', color: 'green' }} // Set background to white and text color to green
+                >
+                  <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} />
+                </button>
+            </div>
 
                 <button
                     className="btn bg-custom-color-yellow custom-font custom-button fs-5 fw-semibold"

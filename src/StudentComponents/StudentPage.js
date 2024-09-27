@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../App.css';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 
 export default function StudentPage() {
   const navigate = useNavigate();
@@ -16,15 +18,14 @@ export default function StudentPage() {
     setError('');
 
     // Student ID validation
-    const studentIdPattern = /^\d{4}-\d{5}-PCC-\d{1}$/;
+    const studentIdPattern = /^\d{4}-\d{6}$/;
     if (!studentIdPattern.test(studentId)) {
-      setError('Student ID must follow the format (e.g., 2024-00123-PCC-4)');
+      setError('Student ID must follow the format (e.g., 2024-123456)');
       return;
     }
 
     // Password validation
     if (/\s/.test(password)) {
-      // If password contains any space, prevent form submission
       setError('Password must not have spaces.');
       return;
     }
@@ -40,6 +41,9 @@ export default function StudentPage() {
       setError('Password must contain at least one uppercase letter.');
       return;
     }
+
+    //Insert API here for validating credentials to database
+
 
     console.log('Student ID:', studentId);
     console.log('Password:', password);
@@ -112,10 +116,11 @@ export default function StudentPage() {
               />
               <button
                 type="button"
-                className="btn btn-outline-secondary"
+                className="btn "
                 onClick={togglePasswordVisibility}
+                style={{ backgroundColor: 'white', color: 'green' }} // Set background to white and text color to green
               >
-                {showPassword ? 'Hide' : 'Show'}
+                <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} />
               </button>
             </div>
 

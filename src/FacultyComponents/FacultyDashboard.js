@@ -4,23 +4,24 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUser, faSignOutAlt, faBars, faChalkboardTeacher, faCalendar } from '@fortawesome/free-solid-svg-icons';
 import FacultySchedulePage from './FacultySchedulePage';
 import '../StudentComponents/Dashboard.css';
+import ClassDetails from './ClassDetails';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
-export default function FacultyDashboard (){
+export default function FacultyDashboard () {
   const navigate = useNavigate();
   const [showDropdown, setShowDropdown] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
   const [selectedSection, setSelectedSection] = useState('classes'); // Default section
-  const [showClassesSubmenu, setShowClassesSubmenu] = useState(false);
-  const [selectedClass, setSelectedClass] = useState(null);
+  const [selectedClass, setSelectedClass] = useState(null); // To track selected class
   const dropdownRef = useRef(null);
 
   const SECTIONS = {
     CLASSES: 'classes',
     SCHEDULE: 'schedule',
     HRIS: 'hris',
+    PROFILE: 'profile',
+    CHANGE_PASSWORD: 'change-password',
   };
-
 
   const handleLogout = () => {
     navigate('/login');
@@ -31,18 +32,18 @@ export default function FacultyDashboard (){
   };
 
   const handleProfileClick = () => {
-    setSelectedSection('profile');
+    setSelectedSection(SECTIONS.PROFILE);
     setShowDropdown(false);
   };
 
   const handleChangePasswordClick = () => {
-    setSelectedSection('change-password');
+    setSelectedSection(SECTIONS.CHANGE_PASSWORD);
     setShowDropdown(false);
   };
 
   const handleClassClick = (className) => {
-    setSelectedClass(className);
-    navigate(`/class-details/${className}`);
+    setSelectedClass(className); // Set the selected class
+    setSelectedSection(SECTIONS.CLASSES); // Ensure the section is still 'classes'
   };
 
   const toggleSidebar = () => {
@@ -74,29 +75,30 @@ export default function FacultyDashboard (){
         <div className="welcome-message mb-3 text-center">Hello, John Doe!</div>
         <nav className="menu mb-3">
           <Link
-              to=""
-              className={`menu-item d-flex align-items-center mb-2 ${selectedSection === SECTIONS.CLASSES ? 'active' : ''}`}
-              onClick={() => {setSelectedSection(SECTIONS.CLASSES); setShowSidebar(false);}}
-            >
+            to=""
+            className={`menu-item d-flex align-items-center mb-2 ${selectedSection === SECTIONS.CLASSES ? 'active' : ''}`}
+            onClick={() => { setSelectedSection(SECTIONS.CLASSES); setSelectedClass(null); setShowSidebar(false); }}
+          >
             <FontAwesomeIcon icon={faChalkboardTeacher} className="me-2" />
             CLASSES
           </Link>
-          <Link to=""
-              className={`menu-item d-flex align-items-center mb-2 ${selectedSection === SECTIONS.SCHEDULE ? 'active' : ''}`}
-              onClick={() => {setSelectedSection(SECTIONS.SCHEDULE); setShowSidebar(false);}}
-            >
+          <Link
+            to=""
+            className={`menu-item d-flex align-items-center mb-2 ${selectedSection === SECTIONS.SCHEDULE ? 'active' : ''}`}
+            onClick={() => { setSelectedSection(SECTIONS.SCHEDULE); setShowSidebar(false); }}
+          >
             <FontAwesomeIcon icon={faCalendar} className="me-2" />
             SCHEDULE
           </Link>
-          <Link to=""
-              className={`menu-item d-flex align-items-center mb-2 ${selectedSection === SECTIONS.HRIS ? 'active' : ''}`}
-              onClick={() => {setSelectedSection(SECTIONS.HRIS); setShowSidebar(false);}}
-            >
+          <Link
+            to=""
+            className={`menu-item d-flex align-items-center mb-2 ${selectedSection === SECTIONS.HRIS ? 'active' : ''}`}
+            onClick={() => { setSelectedSection(SECTIONS.HRIS); setShowSidebar(false); }}
+          >
             <FontAwesomeIcon icon={faUser} className="me-2" />
             HRIS
           </Link>
         </nav>
-        
       </div>
 
       <div className="main-content flex-grow-1">
@@ -133,52 +135,45 @@ export default function FacultyDashboard (){
           </div>
         </header>
 
-        {selectedSection === 'classes' && (
-          <section className="classes-section">
-            <h2 className="custom-font custom-color-green-font">Class Records</h2>
+        {selectedSection === SECTIONS.CLASSES && (
+          <section className="mt-3 ms-0 ">
+            <h2 className="custom-font custom-color-green-font">Class Records for {selectedClass}</h2>
             {selectedClass ? (
-              <div className="class-details">
-                <h3>Details for {selectedClass}</h3>
+              <div className=" ms-0  ">
+                <ClassDetails />
               </div>
             ) : (
               <div className="class-box-container">
                 <div className="class-box" onClick={() => handleClassClick('BSIT1-1')}>BSIT 1-1</div>
                 <div className="class-box" onClick={() => handleClassClick('BSIT1-2')}>BSIT 1-2</div>
-                <div className="class-box" onClick={() => handleClassClick('BSIT1-1')}>BSIT 2-1</div>
-                <div className="class-box" onClick={() => handleClassClick('BSIT1-2')}>BSIT 2-2</div>
-                <div className="class-box" onClick={() => handleClassClick('BSIT1-1')}>BSIT 3-1</div>
-                <div className="class-box" onClick={() => handleClassClick('BSIT1-2')}>BSIT 3-2</div>
-                <div className="class-box" onClick={() => handleClassClick('BSIT1-1')}>BSIT 4-1</div>
-                <div className="class-box" onClick={() => handleClassClick('BSIT1-2')}>BSIT 4-2</div>
+                <div className="class-box" onClick={() => handleClassClick('BSIT2-1')}>BSIT 2-1</div>
+                <div className="class-box" onClick={() => handleClassClick('BSIT2-2')}>BSIT 2-2</div>
+                <div className="class-box" onClick={() => handleClassClick('BSIT3-1')}>BSIT 3-1</div>
+                <div className="class-box" onClick={() => handleClassClick('BSIT3-2')}>BSIT 3-2</div>
+                <div className="class-box" onClick={() => handleClassClick('BSIT4-1')}>BSIT 4-1</div>
+                <div className="class-box" onClick={() => handleClassClick('BSIT4-2')}>BSIT 4-2</div>
               </div>
             )}
           </section>
         )}
 
-      {selectedSection === 'schedule' && (
-        <section className="m-3 ms-0">
-          <h2 className='custom-color-green-font custom-font ms-3'>Schedule</h2>
-          <FacultySchedulePage />
-        </section>
-
-        
-                
+        {selectedSection === SECTIONS.SCHEDULE && (
+          <section className="m-3 ms-0">
+            <h2 className='custom-color-green-font custom-font ms-3'>Schedule</h2>
+            <FacultySchedulePage />
+          </section>
         )}
 
-      {selectedSection === 'hris' && (
-              <section className="m-3 ms-0">
-                <h2 className='custom-color-green-font custom-font ms-3'>HRIS</h2>
-                
-              </section>
+        {selectedSection === SECTIONS.HRIS && (
+          <section className="m-3 ms-0">
+            <h2 className='custom-color-green-font custom-font ms-3'>HRIS</h2>
+          </section>
+        )}
 
-              
-                      
-              )}
-
-        {selectedSection === 'profile' && (
+        {selectedSection === SECTIONS.PROFILE && (
           <section className="card border-success p-3">
             <h2 className='custom-color-green-font custom-font'>Profile</h2>
-            <div className="custome-font custom-color-green-font fs-6 mb-2">Faculty ID: 2020-00202-PQ-O</div>
+            <div className="custom-font custom-color-green-font fs-6 mb-2">Faculty ID: 2020-00202-PQ-O</div>
             <input type="text" placeholder="First Name" className="form-control custom-color-green-font mb-2" required />
             <input type="text" placeholder="Last Name" className="form-control custom-color-green-font mb-2" required />
             <input type="email" placeholder="Email" className="form-control custom-color-green-font mb-2" required />
@@ -188,7 +183,7 @@ export default function FacultyDashboard (){
           </section>
         )}
 
-        {selectedSection === 'change-password' && (
+        {selectedSection === SECTIONS.CHANGE_PASSWORD && (
           <section className="card border-success p-3">
             <h2 className='custom-color-green-font custom-font'>Change Password</h2>
             <input type="password" placeholder="New Password" className="form-control custom-color-green-font mb-2" required />
@@ -201,5 +196,3 @@ export default function FacultyDashboard (){
     </div>
   );
 };
-
-
