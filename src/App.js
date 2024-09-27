@@ -1,6 +1,6 @@
 // src/App.js
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom'; // Import Navigate
 import LoginPage from './LoginPage';
 import LoginPage2 from './LoginPage2';
 import StudentPage from './StudentComponents/StudentPage'; 
@@ -18,10 +18,12 @@ import ProgramHeadDashboard from './ProgramHeadComponents/ProgramHeadDashboard';
 import ProgramHeadPage from './ProgramHeadComponents/ProgramHeadPage';
 import ErrorPage from './ErrorPage';
 
-
 const App = () => {
   return (
     <Routes>
+      {/* Redirect root URL to /login */}
+      <Route path="/" element={<Navigate to="/login" />} />
+      
       <Route path="/login" element={<LoginPage />} />
       <Route path="/login2" element={<LoginPage2 />} />
       <Route path="/student" element={<StudentPage />} /> 
@@ -39,7 +41,6 @@ const App = () => {
       <Route path="/programHead-dashboard" element={<ProgramHeadDashboard />} /> 
 
       <Route path="*" element={<ErrorPage />} />
-
     </Routes>
   );
 };
