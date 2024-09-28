@@ -22,7 +22,7 @@ export default function RegistrarDashboard() {
   };
 
   const handleLogout = () => {
-    navigate('/login2');
+    navigate('/login');
   };
 
   const toggleDropdown = () => {

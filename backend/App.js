@@ -1,39 +1,42 @@
 // Import required packages
 require('dotenv').config(); // Load environment variables from .env file
-
-console.log('Environment Variables Loaded:', {
-    SUPABASE_URL: process.env.SUPABASE_URL,
-    SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY
-});
-
 const express = require('express');
+const cors = require('cors');
+const supabase = require('./supabaseServer'); // Ensure this is correctly exporting your Supabase client
 
-// Import the Supabase client
-const supabase = require('./supabaseServer'); // Ensure the path is correct
-
-// Initialize Express
+// Initialize
 const app = express();
 const port = process.env.PORT || 5000; // Use the PORT from .env or default to 5000
+app.use(cors({
+    origin: 'http://localhost:3000', // Adjust this for your frontend URL
+}));
 
 // Middleware to parse JSON requests
 app.use(express.json());
 
-// A sample API route using Supabase
-app.get('/data', async (req, res) => {
+// Redirect root URL to /faculty
+app.get('/', (req, res) => {
+    res.redirect('/faculty');
+});
+
+// Correct the route to use the request query instead of params for fetching faculty details
+app.get('/faculty/:personnelNumber', async (req, res) => {
+    const { personnelNumber } = req.params; // Get personnelNumber from the URL parameter
     const { data, error } = await supabase
-        .from('faculty_accounts')
-        .select('*');
+        .from('faculty') // Ensure this is your actual table name
+        .select('*')
+        .eq('personnelNumber', personnelNumber) // Match the personnelNumber
+        .single(); // Expect a single result since personnel numbers should be unique
 
     if (error) {
         return res.status(400).json({ error: error.message });
     }
 
-    res.json(data);
-});
+    if (!data) {
+        return res.status(404).json({ error: 'Faculty not found' });
+    }
 
-// Redirect root URL to /data
-app.get('/', (req, res) => {
-    res.redirect('/data');
+    res.json(data); // Send the found data as a response
 });
 
 // Start the server

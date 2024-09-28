@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
-import { supabase } from '../supabaseClient';
+import PersonnelModel from '../ReactModels/PersonnelModel'; // Adjust the path as necessary
+
 import '../App.css';
 
 export default function FacultyPage() {
@@ -21,8 +22,8 @@ export default function FacultyPage() {
     setError('');
 
     // Student ID validation
-    const facultyIdPattern = /^\d{4}-\d{3}-PCC-\d{1}$/;
-    if (!facultyIdPattern.test(accountNumber)) {
+    const personnelNumberPattern = /^\d{4}-\d{3}-PCC-\d{1}$/;
+    if (!personnelNumberPattern.test(accountNumber)) {
       setError('Faculty ID must follow the format (e.g., 2024-123-PCC-1)');
       return;
     }
@@ -48,32 +49,31 @@ export default function FacultyPage() {
     
     //Debugging
     console.log('Account Number:', accountNumber);
-
-
-    //Connect to Supabase for account validation
+    
     try {
-      const { data, error } = await supabase
-        .from('faculty_accounts') // Replace with your actual table name
-        .select('*')
-        .eq('account_number', accountNumber) //Check for matching account no. in Supabase; equivalent to WHERE command in Postgre
-        .single(); // Assuming account numbers are unique, expect to find ONLY ONE EXACT result
-      
-      if (error || !data) {
-        setError('Invalid Account');
-        return;
-      }
-      // Validate password (you might hash/compare in a real-world scenario)
-      if (data.pass !== password) {
-        setError('Incorrect password.');
-        return;
-      }
-      // If successful, navigate to the faculty dashboard
-      console.log('Login successful:', data);
-      navigate('/faculty-dashboard');
+      // Fetch the personnel data using the account number
+      const user = await PersonnelModel.fetchPersonnelData(accountNumber);
+  
+      // If the fetched data matches the input credentials (you can implement further validation here)
+      if (user && user.personnelPassword === password) {
 
+        if (user.personnelType === 'Faculty') {
+          navigate('/faculty-dashboard');
+        } else if (user.personnelType === 'Head') {
+          navigate('/programHead-dashboard');
+        } else if (user.personnelType === 'Registrar') {
+          navigate('/registrar-dashboard');
+        } else {
+          setError('Unauthorized personnel type.');
+      }
+      console.log('Login successful:', user);
+      
+      
+      } else {
+        setError('Invalid credentials.');
+      }
     } catch (error) {
-      setError('Login failed. Please try again later.');
-      console.error('Error logging in:', error);
+      setError('Account does not exist. Try again.');
     }
     };
 
