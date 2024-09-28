@@ -21,8 +21,8 @@ app.use(express.json());
 // A sample API route using Supabase
 app.get('/data', async (req, res) => {
     const { data, error } = await supabase
-        .from('testing')  // Replace with your Supabase table name
-        .select('Name, StudID');
+        .from('faculty_accounts')
+        .select('*');
 
     if (error) {
         return res.status(400).json({ error: error.message });

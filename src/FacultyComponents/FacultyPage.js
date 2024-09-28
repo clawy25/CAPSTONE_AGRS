@@ -2,18 +2,19 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
+import { supabase } from '../supabaseClient';
 import '../App.css';
 
 export default function FacultyPage() {
   const navigate = useNavigate();
-  const [accountNumber, setAccountNumber] = useState('');
-  const [password, setAccountPassword] = useState('');
+  const [accountNumber, setAccountNumber] = useState('0000-000-PCC-0');
+  const [password, setAccountPassword] = useState('Agrspcc2024');
   
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
     
 
-    const handleLogin = (e) => {
+    const handleLogin = async (e) => {
         e.preventDefault();
     
     // Reset error message
@@ -44,12 +45,36 @@ export default function FacultyPage() {
       setError('Password must contain at least one uppercase letter.');
       return;
     }
+    
+    //Debugging
+    console.log('Account Number:', accountNumber);
 
-    //API for account validation
 
-        console.log('Account Number:', accountNumber);
-        console.log('Password:', password);
-        navigate('/faculty-dashboard');
+    //Connect to Supabase for account validation
+    try {
+      const { data, error } = await supabase
+        .from('faculty_accounts') // Replace with your actual table name
+        .select('*')
+        .eq('account_number', accountNumber) //Check for matching account no. in Supabase; equivalent to WHERE command in Postgre
+        .single(); // Assuming account numbers are unique, expect to find ONLY ONE EXACT result
+      
+      if (error || !data) {
+        setError('Invalid Account');
+        return;
+      }
+      // Validate password (you might hash/compare in a real-world scenario)
+      if (data.pass !== password) {
+        setError('Incorrect password.');
+        return;
+      }
+      // If successful, navigate to the faculty dashboard
+      console.log('Login successful:', data);
+      navigate('/faculty-dashboard');
+
+    } catch (error) {
+      setError('Login failed. Please try again later.');
+      console.error('Error logging in:', error);
+    }
     };
 
     //Back Button
