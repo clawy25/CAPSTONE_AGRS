@@ -4,9 +4,11 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUser, faSignOutAlt, faBars, faChalkboardTeacher, faCalendar, faSearch } from '@fortawesome/free-solid-svg-icons';
 import '../StudentComponents/Dashboard.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import { UserContext } from '../Context/UserContext';
 
 const ClassDetails = () => {
   const navigate = useNavigate();
+  //const { user } = useContext(UserContext); // Get user context
   const [showDropdown, setShowDropdown] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
   const [selectedSection, setSelectedSection] = useState('classes');

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUser, faCalendarAlt, faGraduationCap, faBars } from '@fortawesome/free-solid-svg-icons';
@@ -7,9 +7,11 @@ import '../App.css';
 import StudentEnrollment from './StudentEnrollment';
 import StudentSchedule from './StudentSchedule';
 import StudentGrades from './StudentGrades';
+import { UserContext } from '../Context/UserContext';
 
 export default function StudentDashboard() {
   const navigate = useNavigate();
+  const { user } = useContext(UserContext); // Get user context
   const [showDropdown, setShowDropdown] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
   const [selectedSection, setSelectedSection] = useState('enrollment'); // Default section
@@ -73,7 +75,7 @@ export default function StudentDashboard() {
           &times;
         </button>
               <img src="pcc.png" alt="Logo" className="college-logo align-items-center ms-5 mb-3" />
-              <div className="welcome-message mb-3 text-center">Hello, Abigail!</div>
+              <div className="welcome-message mb-3 text-center">Hello, {user ? user.studentName : 'Student'}!</div>
               <nav className="menu mb-3">
                 <Link
                     to=""
@@ -113,7 +115,7 @@ export default function StudentDashboard() {
           </button>
 
           <div className="user-info d-flex align-items-center position-relative" ref={dropdownRef}>
-            <span className="me-2">CRUZ, ABIGAIL (2020-00202-PQ-O)</span>
+            <span className="me-2">{user ? user.studentName : 'Student'} ({user ? user.studentNumber : 'Unknown'})</span>
             <FontAwesomeIcon
               icon={faUser}
               className="user-icon"

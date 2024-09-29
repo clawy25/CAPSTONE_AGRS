@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUser, faSignOutAlt, faBars, faChalkboardTeacher, faCalendar } from '@fortawesome/free-solid-svg-icons';
@@ -6,9 +6,11 @@ import FacultySchedulePage from './FacultySchedulePage';
 import '../StudentComponents/Dashboard.css';
 import ClassDetails from './ClassDetails';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import { UserContext } from '../Context/UserContext';
 
 export default function FacultyDashboard () {
   const navigate = useNavigate();
+  const { user } = useContext(UserContext); // Get user context
   const [showDropdown, setShowDropdown] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
   const [selectedSection, setSelectedSection] = useState('classes'); // Default section
@@ -72,7 +74,7 @@ export default function FacultyDashboard () {
     <div className="dashboard-container d-flex">
       <div className={`sidebar bg-custom-color-green ${showSidebar ? 'd-block' : 'd-none d-md-block'}`}>
         <img src="pcc.png" alt="Logo" className="college-logo align-items-center ms-5 mb-3" />
-        <div className="welcome-message mb-3 text-center">Hello, John Doe!</div>
+        <div className="welcome-message mb-3 text-center">Hello, {user ? user.personnelName : 'Guest'}!</div>
         <nav className="menu mb-3">
           <Link
             to=""
@@ -111,7 +113,7 @@ export default function FacultyDashboard () {
           </button>
 
           <div className="user-info d-flex align-items-center position-relative" ref={dropdownRef}>
-            <span className="me-2">JOHN DOE (Faculty ID: 2020-00123)</span>
+            <span className="me-2">{user ? user.personnelName : 'Guest'} ({user ? user.personnelNumber : 'Unknown'})</span>
             <FontAwesomeIcon
               icon={faUser}
               className="user-icon"

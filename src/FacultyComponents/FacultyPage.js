@@ -1,16 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react'; //Added useContext here
 import { useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 import PersonnelModel from '../ReactModels/PersonnelModel'; // Adjust the path as necessary
-
 import '../App.css';
+import { UserContext } from '../Context/UserContext';
+
 
 export default function FacultyPage() {
   const navigate = useNavigate();
   const [accountNumber, setAccountNumber] = useState('0000-000-PCC-0');
   const [password, setAccountPassword] = useState('Agrspcc2024');
-  
+  const { setUser } = useContext(UserContext);
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
     
@@ -56,6 +57,7 @@ export default function FacultyPage() {
   
       // If the fetched data matches the input credentials (you can implement further validation here)
       if (user && user.personnelPassword === password) {
+        setUser(user);//Transfers the fetched data to the UserContext.js; store the current user's credentials
 
         if (user.personnelType === 'Faculty') {
           navigate('/faculty-dashboard');

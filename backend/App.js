@@ -22,21 +22,85 @@ app.get('/', (req, res) => {
 // Correct the route to use the request query instead of params for fetching faculty details
 app.get('/faculty/:personnelNumber', async (req, res) => {
     const { personnelNumber } = req.params; // Get personnelNumber from the URL parameter
-    const { data, error } = await supabase
+  
+    try {
+      // Fetch faculty data
+      const { data: facultyData, error: facultyError } = await supabase
         .from('faculty') // Ensure this is your actual table name
         .select('*')
         .eq('personnelNumber', personnelNumber) // Match the personnelNumber
-        .single(); // Expect a single result since personnel numbers should be unique
-
-    if (error) {
-        return res.status(400).json({ error: error.message });
-    }
-
-    if (!data) {
+        .single(); // Expect a single result
+  
+      if (facultyError || !facultyData) {
         return res.status(404).json({ error: 'Faculty not found' });
-    }
+      }
 
-    res.json(data); // Send the found data as a response
+      // Fetch program data based on the faculty's programHeadNumber
+      const { data: programData, error: programError } = await supabase
+        .from('program') // Ensure this is your actual table name
+        .select('*')
+        .eq('programNumber', facultyData.programNumber) // Match with the faculty's personnelNumber
+        .single(); // Expect a single result
+  
+      if (programError || !programData) {
+        return res.status(404).json({ error: 'Program not found' });
+      }
+  
+      // Combine faculty and program data
+      const responseData = {
+        ...facultyData,
+        programName: programData.programName, // Add program name
+        // You can add any other fields from the programData as needed
+      };
+  
+      res.json(responseData); // Send the combined data as a response
+    } catch (error) {
+      console.error('Error fetching personnel data:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+  
+
+
+// Correct the route to use the request query instead of params for fetching faculty details
+app.get('/student/:studentNumber', async (req, res) => {
+    const { studentNumber } = req.params; // Get studentNumber from the URL parameter
+
+    try {
+      // Fetch student data
+      const { data: studentData, error: studentError } = await supabase
+        .from('student') // Ensure this is your actual table name
+        .select('*')
+        .eq('studentNumber', studentNumber) // Match the personnelNumber
+        .single(); // Expect a single result
+  
+      if (studentError || !studentData) {
+        return res.status(404).json({ error: 'Student not found' });
+      }
+
+      // Fetch program data based on the faculty's programHeadNumber
+      const { data: programData, error: programError } = await supabase
+        .from('program') // Ensure this is your actual table name
+        .select('*')
+        .eq('programNumber', studentData.studentProgramNumber) // Match with the faculty's personnelNumber
+        .single(); // Expect a single result
+  
+      if (programError || !programData) {
+        return res.status(404).json({ error: 'Program not found' });
+      }
+  
+      // Combine faculty and program data
+      const responseData = {
+        ...studentData,
+        studentProgramName: programData.programName, // Add program name
+        // You can add any other fields from the programData as needed
+      };
+  
+      res.json(responseData); // Send the combined data as a response
+    } catch (error) {
+      console.error('Error fetching personnel data:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
 });
 
 // Start the server

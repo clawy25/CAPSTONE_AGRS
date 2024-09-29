@@ -1,17 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../App.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
+import StudentModel from '../ReactModels/StudentModel';
+import { UserContext } from '../Context/UserContext';
 
 export default function StudentPage() {
   const navigate = useNavigate();
-  const [studentId, setStudentId] = useState('');
-  const [password, setPassword] = useState('');
+  const [studentId, setStudentId] = useState('2024-000001');
+  const [password, setPassword] = useState('Agrspcc2024');
+  const { setUser } = useContext(UserContext);
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false); 
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
 
     // Reset error message
@@ -43,11 +46,23 @@ export default function StudentPage() {
     }
 
     //Insert API here for validating credentials to database
-
-
-    console.log('Student ID:', studentId);
-    console.log('Password:', password);
-    navigate('/dashboard'); // Proceed to dashboard if validation passes
+    try {
+      // Fetch the personnel data using the account number
+      const user = await StudentModel.fetchStudentData(studentId);
+  
+      // If the fetched data matches the input credentials (you can implement further validation here)
+      if (user && user.studentPassword === password) {
+        setUser(user);//Transfers the fetched data to the UserContext.js; store the current user's credentials
+        navigate('/dashboard');
+      console.log('Login successful:', user);
+      
+      
+      } else {
+        setError('Invalid credentials.');
+      }
+    } catch (error) {
+      setError('Account does not exist. Try again.');
+    }
   };
 
   const handleBackClick = () => {

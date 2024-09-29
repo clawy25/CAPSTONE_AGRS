@@ -1,7 +1,7 @@
 export default class PersonnelModel {
   constructor(id, personnelNumber, personnelPassword, personnelType,
               personnelName, personnelGender, personnelEmail, 
-              personnelBirthDate) {
+              personnelBirthDate, programNumber, programName) {
     this.id = id;
     this.personnelNumber = personnelNumber;
     this.personnelPassword = personnelPassword;
@@ -10,6 +10,8 @@ export default class PersonnelModel {
     this.personnelGender = personnelGender;
     this.personnelEmail = personnelEmail;
     this.personnelBirthDate = personnelBirthDate;
+    this.programNumber = programNumber;
+    this.programName = programName;
   }
 
   // Function to fetch personnel data (Read only)
@@ -21,7 +23,20 @@ export default class PersonnelModel {
         throw new Error('Error fetching personnel data');
       }
       const data = await response.json();
-      return data;
+      
+      // Return data including programName
+      return new PersonnelModel(
+        data.id,
+        data.personnelNumber,
+        data.personnelPassword,
+        data.personnelType,
+        data.personnelName,
+        data.personnelGender,
+        data.personnelEmail,
+        data.personnelBirthDate,
+        data.programNumber,
+        data.programName
+      );
     } catch (error) {
       console.error('Error fetching personnel data:', error);
       throw error;
