@@ -16,7 +16,7 @@
 }
 
 .custom-font {
-    font-family: 'Josefin Sans', sans-serif;
+    font-family: 'Josefin Sans', sans-serif !important;
 }
 
 .custom-color-font {
@@ -50,12 +50,12 @@
 }
 
 .table {
-  width: 100%;
-  table-layout: auto;
+  width: 100% !important; 
+  table-layout: auto !important;
 }
 
 tbody {
-  overflow-y: auto;
+  overflow-y: auto !important;
 }
 
 
@@ -117,6 +117,18 @@ tbody {
 .close-sidebar-btn:hover {
   color: red;
 }
+
+.btn-bg-custom-color-green {
+  background-color: #004d00 !important;
+}
+
+
+.btn-bg-custom-color-green:hover {
+  background-color: #035c03 !important; /* Change to your desired lighter shade */
+  transition: background-color 0.3s ease !important; /* Smooth transition effect */
+  font-weight: 600;
+}
+
 
 
 /*LOGIN PAGE PHONE VIEW*/

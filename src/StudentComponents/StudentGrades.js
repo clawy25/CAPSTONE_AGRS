@@ -4,9 +4,6 @@ import '../App.css';
 
 
 export default function Grades(){
-  const handlePrintCertificate = () => {
-    window.print();
-  };
 
   return (
 
@@ -83,11 +80,6 @@ export default function Grades(){
             </table>
             
         
-          </div>
-          <div className="col-12 col-md-4 mt-2">
-            <button className="btn custom-color-font bg-custom-color-green mt-2 ms-md-3 mt-md-0 w-100 w-md-auto custom-font" onClick={handlePrintCertificate}>
-              Print Certificate of Grades
-            </button>
           </div>
         </section>
        

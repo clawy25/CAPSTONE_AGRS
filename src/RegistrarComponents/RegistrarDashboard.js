@@ -4,8 +4,10 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUser, faCalendarAlt, faGraduationCap, faBars, faChalkboardTeacher } from '@fortawesome/free-solid-svg-icons';
 import RegistrarStudents from './RegistrarStudents'
 import RegistrarGrades from './RegistrarGrades'
+import RegistrarProfessor from './RegistrarProfessor';
 import '../App.css';
 import { UserContext } from '../Context/UserContext';
+
 
 export default function RegistrarDashboard() {
   const navigate = useNavigate();
@@ -19,7 +21,6 @@ export default function RegistrarDashboard() {
   const SECTIONS = {
     STUDENTS: 'students',
     GRADES: 'grades',
-    SCHEDULE: 'schedule',
     PROFESSORS: 'professors',
   };
 
@@ -95,14 +96,6 @@ export default function RegistrarDashboard() {
           </Link>
           <Link
             to=""
-            className={`menu-item d-flex align-items-center mb-2 ${selectedSection === SECTIONS.SCHEDULE ? 'active' : ''}`}
-            onClick={() => {setSelectedSection(SECTIONS.SCHEDULE);setShowSidebar(false);}}
-          >
-            <FontAwesomeIcon icon={faCalendarAlt} className="me-2" />
-            SCHEDULE
-          </Link>
-          <Link
-            to=""
             className={`menu-item d-flex align-items-center mb-2 ${selectedSection === SECTIONS.PROFESSORS ? 'active' : ''}`}
             onClick={() => {setSelectedSection(SECTIONS.PROFESSORS);setShowSidebar(false);}}
           >
@@ -149,7 +142,7 @@ export default function RegistrarDashboard() {
         {/* Render content based on the selected section */}
         {selectedSection === SECTIONS.STUDENTS && (
           <section className="m-3">
-            <h2 className="custom-font custom-color-green-font">Students Section</h2>
+            <h2 className="custom-font custom-color-green-font">STUDENTS MASTERLIST</h2>
             <RegistrarStudents />
             
           </section>
@@ -160,16 +153,10 @@ export default function RegistrarDashboard() {
             <RegistrarGrades />
           </section>
         )}
-        {selectedSection === SECTIONS.SCHEDULE && (
-          <section className="m-3">
-            <h2 className="custom-font custom-color-green-font">Schedule Section</h2>
-            {/* Schedule section content */}
-          </section>
-        )}
         {selectedSection === SECTIONS.PROFESSORS && (
           <section className="m-3">
             <h2 className="custom-font custom-color-green-font">Professors Section</h2>
-            {/* Professors section content */}
+            <RegistrarProfessor />
           </section>
         )}
 
