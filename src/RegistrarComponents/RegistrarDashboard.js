@@ -142,20 +142,20 @@ export default function RegistrarDashboard() {
         {/* Render content based on the selected section */}
         {selectedSection === SECTIONS.STUDENTS && (
           <section className="m-3">
-            <h2 className="custom-font custom-color-green-font">STUDENTS MASTERLIST</h2>
+            
             <RegistrarStudents />
             
           </section>
         )}
         {selectedSection === SECTIONS.GRADES && (
           <section className="m-3">
-            <h2 className="custom-font custom-color-green-font">Grades Section</h2>
+            
             <RegistrarGrades />
           </section>
         )}
         {selectedSection === SECTIONS.PROFESSORS && (
           <section className="m-3">
-            <h2 className="custom-font custom-color-green-font">Professors Section</h2>
+            
             <RegistrarProfessor />
           </section>
         )}
