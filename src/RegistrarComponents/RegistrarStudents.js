@@ -1,42 +1,144 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import '../App.css'; // Custom styling
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSearch, faFileAlt, faCog, faFileSignature, faFilter } from '@fortawesome/free-solid-svg-icons'; // Import the icons you want to use
+import * as XLSX from 'xlsx';
+import StudentModel from '../ReactModels/StudentModel';
 
 export default function RegistrarStudents() {
     const [searchQuery, setSearchQuery] = useState('');
     const [filterOption, setFilterOption] = useState('All');
-    const [showFilterDropdown, setShowFilterDropdown] = useState(false); // State to toggle filter dropdown
-    const [students, setStudents] = useState([
-        // Sample data, replace with actual student data
-        { 
-            itemNumber: 1, 
-            name: 'John Doe',
-            studentNumber: '0000-001-PCC-0' ,
-            batchYear: '2020', 
-            section: 'A', 
-            course: 'BSCS', 
-            status: 'Regular' 
-        },
-        { 
-            itemNumber: 2, 
-            name: 'Jane Smith', 
-            studentNumber: '0000-002-PCC-0' ,
-            batchYear: '2021', 
-            section: 'B', 
-            course: 'BSIT', 
-            status: 'Irregular' 
-        },
-        { 
-            itemNumber: 3, 
-            name: 'Alex Johnson', 
-            studentNumber: '0000-003-PCC-0' ,
-            batchYear: '2022', 
-            section: 'C', 
-            course: 'BSCS', 
-            status: 'Regular' 
+    const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+    const [students, setStudents] = useState([]);
+
+    // Fetch existing students from StudentModel
+    const fetchExistingStudents = async () => {
+        try {
+            const existingStudents = await StudentModel.fetchExistingStudents();
+            setStudents(existingStudents);
+        } catch (error) {
+            console.error('Error fetching existing students:', error);
         }
-    ]);
+    };
+
+    // Fetch existing students onload
+    useEffect(() => {
+        fetchExistingStudents();
+    }, []);
+
+    // Insert the list of newStudents into the database
+    const insertStudents = async (newStudents) => {
+        try {
+            const response = await StudentModel.insertStudent(newStudents); // Pass the entire array for bulk insert
+            console.log('Inserted students:', response);
+        } catch (error) {
+            console.error('Error inserting students in bulk:', error);
+        }
+    };
+
+    // Scan the spreadsheet to get the list of newStudents
+    const handleFileUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) {
+            console.error('No file selected');
+            return; // Exit if no file is selected
+        }
+        const reader = new FileReader();
+    
+        reader.onload = async (event) => {
+            const binaryStr = event.target.result;
+            const workbook = XLSX.read(binaryStr, { type: 'binary' });
+            const sheetName = workbook.SheetNames[0];
+            const sheet = workbook.Sheets[sheetName];
+            const data = XLSX.utils.sheet_to_json(sheet);
+    
+            // Get the existing student numbers
+            const existingStudentNumbers = new Set(students.map(student => student.studentNumber));
+            const newStudents = [];
+    
+            for (const row of data) {
+                // Map each column from the spreadsheet to a field in the model
+                const studentPassword = row["studentPassword"] || '';
+                const studentType = row["studentType"] || '';
+                const studentName = row["studentName"] || '';
+                const studentGender = row["studentGender"] || '';
+                const studentEmail = row["studentEmail"] || '';
+                const studentBirthDate = row["studentBirthDate"] || '';
+                const studentPccEmail = row["studentPccEmail"] || '';
+                const studentAdmissionYr = row["studentAdmissionYr"] || '';
+                const studentYrLevel = row["studentYrLevel"] || '';
+                const studentProgramNumber = row["studentProgramNumber"] || '';
+                const studentProgramName = row["Program Name"] || '';
+    
+                // Validate the row and add it to newStudents if valid
+                if (validateRow(row, existingStudentNumbers)) {
+                    // Generate a unique student number for each valid student
+                    let studentNumber = generateNextStudentNumber(existingStudentNumbers);
+    
+                    // Ensure unique student number (though it should be unique if generated correctly)
+                    while (existingStudentNumbers.has(studentNumber)) {
+                        studentNumber = generateNextStudentNumber(existingStudentNumbers);
+                    }
+    
+                    // Add new student to the array
+                    newStudents.push(new StudentModel(
+                        students.length + newStudents.length + 1, // Generate ID
+                        studentNumber,
+                        studentPassword,
+                        studentType,
+                        studentName,
+                        studentGender,
+                        studentEmail,
+                        studentBirthDate,
+                        studentPccEmail,
+                        studentAdmissionYr,
+                        studentYrLevel,
+                        studentProgramNumber,
+                        studentProgramName
+                    ));
+    
+                    // Add the newly generated student number to the existing set
+                    existingStudentNumbers.add(studentNumber);
+                }
+            }
+    
+            // Insert all valid records in bulk
+            console.log("New students to insert:", newStudents);
+            await insertStudents(newStudents);
+            await fetchExistingStudents(); // Refresh the student list after import
+        };
+    
+        reader.readAsArrayBuffer(file);
+    };
+    
+
+    // Validate each row
+    const validateRow = (row, existingStudentNumbers) => {
+        if (!row.studentName) {
+            return false; // Invalid row
+        }
+        return true; // Valid row
+    };
+
+    // Function for generating new studentNumbers
+    const generateNextStudentNumber = (existingNumbers) => {
+        const year = new Date().getFullYear(); // Get current year (e.g., 2024)
+        let highestNumber = 0;
+
+        // Loop through existing student numbers to find the highest
+        existingNumbers.forEach(num => {
+            const currentYear = num.split('-')[0];
+            if (currentYear === year.toString()) {
+                const numberPart = parseInt(num.split('-')[1]);
+                if (numberPart > highestNumber) {
+                    highestNumber = numberPart;
+                }
+            }
+        });
+
+        const nextNumber = highestNumber + 1;
+        return `${year}-${nextNumber.toString().padStart(6, '0')}`; // Format as '2024-000001'
+    };
 
     const handleSearch = (e) => {
         setSearchQuery(e.target.value);
@@ -56,14 +158,11 @@ export default function RegistrarStudents() {
 
     const filteredStudents = students.filter(student => {
         return (
-            student.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
-            (filterOption === 'All' || student.status === filterOption)
+            student.studentName &&
+            student.studentName.toLowerCase().includes(searchQuery.toLowerCase()) &&
+            (filterOption === 'All' || student.studentType === filterOption)
         );
     });
-
-    const importStudents = (e) => {
-        //insert API
-    };
 
     return (
         <div className="container-fluid">
@@ -107,9 +206,16 @@ export default function RegistrarStudents() {
 
                     {/* Upper right: Import Student Classlist button */}
                     <div className="col-12 col-md-6 d-flex justify-content-end align-items-center">
-                        <button className="btn btn-success custom-font w-100 w-md-50" onClick={importStudents}> {/* Use w-md-50 for 50% width on desktop */}
+                        <button className="btn btn-success custom-font w-100 w-md-50" onClick={() => document.querySelector('input[type="file"]').click()}> {/* Use w-md-50 for 50% width on desktop */}
                             <FontAwesomeIcon icon={faFileAlt} /> Import Student Classlist {/* Font Awesome file icon */}
                         </button>
+                        <input 
+                            type="file" 
+                            style={{ display: 'none' }} 
+                            accept=".xlsx, .xls" 
+                            onChange={handleFileUpload} 
+                        />
+
                     </div>
                 </div>
 
@@ -131,24 +237,28 @@ export default function RegistrarStudents() {
                                     </tr>
                                 </thead>
                                 <tbody className='bg-white'>
-                                    {filteredStudents.map(student => (
-                                        <tr key={student.itemNumber}>
-                                            <td className='custom-color-green-font'>{student.itemNumber}</td>
-                                            <td className='custom-color-green-font'>{student.name}</td>
+                                    {filteredStudents.map((student, index) => {
+                                    // Calculate the display Item No.
+                                    const displayItemNo = students.length - filteredStudents.length + index + 1;
+
+                                    return (
+                                        <tr key={student.id}>
+                                            <td className='custom-color-green-font'>{displayItemNo}</td>
+                                            <td className='custom-color-green-font'>{student.studentName}</td>
                                             <td className='custom-color-green-font'>{student.studentNumber}</td>
-                                            <td className='custom-color-green-font'>{student.batchYear}</td>
+                                            <td className='custom-color-green-font'>{student.studentAdmissionYr}</td>
                                             <td className='custom-color-green-font'>{student.section}</td>
-                                            <td className='custom-color-green-font'>{student.course}</td>
+                                            <td className='custom-color-green-font'>{student.studentProgramName}</td>
                                             <td>
                                                 <select
-                                                    className="form-select custom-color-green-font"
-                                                    value={student.status}
-                                                    onChange={(e) => handleStatusChange(student.itemNumber, e.target.value)} // Changed from student.id to student.itemNumber
+                                                className="form-select custom-color-green-font"
+                                                value={student.studentType}
+                                                onChange={(e) => handleStatusChange(student.id, e.target.value)} // Changed from student.id to student.itemNumber
                                                 >
-                                                    <option value="Regular">Regular</option>
-                                                    <option value="Irregular">Irregular</option>
-                                                    <option value="Withdraw">Withdraw</option>
-                                                    <option value="INC">Incomplete (INC)</option>
+                                                <option value="Regular">Regular</option>
+                                                <option value="Irregular">Irregular</option>
+                                                <option value="Withdraw">Withdraw</option>
+                                                <option value="INC">Incomplete (INC)</option>
                                                 </select>
                                             </td>
                                             <td>
@@ -160,8 +270,10 @@ export default function RegistrarStudents() {
                                                 </button>
                                             </td>
                                         </tr>
-                                    ))}
+                                    );
+                                    })}
                                 </tbody>
+
                             </table>
                         </div>
                     </div>
