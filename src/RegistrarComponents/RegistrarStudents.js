@@ -157,12 +157,16 @@ export default function RegistrarStudents() {
     };
 
     const filteredStudents = students.filter(student => {
+        const searchQueryLower = searchQuery.toLowerCase();
         return (
-            student.studentName &&
-            student.studentName.toLowerCase().includes(searchQuery.toLowerCase()) &&
+            (student.studentName && student.studentName.toLowerCase().includes(searchQueryLower)) ||
+            (student.studentNumber && student.studentNumber.toLowerCase().includes(searchQueryLower)) ||
+            (student.studentType && student.studentType.toLowerCase().includes(searchQueryLower)) &&
             (filterOption === 'All' || student.studentType === filterOption)
         );
     });
+    
+    
 
     return (
         <div className="container-fluid">
@@ -237,43 +241,39 @@ export default function RegistrarStudents() {
                                     </tr>
                                 </thead>
                                 <tbody className='bg-white'>
-                                    {filteredStudents.map((student, index) => {
-                                    // Calculate the display Item No.
-                                    const displayItemNo = students.length - filteredStudents.length + index + 1;
-
-                                    return (
-                                        <tr key={student.id}>
-                                            <td className='custom-color-green-font'>{displayItemNo}</td>
-                                            <td className='custom-color-green-font'>{student.studentName}</td>
-                                            <td className='custom-color-green-font'>{student.studentNumber}</td>
-                                            <td className='custom-color-green-font'>{student.studentAdmissionYr}</td>
-                                            <td className='custom-color-green-font'>{student.section}</td>
-                                            <td className='custom-color-green-font'>{student.studentProgramName}</td>
-                                            <td>
+                                    {filteredStudents.map((student) => {
+                                        return (
+                                            <tr key={student.id}>
+                                                <td className='custom-color-green-font'>{student.id}</td>
+                                                <td className='custom-color-green-font'>{student.studentName}</td>
+                                                <td className='custom-color-green-font'>{student.studentNumber}</td>
+                                                <td className='custom-color-green-font'>{student.studentAdmissionYr}</td>
+                                                <td className='custom-color-green-font'>{student.section}</td>
+                                                <td className='custom-color-green-font'>{student.studentProgramName}</td>
+                                                <td>
                                                 <select
-                                                className="form-select custom-color-green-font"
-                                                value={student.studentType}
-                                                onChange={(e) => handleStatusChange(student.id, e.target.value)} // Changed from student.id to student.itemNumber
+                                                    className="form-select custom-color-green-font"
+                                                    value={student.studentType}
+                                                    onChange={(e) => handleStatusChange(student.id, e.target.value)} // Changed from student.id to student.itemNumber
                                                 >
-                                                <option value="Regular">Regular</option>
-                                                <option value="Irregular">Irregular</option>
-                                                <option value="Withdraw">Withdraw</option>
-                                                <option value="INC">Incomplete (INC)</option>
+                                                    <option value="Regular">Regular</option>
+                                                    <option value="Irregular">Irregular</option>
+                                                    <option value="Withdraw">Withdraw</option>
+                                                    <option value="INC">Incomplete (INC)</option>
                                                 </select>
-                                            </td>
-                                            <td>
-                                                <button className="btn btn-success btn-sm me-2">
-                                                    <FontAwesomeIcon icon={faCog} /> COG {/* Font Awesome settings icon */}
-                                                </button>
-                                                <button className="btn btn-success btn-sm">
-                                                    <FontAwesomeIcon icon={faFileSignature} /> TOR {/* Font Awesome signature icon */}
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    );
+                                                </td>
+                                                <td>
+                                                    <button className="btn btn-success btn-sm me-2">
+                                                        <FontAwesomeIcon icon={faCog} /> COG {/* Font Awesome settings icon */}
+                                                    </button>
+                                                    <button className="btn btn-success btn-sm">
+                                                        <FontAwesomeIcon icon={faFileSignature} /> TOR {/* Font Awesome signature icon */}
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        );
                                     })}
                                 </tbody>
-
                             </table>
                         </div>
                     </div>
