@@ -18,7 +18,7 @@ export default class PersonnelModel {
   static async fetchPersonnelData(personnelNumber) {
     try {
       // Example API call to your backend (Node.js)
-      const response = await fetch(`http://localhost:5000/faculty/${personnelNumber}`);
+      const response = await fetch(`http://localhost:5000/personnel/${personnelNumber}`);
       if (!response.ok) {
         throw new Error('Error fetching personnel data');
       }

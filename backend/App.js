@@ -1,8 +1,7 @@
-// Import required packages
-require('dotenv').config(); // Load environment variables from .env file
+require('dotenv').config(); // Load .env
 const express = require('express');
 const cors = require('cors');
-const supabase = require('./supabaseServer'); // Ensure this is correctly exporting your Supabase client
+const supabase = require('./supabaseServer');
 
 // Initialize
 const app = express();
@@ -11,35 +10,35 @@ app.use(cors({
     origin: 'http://localhost:3000', // Adjust this for your frontend URL
 }));
 
-// Middleware to parse JSON requests
+
 app.use(express.json());
 
 // Redirect root URL to /faculty
 app.get('/', (req, res) => {
-    res.redirect('/faculty');
+    res.redirect('/student');
 });
 
-// Correct the route to use the request query instead of params for fetching faculty details
-app.get('/faculty/:personnelNumber', async (req, res) => {
+// Login as Personnel
+app.get('/personnel/:personnelNumber', async (req, res) => {
     const { personnelNumber } = req.params; // Get personnelNumber from the URL parameter
   
     try {
       // Fetch faculty data
-      const { data: facultyData, error: facultyError } = await supabase
-        .from('faculty') // Ensure this is your actual table name
+      const { data: personnelData, error: personnelError } = await supabase
+        .from('personnel') // Ensure this is your actual table name
         .select('*')
         .eq('personnelNumber', personnelNumber) // Match the personnelNumber
         .single(); // Expect a single result
   
-      if (facultyError || !facultyData) {
-        return res.status(404).json({ error: 'Faculty not found' });
+      if (personnelError || !personnelData) {
+        return res.status(404).json({ error: 'Personnel not found' });
       }
 
       // Fetch program data based on the faculty's programHeadNumber
       const { data: programData, error: programError } = await supabase
         .from('program') // Ensure this is your actual table name
         .select('*')
-        .eq('programNumber', facultyData.programNumber) // Match with the faculty's personnelNumber
+        .eq('programNumber', personnelData.programNumber) // Match with the faculty's personnelNumber
         .single(); // Expect a single result
   
       if (programError || !programData) {
@@ -48,7 +47,7 @@ app.get('/faculty/:personnelNumber', async (req, res) => {
   
       // Combine faculty and program data
       const responseData = {
-        ...facultyData,
+        ...personnelData,
         programName: programData.programName, // Add program name
         // You can add any other fields from the programData as needed
       };
@@ -60,7 +59,7 @@ app.get('/faculty/:personnelNumber', async (req, res) => {
     }
   });
   
-// Correct the route to use the request query instead of params for fetching student details
+// Login as Student
 app.get('/student/:studentNumber', async (req, res) => {
     const { studentNumber } = req.params; // Get studentNumber from the URL parameter
 
@@ -101,7 +100,7 @@ app.get('/student/:studentNumber', async (req, res) => {
     }
 });
 
-// Fetch all students
+// All students
 app.get('/student', async (req, res) => {
   try {
       // Fetch all student data
@@ -142,8 +141,48 @@ app.get('/student', async (req, res) => {
   }
 });
 
+// All personnels
+app.get('/personnel', async (req, res) => {
+  try {
+      // Fetch all personnel data
+      const { data: personnelData, error: personnelError } = await supabase
+          .from('personnel')
+          .select('*');
 
+      if (personnelError || !personnelData) {
+          return res.status(500).json({ error: personnelError.message || 'Failed to fetch personnel data' });
+      }
 
+      // Prepare an array to hold personnel data with program names
+      const personnelWithPrograms = await Promise.all(personnelData.map(async (personnel) => {
+          // Fetch program data based on the student's program number
+          const { data: programData, error: programError } = await supabase
+              .from('program')
+              .select('*')
+              .eq('programNumber', personnel.programNumber) // Match with the programNumber
+              .single(); // Expect a single result
+
+          if (programError || !programData) {
+              return {
+                  ...personnel,
+                  programName: null, // If program is not found, set name to null
+              };
+          }
+
+          return {
+              ...personnel,
+              programName: programData.programName, // Add program name
+          };
+      }));
+
+      res.json(personnelWithPrograms); // Return the array of personnels with program names
+  } catch (error) {
+      console.error('Error fetching personnel:', error); // Log the error
+      res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Insert new students
 app.post('/student/upload', async (req, res) => {
   try {
       const studentsData = req.body.data;
