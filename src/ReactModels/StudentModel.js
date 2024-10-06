@@ -1,6 +1,6 @@
 export default class StudentModel {
   constructor(id, studentNumber, studentPassword, studentType,
-              studentName, studentGender, studentEmail, 
+              studentName, studentSex, studentEmail, 
               studentBirthDate, studentPccEmail, studentAdmissionYr, 
               studentYrLevel, studentProgramNumber, studentProgramName) {
       this.id = id;
@@ -8,7 +8,7 @@ export default class StudentModel {
       this.studentPassword = studentPassword;
       this.studentType = studentType;
       this.studentName = studentName;
-      this.studentGender = studentGender;
+      this.studentSex = studentSex;
       this.studentEmail = studentEmail;
       this.studentBirthDate = studentBirthDate;
       this.studentPccEmail = studentPccEmail;
@@ -43,7 +43,7 @@ export default class StudentModel {
               data.studentPassword,
               data.studentType,
               data.studentName,
-              data.studentGender,
+              data.studentSex,
               data.studentEmail,
               data.studentBirthDate,
               data.studentPccEmail,
@@ -75,7 +75,7 @@ export default class StudentModel {
               student.studentPassword,
               student.studentType,
               student.studentName,
-              student.studentGender,
+              student.studentSex,
               student.studentEmail,
               student.studentBirthDate,
               student.studentPccEmail,
@@ -98,7 +98,7 @@ export default class StudentModel {
             studentPassword: student.studentPassword,
             studentType: student.studentType,
             studentName: student.studentName,
-            studentGender: student.studentGender,
+            studentSex: student.studentSex,
             studentEmail: student.studentEmail,
             studentBirthDate: 
               typeof student.studentBirthDate === 'number' 

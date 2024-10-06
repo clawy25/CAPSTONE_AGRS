@@ -1,13 +1,13 @@
 export default class PersonnelModel {
   constructor(id, personnelNumber, personnelPassword, personnelType,
-              personnelName, personnelGender, personnelEmail, 
+              personnelName, personnelSex, personnelEmail, 
               personnelBirthDate, programNumber, programName) {
     this.id = id;
     this.personnelNumber = personnelNumber;
     this.personnelPassword = personnelPassword;
     this.personnelType = personnelType;
     this.personnelName = personnelName;
-    this.personnelGender = personnelGender;
+    this.personnelSex = personnelSex;
     this.personnelEmail = personnelEmail;
     this.personnelBirthDate = personnelBirthDate;
     this.programNumber = programNumber;
@@ -31,7 +31,7 @@ export default class PersonnelModel {
         data.personnelPassword,
         data.personnelType,
         data.personnelName,
-        data.personnelGender,
+        data.personnelSex,
         data.personnelEmail,
         data.personnelBirthDate,
         data.programNumber,
