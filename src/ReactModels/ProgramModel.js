@@ -1,8 +1,8 @@
 export default class ProgramModel {
     constructor(id, programName, programNumber) {
         this.id = id;
-        this.programName = programName; // Fixed typo: "his.programName" -> "this.programName"
-        this.programNumber = programNumber; // Program number
+        this.programName = programName;
+        this.programNumber = programNumber;
     }
 
     // Function to fetch program data by programNumber
