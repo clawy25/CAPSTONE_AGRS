@@ -253,6 +253,25 @@ app.post('/timeline/upload', async (req, res) => {
   }
 });
 
+//FETCHING PROGRAM DATA FROM SUPABASE
+app.get('/program', async (req, res) => {
+  try {
+      // Fetch data from the program table using correct column names
+      const { data: programData, error: programError } = await supabase
+          .from('program') // Ensure this is your actual table name
+          .select('*'); // Use the correct column names
+
+      if (programError) {
+          return res.status(500).json({ error: programError.message || 'Failed to fetch program data' });
+      }
+
+      res.json(programData); // Send the fetched data as JSON response
+  } catch (error) {
+      console.error('Error fetching program data:', error); // Log the error
+      res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 
 // Start the server
 app.listen(port, () => {

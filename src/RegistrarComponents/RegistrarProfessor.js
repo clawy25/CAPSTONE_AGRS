@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import RegistrarYearSectionTab from './RegistrarYearSectionTab';
+import React, { useState, useEffect } from 'react';
+import RegistrarYearSectionTab from './RegistrarBatchYear';
+import ProgramModel from '../ReactModels/ProgramModel'; // Import the ProgramModel
 import '../App.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons'; // Import the back icon
@@ -8,6 +9,27 @@ export default function RegistrarProfessor() {
   // State to manage the active view
   const [activeView, setActiveView] = useState('professor'); // Start with professor view
   const [selectedProgram, setSelectedProgram] = useState('');
+  const [programs, setPrograms] = useState([]); // State to hold programs
+  const [loading, setLoading] = useState(true); // State to manage loading state
+  const [error, setError] = useState(null); // State to manage errors
+
+  // Fetch programs on component mount
+  useEffect(() => {
+    const fetchPrograms = async () => {
+      try {
+        const programData = await ProgramModel.fetchAllPrograms();
+        console.log('Program data:', programData); // Log the fetched data
+        setPrograms(programData);
+        setLoading(false); // Set loading to false after data is fetched
+      } catch (error) {
+        console.error('Error fetching programs:', error);
+        setError('Failed to fetch programs');
+        setLoading(false); // Stop loading even if there's an error
+      }
+    };
+
+    fetchPrograms();
+  }, []);
 
   // Function to switch to the year/section tab
   const goToYearSectionTab = (program) => {
@@ -22,88 +44,30 @@ export default function RegistrarProfessor() {
 
   return (
     <section className="container-fluid ms-0">
-      {activeView === 'professor' ? (
+      {loading && <p>Loading programs...</p>} {/* Loading state */}
+      {error && <p className="text-danger">{error}</p>} {/* Error state */}
+      {!loading && !error && activeView === 'professor' && (
         // Professor buttons section
         <div className="row g-4">
-            <h2 className="custom-font custom-color-green-font">Programs</h2>
-          {/* BS in Entrepreneurship */}
-          <div className="col-6 col-md-3 mb-3">
-            <button
-              className="btn btn-bg-custom-color-green custom-color-font fs-5 rounded custom-font d-flex align-items-center justify-content-center"
-              style={{ height: '200px', width: '100%' }}
-              onClick={() => goToYearSectionTab('BS in Entrepreneurship')} // Switch to Year Section Tab with program
-            >
-              <span className="ms-2">BS in Entrepreneurship</span>
-            </button>
-          </div>
-
-          {/* BS in Real Estate Management */}
-          <div className="col-6 col-md-3 mb-3">
-            <button
-              className="btn btn-bg-custom-color-green custom-color-font fs-5 rounded custom-font d-flex align-items-center justify-content-center"
-              style={{ height: '200px', width: '100%' }}
-              onClick={() => goToYearSectionTab('BS in Real Estate Management')}
-            >
-              <span className="ms-2">BS in Real Estate Management</span>
-            </button>
-          </div>
-
-          {/* BS in Tourism Management */}
-          <div className="col-6 col-md-3 mb-3">
-            <button
-              className="btn btn-bg-custom-color-green custom-color-font fs-5 rounded custom-font d-flex align-items-center justify-content-center"
-              style={{ height: '200px', width: '100%' }}
-              onClick={() => goToYearSectionTab('BS in Tourism Management')}
-            >
-              <span className="ms-2">BS in Tourism Management</span>
-            </button>
-          </div>
-
-          {/* 2-Year Hospitality Management Services */}
-          <div className="col-6 col-md-3 mb-3">
-            <button
-              className="btn btn-bg-custom-color-green custom-color-font fs-5 rounded custom-font d-flex align-items-center justify-content-center"
-              style={{ height: '200px', width: '100%' }}
-              onClick={() => goToYearSectionTab('2-Year Hospitality Management Services')}
-            >
-              <span className="ms-2">2-Year Hospitality Mgmt Services</span>
-            </button>
-          </div>
-
-          {/* Bookkeeping NC III */}
-          <div className="col-6 col-md-3 mb-3">
-            <button
-              className="btn btn-bg-custom-color-green custom-color-font fs-5 rounded custom-font d-flex align-items-center justify-content-center"
-              style={{ height: '200px', width: '100%' }}
-              onClick={() => goToYearSectionTab('Bookkeeping NC III')}
-            >
-              <span className="ms-2">Bookkeeping NC III</span>
-            </button>
-          </div>
-
-          {/* Food and Beverage Services NC II */}
-          <div className="col-6 col-md-3 mb-3">
-            <button
-              className="btn btn-bg-custom-color-green custom-color-font fs-5 rounded custom-font d-flex align-items-center justify-content-center"
-              style={{ height: '200px', width: '100%' }}
-              onClick={() => goToYearSectionTab('F&B Services NC II')}
-            >
-              <span className="ms-2">F&B Services NC II</span>
-            </button>
-          </div>
-
-          {/* Housekeeping NC II */}
-          <div className="col-6 col-md-3 mb-3">
-            <button
-              className="btn btn-bg-custom-color-green custom-color-font fs-5 rounded custom-font d-flex align-items-center justify-content-center"
-              style={{ height: '200px', width: '100%' }}
-              onClick={() => goToYearSectionTab('Housekeeping NC II')}
-            >
-              <span className="ms-2">Housekeeping NC II</span>
-            </button>
-          </div>
+          <h2 className="custom-font custom-color-green-font">Programs</h2>
+          {programs.length === 0 ? (
+            <p>No programs available.</p> // Display message if no programs
+          ) : (
+            programs.map((program) => (
+              <div key={program.id} className="col-6 col-md-3 mb-3">
+                <button
+                  className="btn btn-bg-custom-color-green custom-color-font fs-5 rounded custom-font d-flex align-items-center justify-content-center"
+                  style={{ height: '200px', width: '100%' }}
+                  onClick={() => goToYearSectionTab(program.programName)} // Switch to Year Section Tab with program
+                >
+                  <span className="ms-2">{program.programName}</span>
+                </button>
+              </div>
+            ))
+          )}
         </div>
-      ) : (
+      )}
+      {activeView === 'yearSectionTab' && (
         <div>
           {/* Flex container for back button and title */}
           <div className="d-flex align-items-center mb-4">
