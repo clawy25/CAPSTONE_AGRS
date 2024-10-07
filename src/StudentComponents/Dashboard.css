@@ -1377,6 +1377,16 @@ background-color: #f0f0f0;
   margin-left: 5px;
 }
 
+.narrow-column {
+  width: 30px; /* Set a narrow width for the A column */
+  text-align: center;
+}
+
+.attendance-column {
+  width: 50px; /* P, L, E columns */
+  text-align: center;
+}
+
 
 
 
