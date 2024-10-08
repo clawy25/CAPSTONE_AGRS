@@ -1,5 +1,6 @@
 import React from 'react';
 import { Tab, Tabs, Table } from 'react-bootstrap';
+import '../App.css'
 
 export default function RegistrarYearSectionTab() {
   const renderTable = () => (
@@ -43,7 +44,7 @@ export default function RegistrarYearSectionTab() {
     <div className='container-fluid bg-white p-2 px-4 rounded'>
       <Tabs defaultActiveKey="1st" id="grade-tab-system" className="mb-3 text-success">
         {/* 1st Year Tab */}
-        <Tab eventKey="1st" title={<span className="custom-color-green-font custom-font">1st</span>}>
+        <Tab eventKey="1st" title={<span className="custom-color-green-font custom-font">First Year</span>}>
           <Tabs className="mb-3">
             <Tab eventKey="1A" title={<span className="custom-color-green-font custom-font">1A</span>}>
               {renderTable()}
@@ -73,7 +74,7 @@ export default function RegistrarYearSectionTab() {
         </Tab>
 
         {/* 2nd Year Tab */}
-        <Tab eventKey="2nd" title={<span className="custom-color-green-font custom-font">2nd</span>}>
+        <Tab eventKey="2nd" title={<span className="custom-color-green-font custom-font">Second Year</span>}>
           <Tabs className="mb-3">
             <Tab eventKey="2A" title={<span className="custom-color-green-font custom-font">2A</span>}>
               {renderTable()}
@@ -103,7 +104,7 @@ export default function RegistrarYearSectionTab() {
         </Tab>
 
         {/* 3rd Year Tab */}
-        <Tab eventKey="3rd" title={<span className="custom-color-green-font custom-font">3rd</span>}>
+        <Tab eventKey="3rd" title={<span className="custom-color-green-font custom-font">Thrid Year</span>}>
           <Tabs className="mb-3">
             <Tab eventKey="3A" title={<span className="custom-color-green-font custom-font">3A</span>}>
               {renderTable()}
@@ -133,7 +134,7 @@ export default function RegistrarYearSectionTab() {
         </Tab>
 
         {/* 4th Year Tab */}
-        <Tab eventKey="4th" title={<span className="custom-color-green-font custom-font">4th</span>}>
+        <Tab eventKey="4th" title={<span className="custom-color-green-font custom-font">Fourth Year</span>}>
           <Tabs className="mb-3">
             <Tab eventKey="4A" title={<span className="custom-color-green-font custom-font">4A</span>}>
               {renderTable()}
