@@ -20,7 +20,7 @@ export default function StudentDashboard() {
   const SECTIONS = {
     ENROLLMENT: 'enrollment',
     SCHEDULE: 'schedule',
-    GRADES: 'grades',
+    GRADES: 'grades'
   };
 
   const handleLogout = () => {
@@ -101,6 +101,7 @@ export default function StudentDashboard() {
                     <FontAwesomeIcon icon={faGraduationCap} className="me-2" />
                     GRADES
                 </Link>
+
             </nav>
 
       </div>
@@ -140,11 +141,19 @@ export default function StudentDashboard() {
         </header>
 
         {selectedSection === 'enrollment' && (
-          <section className="mt-3 ms-0">
+          <section>
+            <section className="mt-3 ms-0 ">
             <h2 className="custom-font custom-color-green-font">Enrollment</h2>
-            <StudentEnrollment />
+          
+              <StudentEnrollment />
+           
+           
           </section>
+
+          </section>
+          
         )}
+
 
         {selectedSection === 'schedule' && (
           <section className="m-3 ms-0">
