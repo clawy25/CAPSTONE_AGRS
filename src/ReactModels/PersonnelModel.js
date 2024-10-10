@@ -42,4 +42,26 @@ export default class PersonnelModel {
       throw error;
     }
   }
+  // NO FRONTEND FOR INSERTING PERSONNEL YET
+  static async insertPersonnel(personnelData) {
+    try {
+      const response = await fetch('http://localhost:5000/personnel/upload', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(personnelData),
+      });
+
+      if (!response.ok) {
+        throw new Error('Error creating personnel');
+      }
+
+        const data = await response.json();
+        return data; // Return the response or any necessary data
+    } catch (error) {
+        console.error('Error creating personnel:', error);
+        throw error;
+    }
+  }
 }

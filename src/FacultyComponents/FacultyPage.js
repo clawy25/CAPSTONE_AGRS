@@ -55,25 +55,24 @@ export default function FacultyPage() {
       // Fetch the personnel data using the account number
       const user = await PersonnelModel.fetchPersonnelData(accountNumber);
   
-      // If the fetched data matches the input credentials (you can implement further validation here)
-      if (user && user.personnelPassword === password) {
-        setUser(user);//Transfers the fetched data to the UserContext.js; store the current user's credentials
+      // If the user is fetched successfully
+      if (user) {
+        setUser(user); // Store the current user's credentials
 
-        if (user.personnelType === 'Faculty') {
-          navigate('/faculty-dashboard');
-        } else if (user.personnelType === 'Head') {
-          navigate('/programHead-dashboard');
-        } else if (user.personnelType === 'Registrar') {
-          navigate('/registrar-dashboard');
-        } else {
-          setError('Unauthorized personnel type.');
+      // Navigate based on personnel type
+      if (user.personnelType === 'Faculty') {
+        navigate('/faculty-dashboard');
+      } else if (user.personnelType === 'Head') {
+        navigate('/programHead-dashboard');
+      } else if (user.personnelType === 'Registrar') {
+        navigate('/registrar-dashboard');
+      } else {
+        setError('Unauthorized personnel type.');
       }
       console.log('Login successful:', user);
-      
-      
-      } else {
-        setError('Invalid credentials.');
-      }
+    } else {
+      setError('Invalid credentials.'); // This will be handled by the backend now
+    }
     } catch (error) {
       setError('Account does not exist. Try again.');
     }
