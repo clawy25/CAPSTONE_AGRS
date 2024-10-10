@@ -1,56 +1,28 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUser, faSignOutAlt, faBars, faChalkboardTeacher, faCalendar, faSearch, faPlus, faMinus } from '@fortawesome/free-solid-svg-icons'; // Import minus icon
+import { faSearch, faPlus, faMinus } from '@fortawesome/free-solid-svg-icons'; // Import minus icon
 import '../StudentComponents/Dashboard.css';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { UserContext } from '../Context/UserContext';
 
 const ClassDetails = () => {
-  const navigate = useNavigate();
-  const [showDropdown, setShowDropdown] = useState(false);
-  const [showSidebar, setShowSidebar] = useState(false);
-  const [selectedSection, setSelectedSection] = useState('classes');
-  const [selectedClass, setSelectedClass] = useState(null);
   const [selectedPeriod, setSelectedPeriod] = useState('midterm');
   const [searchTerm, setSearchTerm] = useState('');
-  const dropdownRef = useRef(null);
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [status, setStatus] = useState({});
-  const [numOfDays, setNumOfDays] = useState(21);
   const [attendanceColumns, setAttendanceColumns] = useState([{ id: 1, date: new Date() }]);
+  const [assignmentColumns, setAssignmentColumns] = useState([{ id: 1 }]);
+  const [quizColumns, setQuizColumns] = useState([{ id: 1 }]); 
+  const [recitationColumns, setRecitationColumns] = useState([{ id: 1 }]);
+  const [pbaColumns, setPbaColumns] = useState([{ id: 1 }]);
 
-  // Function to change the attendance date in the header
-  const handleDateChange = (date, index) => {
-    setAttendanceColumns((prevColumns) =>
-      prevColumns.map((col, i) => (i === index ? { ...col, date } : col))
-    );
+  
+  const addColumn = (setColumns) => {
+    setColumns((prevColumns) => [...prevColumns, { id: prevColumns.length + 1 }]);
   };
 
-  // Function to add a new Attendance Date column
-  const handleAddColumn = () => {
-    setAttendanceColumns((prevColumns) => [
-      ...prevColumns,
-      { id: prevColumns.length + 1, date: new Date() }
-    ]);
-  };
 
-  // Function to remove an Attendance Date column
-  const handleRemoveColumn = (index) => {
-    setAttendanceColumns((prevColumns) => prevColumns.filter((_, i) => i !== index));
-  };
-
-  // Function to handle status change in rows
-  const handleStatusChange = (studentId, columnId, newStatus) => {
-    setStatus((prevStatus) => ({
-      ...prevStatus,
-      [studentId]: {
-        ...prevStatus[studentId],
-        [columnId]: newStatus,
-      }
-    }));
+  const removeColumn = (index, setColumns) => {
+    setColumns((prevColumns) => prevColumns.filter((_, i) => i !== index));
   };
 
   // Function to handle period change
@@ -58,522 +30,524 @@ const ClassDetails = () => {
     setSelectedPeriod(period);
   };
 
-  // Function to handle changes in the number of days
-  const handleDaysChange = (e) => {
-    setNumOfDays(e.target.value);
-  };
-
   // Function to handle search input changes
   const handleSearchChange = (event) => {
     setSearchTerm(event.target.value);
   };
 
-  const students = [
-    { id: 123456, name: 'John Doe' },
-    { id: 234567, name: 'Jane Smith' },
-    { id: 345678, name: 'Michael Brown' },
-    { id: 456789, name: 'Alice Johnson' }
-  ];
+
+
 
   const renderTableContent = () => {
     switch (selectedPeriod) {
       case 'midterm':
         return (
-          <div>
-            <table className="details-table">
-              <thead>
-                <tr>
-                  <th colSpan="2" rowSpan="1">Student Info.</th>
-                  <th colSpan={6 + attendanceColumns.length} rowSpan="1">
-                    Attendance (P-Present; L-Late; E=Excuse; A=Absent)
-                    <button 
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', marginLeft: '10px' }}
-                      onClick={handleAddColumn}
+          <div style={{ overflowX: 'auto', maxHeight: '500px' }}>
+          <table className="details-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr>
+                <th colSpan="2">Student Info</th>
+                <th colSpan={attendanceColumns.length + 7}>Attendance (P-Present; L-Late; E-Excuse; A-Absent)</th>
+                <th colSpan={assignmentColumns.length + 3} rowSpan={3}>Assignments 5%</th>
+                <th colSpan={quizColumns.length + 3} rowSpan={2}>Quizzes/Seatwork 10%</th> {/* New column header */}
+                <th colSpan={recitationColumns.length + 3} rowSpan={3}>Recitation/Participation 10%</th>
+                <th colSpan="1" rowSpan="3">CS Grade</th>
+                <th colSpan={pbaColumns.length + 3} rowSpan={2}>Performance Based Assessment</th>
+                <th colSpan="3" rowSpan="3">Midterm Exam</th>
+                <th colSpan="1" rowSpan="3">Midterm Grade</th>
+                <th colSpan="1" rowSpan="4">Numerical Equivalent</th>
+                <th colSpan="1" rowSpan="4">Remarks</th>
+              </tr>
+              <tr>
+                <th rowSpan="3">Student No</th>
+                <th rowSpan="3">Name</th>
+                {/* Attendance Columns */}
+                {attendanceColumns.map((column, index) => (
+                  <th rowSpan="3">
+                    <DatePicker
+                      selected={column.date}
+                      onChange={(date) =>
+                        setAttendanceColumns((prevColumns) =>
+                          prevColumns.map((col, i) => (i === index ? { ...col, date } : col))
+                        )
+                      }
+                      dateFormat="yyyy-MM-dd"
+                    /> 
+                    <button
+                      onClick={() => removeColumn(index, setAttendanceColumns)}
+                      style={{ background: 'none', border: 'none' }}
                     >
-                      <FontAwesomeIcon icon={faPlus} />
+                      <FontAwesomeIcon icon={faMinus} />
                     </button>
                   </th>
-                  <th colSpan="27" rowSpan="1">Class Standing 30%</th>
-                  <th colSpan="6" rowSpan="1">Performance Based Assessment 30%</th>
-                  <th colSpan="3" rowSpan="3">Midterm Exam</th>
-                  <th colSpan="1" rowSpan="3">Midterm Grade</th>
-                  <th colSpan="1" rowSpan="4">Numerical Equivalent</th>
-                  <th colSpan="1" rowSpan="4">Remarks</th>
-                </tr>
-                <tr>
-                  <th rowSpan="4">Student No</th>
-                  <th rowSpan="4">Name</th>
-                  {attendanceColumns.map((column, index) => (
-                    <th key={index} rowSpan="3">
-                      Attendance Date {index + 1}
-                      <br />
-                      <DatePicker
-                        selected={column.date}
-                        onChange={(date) => handleDateChange(date, index)}
-                        dateFormat="yyyy-MM-dd"
-                        className="date-picker"
-                      />
-                      <button 
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', marginLeft: '10px' }}
-                        onClick={() => handleRemoveColumn(index)} 
-                      >
-                        <FontAwesomeIcon icon={faMinus} />
-                      </button>
-                    </th>
-                  ))}
-                  <th colSpan="3">No of Days</th>
-                  <th colSpan="1">
-                    <input
-                      type="number"
-                      value={numOfDays}
-                      onChange={handleDaysChange}
-                      placeholder="No of Days"
-                      style={{ width: '50px' }}
-                    />
-                  </th>
-                  <th colSpan="2">Attendance (5%)</th>
-                  <th colSpan="7" rowSpan="2">Assignment 5%</th>
-                  <th colSpan="12">Quizzes/Seatwork 10%</th>
-                  <th colSpan="7" rowSpan="2">Recitation/Participation 10%</th>
-                  <th colSpan="1" rowSpan="2">CS Grade</th>
-                  <th colSpan="1" rowSpan="2">PBA 1</th>
-                  <th colSpan="1" rowSpan="2">PBA 2</th>
-                  <th colSpan="1" rowSpan="2">PBA 3</th>
-                  <th colSpan="1" rowSpan="2">PBA 4</th>
-                  <th colSpan="1" rowSpan="3">Total</th>
-                  <th colSpan="1" rowSpan="2">PBA Grade</th>
-                </tr>
-                <tr>
-                  <th colSpan="4">Total Student Attendance</th>
-                  <th colSpan="2">5%</th>
-                  <th><input type="number" style={{ width: '70px' }} placeholder="Items" /></th>
-                  <th><input type="number" style={{ width: '70px' }} placeholder="Items" /></th>
-                  <th><input type="number" style={{ width: '70px' }} placeholder="Items" /></th>
-                  <th><input type="number" style={{ width: '70px' }} placeholder="Items" /></th>
-                  <th><input type="number" style={{ width: '70px' }} placeholder="Items" /></th>
-                  <th colSpan="5">Equivalent Rate</th>
-                  <th rowSpan="2" colSpan="1">Total</th>
-                  <th rowSpan="2" colSpan="1">10%</th>
-                </tr>
-                <tr>
-                  <th>P</th>
-                  <th>L</th>
-                  <th>E</th>
-                  <th className="narrow-column">A</th>
-                  <th>50%</th>
-                  <th>5%</th>
-                  <th>1</th>
-                  <th>2</th>
-                  <th>3</th>
-                  <th>4</th>
-                  <th>5</th>
-                  <th>Total</th>
-                  <th>5%</th>
-                  <th>1</th>
-                  <th>2</th>
-                  <th>3</th>
-                  <th>4</th>
-                  <th>5</th>
-                  <th>1</th>
-                  <th>2</th>
-                  <th>3</th>
-                  <th>4</th>
-                  <th>5</th>
-                  <th>1</th>
-                  <th>2</th>
-                  <th>3</th>
-                  <th>4</th>
-                  <th>5</th>
-                  <th>Total</th>
-                  <th>10%</th>
-                  <th>30%</th>
-                  <th>
-                    <select style={{ width: '100px' }}>
-                      <option value="" defaultChecked>Select</option>
-                      <option value="Option1">Projects</option>
-                      <option value="Option2">Reports</option>
-                      <option value="Option3">Reflection</option>
-                      <option value="Option2">Portfolio</option>
-                      <option value="Option3">Research</option>
-                      <option value="Option3">Lab</option>
-                    </select>
-                  </th>
-                  <th>
-                    <select style={{ width: '100px' }}>
-                      <option value="" defaultChecked>Select</option>
-                      <option value="Option1">Projects</option>
-                      <option value="Option2">Reports</option>
-                      <option value="Option3">Reflection</option>
-                      <option value="Option2">Portfolio</option>
-                      <option value="Option3">Research</option>
-                      <option value="Option3">Lab</option>
-                    </select>
-                  </th>
-                  <th>
-                    <select style={{ width: '100px' }}>
-                      <option value="" defaultChecked>Select</option>
-                      <option value="Option1">Projects</option>
-                      <option value="Option2">Reports</option>
-                      <option value="Option3">Reflection</option>
-                      <option value="Option2">Portfolio</option>
-                      <option value="Option3">Research</option>
-                      <option value="Option3">Lab</option>
-                    </select>
-                  </th>
-                  <th>
-                    <select style={{ width: '100px' }}>
-                      <option value="" defaultChecked>Select</option>
-                      <option value="Option1">Projects</option>
-                      <option value="Option2">Reports</option>
-                      <option value="Option3">Reflection</option>
-                      <option value="Option2">Portfolio</option>
-                      <option value="Option3">Research</option>
-                      <option value="Option3">Lab</option>
-                    </select>
-                  </th>
-                  <th>30%</th>
-                  <th><input type="number" style={{ width: '70px' }} placeholder="Items" /></th>
-                  <th colSpan="2" rowSpan="1">40%</th>
-                  <th>Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                {students.map((student) => (
-                  <tr key={student.id}>
-                    <td>{student.id}</td>
-                    <td>{student.name}</td>
-                    {attendanceColumns.map((column, index) => (
-                      <td key={index}>
-                        <select
-                          value={status[student.id]?.[index + 1] || ''}
-                          onChange={(e) => handleStatusChange(student.id, index + 1, e.target.value)}
-                        >
-                          <option value="">Select Status</option>
-                          <option value="P">P</option>
-                          <option value="L">L</option>
-                          <option value="E">E</option>
-                          <option value="A">A</option>
-                        </select>
-                      </td>
-                    ))}
-                    <td>{status[student.id]?.P ? 1 : 0}</td>
-                    <td>{status[student.id]?.L ? 1 : 0}</td>
-                    <td>{status[student.id]?.E ? 1 : 0}</td>
-                    <td className="narrow-column">{status[student.id]?.A ? 1 : 0}</td>
-                    <td></td> 
-                    <td></td> 
-                    {/* Add input fields for assignments */}
-                    <td><input type="number" style={{ width: '50px' }} /></td> {/* Assignment 1 */}
-                    <td><input type="number" style={{ width: '50px' }} /></td> {/* Assignment 2 */}
-                    <td><input type="number" style={{ width: '50px' }} /></td> {/* Assignment 3 */}
-                    <td><input type="number" style={{ width: '50px' }} /></td> {/* Assignment 4 */}
-                    <td><input type="number" style={{ width: '50px' }} /></td> {/* Assignment 5 */}
-                    <td></td> {/* Total for Assignments */}
-                    <td></td> {/* 5% for Assignments */}
-                    {/* Quizzes/Seatwork Columns */}
-                    <td><input type="number" style={{ width: '50px' }} /></td> {/* Quiz 1 */}
-                    <td><input type="number" style={{ width: '50px' }} /></td> {/* Quiz 2 */}
-                    <td><input type="number" style={{ width: '50px' }} /></td> {/* Quiz 3 */}
-                    <td><input type="number" style={{ width: '50px' }} /></td> {/* Quiz 4 */}
-                    <td><input type="number" style={{ width: '50px' }} /></td> {/* Quiz 5 */}
-                    <td></td> {/* Equivalent Rate 1 */}
-                    <td></td> {/* Equivalent Rate 2 */}
-                    <td></td> {/* Equivalent Rate 3 */}
-                    <td></td> {/* Equivalent Rate 4 */}
-                    <td></td> {/* Equivalent Rate 5 */}
-                    <td></td> {/* Total */}
-                    <td></td> {/* 10% */}
-                    {/* Recitation/Participation Columns */}
-                    <td><input type="number" style={{ width: '50px' }} /></td> {/* Recitation 1 */}
-                    <td><input type="number" style={{ width: '50px' }} /></td> {/* Recitation 2 */}
-                    <td><input type="number" style={{ width: '50px' }} /></td> {/* Recitation 3 */}
-                    <td><input type="number" style={{ width: '50px' }} /></td> {/* Recitation 4 */}
-                    <td><input type="number" style={{ width: '50px' }} /></td> {/* Recitation 5 */}
-                    <td></td> {/* Recitation Total */}
-                    <td></td> {/* Recitation 10% */}
-                    <td></td> {/* CS GRADE 30% */}
-                    <td><input type="number" style={{ width: '100px' }} /></td> {/* PBA 1 */}
-                    <td><input type="number" readOnly style={{ width: '100px' }} /></td> {/* PBA 2 */}
-                    <td><input type="number" readOnly style={{ width: '100px' }} /></td> {/* PBA 3 */}
-                    <td><input type="number" readOnly style={{ width: '100px' }} /></td> {/* PBA 4 */}
-                    <td></td>
-                    <td></td>
-                    <td><input type="number" readOnly style={{ width: '70px' }} /></td> {/* 5% for Assignments */}
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td>
-                      <select
-                        value={status[student.id] || ''}
-                        onChange={(e) => handleStatusChange(student.id, e.target.value)}
-                      >
-                        <option defaultChecked="">Select Status</option>
-                        <option value="Failed">Failed</option>
-                        <option value="Passed">Passed</option>
-                        <option value="OD">OD</option>
-                        <option value="UD">UD</option>
-                        <option value="INC">INC</option>
-                        <option value="NC">NC</option>
-                        <option value="FA">FA</option>
-                      </select>
-                    </td>
-                  </tr>
                 ))}
-              </tbody>
-            </table>
-          </div>
-        );
+                {/* Add Column Button */}
+                <th rowSpan="3" style={{ background: '#d1e7dd', padding: '0', border: 'none' }}>
+                  <button onClick={() => addColumn(setAttendanceColumns)} style={{ background: 'none', border: 'none' }}>
+                    <FontAwesomeIcon icon={faPlus} />
+                  </button>
+                </th>
+                {/* New Row for No of Days and Input Field */}
+                <th colSpan="2">No of Days</th>
+                <th colSpan="2">
+                  <input type="text" style={{ width: '60px', marginLeft: '10px' }} />
+                </th>
+                <th colSpan="2" rowSpan="2">Attendance 5%</th>
+              </tr>
+              <tr>
+                {/* "Total Student Attendance" header placed below the "No of Days" and "Input Field" */}
+                <th colSpan="4">Total Student Attendance</th>
+                {/* Quiz Columns */}
+                {quizColumns.map((_, index) => (
+                  <th key={index}>
+                    <input type="number" style={{ width: '70px' }} placeholder="Items" />
+                  </th>
+                ))}
+                <th rowSpan={2} style={{ background: '#d1e7dd', padding: '0', border: 'none' }}>
+                  <button onClick={() => addColumn(setQuizColumns)} style={{ background: 'none', border: 'none' }}>
+                    <FontAwesomeIcon icon={faPlus} />
+                  </button>
+                </th>
+                <th rowSpan={2}>Total</th>
+                <th rowSpan={2}>10%</th>
+    
+                {/* PBA Columns */}
+                {pbaColumns.map((_, index) => (
+                  <th key={index} >
+                    PBA {index + 1}
+                    <button onClick={() => removeColumn(index, setPbaColumns)} style={{ background: 'none', border: 'none' }}>
+                      <FontAwesomeIcon icon={faMinus} />
+                    </button>
+                  </th>
+                ))}
+                <th rowSpan={2} style={{ background: '#d1e7dd', padding: '0', border: 'none' }}>
+                  <button onClick={() => addColumn(setPbaColumns)} style={{ background: 'none', border: 'none' }}>
+                    <FontAwesomeIcon icon={faPlus} />
+                  </button>
+                </th>
+                <th rowSpan={2}>Total</th>
+                <th>PBA Grade</th>
+    
+              </tr>
+              <tr>
+                <th colSpan="1">P</th>
+                <th colSpan="1">L</th>
+                <th colSpan="1">E</th>
+                <th colSpan="1">A</th>
+                <th colSpan="2">5%</th>
+    
+                {/* Assignment Columns */}
+                {assignmentColumns.map((_, index) => (
+                  <th key={index}>
+                    Assignment {index + 1}
+                    <button onClick={() => removeColumn(index, setAssignmentColumns)} style={{ background: 'none', border: 'none' }}>
+                      <FontAwesomeIcon icon={faMinus} />
+                    </button>
+                  </th>
+                ))}
+                <th style={{ background: '#d1e7dd', padding: '0', border: 'none' }}>
+                  <button onClick={() => addColumn(setAssignmentColumns)} style={{ background: 'none', border: 'none' }}>
+                    <FontAwesomeIcon icon={faPlus} />
+                  </button>
+                </th>
+                <th>Total</th>
+                <th>5%</th>
+    
+                {/* Quizzes/Seatwork Columns */}
+                {quizColumns.map((_, index) => (
+                  <th key={index}>
+                    Q/S {index + 1}
+                    <button onClick={() => removeColumn(index, setQuizColumns)} style={{ background: 'none', border: 'none' }}>
+                      <FontAwesomeIcon icon={faMinus} />
+                    </button>
+                  </th>
+                ))}
+    
+                {/* Recitation Columns */}
+                {recitationColumns.map((_, index) => (
+                  <th key={index}>
+                    Recitation {index + 1}
+                    <button onClick={() => removeColumn(index, setRecitationColumns)} style={{ background: 'none', border: 'none' }}>
+                      <FontAwesomeIcon icon={faMinus} />
+                    </button>
+                  </th>
+                ))}
+                <th style={{ background: '#d1e7dd', padding: '0', border: 'none' }}>
+                  <button onClick={() => addColumn(setRecitationColumns)} style={{ background: 'none', border: 'none' }}>
+                    <FontAwesomeIcon icon={faPlus} />
+                  </button>
+                </th>
+                <th>Total</th>
+                <th>10%</th>
+                <th>30%</th>
+    
+                {/* Quiz Columns */}
+                {pbaColumns.map((_, index) => (
+                  <th>
+                  <select>
+                  <option value="Project">Select</option>
+                    <option value="Project">Project</option>
+                    <option value="Reports">Reports</option>
+                    <option value="Reflection">Reflection</option>
+                    <option value="Portfolio">Portfolio</option>
+                    <option value="Research">Research</option>
+                    <option value="Laboratory">Laboratory</option>
+                  </select>
+                </th>
+                ))}
+    
+              <th>30%</th>
+              <th>
+                    <input type="number" style={{ width: '70px' }} placeholder="Items" />
+              </th>
+              <th colSpan={2}>40%</th>
+              <th>Total</th>
+    
+              </tr>
+            </thead>
+            <tbody>
+              {/* Example Student Data */}
+              <tr>
+                <td>123456</td>
+                <td>John Doe</td>
+                {attendanceColumns.map((_, index) => (
+                  <td key={index}>
+                    <select>
+                      <option value="Select">Select</option>
+                      <option value="P">P</option>
+                      <option value="L">L</option>
+                      <option value="E">E</option>
+                      <option value="A">A</option>
+                  </select>
+                  </td>
+                ))}
+                <td></td>
+                <td>0</td>
+                <td>0</td>
+                <td>0</td>
+                <td>0</td>
+    
+                <td></td>
+                <td></td>
+    
+                {assignmentColumns.map((_, index) => (
+                  <td key={index}>
+                    <input type="number" style={{ width: '70px' }} placeholder="Score" />
+                  </td>
+                ))}
+                <td></td>
+                <td></td>
+                <td></td>
+    
+                {quizColumns.map((_, index) => (
+                  <td key={index}>
+                    <input type="number" style={{ width: '70px' }} placeholder="Score" />
+                  </td> // Placeholder for quiz data
+                ))}
+                <td></td>
+                <td></td>
+                <td></td>
+    
+                {recitationColumns.map((_, index) => (
+                  <td key={index}>
+                    <input type="number" style={{ width: '70px' }} placeholder="Score" />
+                  </td>
+                ))}
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+    
+    
+                {pbaColumns.map((_, index) => (
+                  <td key={index}>
+                    <input type="number" style={{ width: '70px' }} placeholder="Score" />
+                  </td>
+                ))}
+                <td></td>
+                <td></td>
+                <td></td>
+    
+                <td><input type="number" style={{ width: '70px' }} placeholder="Score" /></td>
+                <td></td>
+                <td></td>
+    
+                <td></td>
+                <td></td>
+    
+                <td>
+                    <select>
+                      <option value="Select">Select</option>
+                      <option value="P">PASSED</option>
+                      <option value="F">FAILED</option>
+                      <option value="OD">OD</option>
+                      <option value="UD">UD</option>
+                      <option value="F">INC</option>
+                      <option value="OD">NC</option>
+                      <option value="UD"></option>
+                  </select>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      );
 
       
       case 'finals':
         return (
-          <div>
-            <table className="details-table">
-              <thead>
-                <tr>
-                  <th colSpan="2" rowSpan="1">Student Info.</th>
-                  <th colSpan={6 + attendanceColumns.length} rowSpan="1">
-                    Attendance (P-Present; L-Late; E=Excuse; A=Absent)
-                    <button 
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', marginLeft: '10px' }}
-                      onClick={handleAddColumn}
+          <div style={{ overflowX: 'auto', maxHeight: '500px' }}>
+          <table className="details-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr>
+                <th colSpan="2">Student Info</th>
+                <th colSpan={attendanceColumns.length + 7}>Attendance (P-Present; L-Late; E-Excuse; A-Absent)</th>
+                <th colSpan={assignmentColumns.length + 3} rowSpan={3}>Assignments 5%</th>
+                <th colSpan={quizColumns.length + 3} rowSpan={2}>Quizzes/Seatwork 10%</th> {/* New column header */}
+                <th colSpan={recitationColumns.length + 3} rowSpan={3}>Recitation/Participation 10%</th>
+                <th colSpan="1" rowSpan="3">CS Grade</th>
+                <th colSpan={pbaColumns.length + 3} rowSpan={2}>Performance Based Assessment</th>
+                <th colSpan="3" rowSpan="3">Midterm Exam</th>
+                <th colSpan="1" rowSpan="3">Midterm Grade</th>
+                <th colSpan="1" rowSpan="4">Numerical Equivalent</th>
+                <th colSpan="1" rowSpan="4">Remarks</th>
+              </tr>
+              <tr>
+                <th rowSpan="3">Student No</th>
+                <th rowSpan="3">Name</th>
+                {/* Attendance Columns */}
+                {attendanceColumns.map((column, index) => (
+                  <th rowSpan="3">
+                    <DatePicker
+                      selected={column.date}
+                      onChange={(date) =>
+                        setAttendanceColumns((prevColumns) =>
+                          prevColumns.map((col, i) => (i === index ? { ...col, date } : col))
+                        )
+                      }
+                      dateFormat="yyyy-MM-dd"
+                    /> 
+                    <button
+                      onClick={() => removeColumn(index, setAttendanceColumns)}
+                      style={{ background: 'none', border: 'none' }}
                     >
-                      <FontAwesomeIcon icon={faPlus} />
+                      <FontAwesomeIcon icon={faMinus} />
                     </button>
                   </th>
-                  <th colSpan="27" rowSpan="1">Class Standing 30%</th>
-                  <th colSpan="6" rowSpan="1">Performance Based Assessment 30%</th>
-                  <th colSpan="3" rowSpan="3">Midterm Exam</th>
-                  <th colSpan="1" rowSpan="3">Midterm Grade</th>
-                  <th colSpan="1" rowSpan="4">Numerical Equivalent</th>
-                  <th colSpan="1" rowSpan="4">Remarks</th>
-                </tr>
-                <tr>
-                  <th rowSpan="4">Student No</th>
-                  <th rowSpan="4">Name</th>
-                  {attendanceColumns.map((column, index) => (
-                    <th key={index} rowSpan="3">
-                      Attendance Date {index + 1}
-                      <br />
-                      <DatePicker
-                        selected={column.date}
-                        onChange={(date) => handleDateChange(date, index)}
-                        dateFormat="yyyy-MM-dd"
-                        className="date-picker"
-                      />
-                      <button 
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', marginLeft: '10px' }}
-                        onClick={() => handleRemoveColumn(index)} 
-                      >
-                        <FontAwesomeIcon icon={faMinus} />
-                      </button>
-                    </th>
-                  ))}
-                  <th colSpan="3">No of Days</th>
-                  <th colSpan="1">
-                    <input
-                      type="number"
-                      value={numOfDays}
-                      onChange={handleDaysChange}
-                      placeholder="No of Days"
-                      style={{ width: '50px' }}
-                    />
-                  </th>
-                  <th colSpan="2">Attendance (5%)</th>
-                  <th colSpan="7" rowSpan="2">Assignment 5%</th>
-                  <th colSpan="12">Quizzes/Seatwork 10%</th>
-                  <th colSpan="7" rowSpan="2">Recitation/Participation 10%</th>
-                  <th colSpan="1" rowSpan="2">CS Grade</th>
-                  <th colSpan="1" rowSpan="2">PBA 1</th>
-                  <th colSpan="1" rowSpan="2">PBA 2</th>
-                  <th colSpan="1" rowSpan="2">PBA 3</th>
-                  <th colSpan="1" rowSpan="2">PBA 4</th>
-                  <th colSpan="1" rowSpan="3">Total</th>
-                  <th colSpan="1" rowSpan="2">PBA Grade</th>
-                </tr>
-                <tr>
-                  <th colSpan="4">Total Student Attendance</th>
-                  <th colSpan="2">5%</th>
-                  <th><input type="number" style={{ width: '70px' }} placeholder="Items" /></th>
-                  <th><input type="number" style={{ width: '70px' }} placeholder="Items" /></th>
-                  <th><input type="number" style={{ width: '70px' }} placeholder="Items" /></th>
-                  <th><input type="number" style={{ width: '70px' }} placeholder="Items" /></th>
-                  <th><input type="number" style={{ width: '70px' }} placeholder="Items" /></th>
-                  <th colSpan="5">Equivalent Rate</th>
-                  <th rowSpan="2" colSpan="1">Total</th>
-                  <th rowSpan="2" colSpan="1">10%</th>
-                </tr>
-                <tr>
-                  <th>P</th>
-                  <th>L</th>
-                  <th>E</th>
-                  <th className="narrow-column">A</th>
-                  <th>50%</th>
-                  <th>5%</th>
-                  <th>1</th>
-                  <th>2</th>
-                  <th>3</th>
-                  <th>4</th>
-                  <th>5</th>
-                  <th>Total</th>
-                  <th>5%</th>
-                  <th>1</th>
-                  <th>2</th>
-                  <th>3</th>
-                  <th>4</th>
-                  <th>5</th>
-                  <th>1</th>
-                  <th>2</th>
-                  <th>3</th>
-                  <th>4</th>
-                  <th>5</th>
-                  <th>1</th>
-                  <th>2</th>
-                  <th>3</th>
-                  <th>4</th>
-                  <th>5</th>
-                  <th>Total</th>
-                  <th>10%</th>
-                  <th>30%</th>
-                  <th>
-                    <select style={{ width: '100px' }}>
-                      <option value="" defaultChecked>Select</option>
-                      <option value="Option1">Projects</option>
-                      <option value="Option2">Reports</option>
-                      <option value="Option3">Reflection</option>
-                      <option value="Option2">Portfolio</option>
-                      <option value="Option3">Research</option>
-                      <option value="Option3">Lab</option>
-                    </select>
-                  </th>
-                  <th>
-                    <select style={{ width: '100px' }}>
-                      <option value="" defaultChecked>Select</option>
-                      <option value="Option1">Projects</option>
-                      <option value="Option2">Reports</option>
-                      <option value="Option3">Reflection</option>
-                      <option value="Option2">Portfolio</option>
-                      <option value="Option3">Research</option>
-                      <option value="Option3">Lab</option>
-                    </select>
-                  </th>
-                  <th>
-                    <select style={{ width: '100px' }}>
-                      <option value="" defaultChecked>Select</option>
-                      <option value="Option1">Projects</option>
-                      <option value="Option2">Reports</option>
-                      <option value="Option3">Reflection</option>
-                      <option value="Option2">Portfolio</option>
-                      <option value="Option3">Research</option>
-                      <option value="Option3">Lab</option>
-                    </select>
-                  </th>
-                  <th>
-                    <select style={{ width: '100px' }}>
-                      <option value="" defaultChecked>Select</option>
-                      <option value="Option1">Projects</option>
-                      <option value="Option2">Reports</option>
-                      <option value="Option3">Reflection</option>
-                      <option value="Option2">Portfolio</option>
-                      <option value="Option3">Research</option>
-                      <option value="Option3">Lab</option>
-                    </select>
-                  </th>
-                  <th>30%</th>
-                  <th><input type="number" style={{ width: '70px' }} placeholder="Items" /></th>
-                  <th colSpan="2" rowSpan="1">40%</th>
-                  <th>Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                {students.map((student) => (
-                  <tr key={student.id}>
-                    <td>{student.id}</td>
-                    <td>{student.name}</td>
-                    {attendanceColumns.map((column, index) => (
-                      <td key={index}>
-                        <select
-                          value={status[student.id]?.[index + 1] || ''}
-                          onChange={(e) => handleStatusChange(student.id, index + 1, e.target.value)}
-                        >
-                          <option value="">Select Status</option>
-                          <option value="P">P</option>
-                          <option value="L">L</option>
-                          <option value="E">E</option>
-                          <option value="A">A</option>
-                        </select>
-                      </td>
-                    ))}
-                    <td>{status[student.id]?.P ? 1 : 0}</td>
-                    <td>{status[student.id]?.L ? 1 : 0}</td>
-                    <td>{status[student.id]?.E ? 1 : 0}</td>
-                    <td className="narrow-column">{status[student.id]?.A ? 1 : 0}</td>
-                    <td></td> 
-                    <td></td> 
-                    {/* Add input fields for assignments */}
-                    <td><input type="number" style={{ width: '50px' }} /></td> {/* Assignment 1 */}
-                    <td><input type="number" style={{ width: '50px' }} /></td> {/* Assignment 2 */}
-                    <td><input type="number" style={{ width: '50px' }} /></td> {/* Assignment 3 */}
-                    <td><input type="number" style={{ width: '50px' }} /></td> {/* Assignment 4 */}
-                    <td><input type="number" style={{ width: '50px' }} /></td> {/* Assignment 5 */}
-                    <td></td> {/* Total for Assignments */}
-                    <td></td> {/* 5% for Assignments */}
-                    {/* Quizzes/Seatwork Columns */}
-                    <td><input type="number" style={{ width: '50px' }} /></td> {/* Quiz 1 */}
-                    <td><input type="number" style={{ width: '50px' }} /></td> {/* Quiz 2 */}
-                    <td><input type="number" style={{ width: '50px' }} /></td> {/* Quiz 3 */}
-                    <td><input type="number" style={{ width: '50px' }} /></td> {/* Quiz 4 */}
-                    <td><input type="number" style={{ width: '50px' }} /></td> {/* Quiz 5 */}
-                    <td></td> {/* Equivalent Rate 1 */}
-                    <td></td> {/* Equivalent Rate 2 */}
-                    <td></td> {/* Equivalent Rate 3 */}
-                    <td></td> {/* Equivalent Rate 4 */}
-                    <td></td> {/* Equivalent Rate 5 */}
-                    <td></td> {/* Total */}
-                    <td></td> {/* 10% */}
-                    {/* Recitation/Participation Columns */}
-                    <td><input type="number" style={{ width: '50px' }} /></td> {/* Recitation 1 */}
-                    <td><input type="number" style={{ width: '50px' }} /></td> {/* Recitation 2 */}
-                    <td><input type="number" style={{ width: '50px' }} /></td> {/* Recitation 3 */}
-                    <td><input type="number" style={{ width: '50px' }} /></td> {/* Recitation 4 */}
-                    <td><input type="number" style={{ width: '50px' }} /></td> {/* Recitation 5 */}
-                    <td></td> {/* Recitation Total */}
-                    <td></td> {/* Recitation 10% */}
-                    <td></td> {/* CS GRADE 30% */}
-                    <td><input type="number" style={{ width: '100px' }} /></td> {/* PBA 1 */}
-                    <td><input type="number" readOnly style={{ width: '100px' }} /></td> {/* PBA 2 */}
-                    <td><input type="number" readOnly style={{ width: '100px' }} /></td> {/* PBA 3 */}
-                    <td><input type="number" readOnly style={{ width: '100px' }} /></td> {/* PBA 4 */}
-                    <td></td>
-                    <td></td>
-                    <td><input type="number" readOnly style={{ width: '70px' }} /></td> {/* 5% for Assignments */}
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td>
-                      <select
-                        value={status[student.id] || ''}
-                        onChange={(e) => handleStatusChange(student.id, e.target.value)}
-                      >
-                        <option defaultChecked="">Select Status</option>
-                        <option value="Failed">Failed</option>
-                        <option value="Passed">Passed</option>
-                        <option value="OD">OD</option>
-                        <option value="UD">UD</option>
-                        <option value="INC">INC</option>
-                        <option value="NC">NC</option>
-                        <option value="FA">FA</option>
-                      </select>
-                    </td>
-                  </tr>
                 ))}
-              </tbody>
-            </table>
-          </div>
-        );
-        
+                {/* Add Column Button */}
+                <th rowSpan="3" style={{ background: '#d1e7dd', padding: '0', border: 'none' }}>
+                  <button onClick={() => addColumn(setAttendanceColumns)} style={{ background: 'none', border: 'none' }}>
+                    <FontAwesomeIcon icon={faPlus} />
+                  </button>
+                </th>
+                {/* New Row for No of Days and Input Field */}
+                <th colSpan="2">No of Days</th>
+                <th colSpan="2">
+                  <input type="text" style={{ width: '60px', marginLeft: '10px' }} />
+                </th>
+                <th colSpan="2" rowSpan="2">Attendance 5%</th>
+              </tr>
+              <tr>
+                {/* "Total Student Attendance" header placed below the "No of Days" and "Input Field" */}
+                <th colSpan="4">Total Student Attendance</th>
+                {/* Quiz Columns */}
+                {quizColumns.map((_, index) => (
+                  <th key={index}>
+                    <input type="number" style={{ width: '70px' }} placeholder="Items" />
+                  </th>
+                ))}
+                <th rowSpan={2} style={{ background: '#d1e7dd', padding: '0', border: 'none' }}>
+                  <button onClick={() => addColumn(setQuizColumns)} style={{ background: 'none', border: 'none' }}>
+                    <FontAwesomeIcon icon={faPlus} />
+                  </button>
+                </th>
+                <th rowSpan={2}>Total</th>
+                <th rowSpan={2}>10%</th>
+    
+                {/* PBA Columns */}
+                {pbaColumns.map((_, index) => (
+                  <th key={index} >
+                    PBA {index + 1}
+                    <button onClick={() => removeColumn(index, setPbaColumns)} style={{ background: 'none', border: 'none' }}>
+                      <FontAwesomeIcon icon={faMinus} />
+                    </button>
+                  </th>
+                ))}
+                <th rowSpan={2} style={{ background: '#d1e7dd', padding: '0', border: 'none' }}>
+                  <button onClick={() => addColumn(setPbaColumns)} style={{ background: 'none', border: 'none' }}>
+                    <FontAwesomeIcon icon={faPlus} />
+                  </button>
+                </th>
+                <th rowSpan={2}>Total</th>
+                <th>PBA Grade</th>
+    
+              </tr>
+              <tr>
+                <th colSpan="1">P</th>
+                <th colSpan="1">L</th>
+                <th colSpan="1">E</th>
+                <th colSpan="1">A</th>
+                <th colSpan="2">5%</th>
+    
+                {/* Assignment Columns */}
+                {assignmentColumns.map((_, index) => (
+                  <th key={index}>
+                    Assignment {index + 1}
+                    <button onClick={() => removeColumn(index, setAssignmentColumns)} style={{ background: 'none', border: 'none' }}>
+                      <FontAwesomeIcon icon={faMinus} />
+                    </button>
+                  </th>
+                ))}
+                <th style={{ background: '#d1e7dd', padding: '0', border: 'none' }}>
+                  <button onClick={() => addColumn(setAssignmentColumns)} style={{ background: 'none', border: 'none' }}>
+                    <FontAwesomeIcon icon={faPlus} />
+                  </button>
+                </th>
+                <th>Total</th>
+                <th>5%</th>
+    
+                {/* Quizzes/Seatwork Columns */}
+                {quizColumns.map((_, index) => (
+                  <th key={index}>
+                    Q/S {index + 1}
+                    <button onClick={() => removeColumn(index, setQuizColumns)} style={{ background: 'none', border: 'none' }}>
+                      <FontAwesomeIcon icon={faMinus} />
+                    </button>
+                  </th>
+                ))}
+    
+                {/* Recitation Columns */}
+                {recitationColumns.map((_, index) => (
+                  <th key={index}>
+                    Recitation {index + 1}
+                    <button onClick={() => removeColumn(index, setRecitationColumns)} style={{ background: 'none', border: 'none' }}>
+                      <FontAwesomeIcon icon={faMinus} />
+                    </button>
+                  </th>
+                ))}
+                <th style={{ background: '#d1e7dd', padding: '0', border: 'none' }}>
+                  <button onClick={() => addColumn(setRecitationColumns)} style={{ background: 'none', border: 'none' }}>
+                    <FontAwesomeIcon icon={faPlus} />
+                  </button>
+                </th>
+                <th>Total</th>
+                <th>10%</th>
+                <th>30%</th>
+    
+                {/* Quiz Columns */}
+                {pbaColumns.map((_, index) => (
+                  <th>
+                  <select>
+                  <option value="Project">Select</option>
+                    <option value="Project">Project</option>
+                    <option value="Reports">Reports</option>
+                    <option value="Reflection">Reflection</option>
+                    <option value="Portfolio">Portfolio</option>
+                    <option value="Research">Research</option>
+                    <option value="Laboratory">Laboratory</option>
+                  </select>
+                </th>
+                ))}
+    
+              <th>30%</th>
+              <th>
+                    <input type="number" style={{ width: '70px' }} placeholder="Items" />
+              </th>
+              <th colSpan={2}>40%</th>
+              <th>Total</th>
+    
+              </tr>
+            </thead>
+            <tbody>
+              {/* Example Student Data */}
+              <tr>
+                <td>123456</td>
+                <td>Luke Hemmings</td>
+                {attendanceColumns.map((_, index) => (
+                  <td key={index}>
+                    <select>
+                      <option value="Select">Select</option>
+                      <option value="P">P</option>
+                      <option value="L">L</option>
+                      <option value="E">E</option>
+                      <option value="A">A</option>
+                  </select>
+                  </td>
+                ))}
+                <td></td>
+                <td>0</td>
+                <td>0</td>
+                <td>0</td>
+                <td>0</td>
+    
+                <td></td>
+                <td></td>
+    
+                {assignmentColumns.map((_, index) => (
+                  <td key={index}>
+                    <input type="number" style={{ width: '70px' }} placeholder="Score" />
+                  </td>
+                ))}
+                <td></td>
+                <td></td>
+                <td></td>
+    
+                {quizColumns.map((_, index) => (
+                  <td key={index}>
+                    <input type="number" style={{ width: '70px' }} placeholder="Score" />
+                  </td> // Placeholder for quiz data
+                ))}
+                <td></td>
+                <td></td>
+                <td></td>
+    
+                {recitationColumns.map((_, index) => (
+                  <td key={index}>
+                    <input type="number" style={{ width: '70px' }} placeholder="Score" />
+                  </td>
+                ))}
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+    
+    
+                {pbaColumns.map((_, index) => (
+                  <td key={index}>
+                    <input type="number" style={{ width: '70px' }} placeholder="Score" />
+                  </td>
+                ))}
+                <td></td>
+                <td></td>
+                <td></td>
+    
+                <td><input type="number" style={{ width: '70px' }} placeholder="Score" /></td>
+                <td></td>
+                <td></td>
+    
+                <td></td>
+                <td></td>
+    
+                <td>
+                    <select>
+                      <option value="Select">Select</option>
+                      <option value="P">PASSED</option>
+                      <option value="F">FAILED</option>
+                      <option value="OD">OD</option>
+                      <option value="UD">UD</option>
+                      <option value="F">INC</option>
+                      <option value="OD">NC</option>
+                      <option value="UD"></option>
+                  </select>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      );
+
+      
           case 'summary': 
           return (
             <table className="details-table">
