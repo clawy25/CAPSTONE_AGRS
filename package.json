@@ -23,12 +23,15 @@
     "web-vitals": "^2.1.4",
     "xlsx": "^0.18.5"
   },
-  "scripts": {
-    "start": "react-scripts start",
+"scripts": {
+    "start": "concurrently \"npm run backend\" \"npm run frontend\"",
+    "backend": "cd backend && nodemon App.js",
+    "frontend": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
+
   "eslintConfig": {
     "extends": [
       "react-app",
@@ -48,6 +51,10 @@
     ]
   },
   "devDependencies": {
-    "@ljharb/tsconfig": "^0.2.0"
+    "@ljharb/tsconfig": "^0.2.0",
+    "concurrently": "^9.0.1"
   }
+
+
+
 }
