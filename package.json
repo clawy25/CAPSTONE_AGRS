@@ -14,6 +14,7 @@
     "dotenv": "^16.4.5",
     "express": "^4.21.0",
     "ioredis": "^5.4.1",
+    "nodemon": "^3.1.7",
     "react": "^18.3.1",
     "react-bootstrap": "^2.10.5",
     "react-datepicker": "^7.4.0",
@@ -30,6 +31,11 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
+  },
+  "devDependencies": {
+    "@ljharb/tsconfig": "^0.2.0",
+    "concurrently": "^9.0.1",
+    "nodemon": "^3.1.7"
   },
   "eslintConfig": {
     "extends": [
@@ -48,10 +54,5 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  },
-  "devDependencies": {
-    "@ljharb/tsconfig": "^0.2.0",
-    "concurrently": "^9.0.1",
-    "nodemon": "^3.1.7"
   }
 }

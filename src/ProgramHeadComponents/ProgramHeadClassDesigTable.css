@@ -1,0 +1,13 @@
+.custom-color-green-font {
+    color: #4CAF50; /* Green color */
+    font-weight: bold; /* Bold text */
+  }
+  
+  .custom-font {
+    font-size: 16px; /* Set desired font size */
+  }
+  
+  .success-border {
+    border: 2px solid #4CAF50; /* Green border for the table */
+  }
+  
