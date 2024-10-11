@@ -7,7 +7,7 @@ const jwt = require('jsonwebtoken');
 const app = express();
 const port = process.env.SUPA_PORT; // Use the PORT from .env or default to 5000
 app.use(cors({
-    origin: 'http://localhost:3000', // Adjust this for your frontend URL
+    origin: 'http://localhost:3001', // Adjust this for your frontend URL
 }));
 app.use(express.json());
 
@@ -245,39 +245,107 @@ app.post('/student/upload', async (req, res) => {
   }
 });
 
-// Insert new personnel (UNUSED)
-app.post('/personnel/upload', async (req, res) => {
-  try {
-      const personnelData = req.body.data;//This is in array format
+// Retrieve personnel by personnelNumber
+app.get('/personnel/:personnelNumber', async (req, res) => {
+    const { personnelNumber } = req.params;
 
-      // Validate personnelData
-      if (!Array.isArray(personnelData) || personnelData.length === 0) {
-          return res.status(400).json({ message: 'Invalid data format or no personnel to insert' });
-      }
-      // Password Hashing with bcryptjs
-      const personnelWithHashedPasswords = await Promise.all(personnelData.map(async (person) => {
-        const hashedPassword = await bcrypt.hash(person.personnelPassword, 10); // Hash the password
-          return {
-            ...person,
-            personnelPassword: hashedPassword // Replace plaintext password with hashed password
-        };
-      }));
+    try {
+        const { data: personnelData, error } = await supabase
+            .from('personnel')
+            .select('*')
+            .eq('personnelNumber', personnelNumber)
+            .single();
 
-      // Perform bulk insertion using Supabase
-      const { data, error } = await supabase
-          .from('personnel') // Replace with your table name
-          .insert(personnelWithHashedPasswords);
+        if (error || !personnelData) {
+            return res.status(404).json({ error: 'Personnel not found' });
+        }
 
-      if (error) {
-          throw error;
-      }
-
-      res.status(200).json(data);
-  } catch (error) {
-      console.error('Error inserting personnel:', error);
-      res.status(500).json({ message: `Error inserting personnel: ${error.message || 'Unknown error'}` });
-  }
+        const token = generateToken(personnelData);
+        res.json({ ...personnelData, token });
+    } catch (error) {
+        console.error('Error fetching personnel data:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
 });
+
+// Update personnel by personnelNumber
+app.put('/personnel/:personnelNumber', async (req, res) => {
+    const { personnelNumber } = req.params;
+    const updatedPersonnelData = req.body;
+
+    try {
+        const { data, error } = await supabase
+            .from('personnel')
+            .update(updatedPersonnelData)
+            .eq('personnelNumber', personnelNumber);
+
+        if (error) {
+            return res.status(500).json({ error: 'Failed to update personnel data' });
+        }
+
+        res.json(data);
+    } catch (error) {
+        console.error('Error updating personnel data:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Delete personnel by personnelNumber
+app.delete('/personnel/:personnelNumber', async (req, res) => {
+    const { personnelNumber } = req.params;
+
+    try {
+        const { data, error } = await supabase
+            .from('personnel')
+            .delete('*')
+            .eq('personnelNumber', personnelNumber);
+
+        if (error) {
+            return res.status(500).json({ error: 'Failed to delete personnel' });
+        }
+
+        res.json({ message: 'Personnel deleted successfully', data });
+    } catch (error) {
+        console.error('Error deleting personnel:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Insert new personnel
+app.post('/personnel/upload', async (req, res) => {
+    try {
+        const personnelData = req.body.data;
+
+        // Check if personnelData is defined and is an array
+        if (!personnelData || !Array.isArray(personnelData) || personnelData.length === 0) {
+            return res.status(400).json({ message: 'Invalid data format or no personnel to insert' });
+        }
+
+        const personnelWithHashedPasswords = await Promise.all(personnelData.map(async (person) => {
+            const hashedPassword = await bcrypt.hash(person.personnelPassword, 10);
+            return {
+                ...person,
+                personnelPassword: hashedPassword
+            };
+        }));
+
+        const { data, error } = await supabase
+            .from('personnel')
+            .insert(personnelWithHashedPasswords);
+
+        if (error) {
+            throw error; // Log the error for debugging
+        }
+
+        res.status(200).json(data);
+    } catch (error) {
+        console.error('Error inserting personnel:', error);
+        res.status(500).json({ message: `Error inserting personnel: ${error.message || 'Unknown error'}` });
+    }
+});
+
+
+  
 
 app.post('/timeline/upload', async (req, res) => {
   try {
@@ -321,6 +389,112 @@ app.get('/program', async (req, res) => {
       console.error('Error fetching program data:', error); // Log the error
       res.status(500).json({ error: 'Internal server error' });
   }
+});
+
+// Create a new subject
+app.post('/subject', async (req, res) => {
+    const { subjectCode, subjectName, programName } = req.body;
+
+    try {
+        // Insert the new subject into the database
+        const { data, error } = await supabase
+            .from('subject')
+            .insert([{ subjectCode, subjectName, programName }]);
+
+        if (error) {
+            return res.status(500).json({ error: error.message });
+        }
+
+        res.status(201).json({ message: 'Subject created successfully', data });
+    } catch (error) {
+        console.error('Error creating subject:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+
+// Get all subjects
+app.get('/subject', async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('subject')
+            .select('*');
+
+        if (error) {
+            return res.status(500).json({ error: error.message });
+        }
+
+        res.json(data);
+    } catch (error) {
+        console.error('Error fetching subjects:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Get subject by ID
+app.get('/subject/:id', async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const { data, error } = await supabase
+            .from('subject')
+            .select('*')
+            .eq('id', id)
+            .single();
+
+        if (error || !data) {
+            return res.status(404).json({ error: 'Subject not found' });
+        }
+
+        res.json(data);
+    } catch (error) {
+        console.error('Error fetching subject:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+
+// Update subject by ID
+app.put('/subject/:id', async (req, res) => {
+    const { id } = req.params;
+    const { subjectCode, subjectName, programName } = req.body;
+
+    try {
+        const { data, error } = await supabase
+            .from('subject')
+            .update({ subjectCode, subjectName, programName })
+            .eq('id', id);
+
+        if (error) {
+            return res.status(500).json({ error: 'Failed to update subject' });
+        }
+
+        res.json({ message: 'Subject updated successfully', data });
+    } catch (error) {
+        console.error('Error updating subject:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Delete subject by ID
+app.delete('/subject/:id', async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const { data, error } = await supabase
+            .from('subject')
+            .delete()
+            .eq('id', id);
+
+        if (error) {
+            return res.status(500).json({ error: 'Failed to delete subject' });
+        }
+
+        res.json({ message: 'Subject deleted successfully', data });
+    } catch (error) {
+        console.error('Error deleting subject:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
 });
 
 

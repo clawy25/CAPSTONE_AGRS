@@ -1,27 +1,47 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Table, Modal, Button, Form } from 'react-bootstrap';
 import '../App.css';
+import PersonnelModel from '../ReactModels/PersonnelModel';
+import { UserContext } from '../Context/UserContext';
 
 export default function ProgramHeadEditProfs({ onBack }) {
-  const [professors, setProfessors] = useState([
-    { name: 'John Doe', email: 'john.doe@example.com', phone: '123-456-7890', sex: 'Male', address: '123 Main St' },
-    { name: 'Jane Smith', email: 'jane.smith@example.com', phone: '987-654-3210', sex: 'Female', address: '456 Elm St' },
-  ]);
-
+  const [professors, setProfessors] = useState([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [newProf, setNewProf] = useState({ name: '', email: '', phone: '', sex: '', address: '' });
   const [editProf, setEditProf] = useState({ name: '', email: '', phone: '', sex: '', address: '' });
   const [activeProfIndex, setActiveProfIndex] = useState(null);
+  const { user, setUser } = useContext(UserContext);
+
+  // Fetch professors from PersonnelModel when the component mounts
+  useEffect(() => {
+    async function fetchProfessors() {
+      try {
+        const data = await PersonnelModel.getProfessors(); // Make sure this is fetching from Supabase correctly
+        setProfessors(data);
+      } catch (error) {
+        console.error('Error fetching professors:', error);
+      }
+    }
+
+    fetchProfessors();
+  }, []);
 
   const handleShowAdd = () => setShowAddModal(true);
   const handleCloseAdd = () => setShowAddModal(false);
 
   const handleShowEdit = (professor, index) => {
-    setEditProf(professor);
+    setEditProf({
+      name: professor.personnelName,
+      email: professor.personnelEmail,
+      phone: professor.personnelNumber,
+      sex: professor.personnelSex,
+      address: professor.programName, // Address is being used as programName, ensure this is correct
+    });
     setActiveProfIndex(index);
     setShowEditModal(true);
   };
+
   const handleCloseEdit = () => setShowEditModal(false);
 
   const handleInputChange = (e) => {
@@ -34,23 +54,72 @@ export default function ProgramHeadEditProfs({ onBack }) {
     setEditProf((prevState) => ({ ...prevState, [name]: value }));
   };
 
-  const handleAddProf = () => {
-    setProfessors((prevState) => [...prevState, newProf]);
-    setNewProf({ name: '', email: '', phone: '', sex: '', address: '' });
+  // Add professor to the database
+  // Add professor to the database
+const handleAddProf = async () => {
+  const newProfessorData = {
+    personnelNumber: newProf.phone,
+    personnelPassword: 'AgrsPcc2024',
+    personnelName: newProf.name,
+    personnelSex: newProf.sex,
+    personnelEmail: newProf.email,
+    personnelBirthDate: '2022-11-01', // Make sure this date format is valid
+    programNumber: user.programNumber,
+    programName: user.programName, // Assuming this is the address field
+  };
+
+  try {
+    // Call insertPersonnel directly with the array
+    const response = await PersonnelModel.insertPersonnel(newProfessorData);
+
+    // Check the response for any potential error messages
+    if (!response) {
+      throw new Error('No response from server');
+    }
     handleCloseAdd();
+    setProfessors((prevState) => [...prevState, newProfessorData]);
+    setNewProf({ name: '', email: '', phone: '', sex: '', address: '' });
+    
+  } catch (error) {
+    console.error('Error adding professor:', error);
+  }
+};
+
+
+  // Edit professor in the database
+  const handleEditProf = async () => {
+    const updatedProfessorData = {
+      personnelName: editProf.name,
+      personnelEmail: editProf.email,
+      personnelNumber: editProf.phone,
+      personnelSex: editProf.sex,
+       // Ensure this is the right field for address
+    };
+
+    try {
+      const personnelNumber = professors[activeProfIndex].personnelNumber;
+      await PersonnelModel.updatePersonnel(personnelNumber, updatedProfessorData); // Ensure this interacts with your Supabase setup
+      setProfessors((prevState) => {
+        const updatedProfs = [...prevState];
+        updatedProfs[activeProfIndex] = updatedProfessorData;
+        return updatedProfs;
+      });
+      handleCloseEdit();
+    } catch (error) {
+      console.error('Error updating professor:', error);
+    }
   };
 
-  const handleEditProf = () => {
-    setProfessors((prevState) => {
-      const updatedProfs = [...prevState];
-      updatedProfs[activeProfIndex] = editProf; // Update the edited professor
-      return updatedProfs;
-    });
-    handleCloseEdit();
-  };
+  // Delete professor from the database
+  const handleDeleteProf = async (index) => {
+    const personnelNumber = professors[index].personnelNumber;
 
-  const handleDeleteProf = (index) => {
-    setProfessors((prevState) => prevState.filter((_, i) => i !== index));
+    try {
+      await PersonnelModel.deletePersonnel(personnelNumber); // Ensure this is deleting from your Supabase
+      setProfessors((prevState) => prevState.filter((_, i) => i !== index));
+    } catch (error) {
+      console.error('Error deleting professor:', error);
+    }
   };
 
   const renderTable = () => (
@@ -65,20 +134,36 @@ export default function ProgramHeadEditProfs({ onBack }) {
           <th className='custom-color-green-font custom-font'>Actions</th>
         </tr>
       </thead>
-      <tbody className='bg-white'>
-        {professors.map((prof, index) => (
-          <tr key={index}>
-            <td>{prof.name}</td>
-            <td>{prof.email}</td>
-            <td>{prof.phone}</td>
-            <td>{prof.sex}</td>
-            <td>{prof.address}</td>
-            <td>
-              <Button variant="warning" onClick={() => handleShowEdit(prof, index)} className="me-2">Edit</Button>
-              <Button variant="danger" onClick={() => handleDeleteProf(index)}>Delete</Button>
-            </td>
+      <tbody>
+        {professors.length > 0 ? (
+          professors.map((professor, index) => (
+            <tr key={index}>
+              <td>{professor.personnelName}</td>
+              <td>{professor.personnelEmail}</td>
+              <td>{professor.personnelNumber}</td>
+              <td>{professor.personnelSex}</td>
+              <td>{professor.programName}</td> {/* Replace with address field if necessary */}
+              <td>
+                <button 
+                  className="btn btn-warning" 
+                  onClick={() => handleShowEdit(professor, index)}
+                >
+                  Edit
+                </button>
+                <button 
+                  className="btn btn-danger" 
+                  onClick={() => handleDeleteProf(index)}
+                >
+                  Delete
+                </button>
+              </td>
+            </tr>
+          ))
+        ) : (
+          <tr>
+            <td colSpan="6">No data available</td>
           </tr>
-        ))}
+        )}
       </tbody>
     </Table>
   );
@@ -115,7 +200,7 @@ export default function ProgramHeadEditProfs({ onBack }) {
               />
             </Form.Group>
             <Form.Group className="mb-3">
-              <Form.Label>Phone Number</Form.Label>
+              <Form.Label>Personnel Number</Form.Label>
               <Form.Control
                 type="text"
                 name="phone"
@@ -188,7 +273,7 @@ export default function ProgramHeadEditProfs({ onBack }) {
               />
             </Form.Group>
             <Form.Group className="mb-3">
-              <Form.Label>Phone Number</Form.Label>
+              <Form.Label>Personnel Number</Form.Label>
               <Form.Control
                 type="text"
                 name="phone"
