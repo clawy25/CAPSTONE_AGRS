@@ -4,13 +4,15 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSearch, faFileAlt, faCog, faFileSignature, faFilter } from '@fortawesome/free-solid-svg-icons'; // Import the icons you want to use
 import * as XLSX from 'xlsx';
 import StudentModel from '../ReactModels/StudentModel';
-import TimelineModel from '../ReactModels/TimelineModel'; 
+import TimelineModel from '../ReactModels/TimelineModel';
+import SectionModel from '../ReactModels/SectionModel';
 
 export default function RegistrarStudents() {
     const [searchQuery, setSearchQuery] = useState('');
     const [filterOption, setFilterOption] = useState('All');
     const [showFilterDropdown, setShowFilterDropdown] = useState(false);
     const [students, setStudents] = useState([]);
+    const [sections, setSections] = useState([]);
 
     // Fetch existing students from StudentModel
     const fetchExistingStudents = async () => {
@@ -22,9 +24,19 @@ export default function RegistrarStudents() {
         }
     };
 
-    // Fetch existing students onload
+    const fetchExistingSections = async () => {
+        try {
+            const existingSections = await SectionModel.fetchExistingSections();
+            setSections(existingSections);
+        } catch (error) {
+            console.error('Error fetching existing sections:', error);
+        }
+    };
+
+    // Fetch existing students and sections onload
     useEffect(() => {
         fetchExistingStudents();
+        fetchExistingSections();
     }, []);
 
     // Insert the list of newStudents into the database
@@ -54,11 +66,11 @@ export default function RegistrarStudents() {
             const data = XLSX.utils.sheet_to_json(sheet);
 
             const existingStudentNumbers = new Set(students.map(student => student.studentNumber));
+            const existingSectionNumbers = sections.map(section => section.sectionNumber);
             const newStudents = [];
             const currentYear = new Date().getFullYear();
             const nextYear = currentYear + 1;
             const currentMonth = new Date().getMonth() + 1;
-
             const academicYear = `${currentYear}-${nextYear}`;
             const semester = currentMonth >= 7 && currentMonth <= 12 ? 1 : 2;
 
@@ -72,6 +84,9 @@ export default function RegistrarStudents() {
                 const studentPccEmail = row["studentPccEmail"] || '';
                 const studentProgramNumber = row["studentProgramNumber"] || '';
                 const studentProgramName = row["Program Name"] || '';
+                const studentContact = ''; //Set to empty
+                const studentAddress = ''; //Set to empty
+                let assignedSection = ''; //Set to empty
 
                 // Validate the row and add it to newStudents if valid
                 if (validateRow(row, existingStudentNumbers)) {
@@ -79,7 +94,6 @@ export default function RegistrarStudents() {
                     const admissionYearInt = parseInt(row["studentAdmissionYr"], 10);
                     let studentYrLevel = 1; // Default to 1
                     let studentNumber = '';
-
                     if (admissionYearInt < currentYear) {
                         studentYrLevel = (currentYear - admissionYearInt) + 1; // Calculate year level based on difference
                         studentNumber = generateNextStudentNumber(existingStudentNumbers, admissionYearInt); // Generate number based on admission year
@@ -88,15 +102,22 @@ export default function RegistrarStudents() {
                         if (studentYrLevel > 4) {
                             studentType = 'Graduated';
                         }
+
                     } else if (admissionYearInt === currentYear) {
                         studentYrLevel = 1; // First year if admission year is the current year
                         studentNumber = generateNextStudentNumber(existingStudentNumbers, currentYear); // Generate number based on current year
+                    }
+
+                    if (studentYrLevel <= 4){
+                        assignedSection = generateNextSectionNumber(admissionYear, studentProgramNumber, existingSectionNumbers);
                     }
 
                     // Ensure unique student number
                     while (existingStudentNumbers.has(studentNumber)) {
                         studentNumber = generateNextStudentNumber(existingStudentNumbers, admissionYearInt);
                     }
+
+                    
 
                     // Add new student to the array
                     newStudents.push(new StudentModel(
@@ -112,13 +133,16 @@ export default function RegistrarStudents() {
                         admissionYear,
                         studentYrLevel, // Set year level based on admission year
                         studentProgramNumber,
-                        studentProgramName
+                        studentProgramName,
+                        studentContact,
+                        studentAddress
                     ));
 
                     console.log('Academic Year:', academicYear);
                     console.log('Semester:', semester);
                     // Insert timeline data if yearLevel is 4 or below
                     if (studentYrLevel <= 4) {
+                        await SectionModel.createAndInsertSection(assignedSection, studentProgramNumber, studentNumber);
                         await TimelineModel.createAndInsertTimeline(academicYear, studentNumber, studentYrLevel, semester, new Date(), null);
                     }
 
@@ -154,6 +178,46 @@ export default function RegistrarStudents() {
         const nextNumber = highestNumber + 1;
         return `${year}-${nextNumber.toString().padStart(6, '0')}`; // Format as '2024-000001'
     };
+
+    const generateNextSectionNumber = (year, studentProgramNumber, existingSectionNumbers) => {
+        let highestNumber = 1;
+        let sectionCount = 0;
+    
+        // Loop through existing section numbers
+        existingSectionNumbers.forEach(section => {
+            const [sectionYear, programNumber, sectionNumber] = section.split('-');
+    
+            // Check if the section matches the current year and student program number
+            if (sectionYear === year.toString() && programNumber === studentProgramNumber.toString()) {
+                const numberPart = parseInt(sectionNumber, 10); // Parse section number
+    
+                // Update highest section number
+                if (numberPart > highestNumber) {
+                    highestNumber = numberPart;
+                }
+    
+                // Increment the count of students in this section
+                sectionCount++;
+            }
+        });
+    
+        // Count the number of students in the highest section number
+        const highestSectionCount = existingSectionNumbers.filter(section => {
+            const [, , secNum] = section.split('-');
+            return secNum === highestNumber.toString().padStart(3, '0'); // Match with padded number
+        }).length;
+    
+        // Check if there are already 60 or more students in the current highest section
+        if (highestSectionCount >= 60) {
+            // Increment the highest number to create a new section
+            highestNumber++;
+        }
+    
+        // Return the new or current section number
+        return `${year}-${studentProgramNumber}-${highestNumber.toString().padStart(3, '0')}`; // Format as '2024-101-001'
+    };
+    
+    
     
     
 
@@ -267,13 +331,16 @@ export default function RegistrarStudents() {
                                 </thead>
                                 <tbody className='bg-white'>
                                     {filteredStudents.map((student) => {
+                                        // Find the section that matches the student's studentNumber
+                                        const matchingSection = sections.find(section => section.studentNumber === student.studentNumber);
+                                        const sectionNumber = matchingSection ? matchingSection.sectionNumber : 'N/A';
                                         return (
                                             <tr key={student.id}>
                                                 <td className='custom-color-green-font'>{student.id}</td>
                                                 <td className='custom-color-green-font'>{student.studentName}</td>
                                                 <td className='custom-color-green-font'>{student.studentNumber}</td>
                                                 <td className='custom-color-green-font'>{student.studentAdmissionYr}</td>
-                                                <td className='custom-color-green-font'>{student.section}</td>
+                                                <td className='custom-color-green-font'>{sectionNumber}</td>
                                                 <td className='custom-color-green-font'>{student.studentProgramName}</td>
                                                 <td>
                                                 <select

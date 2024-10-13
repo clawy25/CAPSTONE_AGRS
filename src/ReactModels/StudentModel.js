@@ -2,7 +2,8 @@ export default class StudentModel {
   constructor(id, studentNumber, studentPassword, studentType,
               studentName, studentSex, studentEmail, 
               studentBirthDate, studentPccEmail, studentAdmissionYr, 
-              studentYrLevel, studentProgramNumber, studentProgramName) {
+              studentYrLevel, studentProgramNumber, studentProgramName,
+              studentContact, studentAddress) {
       this.id = id;
       this.studentNumber = studentNumber;
       this.studentPassword = studentPassword;
@@ -16,6 +17,8 @@ export default class StudentModel {
       this.studentYrLevel = studentYrLevel;
       this.studentProgramNumber = studentProgramNumber;
       this.studentProgramName = studentProgramName;
+      this.studentContact = studentContact;
+      this.studentAddress = studentAddress;
 
       // Add more here if needed
   }
@@ -50,7 +53,9 @@ export default class StudentModel {
               data.studentAdmissionYr,
               data.studentYrLevel,
               data.studentProgramNumber,
-              data.studentProgramName
+              data.studentProgramName,
+              data.studentContact,
+              data.studentAddress
           );
       } catch (error) {
           console.error('Error fetching student data:', error);
@@ -90,6 +95,7 @@ export default class StudentModel {
       }
   }
 
+  //Function to insert students (import from RegistrarStudents.js)
   static async insertStudent(studentsData) {
     try {
         // Map studentsData to exclude studentProgramName and convert studentBirthDate
@@ -108,6 +114,8 @@ export default class StudentModel {
             studentAdmissionYr: student.studentAdmissionYr,
             studentYrLevel: student.studentYrLevel,
             studentProgramNumber: student.studentProgramNumber,
+            studentContact: '',
+            studentAddress: ''
         }));
 
         const response = await fetch('http://localhost:5000/student/upload', {

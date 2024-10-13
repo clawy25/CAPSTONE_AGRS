@@ -1,7 +1,8 @@
 export default class PersonnelModel {
   constructor(id, personnelNumber, personnelPassword, personnelType,
               personnelName, personnelSex, personnelEmail, 
-              personnelBirthDate, programNumber, programName) {
+              personnelBirthDate, programNumber, programName,
+              personnelContact, personnelAddress) {
     this.id = id;
     this.personnelNumber = personnelNumber;
     this.personnelPassword = personnelPassword;
@@ -12,6 +13,8 @@ export default class PersonnelModel {
     this.personnelBirthDate = personnelBirthDate;
     this.programNumber = programNumber;
     this.programName = programName;
+    this.personnelContact = personnelContact;
+    this.personnelAddress = personnelAddress;
   }
 
   // Fetch specific personnel data by personnelNumber
@@ -33,7 +36,9 @@ export default class PersonnelModel {
         data.personnelEmail,
         data.personnelBirthDate,
         data.programNumber,
-        data.programName
+        data.programName,
+        data.personnelContact,
+        data.personnelAddress
       );
     } catch (error) {
       console.error('Error fetching personnel data:', error);
@@ -61,7 +66,9 @@ export default class PersonnelModel {
         prof.personnelEmail,
         prof.personnelBirthDate,
         prof.programNumber,
-        prof.programName
+        prof.programName,
+        prof.personnelContact,
+        prof.personnelAddress
       ));
     } catch (error) {
       console.error('Error fetching professors:', error);

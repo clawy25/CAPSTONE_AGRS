@@ -65,7 +65,9 @@ const handleAddProf = async () => {
     personnelEmail: newProf.email,
     personnelBirthDate: '2022-11-01', // Make sure this date format is valid
     programNumber: user.programNumber,
-    programName: user.programName, // Assuming this is the address field
+    programName: user.programName,
+    personnelContact: '', // Assuming this is the contact no.
+    personnelAddress: '', // Assuming this is the address field
   };
 
   try {

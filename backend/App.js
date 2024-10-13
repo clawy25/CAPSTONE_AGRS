@@ -7,7 +7,7 @@ const jwt = require('jsonwebtoken');
 const app = express();
 const port = process.env.SUPA_PORT; // Use the PORT from .env or default to 5000
 app.use(cors({
-    origin: 'http://localhost:3001', // Adjust this for your frontend URL
+    origin: 'http://localhost:3000', // Adjust this for your frontend URL
 }));
 app.use(express.json());
 
@@ -156,9 +156,28 @@ app.get('/student', async (req, res) => {
         res.status(500).json({ error: 'Internal server error' });
     }
   });
+
+//All sections
+app.get('/section', async (req, res) => {
+    try {
+        // Fetch all student data
+        const { data: sectionData, error: sectionError } = await supabase
+            .from('section')
+            .select('*');
+  
+        if (sectionError || !sectionData) {
+            return res.status(500).json({ error: sectionError.message || 'Failed to fetch section data' });
+        }
+  
+        res.json(sectionData); // Return the array of students with program names
+    } catch (error) {
+        console.error('Error fetching section:', error); // Log the error
+        res.status(500).json({ error: 'Internal server error' });
+    }
+  });
   
   // Get all timeline entries
-  app.get('/timeline', async (req, res) => {
+app.get('/timeline', async (req, res) => {
     try {
         // Fetch all timeline data
         const { data: timelineData, error: timelineError } = await supabase
@@ -177,7 +196,7 @@ app.get('/student', async (req, res) => {
   });
   
   // All personnels
-  app.get('/personnel', async (req, res) => {
+app.get('/personnel', async (req, res) => {
     try {
         // Fetch all personnel data
         const { data: personnelData, error: personnelError } = await supabase
@@ -344,9 +363,33 @@ app.post('/personnel/upload', async (req, res) => {
     }
 });
 
-
+//Insert new section
+app.post('/section/upload', async (req, res) => {
+    try {
+        const sectionData = req.body.data; // This is an object
   
-
+        // Validate timelineData
+        if (!sectionData || typeof sectionData !== 'object') {
+            return res.status(400).json({ message: 'Invalid data format or no section to insert' });
+        }
+  
+        // Perform insertion using Supabase
+        const { data, error } = await supabase
+            .from('section')
+            .insert([sectionData]); // Wrap in an array for Supabase
+  
+        if (error) {
+            throw error;
+        }
+  
+        res.status(200).json(data);
+    } catch (error) {
+        console.error('Error inserting section:', error);
+        res.status(500).json({ message: `Error inserting timeline: ${error.message || 'Unknown error'}` });
+    }
+  });
+  
+//Insert new timeline
 app.post('/timeline/upload', async (req, res) => {
   try {
       const timelineData = req.body.data; // This is an object
@@ -496,7 +539,6 @@ app.delete('/subject/:id', async (req, res) => {
         res.status(500).json({ error: 'Internal server error' });
     }
 });
-
 
 // Start the server
 app.listen(port, () => {
