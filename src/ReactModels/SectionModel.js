@@ -1,26 +1,25 @@
 export default class SectionModel {
-    constructor(id, sectionNumber, programNumber, studentNumber) {
+    constructor(id, sectionNumber, sectionName) {
         this.id = id;
         this.sectionNumber = sectionNumber;
-        this.programNumber = programNumber;
-        this.studentNumber = studentNumber;
+        this.sectionName = sectionName;
     }
 
-    // Function to fetch all programs
+    // Function to fetch all sections
     static async fetchExistingSections() {
         try {
             const response = await fetch('http://localhost:5000/section');
             if (!response.ok) {
-                throw new Error('Error fetching programs');
+                throw new Error('Error fetching sections');
             }
             const data = await response.json();
 
-            // Assuming data is an array of program objects
+            console.log('Fetched Sections Data:', data); // Debugging log
+
             return data.map(section => new SectionModel(
                 section.id,
                 section.sectionNumber,
-                section.programNumber,
-                section.studentNumber
+                section.sectionName
             ));
         } catch (error) {
             console.error('Error fetching sections:', error);
@@ -28,12 +27,11 @@ export default class SectionModel {
         }
     }
 
-    // New method to create and insert a program
-    static async createAndInsertSection(sectionNumber, programNumber, studentNumber) {
+    // New method to create and insert a section
+    static async createAndInsertSection(sectionNumber, sectionName) {
         const sectionData = {
             sectionNumber,
-            programNumber,
-            studentNumber
+            sectionName
         };
 
         try {

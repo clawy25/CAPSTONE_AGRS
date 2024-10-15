@@ -1,38 +1,32 @@
-import React, { useState } from 'react';
-import { Tab, Tabs, Table, Modal, Button, Form } from 'react-bootstrap';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowLeft } from '@fortawesome/free-solid-svg-icons'; 
+import React, { useState, useEffect } from 'react';
+import { Table, Modal, Button, Form } from 'react-bootstrap';
+import SubjectModel from '../ReactModels/SubjectModel'; 
 import '../App.css';
 
-export default function ProgramHeadEditSubjects({ onBack }) { 
-  const [yearData, setYearData] = useState({
-    'First Year': [
-      { subjectCode: 'MATH101', subjectName: 'Mathematics' },
-      { subjectCode: 'ENG101', subjectName: 'English' },
-      { subjectCode: 'CS101', subjectName: 'Computer Science' },
-    ],
-    'Second Year': [
-      { subjectCode: 'PHYS201', subjectName: 'Physics' },
-      { subjectCode: 'CHEM201', subjectName: 'Chemistry' },
-      { subjectCode: 'BIO201', subjectName: 'Biology' },
-    ],
-    'Third Year': [
-      { subjectCode: 'STAT301', subjectName: 'Statistics' },
-      { subjectCode: 'HIST301', subjectName: 'History' },
-      { subjectCode: 'PHIL301', subjectName: 'Philosophy' },
-    ],
-    'Fourth Year': [
-      { subjectCode: 'ECO401', subjectName: 'Economics' },
-      { subjectCode: 'SOC401', subjectName: 'Sociology' },
-      { subjectCode: 'ART401', subjectName: 'Art History' },
-    ],
-  });
-
+export default function ProgramHeadEditSubjects({ onBack }) {
+  const [yearData, setYearData] = useState({ 'First Year': [] });
+  const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [newSubject, setNewSubject] = useState({ subjectCode: '', subjectName: '' });
-  const [editSubject, setEditSubject] = useState({ subjectCode: '', subjectName: '' });
-  const [activeYear, setActiveYear] = useState('First Year');
+  const [editSubject, setEditSubject] = useState({ id: '', subjectCode: '', subjectName: '' });
+  const [subjectToDelete, setSubjectToDelete] = useState(null); // State to hold the subject being deleted
+
+  useEffect(() => {
+    const fetchSubjects = async () => {
+      try {
+        const fetchedSubjects = await SubjectModel.fetchExistingSubjects();
+        setYearData({ 'First Year': fetchedSubjects });
+      } catch (error) {
+        console.error('Error fetching subjects:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSubjects();
+  }, []);
 
   const handleShowAdd = () => setShowAddModal(true);
   const handleCloseAdd = () => setShowAddModal(false);
@@ -42,6 +36,12 @@ export default function ProgramHeadEditSubjects({ onBack }) {
     setShowEditModal(true);
   };
   const handleCloseEdit = () => setShowEditModal(false);
+
+  const handleShowDelete = (subject) => {
+    setSubjectToDelete(subject);
+    setShowDeleteModal(true);
+  };
+  const handleCloseDelete = () => setShowDeleteModal(false);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -53,30 +53,68 @@ export default function ProgramHeadEditSubjects({ onBack }) {
     setEditSubject((prevState) => ({ ...prevState, [name]: value }));
   };
 
-  const handleAddSubject = () => {
-    setYearData((prevState) => {
-      const updatedYear = [...prevState[activeYear], newSubject];
-      return { ...prevState, [activeYear]: updatedYear };
-    });
-    setNewSubject({ subjectCode: '', subjectName: '' });
-    handleCloseAdd(); 
-  };
+  const handleAddSubject = async () => {
+    // Validate input data
+    if (!newSubject.subjectCode || !newSubject.subjectName) {
+      console.error('Subject Code and Name are required');
+      return;
+    }
 
-  const handleEditSubject = () => {
-    setYearData((prevState) => {
-      const updatedYear = prevState[activeYear].map((subject) => 
-        subject.subjectCode === editSubject.subjectCode ? editSubject : subject
+    try {
+      // Create and insert the subject
+      const createdSubject = await SubjectModel.createAndInsertSubject(
+        newSubject.subjectCode,
+        newSubject.subjectName
       );
-      return { ...prevState, [activeYear]: updatedYear };
-    });
-    handleCloseEdit();
+  
+      const newSubjectData = createdSubject.data ? createdSubject.data : createdSubject;
+  
+      // Update the yearData with the newly added subject
+      setYearData((prevState) => {
+        const updatedYear = [...prevState['First Year'], newSubjectData]; 
+        return { ...prevState, 'First Year': updatedYear };
+      });
+  
+      // Reset the newSubject state and close modal
+      setNewSubject({ subjectCode: '', subjectName: '' });
+      handleCloseAdd();
+    } catch (error) {
+      console.error('Error adding subject:', error);
+    }
   };
 
-  const handleDeleteSubject = (subjectCode) => {
-    setYearData((prevState) => {
-      const updatedYear = prevState[activeYear].filter((subject) => subject.subjectCode !== subjectCode);
-      return { ...prevState, [activeYear]: updatedYear };
-    });
+  const handleEditSubject = async () => {
+    try {
+      await SubjectModel.updateSubject(editSubject.id, editSubject);
+
+      setYearData((prevState) => {
+        const updatedYear = prevState['First Year'].map((subject) =>
+          subject.id === editSubject.id ? editSubject : subject
+        );
+        return { ...prevState, 'First Year': updatedYear };
+      });
+
+      handleCloseEdit();
+    } catch (error) {
+      console.error('Error updating subject:', error);
+    }
+  };
+
+  const handleDeleteSubject = async () => {
+    if (subjectToDelete) {
+      try {
+        await SubjectModel.deleteSubject(subjectToDelete.id);
+
+        setYearData((prevState) => {
+          const updatedYear = prevState['First Year'].filter((subject) => subject.id !== subjectToDelete.id);
+          return { ...prevState, 'First Year': updatedYear };
+        });
+
+        handleCloseDelete();
+      } catch (error) {
+        console.error('Error deleting subject:', error);
+      }
+    }
   };
 
   const renderTable = (year) => (
@@ -95,7 +133,7 @@ export default function ProgramHeadEditSubjects({ onBack }) {
             <td>{entry.subjectName}</td>
             <td>
               <Button variant="warning" onClick={() => handleShowEdit(entry)} className="me-2">Edit</Button>
-              <Button variant="danger" onClick={() => handleDeleteSubject(entry.subjectCode)}>Delete</Button>
+              <Button variant="danger" onClick={() => handleShowDelete(entry)}>Delete</Button>
             </td>
           </tr>
         ))}
@@ -103,24 +141,13 @@ export default function ProgramHeadEditSubjects({ onBack }) {
     </Table>
   );
 
+  if (loading) return <div>Loading...</div>;
+
   return (
     <div className='container-fluid bg-white p-2 px-4 rounded'>
-      <Tabs defaultActiveKey="firstYear" id="year-tabs" className="mb-3 text-success">
-        <Tab eventKey="firstYear" title={<span className="custom-color-green-font custom-font">First Year</span>} onClick={() => setActiveYear('First Year')}>
-          {renderTable('First Year')}
-        </Tab>
-        <Tab eventKey="secondYear" title={<span className="custom-color-green-font custom-font">Second Year</span>} onClick={() => setActiveYear('Second Year')}>
-          {renderTable('Second Year')}
-        </Tab>
-        <Tab eventKey="thirdYear" title={<span className="custom-color-green-font custom-font">Third Year</span>} onClick={() => setActiveYear('Third Year')}>
-          {renderTable('Third Year')}
-        </Tab>
-        <Tab eventKey="fourthYear" title={<span className="custom-color-green-font custom-font">Fourth Year</span>} onClick={() => setActiveYear('Fourth Year')}>
-          {renderTable('Fourth Year')}
-        </Tab>
-      </Tabs>
-
-      {/* Modal for adding a subject */}
+      {renderTable('First Year')}
+      
+      {/* Add Modal */}
       <Modal show={showAddModal} onHide={handleCloseAdd}>
         <Modal.Header closeButton>
           <Modal.Title>Add Subject</Modal.Title>
@@ -159,24 +186,25 @@ export default function ProgramHeadEditSubjects({ onBack }) {
         </Modal.Footer>
       </Modal>
 
-      {/* Modal for editing a subject */}
+      {/* Edit Modal */}
       <Modal show={showEditModal} onHide={handleCloseEdit}>
         <Modal.Header closeButton>
           <Modal.Title>Edit Subject</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form>
-            <Form.Group className="mb-3">
-              <Form.Label>Subject Code</Form.Label>
-              <Form.Control
-                type="text"
-                name="subjectCode"
-                value={editSubject.subjectCode}
-                onChange={handleEditInputChange}
-                placeholder="Enter Subject Code"
-                disabled // Prevent editing of the subject code
-              />
-            </Form.Group>
+          <Form.Group className="mb-3">
+            <Form.Label>Subject Code</Form.Label>
+            <Form.Control
+              type="text"
+              name="subjectCode"
+              value={editSubject.subjectCode}
+              onChange={handleEditInputChange}
+              placeholder="Enter Subject Code"
+              readOnly
+            />
+          </Form.Group>
+
             <Form.Group className="mb-3">
               <Form.Label>Subject Name</Form.Label>
               <Form.Control
@@ -199,11 +227,27 @@ export default function ProgramHeadEditSubjects({ onBack }) {
         </Modal.Footer>
       </Modal>
 
-      {/* Add Subject Button positioned at the bottom right below the table */}
-      <div className="d-flex justify-content-end mt-3">
-        <Button variant="success" onClick={handleShowAdd}>
-          Add Subject
-        </Button>
+      {/* Delete Modal */}
+      <Modal show={showDeleteModal} onHide={handleCloseDelete}>
+        <Modal.Header closeButton>
+          <Modal.Title>Delete Subject</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          Are you sure you want to delete this subject?
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleCloseDelete}>
+            Cancel
+          </Button>
+          <Button variant="danger" onClick={handleDeleteSubject}>
+            Delete
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Add Subject Button positioned at the bottom right below the table */} 
+      <div className="d-flex justify-content-end mt-3"> 
+        <Button variant="success" onClick={handleShowAdd}> Add Subject </Button>
       </div>
     </div>
   );

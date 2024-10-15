@@ -1,252 +1,106 @@
-import React, { useState, useEffect } from 'react';
-import { Tab, Tabs, Table, Modal, Button, Form } from 'react-bootstrap';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
-import SubjectModel from './SubjectModel'; // Adjust the import path as necessary
-import '../App.css';
+export default class SubjectModel {
+  constructor(id, subjectCode, subjectName, subjectUnits) {
+      this.id = id;
+      this.subjectCode = subjectCode;
+      this.subjectName = subjectName;
+      this.subjectUnits = subjectUnits;
+      
+  }
 
-export default function ProgramHeadEditSubjects({ onBack }) {
-  const [yearData, setYearData] = useState({
-    'First Year': [],
-    'Second Year': [],
-    'Third Year': [],
-    'Fourth Year': [],
-  });
-
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [newSubject, setNewSubject] = useState({ subjectCode: '', subjectName: '', programName: '' });
-  const [editSubject, setEditSubject] = useState({ subjectCode: '', subjectName: '', programName: '' });
-  const [activeYear, setActiveYear] = useState('First Year');
-
-  useEffect(() => {
-    // Fetch all subjects when the component mounts
-    const fetchSubjects = async () => {
+  // Function to fetch all subjects
+  static async fetchExistingSubjects() {
       try {
-        const subjects = await SubjectModel.fetchAllSubjects();
-        // Categorize subjects by year (Assuming you have some logic to determine year)
-        const categorizedSubjects = categorizeSubjects(subjects);
-        setYearData(categorizedSubjects);
+          const response = await fetch('http://localhost:5000/subject');
+          if (!response.ok) {
+              throw new Error('Error fetching subjects');
+          }
+          const data = await response.json();
+
+          // Assuming data is an array of subject objects
+          return data.map(subject => new SubjectModel(
+              subject.id,
+              subject.subjectCode,
+              subject.subjectName,
+              subject.subjectUnits
+              
+          ));
       } catch (error) {
-        console.error('Error fetching subjects:', error);
+          console.error('Error fetching subjects:', error);
+          throw error;
       }
+  }
+
+  // Method to create and insert a subject
+  static async createAndInsertSubject(subjectCode, subjectName, subjectUnits) {
+    const subjectData = {
+      subjectCode,
+      subjectName,
+      subjectUnits
     };
-
-    fetchSubjects();
-  }, []);
-
-  const categorizeSubjects = (subjects) => {
-    // Implement your logic to categorize subjects by year
-    // This is a placeholder implementation; adjust based on your data structure
-    return {
-      'First Year': subjects.filter(sub => sub.programName === 'First Year'),
-      'Second Year': subjects.filter(sub => sub.programName === 'Second Year'),
-      'Third Year': subjects.filter(sub => sub.programName === 'Third Year'),
-      'Fourth Year': subjects.filter(sub => sub.programName === 'Fourth Year'),
-    };
-  };
-
-  const handleShowAdd = () => setShowAddModal(true);
-  const handleCloseAdd = () => setShowAddModal(false);
-
-  const handleShowEdit = (subject) => {
-    setEditSubject(subject);
-    setShowEditModal(true);
-  };
-  const handleCloseEdit = () => setShowEditModal(false);
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setNewSubject((prevState) => ({ ...prevState, [name]: value }));
-  };
-
-  const handleEditInputChange = (e) => {
-    const { name, value } = e.target;
-    setEditSubject((prevState) => ({ ...prevState, [name]: value }));
-  };
-
-  const handleAddSubject = async () => {
+  
     try {
-      const newSubjectData = await SubjectModel.createAndInsertSubject(newSubject.subjectCode, newSubject.subjectName, newSubject.programName);
-      setYearData((prevState) => {
-        const updatedYear = [...prevState[activeYear], newSubjectData];
-        return { ...prevState, [activeYear]: updatedYear };
+      const response = await fetch('http://localhost:5000/subject/upload', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ data: [subjectData] }), // Send data as an array
       });
-      setNewSubject({ subjectCode: '', subjectName: '', programName: '' });
-      handleCloseAdd();
+  
+      if (!response.ok) {
+        throw new Error('Error creating subject');
+      }
+  
+      const data = await response.json();
+      return data; // Return the response or any necessary data
     } catch (error) {
-      console.error('Error adding subject:', error);
+      console.error('Error creating subject:', error);
+      throw error;
     }
-  };
+  }
+  
 
-  const handleEditSubject = () => {
-    setYearData((prevState) => {
-      const updatedYear = prevState[activeYear].map((subject) =>
-        subject.subjectCode === editSubject.subjectCode ? editSubject : subject
-      );
-      return { ...prevState, [activeYear]: updatedYear };
+
+    // Update personnel data
+static async updateSubject(subjectCode, updatedData) {
+  try {
+    const response = await fetch(`http://localhost:5000/subject/${subjectCode}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(updatedData),
     });
-    handleCloseEdit();
-  };
 
-  const handleDeleteSubject = async (subjectCode) => {
-    // Implement the delete functionality as needed
-    setYearData((prevState) => {
-      const updatedYear = prevState[activeYear].filter((subject) => subject.subjectCode !== subjectCode);
-      return { ...prevState, [activeYear]: updatedYear };
+    if (!response.ok) {
+      throw new Error('Error updating subject data');
+    }
+
+    const data = await response.json();
+    return data; // Return updated subject data
+  } catch (error) {
+    console.error('Error updating subject:', error);
+    throw error;
+  }
+}
+
+// Delete subject by ID
+static async deleteSubject(subjectCode) { // Change parameter name to subjectId for clarity
+  try {
+    const response = await fetch(`http://localhost:5000/subject/${subjectCode}`, { // Update URL to reference subjects
+      method: 'DELETE',
     });
-    // Call the appropriate API to delete the subject from the database
-  };
 
-  const renderTable = (year) => (
-    <Table hover className="table table-hover success-border">
-      <thead className="table-success">
-        <tr>
-          <th className='custom-color-green-font custom-font'>Subject Code</th>
-          <th className='custom-color-green-font custom-font'>Subject Name</th>
-          <th className='custom-color-green-font custom-font'>Program Name</th>
-          <th className='custom-color-green-font custom-font'>Actions</th>
-        </tr>
-      </thead>
-      <tbody className='bg-white'>
-        {yearData[year].map((entry, index) => (
-          <tr key={index}>
-            <td>{entry.subjectCode}</td>
-            <td>{entry.subjectName}</td>
-            <td>{entry.programName}</td>
-            <td>
-              <Button variant="warning" onClick={() => handleShowEdit(entry)} className="me-2">Edit</Button>
-              <Button variant="danger" onClick={() => handleDeleteSubject(entry.subjectCode)}>Delete</Button>
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </Table>
-  );
+    if (!response.ok) {
+      throw new Error('Error deleting subject');
+    }
 
-  return (
-    <div className='container-fluid bg-white p-2 px-4 rounded'>
-      <Button variant="primary" className="mb-3" onClick={handleShowAdd}>
-        Add Subject
-      </Button>
+    const data = await response.json();
+    return data; // Return response or success message
+  } catch (error) {
+    console.error('Error deleting subject:', error);
+    throw error;
+  }
+}
 
-      <Tabs defaultActiveKey="firstYear" id="year-tabs" className="mb-3 text-success">
-        <Tab eventKey="firstYear" title={<span className="custom-color-green-font custom-font">First Year</span>} onClick={() => setActiveYear('First Year')}>
-          {renderTable('First Year')}
-        </Tab>
-        <Tab eventKey="secondYear" title={<span className="custom-color-green-font custom-font">Second Year</span>} onClick={() => setActiveYear('Second Year')}>
-          {renderTable('Second Year')}
-        </Tab>
-        <Tab eventKey="thirdYear" title={<span className="custom-color-green-font custom-font">Third Year</span>} onClick={() => setActiveYear('Third Year')}>
-          {renderTable('Third Year')}
-        </Tab>
-        <Tab eventKey="fourthYear" title={<span className="custom-color-green-font custom-font">Fourth Year</span>} onClick={() => setActiveYear('Fourth Year')}>
-          {renderTable('Fourth Year')}
-        </Tab>
-      </Tabs>
-
-      {/* Modal for adding a subject */}
-      <Modal show={showAddModal} onHide={handleCloseAdd}>
-        <Modal.Header closeButton>
-          <Modal.Title>Add Subject</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Form>
-            <Form.Group className="mb-3">
-              <Form.Label>Subject Code</Form.Label>
-              <Form.Control
-                type="text"
-                name="subjectCode"
-                value={newSubject.subjectCode}
-                onChange={handleInputChange}
-                placeholder="Enter Subject Code"
-              />
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Subject Name</Form.Label>
-              <Form.Control
-                type="text"
-                name="subjectName"
-                value={newSubject.subjectName}
-                onChange={handleInputChange}
-                placeholder="Enter Subject Name"
-              />
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Program Name</Form.Label>
-              <Form.Control
-                type="text"
-                name="programName"
-                value={newSubject.programName}
-                onChange={handleInputChange}
-                placeholder="Enter Program Name"
-              />
-            </Form.Group>
-          </Form>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={handleCloseAdd}>
-            Close
-          </Button>
-          <Button variant="primary" onClick={handleAddSubject}>
-            Add Subject
-          </Button>
-        </Modal.Footer>
-      </Modal>
-
-      {/* Modal for editing a subject */}
-      <Modal show={showEditModal} onHide={handleCloseEdit}>
-        <Modal.Header closeButton>
-          <Modal.Title>Edit Subject</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Form>
-            <Form.Group className="mb-3">
-              <Form.Label>Subject Code</Form.Label>
-              <Form.Control
-                type="text"
-                name="subjectCode"
-                value={editSubject.subjectCode}
-                onChange={handleEditInputChange}
-                placeholder="Enter Subject Code"
-                disabled // Prevent editing of the subject code
-              />
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Subject Name</Form.Label>
-              <Form.Control
-                type="text"
-                name="subjectName"
-                value={editSubject.subjectName}
-                onChange={handleEditInputChange}
-                placeholder="Enter Subject Name"
-              />
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Program Name</Form.Label>
-              <Form.Control
-                type="text"
-                name="programName"
-                value={editSubject.programName}
-                onChange={handleEditInputChange}
-                placeholder="Enter Program Name"
-              />
-            </Form.Group>
-          </Form>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={handleCloseEdit}>
-            Close
-          </Button>
-          <Button variant="primary" onClick={handleEditSubject}>
-            Save Changes
-          </Button>
-        </Modal.Footer>
-      </Modal>
-
-      <Button variant="secondary" className="mt-3" onClick={onBack}>
-        <FontAwesomeIcon icon={faArrowLeft} /> Back
-      </Button>
-    </div>
-  );
 }
