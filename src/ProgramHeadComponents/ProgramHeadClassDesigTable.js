@@ -4,10 +4,9 @@ import YearLevelModel from '../ReactModels/YearLevelModel';
 import SectionModel from '../ReactModels/SectionModel';
 import PersonnelModel from '../ReactModels/PersonnelModel';
 import SubjectModel from '../ReactModels/SubjectModel';
-import ScheduleModel from '../ReactModels/ScheduleModel'
 
 export default function ProgramHeadClassDesigTable() {
-  const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 
   const hours = Array.from({ length: 24 }, (_, index) => {
     const hour = index % 12 === 0 ? 12 : index % 12;
@@ -23,38 +22,34 @@ export default function ProgramHeadClassDesigTable() {
   const [subjects, setSubjects] = useState([]);
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchYearLevelsSectionsSubjects = async () => {
       try {
         const fetchedYearLevels = await YearLevelModel.fetchExistingYearLevels();
         setYearLevels(fetchedYearLevels);
-  
+
         const fetchedSections = await SectionModel.fetchExistingSections();
         setSections(fetchedSections);
-  
+
         const fetchedProfessors = await PersonnelModel.getProfessors();
         setProfessors(fetchedProfessors);
-  
+
         const fetchedSubjects = await SubjectModel.fetchExistingSubjects();
         setSubjects(fetchedSubjects);
-  
-        const fetchedSchedules = await ScheduleModel.fetchExistingSchedules(); // Fetch existing schedules
-  
+
         const initialData = {};
         for (const yearLevel of fetchedYearLevels) {
           initialData[yearLevel.yearName] = {};
           fetchedSections.forEach(section => {
-            initialData[yearLevel.yearName][section.sectionName] = fetchedSchedules
-              .filter(schedule => schedule.yearNumber === yearLevel.yearName && schedule.sectionNumber === section.sectionName)
-              .map(schedule => ({
-                subjectCode: schedule.subjectCode,
-                subjectName: schedule.subjectName,
-                professor: schedule.personnelName,
-                scheduleDay: schedule.scheduleDay,
-                startTime: schedule.startTime,
-                endTime: schedule.endTime,
-                numberOfHours: calculateHours(schedule.startTime, schedule.endTime),
-                units: schedule.subjectUnits,
-              }));
+            initialData[yearLevel.yearName][section.sectionName] = fetchedSubjects.map(subject => ({
+              subjectCode: subject.subjectCode,
+              subjectName: subject.subjectName,
+              professor: '', // Default to empty or some initial value
+              scheduleDay: daysOfWeek[0],
+              startTime: '',
+              endTime: '',
+              numberOfHours: '',
+              units: subject.subjectUnits,
+            }));
           });
         }
         setData(initialData);
@@ -63,10 +58,10 @@ export default function ProgramHeadClassDesigTable() {
         console.error('Failed to fetch data:', error);
       }
     };
-  
-    fetchData();
+
+    fetchYearLevelsSectionsSubjects();
   }, []);
-  
+
   const handleSubjectChange = (year, section, index, selectedSubjectName) => {
     const updatedRows = [...data[year][section]];
     const selectedSubject = subjects.find(subject => subject.subjectName === selectedSubjectName);
@@ -147,51 +142,27 @@ export default function ProgramHeadClassDesigTable() {
     }));
   };
 
-  const handleSave = async (year, section) => {
-    try {
-      const rowsToSave = data[year][section];
-  
-      // Loop through the rows and save each schedule
-      for (const row of rowsToSave) {
-        await ScheduleModel.createAndInsertSchedule(
-          `SCH${Math.floor(Math.random() * 1000)}`, // Example scheduleNumber
-          row.subjectCode,
-          row.subjectName,
-          row.units,
-          row.professor,
-          row.scheduleDay,
-          row.startTime,
-          row.endTime,
-          year,
-          section
-        );
+  const handleSave = (year, section) => {
+    setIsEditing(prevState => ({
+      ...prevState,
+      [year]: {
+        ...prevState[year],
+        [section]: false,
       }
-  
-      // Update the UI after saving
-      setIsEditing(prevState => ({
-        ...prevState,
-        [year]: {
-          ...prevState[year],
-          [section]: false,
-        }
-      }));
-    } catch (error) {
-      console.error('Error saving schedules:', error);
-    }
+    }));
+    // Handle saving to the backend if needed
   };
-  
 
   const addRow = (year, section) => {
     const newRow = {
       subjectCode: '',
       subjectName: '',
-      units: '',
       professor: '',
       scheduleDay: daysOfWeek[0],
       startTime: '',
       endTime: '',
       numberOfHours: '',
-      
+      units: '',
     };
 
     setData(prevData => ({
@@ -246,7 +217,6 @@ export default function ProgramHeadClassDesigTable() {
                       onChange={(e) => handleSubjectChange(year, section, index, e.target.value)}
                     >
                       <option value="" disabled>Select a subject</option> {/* Default option */}
-                      
                       {subjects.map((subject) => (
                         <option key={subject.subjectCode} value={subject.subjectName}>
                           {subject.subjectName}
@@ -350,7 +320,7 @@ export default function ProgramHeadClassDesigTable() {
           <Button variant="primary" onClick={() => addRow(year, section)}>Add Row</Button>
         </Table>
         {isEditing[year]?.[section] && (
-          <div className="d-flex justify-content-end mt-3">
+          <div className="d-flex justify-content-end mt-3"> 
           <Button variant="success" onClick={() => handleSave(year, section)}>Save</Button>
           </div>
         )}
