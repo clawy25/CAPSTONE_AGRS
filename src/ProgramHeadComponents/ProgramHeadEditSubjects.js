@@ -9,8 +9,8 @@ export default function ProgramHeadEditSubjects({ onBack }) {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [newSubject, setNewSubject] = useState({ subjectCode: '', subjectName: '' });
-  const [editSubject, setEditSubject] = useState({ id: '', subjectCode: '', subjectName: '' });
+  const [newSubject, setNewSubject] = useState({ subjectCode: '', subjectName: '', subjectUnits: '' });
+  const [editSubject, setEditSubject] = useState({ id: '', subjectCode: '', subjectName: '', subjectUnits: '' });
   const [subjectToDelete, setSubjectToDelete] = useState(null); // State to hold the subject being deleted
 
   useEffect(() => {
@@ -55,8 +55,8 @@ export default function ProgramHeadEditSubjects({ onBack }) {
 
   const handleAddSubject = async () => {
     // Validate input data
-    if (!newSubject.subjectCode || !newSubject.subjectName) {
-      console.error('Subject Code and Name are required');
+    if (!newSubject.subjectCode || !newSubject.subjectName || !newSubject.subjectUnits) {
+      console.error('Subject Code, Name, and Units are required');
       return;
     }
 
@@ -64,7 +64,8 @@ export default function ProgramHeadEditSubjects({ onBack }) {
       // Create and insert the subject
       const createdSubject = await SubjectModel.createAndInsertSubject(
         newSubject.subjectCode,
-        newSubject.subjectName
+        newSubject.subjectName,
+        newSubject.subjectUnits
       );
   
       const newSubjectData = createdSubject.data ? createdSubject.data : createdSubject;
@@ -76,7 +77,7 @@ export default function ProgramHeadEditSubjects({ onBack }) {
       });
   
       // Reset the newSubject state and close modal
-      setNewSubject({ subjectCode: '', subjectName: '' });
+      setNewSubject({ subjectCode: '', subjectName: '', subjectUnits: '' });
       handleCloseAdd();
     } catch (error) {
       console.error('Error adding subject:', error);
@@ -123,6 +124,7 @@ export default function ProgramHeadEditSubjects({ onBack }) {
         <tr>
           <th className='custom-color-green-font custom-font'>Subject Code</th>
           <th className='custom-color-green-font custom-font'>Subject Name</th>
+          <th className='custom-color-green-font custom-font'>Units</th>
           <th className='custom-color-green-font custom-font'>Actions</th>
         </tr>
       </thead>
@@ -131,6 +133,7 @@ export default function ProgramHeadEditSubjects({ onBack }) {
           <tr key={index}>
             <td>{entry.subjectCode}</td>
             <td>{entry.subjectName}</td>
+            <td>{entry.subjectUnits}</td>
             <td>
               <Button variant="warning" onClick={() => handleShowEdit(entry)} className="me-2">Edit</Button>
               <Button variant="danger" onClick={() => handleShowDelete(entry)}>Delete</Button>
@@ -174,6 +177,16 @@ export default function ProgramHeadEditSubjects({ onBack }) {
                 placeholder="Enter Subject Name"
               />
             </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Subject Units</Form.Label>
+              <Form.Control
+                type="text"
+                name="subjectUnits"
+                value={newSubject.subjectUnits}
+                onChange={handleInputChange}
+                placeholder="Enter Subject Units"
+              />
+            </Form.Group>
           </Form>
         </Modal.Body>
         <Modal.Footer>
@@ -193,18 +206,17 @@ export default function ProgramHeadEditSubjects({ onBack }) {
         </Modal.Header>
         <Modal.Body>
           <Form>
-          <Form.Group className="mb-3">
-            <Form.Label>Subject Code</Form.Label>
-            <Form.Control
-              type="text"
-              name="subjectCode"
-              value={editSubject.subjectCode}
-              onChange={handleEditInputChange}
-              placeholder="Enter Subject Code"
-              readOnly
-            />
-          </Form.Group>
-
+            <Form.Group className="mb-3">
+              <Form.Label>Subject Code</Form.Label>
+              <Form.Control
+                type="text"
+                name="subjectCode"
+                value={editSubject.subjectCode}
+                onChange={handleEditInputChange}
+                placeholder="Enter Subject Code"
+                readOnly
+              />
+            </Form.Group>
             <Form.Group className="mb-3">
               <Form.Label>Subject Name</Form.Label>
               <Form.Control
@@ -213,6 +225,16 @@ export default function ProgramHeadEditSubjects({ onBack }) {
                 value={editSubject.subjectName}
                 onChange={handleEditInputChange}
                 placeholder="Enter Subject Name"
+              />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Subject Units</Form.Label>
+              <Form.Control
+                type="text"
+                name="subjectUnits"
+                value={editSubject.subjectUnits}
+                onChange={handleEditInputChange}
+                placeholder="Enter Subject Units"
               />
             </Form.Group>
           </Form>
@@ -245,8 +267,8 @@ export default function ProgramHeadEditSubjects({ onBack }) {
         </Modal.Footer>
       </Modal>
 
-      {/* Add Subject Button positioned at the bottom right below the table */} 
-      <div className="d-flex justify-content-end mt-3"> 
+       {/* Add Subject Button positioned at the bottom right below the table */} 
+       <div className="d-flex justify-content-end mt-3"> 
         <Button variant="success" onClick={handleShowAdd}> Add Subject </Button>
       </div>
     </div>

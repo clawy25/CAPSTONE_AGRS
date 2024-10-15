@@ -561,6 +561,69 @@ app.post('/section/upload', async (req, res) => {
   });
 
   
+  app.get('/schedule', async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('schedules') // Replace with your actual table name
+            .select('*');
+
+        if (error) {
+            return res.status(500).json({ error: error.message });
+        }
+        return res.json(data);
+    } catch (error) {
+        console.error('Error fetching schedules:', error);
+        return res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+// Get subject by ID
+app.get('/schedule/:id', async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const { data, error } = await supabase
+            .from('schedule')
+            .select('*')
+            .eq('id', id)
+            .single();
+
+        if (error || !data) {
+            return res.status(404).json({ error: 'Subject not found' });
+        }
+
+        res.json(data);
+    } catch (error) {
+        console.error('Error fetching subject:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Route to upload new schedules
+app.post('/schedule/upload', async (req, res) => {
+    const { data: schedules } = req.body; // Destructure the array of schedules
+
+    try {
+        const { data, error } = await supabase
+            .from('schedule') // Replace with your actual table name
+            .insert(schedules);
+
+        if (error) {
+            return res.status(400).json({ error: error.message });
+        }
+
+        return res.status(201).json(data); // Return the inserted data
+    } catch (error) {
+        console.error('Error inserting schedules:', error);
+        return res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+
+
+
+
+
 
 // Start the server
 app.listen(port, () => {
