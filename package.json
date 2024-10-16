@@ -11,6 +11,7 @@
     "@testing-library/user-event": "^13.5.0",
     "bcryptjs": "^2.4.3",
     "bootstrap": "^5.3.3",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.21.0",
@@ -29,7 +30,7 @@
   "scripts": {
     "start": "concurrently \"npm run start-backend\" \"npm run start-frontend\"",
     "start-backend": "node backend/App.js",
-    "start-frontend": "set PORT=3001 && react-scripts start",
+    "start-frontend": "set PORT=3000 && react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"

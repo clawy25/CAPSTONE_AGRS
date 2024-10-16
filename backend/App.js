@@ -7,7 +7,7 @@ const jwt = require('jsonwebtoken');
 const app = express();
 const port = process.env.SUPA_PORT; // Use the PORT from .env or default to 5000
 app.use(cors({
-    origin: 'http://localhost:3001', // Adjust this for your frontend URL
+    origin: 'http://localhost:3000', // Adjust this for your frontend URL
 }));
 app.use(express.json());
 
@@ -58,16 +58,15 @@ app.get('/personnel/:personnelNumber', async (req, res) => {
           return res.status(404).json({ error: 'Personnel not found' });
       }
 
-      /* DO NOT REMOVE: NOT YET IMPLEMENTED FOR HASHING
-      // Assuming personnelData contains the hashed password
-      const isMatch = await bcrypt.compare(password, personnelData.personnelPassword);
-      if (!isMatch) {
-        return res.status(401).json({ error: 'Invalid credentials.' });
-      }*/
-
       const token = generateToken(personnelData); // Generate token
+      
+      res.cookie('token', token, {
+        httpOnly: true, // Prevents JavaScript access
+        secure: process.env.NODE_ENV === 'production',   // Sends the cookie only over HTTPS (set to false for local development)
+        sameSite: 'Strict', // Helps prevent CSRF attacks
+      });
 
-      res.json({ ...personnelData, token }); // Send personnel data along with token
+      res.json(personnelData); // Send personnel data along with token
   } catch (error) {
       console.error('Error fetching personnel data:', error);
       res.status(500).json({ error: 'Internal server error' });
@@ -108,7 +107,15 @@ app.get('/student/:studentNumber', async (req, res) => {
         studentProgramName: programData.programName, // Add program name
         // You can add any other fields from the programData as needed
       };
-  
+
+      const token = generateToken(responseData);
+
+      res.cookie('token', token, {
+        httpOnly: true, // Prevents JavaScript access
+        secure: true,   // Sends the cookie only over HTTPS (set to false for local development)
+        sameSite: 'Strict', // Helps prevent CSRF attacks
+      });
+
       res.json(responseData); // Send the combined data as a response
     } catch (error) {
       console.error('Error fetching personnel data:', error);
