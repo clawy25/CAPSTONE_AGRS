@@ -1,11 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Table, Modal, Button, Form } from 'react-bootstrap';
 import SubjectModel from '../ReactModels/SubjectModel'; 
 import '../App.css';
+import { UserContext } from '../Context/UserContext';
 
 export default function ProgramHeadEditSubjects({ onBack }) {
   const [yearData, setYearData] = useState({ 'First Year': [] });
   const [loading, setLoading] = useState(true);
+  const { user } = useContext(UserContext);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -65,6 +67,7 @@ export default function ProgramHeadEditSubjects({ onBack }) {
       const createdSubject = await SubjectModel.createAndInsertSubject(
         newSubject.subjectCode,
         newSubject.subjectName,
+        user.programNumber,
         newSubject.subjectUnits
       );
   
@@ -77,7 +80,7 @@ export default function ProgramHeadEditSubjects({ onBack }) {
       });
   
       // Reset the newSubject state and close modal
-      setNewSubject({ subjectCode: '', subjectName: '', subjectUnits: '' });
+      setNewSubject({ subjectCode: '', subjectName: '',programNumber: '', subjectUnits: '' });
       handleCloseAdd();
     } catch (error) {
       console.error('Error adding subject:', error);

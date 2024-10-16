@@ -434,21 +434,33 @@ app.get('/subject/:id', async (req, res) => {
     }
 });
 
+
 // Add new subject
 app.post('/subject/upload', async (req, res) => {
     try {
-      const subjects = req.body.data; // Extract subjects from the request body
-  
-      // Assuming you're using an ORM or database query for adding the subject
-      const addedSubject = await SubjectModel.create(subjects[0]); // Insert the subject
-  
-      // Send back the newly added subject with a success message
-      res.status(201).json({ success: true, data: addedSubject });
+        const subjectData = req.body.data;
+
+        // Check if subjectData is defined and is an array
+        if (!subjectData || !Array.isArray(subjectData) || subjectData.length === 0) {
+            return res.status(400).json({ message: 'Invalid data format or no subjects to insert' });
+        }
+
+        const { data, error } = await supabase
+            .from('subject')
+            .insert(subjectData);
+
+        if (error) {
+            console.error('Supabase error:', error); // Log the Supabase error for debugging
+            return res.status(500).json({ message: `Error inserting subjects: ${error.message}` });
+        }
+
+        res.status(201).json({ success: true, data }); // Return success with a 201 status
     } catch (error) {
-      console.error("Error adding subject:", error);
-      res.status(500).json({ success: false, message: "Failed to add subject" });
+        console.error('Error inserting subjects:', error);
+        res.status(500).json({ message: `Error inserting subjects: ${error.message || 'Unknown error'}` });
     }
-  });
+});
+
   
 // Update subject by ID
 app.put('/subject/:id', async (req, res) => {

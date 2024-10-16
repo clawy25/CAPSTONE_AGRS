@@ -1,8 +1,9 @@
 export default class SubjectModel {
-  constructor(id, subjectCode, subjectName, subjectUnits) {
+  constructor(id, subjectCode, subjectName, programNumber, subjectUnits) {
       this.id = id;
       this.subjectCode = subjectCode;
       this.subjectName = subjectName;
+      this.programNumber = programNumber;
       this.subjectUnits = subjectUnits;
       
   }
@@ -21,6 +22,7 @@ export default class SubjectModel {
               subject.id,
               subject.subjectCode,
               subject.subjectName,
+              subject.programNumber,
               subject.subjectUnits
               
           ));
@@ -31,10 +33,11 @@ export default class SubjectModel {
   }
 
   // Method to create and insert a subject
-  static async createAndInsertSubject(subjectCode, subjectName, subjectUnits) {
+  static async createAndInsertSubject(subjectCode, subjectName, programNumber, subjectUnits) {
     const subjectData = {
       subjectCode,
       subjectName,
+      programNumber,
       subjectUnits
     };
   
