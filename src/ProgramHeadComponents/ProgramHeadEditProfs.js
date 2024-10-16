@@ -60,6 +60,7 @@ const handleAddProf = async () => {
   const newProfessorData = {
     personnelNumber: newProf.phone,
     personnelPassword: 'AgrsPcc2024',
+    personnelType: 'Faculty',
     personnelName: newProf.name,
     personnelSex: newProf.sex,
     personnelEmail: newProf.email,
