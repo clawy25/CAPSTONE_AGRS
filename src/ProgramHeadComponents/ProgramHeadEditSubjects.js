@@ -1,122 +1,148 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { Table, Modal, Button, Form } from 'react-bootstrap';
-import SubjectModel from '../ReactModels/SubjectModel'; 
+import CourseModel from '../ReactModels/CourseModel'; 
 import '../App.css';
 import { UserContext } from '../Context/UserContext';
 
-export default function ProgramHeadEditSubjects({ onBack }) {
+export default function ProgramHeadEditCourses({ onBack }) {
   const [yearData, setYearData] = useState({ 'First Year': [] });
   const [loading, setLoading] = useState(true);
   const { user } = useContext(UserContext);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [newSubject, setNewSubject] = useState({ subjectCode: '', subjectName: '', subjectUnits: '' });
-  const [editSubject, setEditSubject] = useState({ id: '', subjectCode: '', subjectName: '', subjectUnits: '' });
-  const [subjectToDelete, setSubjectToDelete] = useState(null); // State to hold the subject being deleted
+  
+  const [newCourse, setNewCourse] = useState({ 
+    courseCode: '', 
+    courseDescriptiveTitle: '', 
+    courseLecture: '', 
+    courseLaboratory: '', 
+    coursePreRequisite: '', 
+    courseUnits: '' 
+  });
+
+  const [editCourse, setEditCourse] = useState({ 
+    id: '',
+    courseCode: '', 
+    courseDescriptiveTitle: '', 
+    courseLecture: '', 
+    courseLaboratory: '', 
+    coursePreRequisite: '', 
+    courseUnits: '' 
+  });
+
+  const [courseToDelete, setCourseToDelete] = useState(null); 
 
   useEffect(() => {
-    const fetchSubjects = async () => {
+    const fetchCourses = async () => {
       try {
-        const fetchedSubjects = await SubjectModel.fetchExistingSubjects();
-        setYearData({ 'First Year': fetchedSubjects });
+        const fetchedCourses = await CourseModel.fetchExistingCourses();
+        setYearData({ 'First Year': fetchedCourses });
       } catch (error) {
-        console.error('Error fetching subjects:', error);
+        console.error('Error fetching courses:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchSubjects();
+    fetchCourses();
   }, []);
 
   const handleShowAdd = () => setShowAddModal(true);
   const handleCloseAdd = () => setShowAddModal(false);
 
-  const handleShowEdit = (subject) => {
-    setEditSubject(subject);
+  const handleShowEdit = (course) => {
+    setEditCourse(course);
     setShowEditModal(true);
   };
   const handleCloseEdit = () => setShowEditModal(false);
 
-  const handleShowDelete = (subject) => {
-    setSubjectToDelete(subject);
+  const handleShowDelete = (course) => {
+    setCourseToDelete(course);
     setShowDeleteModal(true);
   };
   const handleCloseDelete = () => setShowDeleteModal(false);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setNewSubject((prevState) => ({ ...prevState, [name]: value }));
+    setNewCourse((prevState) => ({ ...prevState, [name]: value }));
   };
 
   const handleEditInputChange = (e) => {
     const { name, value } = e.target;
-    setEditSubject((prevState) => ({ ...prevState, [name]: value }));
+    setEditCourse((prevState) => ({ ...prevState, [name]: value }));
   };
 
-  const handleAddSubject = async () => {
-    // Validate input data
-    if (!newSubject.subjectCode || !newSubject.subjectName || !newSubject.subjectUnits) {
-      console.error('Subject Code, Name, and Units are required');
+  const handleAddCourse = async () => {
+    // Check if required fields are filled
+    if (!newCourse.courseCode || !newCourse.courseDescriptiveTitle || !newCourse.courseUnits) {
+      console.error('Course Code, Descriptive Title, and Units are required');
       return;
     }
 
     try {
-      // Create and insert the subject
-      const createdSubject = await SubjectModel.createAndInsertSubject(
-        newSubject.subjectCode,
-        newSubject.subjectName,
-        user.programNumber,
-        newSubject.subjectUnits
+      const createdCourse = await CourseModel.createAndInsertCourse(
+        newCourse.courseCode,
+        newCourse.courseDescriptiveTitle,
+        newCourse.courseLecture,
+        newCourse.courseLaboratory,
+        newCourse.coursePreRequisite,
+        newCourse.courseUnits
       );
-  
-      const newSubjectData = createdSubject.data ? createdSubject.data : createdSubject;
-  
-      // Update the yearData with the newly added subject
+
+      const newCourseData = createdCourse.data && Array.isArray(createdCourse.data) ? createdCourse.data[0] : createdCourse;
+
       setYearData((prevState) => {
-        const updatedYear = [...prevState['First Year'], newSubjectData]; 
+        const updatedYear = [...prevState['First Year'], newCourseData];
         return { ...prevState, 'First Year': updatedYear };
       });
-  
-      // Reset the newSubject state and close modal
-      setNewSubject({ subjectCode: '', subjectName: '',programNumber: '', subjectUnits: '' });
+
+      // Reset the new course inputs
+      setNewCourse({
+        courseCode: '',
+        courseDescriptiveTitle: '',
+        courseLecture: '',
+        courseLaboratory: '',
+        coursePreRequisite: '',
+        courseUnits: '',
+      });
+
       handleCloseAdd();
     } catch (error) {
-      console.error('Error adding subject:', error);
+      console.error('Error adding course:', error);
     }
   };
 
-  const handleEditSubject = async () => {
+  const handleEditCourse = async () => {
     try {
-      await SubjectModel.updateSubject(editSubject.id, editSubject);
+      await CourseModel.updateCourse(editCourse.id, editCourse);
 
       setYearData((prevState) => {
-        const updatedYear = prevState['First Year'].map((subject) =>
-          subject.id === editSubject.id ? editSubject : subject
+        const updatedYear = prevState['First Year'].map((course) =>
+          course.id === editCourse.id ? editCourse : course
         );
         return { ...prevState, 'First Year': updatedYear };
       });
 
       handleCloseEdit();
     } catch (error) {
-      console.error('Error updating subject:', error);
+      console.error('Error updating course:', error);
     }
   };
 
-  const handleDeleteSubject = async () => {
-    if (subjectToDelete) {
+  const handleDeleteCourse = async () => {
+    if (courseToDelete) {
       try {
-        await SubjectModel.deleteSubject(subjectToDelete.id);
+        await CourseModel.deleteCourse(courseToDelete.id);
 
         setYearData((prevState) => {
-          const updatedYear = prevState['First Year'].filter((subject) => subject.id !== subjectToDelete.id);
+          const updatedYear = prevState['First Year'].filter((course) => course.id !== courseToDelete.id);
           return { ...prevState, 'First Year': updatedYear };
         });
 
         handleCloseDelete();
       } catch (error) {
-        console.error('Error deleting subject:', error);
+        console.error('Error deleting course:', error);
       }
     }
   };
@@ -125,8 +151,11 @@ export default function ProgramHeadEditSubjects({ onBack }) {
     <Table hover className="table table-hover success-border">
       <thead className="table-success">
         <tr>
-          <th className='custom-color-green-font custom-font'>Subject Code</th>
-          <th className='custom-color-green-font custom-font'>Subject Name</th>
+          <th className='custom-color-green-font custom-font'>Course Code</th>
+          <th className='custom-color-green-font custom-font'>Descriptive Title</th>
+          <th className='custom-color-green-font custom-font'>Lecture Hours</th>
+          <th className='custom-color-green-font custom-font'>Laboratory Hours</th>
+          <th className='custom-color-green-font custom-font'>Pre-requisite</th>
           <th className='custom-color-green-font custom-font'>Units</th>
           <th className='custom-color-green-font custom-font'>Actions</th>
         </tr>
@@ -134,9 +163,12 @@ export default function ProgramHeadEditSubjects({ onBack }) {
       <tbody className='bg-white'>
         {yearData[year].map((entry, index) => (
           <tr key={index}>
-            <td>{entry.subjectCode}</td>
-            <td>{entry.subjectName}</td>
-            <td>{entry.subjectUnits}</td>
+            <td>{entry.courseCode}</td>
+            <td>{entry.courseDescriptiveTitle}</td>
+            <td>{entry.courseLecture}</td>
+            <td>{entry.courseLaboratory}</td>
+            <td>{entry.coursePreRequisite}</td>
+            <td>{entry.courseUnits}</td>
             <td>
               <Button variant="warning" onClick={() => handleShowEdit(entry)} className="me-2">Edit</Button>
               <Button variant="danger" onClick={() => handleShowDelete(entry)}>Delete</Button>
@@ -156,38 +188,68 @@ export default function ProgramHeadEditSubjects({ onBack }) {
       {/* Add Modal */}
       <Modal show={showAddModal} onHide={handleCloseAdd}>
         <Modal.Header closeButton>
-          <Modal.Title>Add Subject</Modal.Title>
+          <Modal.Title>Add Course</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form>
             <Form.Group className="mb-3">
-              <Form.Label>Subject Code</Form.Label>
+              <Form.Label>Course Code</Form.Label>
               <Form.Control
                 type="text"
-                name="subjectCode"
-                value={newSubject.subjectCode}
+                name="courseCode"
+                value={newCourse.courseCode}
                 onChange={handleInputChange}
-                placeholder="Enter Subject Code"
+                placeholder="Enter Course Code"
               />
             </Form.Group>
             <Form.Group className="mb-3">
-              <Form.Label>Subject Name</Form.Label>
+              <Form.Label>Descriptive Title</Form.Label>
               <Form.Control
                 type="text"
-                name="subjectName"
-                value={newSubject.subjectName}
+                name="courseDescriptiveTitle"
+                value={newCourse.courseDescriptiveTitle}
                 onChange={handleInputChange}
-                placeholder="Enter Subject Name"
+                placeholder="Enter Descriptive Title"
               />
             </Form.Group>
             <Form.Group className="mb-3">
-              <Form.Label>Subject Units</Form.Label>
+              <Form.Label>Lecture Hours</Form.Label>
               <Form.Control
                 type="text"
-                name="subjectUnits"
-                value={newSubject.subjectUnits}
+                name="courseLecture"
+                value={newCourse.courseLecture}
                 onChange={handleInputChange}
-                placeholder="Enter Subject Units"
+                placeholder="Enter Lecture Hours"
+              />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Laboratory Hours</Form.Label>
+              <Form.Control
+                type="text"
+                name="courseLaboratory"
+                value={newCourse.courseLaboratory}
+                onChange={handleInputChange}
+                placeholder="Enter Laboratory Hours"
+              />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Pre-requisite</Form.Label>
+              <Form.Control
+                type="text"
+                name="coursePreRequisite"
+                value={newCourse.coursePreRequisite}
+                onChange={handleInputChange}
+                placeholder="Enter Pre-requisite"
+              />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Units</Form.Label>
+              <Form.Control
+                type="text"
+                name="courseUnits"
+                value={newCourse.courseUnits}
+                onChange={handleInputChange}
+                placeholder="Enter Units"
               />
             </Form.Group>
           </Form>
@@ -196,48 +258,71 @@ export default function ProgramHeadEditSubjects({ onBack }) {
           <Button variant="secondary" onClick={handleCloseAdd}>
             Close
           </Button>
-          <Button variant="primary" onClick={handleAddSubject}>
-            Add Subject
+          <Button variant="primary" onClick={handleAddCourse}>
+            Add Course
           </Button>
         </Modal.Footer>
       </Modal>
-
+      
       {/* Edit Modal */}
       <Modal show={showEditModal} onHide={handleCloseEdit}>
         <Modal.Header closeButton>
-          <Modal.Title>Edit Subject</Modal.Title>
+          <Modal.Title>Edit Course</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form>
             <Form.Group className="mb-3">
-              <Form.Label>Subject Code</Form.Label>
+              <Form.Label>Course Code</Form.Label>
               <Form.Control
                 type="text"
-                name="subjectCode"
-                value={editSubject.subjectCode}
+                name="courseCode"
+                value={editCourse.courseCode}
                 onChange={handleEditInputChange}
-                placeholder="Enter Subject Code"
-                readOnly
               />
             </Form.Group>
             <Form.Group className="mb-3">
-              <Form.Label>Subject Name</Form.Label>
+              <Form.Label>Descriptive Title</Form.Label>
               <Form.Control
                 type="text"
-                name="subjectName"
-                value={editSubject.subjectName}
+                name="courseDescriptiveTitle"
+                value={editCourse.courseDescriptiveTitle}
                 onChange={handleEditInputChange}
-                placeholder="Enter Subject Name"
               />
             </Form.Group>
             <Form.Group className="mb-3">
-              <Form.Label>Subject Units</Form.Label>
+              <Form.Label>Lecture Hours</Form.Label>
               <Form.Control
                 type="text"
-                name="subjectUnits"
-                value={editSubject.subjectUnits}
+                name="courseLecture"
+                value={editCourse.courseLecture}
                 onChange={handleEditInputChange}
-                placeholder="Enter Subject Units"
+              />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Laboratory Hours</Form.Label>
+              <Form.Control
+                type="text"
+                name="courseLaboratory"
+                value={editCourse.courseLaboratory}
+                onChange={handleEditInputChange}
+              />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Pre-requisite</Form.Label>
+              <Form.Control
+                type="text"
+                name="coursePreRequisite"
+                value={editCourse.coursePreRequisite}
+                onChange={handleEditInputChange}
+              />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Units</Form.Label>
+              <Form.Control
+                type="text"
+                name="courseUnits"
+                value={editCourse.courseUnits}
+                onChange={handleEditInputChange}
               />
             </Form.Group>
           </Form>
@@ -246,7 +331,7 @@ export default function ProgramHeadEditSubjects({ onBack }) {
           <Button variant="secondary" onClick={handleCloseEdit}>
             Close
           </Button>
-          <Button variant="primary" onClick={handleEditSubject}>
+          <Button variant="primary" onClick={handleEditCourse}>
             Save Changes
           </Button>
         </Modal.Footer>
@@ -255,25 +340,27 @@ export default function ProgramHeadEditSubjects({ onBack }) {
       {/* Delete Modal */}
       <Modal show={showDeleteModal} onHide={handleCloseDelete}>
         <Modal.Header closeButton>
-          <Modal.Title>Delete Subject</Modal.Title>
+          <Modal.Title>Delete Course</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          Are you sure you want to delete this subject?
+          Are you sure you want to delete this course?
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={handleCloseDelete}>
-            Cancel
+            Close
           </Button>
-          <Button variant="danger" onClick={handleDeleteSubject}>
-            Delete
+          <Button variant="danger" onClick={handleDeleteCourse}>
+            Delete Course
           </Button>
         </Modal.Footer>
       </Modal>
-
-       {/* Add Subject Button positioned at the bottom right below the table */} 
+       {/* Add Subject Button */}
        <div className="d-flex justify-content-end mt-3"> 
-        <Button variant="success" onClick={handleShowAdd}> Add Subject </Button>
+        <Button variant="success" onClick={handleShowAdd}>
+          Add Course
+        </Button>
       </div>
     </div>
+    
   );
 }

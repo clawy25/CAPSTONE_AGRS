@@ -402,10 +402,10 @@ app.get('/program', async (req, res) => {
 
 
 // Get all subjects
-app.get('/subject', async (req, res) => {
+app.get('/course', async (req, res) => {
     try {
         const { data, error } = await supabase
-            .from('subject')
+            .from('course')
             .select('*');
 
         if (error) {
@@ -419,13 +419,13 @@ app.get('/subject', async (req, res) => {
     }
 });
 
-// Get subject by ID
-app.get('/subject/:id', async (req, res) => {
+// Get course by ID
+app.get('/course/:id', async (req, res) => {
     const { id } = req.params;
 
     try {
         const { data, error } = await supabase
-            .from('subject')
+            .from('course')
             .select('*')
             .eq('id', id)
             .single();
@@ -436,81 +436,82 @@ app.get('/subject/:id', async (req, res) => {
 
         res.json(data);
     } catch (error) {
-        console.error('Error fetching subject:', error);
+        console.error('Error fetching course:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
 
 
-// Add new subject
-app.post('/subject/upload', async (req, res) => {
+// Add new course
+app.post('/course/upload', async (req, res) => {
     try {
-        const subjectData = req.body.data;
+        const courseData = req.body.data;
 
-        // Check if subjectData is defined and is an array
-        if (!subjectData || !Array.isArray(subjectData) || subjectData.length === 0) {
-            return res.status(400).json({ message: 'Invalid data format or no subjects to insert' });
+        // Check if courseData is defined and is an array
+        if (!courseData || !Array.isArray(courseData) || courseData.length === 0) {
+            return res.status(400).json({ message: 'Invalid data format or no courses to insert' });
         }
 
         const { data, error } = await supabase
-            .from('subject')
-            .insert(subjectData);
+            .from('course')
+            .insert(courseData);
 
         if (error) {
             console.error('Supabase error:', error); // Log the Supabase error for debugging
-            return res.status(500).json({ message: `Error inserting subjects: ${error.message}` });
+            return res.status(500).json({ message: `Error inserting courses: ${error.message}` });
         }
 
         res.status(201).json({ success: true, data }); // Return success with a 201 status
     } catch (error) {
-        console.error('Error inserting subjects:', error);
-        res.status(500).json({ message: `Error inserting subjects: ${error.message || 'Unknown error'}` });
+        console.error('Error inserting courses:', error);
+        res.status(500).json({ message: `Error inserting courses: ${error.message || 'Unknown error'}` });
     }
 });
 
   
-// Update subject by ID
-app.put('/subject/:id', async (req, res) => {
+// Update course by ID
+app.put('/course/:id', async (req, res) => {
     const { id } = req.params;
-    const { subjectCode, subjectName} = req.body;
+    const { courseDescriptiveTitle, courseLecture, courseLaboratory, coursePreRequisite, courseUnits } = req.body;
 
     try {
         const { data, error } = await supabase
-            .from('subject')
-            .update({ subjectCode, subjectName})
+            .from('course')
+            .update({ courseDescriptiveTitle, courseLecture, courseLaboratory, coursePreRequisite, courseUnits })
             .eq('id', id);
 
         if (error) {
-            return res.status(500).json({ error: 'Failed to update subject' });
+            return res.status(500).json({ error: 'Failed to update course' });
         }
 
-        res.json({ message: 'Subject updated successfully', data });
+        res.json({ message: 'Course updated successfully', data });
     } catch (error) {
-        console.error('Error updating subject:', error);
+        console.error('Error updating course:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
 
-// Delete subject by ID
-app.delete('/subject/:id', async (req, res) => {
+// Delete course by ID
+app.delete('/course/:id', async (req, res) => {
     const { id } = req.params;
-  
+
     try {
-      const { data, error } = await supabase
-        .from('subject')
-        .delete()
-        .eq('id', id);
-  
-      if (error) {
-        return res.status(500).json({ error: 'Failed to delete subject' });
-      }
-  
-      res.json({ message: 'Subject deleted successfully', data });
+        const { data, error } = await supabase
+            .from('course')
+            .delete("*")
+            .eq('id', id); // Change "*" to use the default delete behavior
+
+        if (error) {
+            return res.status(500).json({ error: 'Failed to delete course' });
+        }
+
+        res.json({ message: 'Course deleted successfully', data });
     } catch (error) {
-      console.error('Error deleting subject:', error);
-      res.status(500).json({ error: 'Internal server error' });
+        console.error('Error deleting course:', error);
+        res.status(500).json({ error: 'Internal server error' });
     }
-  });
+});
+
 
 
 
@@ -580,23 +581,26 @@ app.post('/section/upload', async (req, res) => {
   });
 
   
-  app.get('/schedule', async (req, res) => {
+// Get all schedules
+app.get('/schedule', async (req, res) => {
     try {
         const { data, error } = await supabase
-            .from('schedules') // Replace with your actual table name
+            .from('schedule')
             .select('*');
 
         if (error) {
             return res.status(500).json({ error: error.message });
         }
-        return res.json(data);
+
+        res.json(data);
     } catch (error) {
         console.error('Error fetching schedules:', error);
-        return res.status(500).json({ error: 'Internal Server Error' });
+        res.status(500).json({ error: 'Internal server error' });
     }
 });
 
-// Get subject by ID
+
+// Get schedule by ID
 app.get('/schedule/:id', async (req, res) => {
     const { id } = req.params;
 
@@ -608,33 +612,100 @@ app.get('/schedule/:id', async (req, res) => {
             .single();
 
         if (error || !data) {
-            return res.status(404).json({ error: 'Subject not found' });
+            return res.status(404).json({ error: 'Schedule not found' });
         }
 
         res.json(data);
     } catch (error) {
-        console.error('Error fetching subject:', error);
+        console.error('Error fetching schedule:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
 
-// Route to upload new schedules
+
+// Add new schedule (multiple schedules at once)
 app.post('/schedule/upload', async (req, res) => {
-    const { data: schedules } = req.body; // Destructure the array of schedules
+    try {
+        const scheduleData = req.body.data;
+
+        // Check if scheduleData is defined and is an array
+        if (!scheduleData || !Array.isArray(scheduleData) || scheduleData.length === 0) {
+            return res.status(400).json({ message: 'Invalid data format or no schedules to insert' });
+        }
+
+        // Insert multiple schedules into the database (e.g., Supabase)
+        const { data, error } = await supabase
+            .from('schedule')
+            .insert(scheduleData);
+
+        if (error) {
+            console.error('Supabase error:', error);
+            return res.status(500).json({ message: `Error inserting schedules: ${error.message}` });
+        }
+
+        res.status(201).json({ success: true, data });
+    } catch (error) {
+        console.error('Error inserting schedules:', error);
+        res.status(500).json({ message: `Error inserting schedules: ${error.message || 'Unknown error'}` });
+    }
+});
+
+
+// Update schedule by ID
+app.put('/schedule/:id', async (req, res) => {
+    const { id } = req.params;
+    const { scheduleNumber, courseCode, courseDescriptiveTitle, courseLecture, courseLaboratory, personnelNumber, professorName, scheduleDay, startTime, endTime, numberOfHours, units, yearNumber, sectionNumber } = req.body;
 
     try {
         const { data, error } = await supabase
-            .from('schedule') // Replace with your actual table name
-            .insert(schedules);
+            .from('schedule')
+            .update({
+                scheduleNumber,
+                courseCode,
+                courseDescriptiveTitle,
+                courseLecture,
+                courseLaboratory,
+                personnelNumber,
+                professorName,
+                scheduleDay,
+                startTime,
+                endTime,
+                numberOfHours,
+                units,
+                yearNumber,
+                sectionNumber
+            })
+            .eq('id', id);
 
         if (error) {
-            return res.status(400).json({ error: error.message });
+            return res.status(500).json({ error: 'Failed to update schedule' });
         }
 
-        return res.status(201).json(data); // Return the inserted data
+        res.json({ message: 'Schedule updated successfully', data });
     } catch (error) {
-        console.error('Error inserting schedules:', error);
-        return res.status(500).json({ error: 'Internal Server Error' });
+        console.error('Error updating schedule:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Delete schedule by ID
+app.delete('/schedule/:id', async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const { data, error } = await supabase
+            .from('schedule')
+            .delete("*")
+            .eq('id', id);
+
+        if (error) {
+            return res.status(500).json({ error: 'Failed to delete schedule' });
+        }
+
+        res.json({ message: 'Schedule deleted successfully', data });
+    } catch (error) {
+        console.error('Error deleting schedule:', error);
+        res.status(500).json({ error: 'Internal server error' });
     }
 });
 

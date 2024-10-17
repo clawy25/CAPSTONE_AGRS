@@ -3,10 +3,11 @@ import { Table, Form, Button, Tab, Tabs } from 'react-bootstrap';
 import YearLevelModel from '../ReactModels/YearLevelModel'; 
 import SectionModel from '../ReactModels/SectionModel';
 import PersonnelModel from '../ReactModels/PersonnelModel';
-import SubjectModel from '../ReactModels/SubjectModel';
+import CourseModel from '../ReactModels/CourseModel';
+import ScheduleModel from '../ReactModels/ScheduleModel';
 
 export default function ProgramHeadClassDesigTable() {
-  const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+  const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
   const hours = Array.from({ length: 24 }, (_, index) => {
     const hour = index % 12 === 0 ? 12 : index % 12;
@@ -19,10 +20,10 @@ export default function ProgramHeadClassDesigTable() {
   const [sections, setSections] = useState([]);
   const [isEditing, setIsEditing] = useState({});
   const [professors, setProfessors] = useState([]);
-  const [subjects, setSubjects] = useState([]);
+  const [courses, setCourses] = useState([]);
 
   useEffect(() => {
-    const fetchYearLevelsSectionsSubjects = async () => {
+    const fetchYearLevelsSectionsCourses = async () => {
       try {
         const fetchedYearLevels = await YearLevelModel.fetchExistingYearLevels();
         setYearLevels(fetchedYearLevels);
@@ -33,22 +34,25 @@ export default function ProgramHeadClassDesigTable() {
         const fetchedProfessors = await PersonnelModel.getProfessors();
         setProfessors(fetchedProfessors);
 
-        const fetchedSubjects = await SubjectModel.fetchExistingSubjects();
-        setSubjects(fetchedSubjects);
+        const fetchedCourses = await CourseModel.fetchExistingCourses();
+        setCourses(fetchedCourses);
 
         const initialData = {};
         for (const yearLevel of fetchedYearLevels) {
           initialData[yearLevel.yearName] = {};
           fetchedSections.forEach(section => {
-            initialData[yearLevel.yearName][section.sectionName] = fetchedSubjects.map(subject => ({
-              subjectCode: subject.subjectCode,
-              subjectName: subject.subjectName,
+            initialData[yearLevel.yearName][section.sectionName] = fetchedCourses.map(course => ({
+              courseCode: course.courseCode,
+              courseDescriptiveTitle: course.courseDescriptiveTitle,
+              courseLecture: course.courseLecture,
+              courseLaboratory: course.courseLaboratory,
+              professorNumber: '', // New field for personnel number
               professor: '', // Default to empty or some initial value
               scheduleDay: daysOfWeek[0],
               startTime: '',
               endTime: '',
               numberOfHours: '',
-              units: subject.subjectUnits,
+              units: course.courseUnits,
             }));
           });
         }
@@ -59,16 +63,18 @@ export default function ProgramHeadClassDesigTable() {
       }
     };
 
-    fetchYearLevelsSectionsSubjects();
+    fetchYearLevelsSectionsCourses();
   }, []);
 
-  const handleSubjectChange = (year, section, index, selectedSubjectName) => {
+  const handleCourseChange = (year, section, index, selectedCourseTitle) => {
     const updatedRows = [...data[year][section]];
-    const selectedSubject = subjects.find(subject => subject.subjectName === selectedSubjectName);
-    if (selectedSubject) {
-      updatedRows[index].subjectCode = selectedSubject.subjectCode;
-      updatedRows[index].subjectName = selectedSubject.subjectName;
-      updatedRows[index].units = selectedSubject.subjectUnits;
+    const selectedCourse = courses.find(course => course.courseDescriptiveTitle === selectedCourseTitle);
+    if (selectedCourse) {
+      updatedRows[index].courseCode = selectedCourse.courseCode;
+      updatedRows[index].courseDescriptiveTitle = selectedCourse.courseDescriptiveTitle;
+      updatedRows[index].courseLecture = selectedCourse.courseLecture;
+      updatedRows[index].courseLaboratory = selectedCourse.courseLaboratory;
+      updatedRows[index].units = selectedCourse.courseUnits;
     }
     setData(prevData => ({
       ...prevData,
@@ -82,6 +88,8 @@ export default function ProgramHeadClassDesigTable() {
   const handleProfessorChange = (year, section, index, selectedProfessor) => {
     const updatedRows = [...data[year][section]];
     updatedRows[index].professor = selectedProfessor;
+    const selectedPerson = professors.find(prof => prof.personnelName === selectedProfessor);
+    updatedRows[index].professorNumber = selectedPerson ? selectedPerson.personnelNumber : '';
     setData(prevData => ({
       ...prevData,
       [year]: {
@@ -142,7 +150,7 @@ export default function ProgramHeadClassDesigTable() {
     }));
   };
 
-  const handleSave = (year, section) => {
+  const handleSave = async (year, section) => {
     setIsEditing(prevState => ({
       ...prevState,
       [year]: {
@@ -150,13 +158,52 @@ export default function ProgramHeadClassDesigTable() {
         [section]: false,
       }
     }));
-    // Handle saving to the backend if needed
+  
+    // Prepare the schedule data
+    const scheduleData = data[year][section].map((row, index) => ({
+      scheduleNumber: index + 1,
+      courseCode: row.courseCode,
+      courseDescriptiveTitle: row.courseDescriptiveTitle,
+      courseLecture: row.courseLecture,
+      courseLaboratory: row.courseLaboratory,
+      personnelNumber: row.professorNumber,
+      personnelName: row.professor,
+      scheduleDay: row.scheduleDay,
+      startTime: row.startTime,
+      endTime: row.endTime,
+      courseUnits: row.units,
+      //yearNumber: year,
+      //sectionNumber: section,
+    }));
+  
+    // Log the data to check its structure
+    console.log('Schedule Data to be sent:', scheduleData);
+  
+    // Send the schedule data to the backend via the API
+    try {
+      const response = await ScheduleModel.createAndInsertSchedules(scheduleData);
+  
+      console.log('API Response:', response);
+  
+      if (response.success) {
+        console.log('Schedules saved successfully:', response.data);
+      } else {
+        console.error('Failed to save schedules:', response);
+      }
+    } catch (error) {
+      console.error('Error saving schedules:', error);
+    }
   };
+  
+  
 
   const addRow = (year, section) => {
     const newRow = {
-      subjectCode: '',
-      subjectName: '',
+      courseCode: '',
+      courseDescriptiveTitle: '',
+      courseLecture: '',
+      courseLaboratory: '',
+      professorNumber: '',
       professor: '',
       scheduleDay: daysOfWeek[0],
       startTime: '',
@@ -195,9 +242,12 @@ export default function ProgramHeadClassDesigTable() {
         <Table hover className="table table-hover success-border">
           <thead className="table-success">
             <tr>
-              <th className='custom-color-green-font custom-font'>Subject Code</th>
-              <th className='custom-color-green-font custom-font'>Subject Name</th>
+              <th className='custom-color-green-font custom-font'>Course Code</th>
+              <th className='custom-color-green-font custom-font'>Course Descriptive Title</th>
+              <th className='custom-color-green-font custom-font'>Course Lecture</th>
+              <th className='custom-color-green-font custom-font'>Course Laboratory</th>
               <th className='custom-color-green-font custom-font'>Units</th>
+              <th className='custom-color-green-font custom-font'>Personnel Number</th>
               <th className='custom-color-green-font custom-font'>Professor</th>
               <th className='custom-color-green-font custom-font'>Schedule Day</th>
               <th className='custom-color-green-font custom-font'>Start Time</th>
@@ -209,46 +259,38 @@ export default function ProgramHeadClassDesigTable() {
           <tbody className='bg-white'>
             {sectionData.map((row, index) => (
               <tr key={index}>
-                <td>{row.subjectCode}</td>
+                <td>{row.courseCode}</td>
                 <td>
                   {isEditing[year]?.[section] ? (
                     <Form.Select
-                      value={row.subjectName || ''} // Handle empty value
-                      onChange={(e) => handleSubjectChange(year, section, index, e.target.value)}
+                      value={row.courseDescriptiveTitle || ''} // Handle empty value
+                      onChange={(e) => handleCourseChange(year, section, index, e.target.value)}
                     >
-                      <option value="" disabled>Select a subject</option> {/* Default option */}
-                      {subjects.map((subject) => (
-                        <option key={subject.subjectCode} value={subject.subjectName}>
-                          {subject.subjectName}
+                      <option value="" disabled>Select a course</option> {/* Default option */}
+                      {courses.map((course) => (
+                        <option key={course.courseCode} value={course.courseDescriptiveTitle}>
+                          {course.courseDescriptiveTitle}
                         </option>
                       ))}
                     </Form.Select>
                   ) : (
-                    <span>{row.subjectName}</span>
+                    <span>{row.courseDescriptiveTitle}</span>
                   )}
                 </td>
-                <td>
-                  {isEditing[year]?.[section] ? (
-                    <Form.Control
-                      type="text"
-                      value={row.units}
-                      onChange={(e) => handleInputChange(year, section, index, 'units', e.target.value)}
-                      readOnly
-                    />
-                  ) : (
-                    <span>{row.units}</span>
-                  )}
-                </td>
+                <td>{row.courseLecture}</td>
+                <td>{row.courseLaboratory}</td>
+                <td>{row.units}</td>
+                <td>{row.professorNumber}</td>
                 <td>
                   {isEditing[year]?.[section] ? (
                     <Form.Select
                       value={row.professor || ''} // Handle empty value
                       onChange={(e) => handleProfessorChange(year, section, index, e.target.value)}
                     >
-                      <option value="" disabled>Select a professor</option> {/* Default option */}
-                      {professors.map((professor) => (
-                        <option key={professor.personnelId} value={professor.personnelName}>
-                          {professor.personnelName}
+                      <option value="" disabled>Select a professor</option>
+                      {professors.map((prof) => (
+                        <option key={prof.personnelNumber} value={prof.personnelName}>
+                          {prof.personnelName}
                         </option>
                       ))}
                     </Form.Select>
@@ -259,10 +301,10 @@ export default function ProgramHeadClassDesigTable() {
                 <td>
                   {isEditing[year]?.[section] ? (
                     <Form.Select
-                      value={row.scheduleDay}
+                      value={row.scheduleDay || ''} // Handle empty value
                       onChange={(e) => handleInputChange(year, section, index, 'scheduleDay', e.target.value)}
                     >
-                      {daysOfWeek.map((day) => (
+                      {daysOfWeek.map(day => (
                         <option key={day} value={day}>
                           {day}
                         </option>
@@ -278,7 +320,7 @@ export default function ProgramHeadClassDesigTable() {
                       value={row.startTime || ''} // Handle empty value
                       onChange={(e) => handleInputChange(year, section, index, 'startTime', e.target.value)}
                     >
-                      <option value="" disabled>Select start time</option> {/* Default option */}
+                      <option value="" disabled>Select start time</option>
                       {hours.map((hour) => (
                         <option key={hour} value={hour}>
                           {hour}
@@ -295,7 +337,7 @@ export default function ProgramHeadClassDesigTable() {
                       value={row.endTime || ''} // Handle empty value
                       onChange={(e) => handleInputChange(year, section, index, 'endTime', e.target.value)}
                     >
-                      <option value="" disabled>Select end time</option> {/* Default option */}
+                      <option value="" disabled>Select end time</option>
                       {hours.map((hour) => (
                         <option key={hour} value={hour}>
                           {hour}
@@ -307,36 +349,29 @@ export default function ProgramHeadClassDesigTable() {
                   )}
                 </td>
                 <td>{row.numberOfHours}</td>
+                
                 <td>
-                  {isEditing[year]?.[section] ? (
-                    <Button variant="danger" onClick={() => deleteRow(year, section, index)}>Delete</Button>
-                  ) : (
-                    <Button variant="secondary" onClick={() => handleEdit(year, section)}>Edit</Button>
-                  )}
+                  <Button variant="danger" onClick={() => deleteRow(year, section, index)}>Delete</Button>
                 </td>
               </tr>
             ))}
           </tbody>
-          <Button variant="primary" onClick={() => addRow(year, section)}>Add Row</Button>
         </Table>
-        {isEditing[year]?.[section] && (
-          <div className="d-flex justify-content-end mt-3"> 
-          <Button variant="success" onClick={() => handleSave(year, section)}>Save</Button>
-          </div>
-        )}
-        
+        <Button variant="primary" onClick={() => addRow(year, section)}>Add Row</Button>
+        <Button variant="success" onClick={() => handleSave(year, section)}>Save</Button>
       </>
     );
   };
 
   return (
     <div>
-      <Tabs defaultActiveKey="programHead" id="uncontrolled-tab-example" className="mb-3">
-        {yearLevels.map((yearLevel) => (
-          <Tab eventKey={yearLevel.yearName} title={yearLevel.yearName} key={yearLevel.yearName}>
+      <h3>Class Scheduling</h3>
+      <Tabs defaultActiveKey={yearLevels[0]?.yearName} id="program-head-tabs" className="mb-3">
+        {yearLevels.map((year) => (
+          <Tab eventKey={year.yearName} title={year.yearName} key={year.yearName}>
             {sections.map((section) => (
               <div key={section.sectionName}>
-                {renderTable(yearLevel.yearName, section.sectionName)}
+                {renderTable(year.yearName, section.sectionName)}
               </div>
             ))}
           </Tab>
