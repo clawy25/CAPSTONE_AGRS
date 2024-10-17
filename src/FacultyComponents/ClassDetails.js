@@ -13,18 +13,33 @@ const ClassDetails = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [attendanceColumns, setAttendanceColumns] = useState([{ id: 1, date: new Date() }]);
   const [assignmentColumns, setAssignmentColumns] = useState([]);
-  const [quizColumns, setQuizColumns] = useState([]);
+
   const [recitationColumns, setRecitationColumns] = useState([]);
   const [pbaColumns, setPbaColumns] = useState([]);  
   const [students, setStudents] = useState([]);
   const [totalAttendanceDays, setTotalAttendanceDays] = useState(0);
   const [attendanceData, setAttendanceData] = useState([]);
+  const [attendancePercentage, setAttendancePercentage] = useState(0); // Default value of 0
   const [assignmentScores, setAssignmentScores] = useState([]);
+  const [assignmentPercentage, setAssignmentPercentage] = useState(5); // Default to 5%
+  const [quizColumns, setQuizColumns] = useState([]); // Initialize quiz columns
+  const [quizseatScores, setQuizseatScores] = useState(
+      students.map(() => Array(quizColumns.length).fill(0)) // This may need to be adjusted initially
+  );
+  const [recitationScores, setRecitationScores] = useState([]);
+const [recitationPercentage, setRecitationPercentage] = useState(0);
 
   
+  const [csGradeScores, setCsGradeScores] = useState([]);
+  const [pbaGradeScores, setPbaGradeScores] = useState([]);
+  const [midtermExamScores, setMidtermExamScores] = useState([]);
+  const [quizseatPercentage, setQuizseatPercentage] = useState(0);
+  const [csGradePercentage, setCsGradePercentage] = useState(0);
+  const [pbaGradePercentage, setPbaGradePercentage] = useState(0);
+  const [midtermExamPercentage, setMidtermExamPercentage] = useState(0);
 
 
-    
+
 
     // Fetch existing students from StudentModel
     const fetchExistingStudents = async () => {
@@ -103,38 +118,169 @@ const ClassDetails = () => {
     return totals;
   };
 
-
-  const handleScoreChange = (studentId, index, score) => {
-    setAssignmentScores((prevScores) => {
-      const studentScores = prevScores[studentId] || [];
-      const updatedScores = [...studentScores];
-      updatedScores[index] = score; // Update the score at the specified index
-      return {
-        ...prevScores,
-        [studentId]: updatedScores,
-      };
+{/* ASSIGNMENTS */}
+  const handleScoreChange = (studentId, assignmentIndex, score) => {
+    setAssignmentScores(prevScores => {
+      const updatedScores = [...prevScores]; // Create a shallow copy of the array
+      if (!updatedScores[studentId]) {
+        updatedScores[studentId] = []; // Initialize an array for this student if it doesn't exist
+      }
+      updatedScores[studentId][assignmentIndex] = score; // Update the score for the student and assignment
+      return updatedScores;
     });
   };
   
-
-  // Function to calculate the average score for the assignment column for a specific student
   const calculateAssignmentColumnAverage = (studentIndex) => {
-   
     const scores = assignmentScores[studentIndex] || [];
     
+    // Filter out non-numeric values and ensure scores are numbers
+    const validScores = scores.map(score => parseFloat(score) || 0);
+    
     // Calculate the sum of the scores
-    const sum = scores.reduce((acc, score) => acc + score, 0);
-  
+    const sum = validScores.reduce((acc, score) => acc + score, 0);
+    
     // Calculate the average (check for divide by zero)
-    const average = scores.length > 0 ? sum / scores.length : 0;
+    const average = validScores.length > 0 ? sum / validScores.length : 0;
   
-    return average;
+    return average.toFixed(2); // Optional: format to 2 decimal places
   };
   
-
+  const calculateAssignmentComponentScore = (studentIndex, percentage) => {
+    const scores = assignmentScores[studentIndex] || [];
+    const validScores = scores.map(score => parseFloat(score) || 0);
+    const sum = validScores.reduce((acc, score) => acc + score, 0);
+    const average = validScores.length > 0 ? sum / validScores.length : 0;
+    const componentScore = average * (percentage / 100);
+    return componentScore.toFixed(2);
+  };
   
   // Example usage for student 1
   console.log(calculateAssignmentColumnAverage(1)); // Output: average of scores for student 1
+ 
+
+
+
+
+  {/* QUIZZES/SEATWORKS */}
+  useEffect(() => {
+    // Adjust the length of quizseatScores based on the quizColumns length
+    setQuizseatScores(prevScores =>
+      prevScores.map(studentScores => {
+        const updatedScores = [...studentScores];
+        while (updatedScores.length < quizColumns.length) {
+          updatedScores.push(0); // Add new columns with default value 0
+        }
+        while (updatedScores.length > quizColumns.length) {
+          updatedScores.pop(); // Remove extra columns
+        }
+        return updatedScores;
+      })
+    );
+  }, [quizColumns]); // Trigger this effect when quizColumns changes
+  
+
+  const addQuizColumn = () => {
+    setQuizColumns([...quizColumns, {}]);
+    setQuizseatScores(prevScores => prevScores.map(scores => [...scores, 0]));
+  };
+  
+  const removeQuizColumn = (indexToRemove) => {
+    // Remove the selected column from quizColumns
+    setQuizColumns(prevColumns => prevColumns.filter((_, index) => index !== indexToRemove));
+  
+    // Remove the corresponding score from each student's scores in quizseatScores
+    setQuizseatScores(prevScores => 
+      prevScores.map(studentScores => 
+        studentScores.filter((_, index) => index !== indexToRemove)
+      )
+    );
+  };
+  
+  
+  const handleQuizseatScoreChange = (studentIndex, quizIndex, score) => {
+    console.log(`Updating scores for student ${studentIndex}, quiz ${quizIndex} to ${score}`);
+    setQuizseatScores(prevScores =>
+      prevScores.map((scores, index) => {
+        if (index === studentIndex) {
+          // Clone the existing scores array
+          const updatedScores = [...scores];
+          updatedScores[quizIndex] = score; // Update the specific quiz score
+          return updatedScores; // Return the updated scores for this student
+        }
+        return scores; // Return the existing scores for other students
+      })
+    );
+  };
+  
+
+  const calculateQuizseatColumnAverage = (studentIndex) => {
+    const scores = quizseatScores[studentIndex] || [];
+    const validScores = scores.map(score => parseFloat(score) || 0);
+    const sum = validScores.reduce((acc, score) => acc + score, 0);
+    const average = validScores.length > 0 ? sum / validScores.length : 0;
+    return average.toFixed(2);
+  };
+  
+  const calculateQuizseatComponentScore = (studentIndex, percentage) => {
+    const scores = quizseatScores[studentIndex] || [];
+    const validScores = scores.map(score => parseFloat(score) || 0);
+    const sum = validScores.reduce((acc, score) => acc + score, 0);
+    const average = validScores.length > 0 ? sum / validScores.length : 0;
+    const componentScore = average * (percentage / 100);
+    return componentScore.toFixed(2);
+  };
+
+  useEffect(() => {
+    console.log(quizseatScores);
+  }, [quizseatScores]);
+  
+  
+  
+  {/* RECITATION/PARTICIPATION */}
+  const handleRecitationScoreChange = (studentId, recitationIndex, score) => {
+    setRecitationScores(prevScores => {
+      const updatedScores = [...prevScores];
+      if (!updatedScores[studentId]) {
+        updatedScores[studentId] = [];
+      }
+      updatedScores[studentId][recitationIndex] = score;
+      return updatedScores;
+    });
+  };
+  
+  
+  const calculateRecitationColumnAverage = (studentIndex) => {
+    const scores = recitationScores[studentIndex] || [];
+  
+    // Filter out non-numeric values and ensure scores are numbers
+    const validScores = scores.map(score => parseFloat(score) || 0);
+  
+    // Calculate the sum of the scores
+    const sum = validScores.reduce((acc, score) => acc + score, 0);
+  
+    // Calculate the average (check for divide by zero)
+    const average = validScores.length > 0 ? sum / validScores.length : 0;
+  
+    return average.toFixed(2); // Format to 2 decimal places
+  };
+  
+  const calculateRecitationComponentScore = (studentIndex, percentage) => {
+    const scores = recitationScores[studentIndex] || [];
+    
+    // Filter out non-numeric values and ensure scores are numbers
+    const validScores = scores.map(score => parseFloat(score) || 0);
+    
+    // Calculate the sum of the scores
+    const sum = validScores.reduce((acc, score) => acc + score, 0);
+    
+    // Calculate the average
+    const average = validScores.length > 0 ? sum / validScores.length : 0;
+    
+    // Multiply by the percentage and return the score
+    const componentScore = average * (percentage / 100);
+    return componentScore.toFixed(2); // Format to 2 decimal places
+  };
+  
   
   
 
@@ -155,9 +301,9 @@ const ClassDetails = () => {
               <tr>
                 <th colSpan="2">Student Info</th>
                 <th colSpan={attendanceColumns.length + 7}>Attendance (P-Present; L-Late; E-Excuse; A-Absent)</th>
-                <th colSpan={assignmentColumns.length + 3} rowSpan={3}>Assignments 5%</th>
-                <th colSpan={quizColumns.length + 3} rowSpan={2}>Quizzes/Seatwork 10%</th> {/* New column header */}
-                <th colSpan={recitationColumns.length + 3} rowSpan={3}>Recitation/Participation 10%</th>
+                <th colSpan={assignmentColumns.length + 3} rowSpan={3} style={{ padding: '60px' }} >Assignments</th>
+                <th colSpan={quizColumns.length + 3} rowSpan={2}>Quizzes/Seatwork</th> {/* New column header */}
+                <th colSpan={recitationColumns.length + 3} rowSpan={3}>Recitation/Participation</th>
                 <th colSpan="1" rowSpan="3">CS Grade</th>
                 <th colSpan={pbaColumns.length + 3} rowSpan={2}>Performance Based Assessment</th>
                 <th colSpan="3" rowSpan="3">Midterm Exam</th>
@@ -165,6 +311,7 @@ const ClassDetails = () => {
                 <th colSpan="1" rowSpan="4">Numerical Equivalent</th>
                 <th colSpan="1" rowSpan="4">Remarks</th>
               </tr>
+              
               <tr>
                 <th rowSpan="3">Student No</th>
                 <th rowSpan="3">Name</th>
@@ -210,7 +357,7 @@ const ClassDetails = () => {
                       readOnly // Make the input field read-only
                     />
                   </th>
-                <th colSpan="2" rowSpan="2">Attendance 5%</th>
+                <th colSpan="2" rowSpan="2">Attendance</th>
               </tr>
               <tr>
 
@@ -218,19 +365,30 @@ const ClassDetails = () => {
                 <th colSpan="4">Total Student Attendance</th>
 
                 
-                {/* Quiz Columns */}
+                {/* Quiz Columns WITH REMOVE BUTTON */}
                 {quizColumns.map((_, index) => (
-                  <th key={index}>
-                    <input type="number" style={{ width: '70px' }} placeholder="Items" />
-                  </th>
-                ))}
+  <th key={index}>
+    Q/S {index + 1}
+    <button onClick={() => removeQuizColumn(index)} style={{ background: 'none', border: 'none' }}>
+      <FontAwesomeIcon icon={faMinus} />
+    </button>
+  </th>
+))}
+
                 <th rowSpan={2} style={{ background: '#d1e7dd', padding: '0', border: 'none' }}>
-                  <button onClick={() => addColumn(setQuizColumns)} style={{ background: 'none', border: 'none' }}>
+                  <button onClick={() => addQuizColumn(setQuizColumns)} style={{ background: 'none', border: 'none' }}>
                     <FontAwesomeIcon icon={faPlus} />
                   </button>
                 </th>
                 <th rowSpan={2}>Total</th>
-                <th rowSpan={2}>10%</th>
+                <th rowSpan={2}>
+                <input
+                type="number"
+                value={quizseatPercentage}
+                onChange={(e) => setQuizseatPercentage(e.target.value)}
+                style={{ width: '60px' }}
+              />
+                %</th>
     
                 {/* PBA Columns */}
                 {pbaColumns.map((_, index) => (
@@ -255,7 +413,14 @@ const ClassDetails = () => {
                 <th colSpan="1">L</th>
                 <th colSpan="1">E</th>
                 <th colSpan="1">A</th>
-                <th colSpan="2">5%</th>
+                <th colSpan="2">
+                <input
+                type="number"
+                value={attendancePercentage}
+                onChange={(e) => setAttendancePercentage(e.target.value)}
+                style={{ width: '60px' }}
+              />
+                %</th>
     
                 {/* Assignment Column Header */}
                 {assignmentColumns.map((_, index) => (
@@ -272,17 +437,25 @@ const ClassDetails = () => {
                   </button>
                 </th>
                 <th>Total</th>
-                <th>5%</th>
-    
-                {/* Quizzes/Seatwork Columns */}
-                {quizColumns.map((_, index) => (
+                {/* Use a `td` for the input field */}
+                <th>
+            <input
+              type="number"
+              value={assignmentPercentage}
+              onChange={(e) => setAssignmentPercentage(e.target.value)}
+              style={{ width: '30px' }}
+            />%
+          </th>
+
+{/* Quizzes/Seatwork SCORE THRESHOLD */}
+{quizColumns.map((_, index) => (
                   <th key={index}>
-                    Q/S {index + 1}
-                    <button onClick={() => removeColumn(index, setQuizColumns)} style={{ background: 'none', border: 'none' }}>
-                      <FontAwesomeIcon icon={faMinus} />
-                    </button>
+                    <input type="number" style={{ width: '70px' }} placeholder="Items" />
                   </th>
                 ))}
+
+
+
     
                 {/* Recitation Columns */}
                 {recitationColumns.map((_, index) => (
@@ -299,10 +472,23 @@ const ClassDetails = () => {
                   </button>
                 </th>
                 <th>Total</th>
-                <th>10%</th>
-                <th>30%</th>
+                <th>
+                <input
+                type="number"
+                value={recitationPercentage}
+                onChange={(e) => setRecitationPercentage(e.target.value)}
+                style={{ width: '30px' }}
+              />
+                %</th>
+                <th>
+                <input
+                type="number"
+                value={csGradePercentage}
+                onChange={(e) => setCsGradePercentage(e.target.value)}
+                style={{ width: '30px' }}
+              />
+                %</th>
     
-                {/* Quiz Columns */}
                 {pbaColumns.map((_, index) => (
                   <th>
                   <select>
@@ -317,19 +503,33 @@ const ClassDetails = () => {
                 </th>
                 ))}
     
-              <th>30%</th>
+              <th>
+              <input
+                type="number"
+                value={pbaGradePercentage}
+                onChange={(e) => setPbaGradePercentage(e.target.value)}
+                style={{ width: '30px' }}
+              />
+                %</th>
               <th>
                     <input type="number" style={{ width: '70px' }} placeholder="Items" />
               </th>
-              <th colSpan={2}>40%</th>
+              <th colSpan={2}>
+              <input
+                type="number"
+                value={midtermExamPercentage}
+                onChange={(e) => setMidtermExamPercentage(e.target.value)}
+                style={{ width: '30px' }}
+              />
+                %</th>
               <th>Total</th>
     
               </tr>
             </thead>
 
-            {/* PLEA */}
+
             <tbody>
-              {students.map((student) => {
+              {students.map((student, studentIndex) => {
                 const totals = calculateTotals(student.id);
                 console.log(`Totals for ${student.id}:`, totals); // Calculate totals for this student
                 return (
@@ -367,30 +567,63 @@ const ClassDetails = () => {
                     <td></td>
                     
 
+                  
                     {assignmentColumns.map((_, index) => (
-  <td key={index}>
+                    <td key={index}>
+                      <input
+                        type="number"
+                        style={{ width: '70px' }}
+                        placeholder="Score"
+                        onChange={(e) => handleScoreChange(student.id, index, parseFloat(e.target.value) || 0)}
+                      />
+                    </td>
+                  ))}
+
+
+                    {assignmentScores.map((scores, studentIndex) => (
+                      <tr key={studentIndex}>
+
+                      </tr>
+                    ))}
+                    <td>{calculateAssignmentColumnAverage(student.id)}%</td> {/* Display average directly */}
+                    <td>{calculateAssignmentComponentScore(student.id, assignmentPercentage)}%</td>
+
+
+                    {quizColumns.map((_, quizIndex) => (
+  <td key={quizIndex}>
     <input
       type="number"
       style={{ width: '70px' }}
       placeholder="Score"
-      onChange={(e) => handleScoreChange(student.id, index, e.target.value)}
+      value={quizseatScores[studentIndex]?.[quizIndex] || ''}
+      onChange={(e) => handleQuizseatScoreChange(studentIndex, quizIndex, parseFloat(e.target.value) || 0)}
     />
   </td>
 ))}
-<td></td>
-<td>{calculateAssignmentColumnAverage(student.id)}%</td> {/* Display average directly */}
 
-        
-                    
-                    
-                    <td></td>
-                    <td></td>
 
-                    {quizColumns.map((_, index) => (
-                      <td key={index}>
-                        <input type="number" style={{ width: '70px' }} placeholder="Score" />
-                      </td>
-                    ))}
+
+
+
+                  {quizseatScores.map((scores, studentIndex) => (
+                    <tr key={studentIndex}>
+                      {quizColumns.map((_, quizIndex) => (
+                        <td key={quizIndex}>
+                          <input
+                            type="number"
+                            style={{ width: '70px' }}
+                            placeholder="Score"
+                            value={quizseatScores[studentIndex] ? quizseatScores[studentIndex][quizIndex] || '' : ''} 
+                            onChange={(e) => handleQuizseatScoreChange(studentIndex, quizIndex, parseFloat(e.target.value) || 0)}
+                          />
+                        </td>
+                      ))}
+                      <td></td>
+                      <td>{calculateQuizseatColumnAverage(studentIndex)}%</td>
+<td>{calculateQuizseatComponentScore(studentIndex, quizseatPercentage)}%</td>
+
+                    </tr>
+                  ))}
                     
                     <td></td>
                     <td></td>
@@ -401,6 +634,24 @@ const ClassDetails = () => {
                         <input type="number" style={{ width: '70px' }} placeholder="Score" />
                       </td>
                     ))}
+
+                    {recitationScores.map((scores, studentIndex) => (
+                      <tr key={studentIndex}>
+                        {scores.map((score, index) => (
+                          <td key={index}>
+                            <input
+                              type="number"
+                              style={{ width: '70px' }}
+                              placeholder="Score"
+                              onChange={(e) => handleRecitationScoreChange(student.id, index, parseFloat(e.target.value) || 0)}
+                            />
+                          </td>
+                        ))}
+                        <td>{calculateRecitationColumnAverage(student.id)}%</td>
+                        <td>{calculateRecitationComponentScore(student.id, recitationPercentage)}%</td>
+                      </tr>
+                    ))}
+
                     
                     <td></td>
                     <td></td>
