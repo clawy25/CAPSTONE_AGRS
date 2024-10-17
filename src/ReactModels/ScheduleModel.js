@@ -15,7 +15,72 @@ export default class ScheduleModel {
         this.units = units;
         this.yearNumber = yearNumber;
         this.sectionNumber = sectionNumber;
+
+        
+        
     }
+
+
+    // Function to fetch all subjects
+  static async fetchExistingschedule() {
+    try {
+        const response = await fetch('http://localhost:5000/schedule');
+        if (!response.ok) {
+            throw new Error('Error fetching schedules');
+        }
+        const data = await response.json();
+
+        // Assuming data is an array of schedules objects
+        return data.map(schedule => new ScheduleModel(
+            schedule.id,
+            schedule.scheduleNumber,
+            schedule.courseCode,
+            schedule.courseDescriptiveTitle,
+            schedule.courseLecture,
+            schedule.courseLaboratory,
+            schedule.units,
+            schedule.personnelNumber,
+            schedule.professorName,
+            schedule.scheduleDay,
+            schedule.startTime,
+            schedule.endTime,
+            schedule.numberOfHours,
+            schedule.yearNumber,
+            schedule.sectionNumber
+            
+        ));
+    } catch (error) {
+        console.error('Error fetching schedules:', error);
+        throw error;
+    }
+}
+
+
+static async deleteSchedule(id) {
+    try {
+      const response = await fetch(`http://localhost:5000/schedule/${id}`, {
+        method: 'DELETE',
+      });
+  
+      console.log('Delete response status:', response.status); // Log response status
+      console.log('Delete response body:', await response.text()); // Log the raw response body
+  
+      if (!response.ok) {
+        throw new Error('Error deleting schedule');
+      }
+  
+      const data = await response.json(); // Attempt to parse JSON
+      return data; // Return response or success message
+    } catch (error) {
+      console.error('Error deleting schedule:', error);
+      throw error;
+    }
+  }
+  
+  
+
+
+   
 
     // Create and insert multiple schedules
     static async createAndInsertSchedules(scheduleData) {

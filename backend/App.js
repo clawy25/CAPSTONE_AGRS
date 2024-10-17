@@ -688,26 +688,25 @@ app.put('/schedule/:id', async (req, res) => {
     }
 });
 
-// Delete schedule by ID
 app.delete('/schedule/:id', async (req, res) => {
-    const { id } = req.params;
-
+    const scheduleId = req.params.id;
+  
     try {
-        const { data, error } = await supabase
-            .from('schedule')
-            .delete("*")
-            .eq('id', id);
-
-        if (error) {
-            return res.status(500).json({ error: 'Failed to delete schedule' });
-        }
-
-        res.json({ message: 'Schedule deleted successfully', data });
+      const deletedSchedule = await ScheduleModel.deleteById(scheduleId);
+      
+      if (deletedSchedule) {
+        return res.json({ success: true, message: 'Schedule deleted' });
+      } else {
+        return res.status(404).json({ success: false, message: 'Schedule not found' });
+      }
     } catch (error) {
-        console.error('Error deleting schedule:', error);
-        res.status(500).json({ error: 'Internal server error' });
+      console.error('Error deleting schedule:', error);
+      return res.status(500).json({ success: false, message: 'Failed to delete schedule' });
     }
-});
+  });
+  
+
+
 
 
 
