@@ -66,7 +66,22 @@ app.get('/personnel/:personnelNumber', async (req, res) => {
         sameSite: 'Strict', // Helps prevent CSRF attacks
       });
 
-      res.json(personnelData); // Send personnel data along with token
+      // Fetch academic year data
+      const { data: academicYear, error: academicYearError } = await supabase
+          .from('academicYear')
+          .select('academicYear')
+          .eq('isCurrent', true)
+          .single(); // Fetch single academic year
+
+      if (academicYearError || !academicYear) {
+         console.log('Academic year not found');
+      }
+
+  // Combine personnel data with academic year
+      const personnelWithAcadYear = {...personnelData, academicYear, // Attach academic year data
+      };
+
+      res.json(personnelWithAcadYear);
   } catch (error) {
       console.error('Error fetching personnel data:', error);
       res.status(500).json({ error: 'Internal server error' });

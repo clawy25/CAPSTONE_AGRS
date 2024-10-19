@@ -25,6 +25,10 @@ export default class PersonnelModel {
         throw new Error('Error fetching personnel data');
       }
       const data = await response.json();
+
+
+      sessionStorage.setItem('currentAcadYear', data.academicYear.academicYear);
+      console.log(data.academicYear.academicYear);
       
       return new PersonnelModel(
         data.id,

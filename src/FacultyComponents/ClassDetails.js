@@ -9,59 +9,82 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import { calculatePLEAStatus } from './GradesComputation';
 
 const ClassDetails = () => {
+
+  const [students, setStudents] = useState([]);
+
+  {/* SEARCH BAR DECLARATION */}
   const [selectedPeriod, setSelectedPeriod] = useState('midterm');
   const [searchTerm, setSearchTerm] = useState('');
-  const [attendanceColumns, setAttendanceColumns] = useState([{ id: 1, date: new Date() }]);
-  const [assignmentColumns, setAssignmentColumns] = useState([]);
 
-  const [recitationColumns, setRecitationColumns] = useState([]);
-  const [pbaColumns, setPbaColumns] = useState([]);  
-  const [students, setStudents] = useState([]);
+
+
+  {/* ATTENDANCE DECLARATION */}
+  const [attendanceColumns, setAttendanceColumns] = useState([{ id: 1, date: new Date() }]);
   const [totalAttendanceDays, setTotalAttendanceDays] = useState(0);
   const [attendanceData, setAttendanceData] = useState([]);
   const [attendancePercentage, setAttendancePercentage] = useState(0); // Default value of 0
+
+
+  {/* ASSIGNMENT DECLARATION */}
+  const [assignmentColumns, setAssignmentColumns] = useState([]);
   const [assignmentScores, setAssignmentScores] = useState([]);
   const [assignmentPercentage, setAssignmentPercentage] = useState(5); // Default to 5%
+
+
+  {/* QUIZZES DECLARATION */}
   const [quizColumns, setQuizColumns] = useState([]); // Initialize quiz columns
   const [quizseatScores, setQuizseatScores] = useState(
-      students.map(() => Array(quizColumns.length).fill(0)) // This may need to be adjusted initially
-  );
-  const [recitationScores, setRecitationScores] = useState([]);
-const [recitationPercentage, setRecitationPercentage] = useState(0);
-
-  
-  const [csGradeScores, setCsGradeScores] = useState([]);
-  const [pbaGradeScores, setPbaGradeScores] = useState([]);
-  const [midtermExamScores, setMidtermExamScores] = useState([]);
+    students.map(() => Array(quizColumns.length).fill(0)));
   const [quizseatPercentage, setQuizseatPercentage] = useState(0);
+
+
+
+  {/* RECITATION DECLARATION */}
+  const [recitationColumns, setRecitationColumns] = useState([]);
+  const [recitationScores, setRecitationScores] = useState([]);
+  const [recitationPercentage, setRecitationPercentage] = useState(0);
+
+
+
+  {/* CLASS STANDING DECLARATION */}
+  const [csGradeScores, setCsGradeScores] = useState([]);
   const [csGradePercentage, setCsGradePercentage] = useState(0);
+
+
+
+  {/* PBA DECLARATION */}
+  const [pbaColumns, setPbaColumns] = useState([]);
+  const [pbaGradeScores, setPbaGradeScores] = useState([]);
   const [pbaGradePercentage, setPbaGradePercentage] = useState(0);
+  
+
+
+  {/* MIDTERM DECLARATION */}  
+  const [midtermExamScores, setMidtermExamScores] = useState([]);
   const [midtermExamPercentage, setMidtermExamPercentage] = useState(0);
 
 
 
 
-    // Fetch existing students from StudentModel
-    const fetchExistingStudents = async () => {
-      try {
-          const existingStudents = await StudentModel.fetchExistingStudents();
-          
-          // Modify student.id to start from 0, 1, 2, etc.
-          const studentsWithModifiedIds = existingStudents.map((student, index) => ({
-              ...student, // Keep the existing student data
-              id: index   // Overwrite the id with the new index
-          }));
-  
-          setStudents(studentsWithModifiedIds);
-      } catch (error) {
-          console.error('Error fetching existing students:', error);
-      }
+  // Fetch existing students from StudentModel
+  const fetchExistingStudents = async () => {
+    try {
+        const existingStudents = await StudentModel.fetchExistingStudents();
+        
+        // Modify student.id to start from 0, 1, 2, etc.
+        const studentsWithModifiedIds = existingStudents.map((student, index) => ({
+            ...student, // Keep the existing student data
+            id: index   // Overwrite the id with the new index
+        }));
+
+        setStudents(studentsWithModifiedIds);
+    } catch (error) {
+        console.error('Error fetching existing students:', error);
+    }
   };
 
-    // Fetch existing students onload
-    useEffect(() => {
-      fetchExistingStudents();
-  }, []);
+  // Fetch existing students onload
+  useEffect(() => {fetchExistingStudents();}, []);
 
   useEffect(() => {
     // Calculate total attendance days whenever attendanceColumns change

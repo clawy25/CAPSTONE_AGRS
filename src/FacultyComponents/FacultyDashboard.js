@@ -24,9 +24,19 @@ export default function FacultyDashboard () {
     PROFILE: 'profile',
     CHANGE_PASSWORD: 'change-password',
   };
+  
+  
+  useEffect(() => {
+    if (!user) {
+      navigate('/login'); // Redirect to login if user is not found
+    }
+  }, [user, navigate]);
+
+
 
   const handleLogout = () => {
     navigate('/login');
+    localStorage.clear();
   };
 
   const toggleDropdown = () => {

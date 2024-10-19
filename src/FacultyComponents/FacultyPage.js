@@ -55,9 +55,14 @@ export default function FacultyPage() {
       // Fetch the personnel data using the account number
       const user = await PersonnelModel.fetchPersonnelData(accountNumber);
   
-      // If the user is fetched successfully
       if (user) {
-        setUser(user); // Store the current user's credentials
+        const credentials = {
+            personnelNumber: user.personnelNumber,
+            personnelType: user.personnelType,
+            personnelName: user.personnelName,
+            programNumber: user.programNumber
+      };
+      setUser(credentials); // Store the current user's credentials to UserContext
 
       // Navigate based on personnel type
       if (user.personnelType === 'Faculty') {
@@ -69,7 +74,6 @@ export default function FacultyPage() {
       } else {
         setError('Unauthorized personnel type.');
       }
-      console.log('Login successful:', user);
     } else {
       setError('Invalid credentials.'); // This will be handled by the backend now
     }
