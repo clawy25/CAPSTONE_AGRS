@@ -116,9 +116,6 @@ export default function RegistrarStudents() {
                     while (existingStudentNumbers.has(studentNumber)) {
                         studentNumber = generateNextStudentNumber(existingStudentNumbers, admissionYearInt);
                     }
-
-                    
-
                     // Add new student to the array
                     newStudents.push(new StudentModel(
                         students.length + newStudents.length + 1, // Generate ID

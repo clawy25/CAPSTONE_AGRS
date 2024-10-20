@@ -40,7 +40,7 @@ export default function ProgramHeadClassDesigTable() {
         console.log("Fetched Professors:", fetchedProfessors);
         setProfessors(fetchedProfessors);
   
-        const fetchedCourses = await CourseModel.fetchExistingCourses();
+        const fetchedCourses = await CourseModel.getCoursesbyProgram();
         console.log("Fetched Courses:", fetchedCourses);
         setCourses(fetchedCourses);
   
@@ -108,7 +108,7 @@ export default function ProgramHeadClassDesigTable() {
   const handleProfessorChange = (year, section, index, selectedProfessor) => {
     const updatedRows = [...data[year][section]];
     updatedRows[index].professor = selectedProfessor;
-    const selectedPerson = professors.find(prof => prof.personnelName === selectedProfessor);
+    const selectedPerson = professors.find(prof => prof.personnelNumber === selectedProfessor);
     updatedRows[index].professorNumber = selectedPerson ? selectedPerson.personnelNumber : '';
     setData(prevData => ({
       ...prevData,
@@ -202,7 +202,7 @@ export default function ProgramHeadClassDesigTable() {
       courseLecture: row.courseLecture,
       courseLaboratory: row.courseLaboratory,
       personnelNumber: row.professorNumber,
-      personnelName: row.professor,
+      personnelNameFirst: row.professor,
       scheduleDay: row.scheduleDay,
       startTime: row.startTime,
       endTime: row.endTime,
@@ -358,8 +358,11 @@ export default function ProgramHeadClassDesigTable() {
                     >
                       <option value="">Select Professor</option>
                       {professors.map(professor => (
-                        <option key={professor.personnelName} value={professor.personnelName}>
-                          {professor.personnelName}
+                        <option key={professor.personnelNumber}
+                                value={`${professor.personnelNameFirst}
+                                        ${professor.personnelNameMiddle}
+                                        ${professor.personnelNameLast}`}>
+                          {`${professor.personnelNameFirst} ${professor.personnelNameMiddle} ${professor.personnelNameLast}`}
                         </option>
                       ))}
                     </Form.Select>

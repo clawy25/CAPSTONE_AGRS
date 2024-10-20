@@ -17,6 +17,7 @@ const ClassDetails = () => {
   const [searchTerm, setSearchTerm] = useState('');
 
 
+  {/* FOR MIDTERMS */}
 
   {/* ATTENDANCE DECLARATION */}
   const [attendanceColumns, setAttendanceColumns] = useState([{ id: 1, date: new Date() }]);
@@ -24,12 +25,10 @@ const ClassDetails = () => {
   const [attendanceData, setAttendanceData] = useState([]);
   const [attendancePercentage, setAttendancePercentage] = useState(0); // Default value of 0
 
-
   {/* ASSIGNMENT DECLARATION */}
   const [assignmentColumns, setAssignmentColumns] = useState([]);
   const [assignmentScores, setAssignmentScores] = useState([]);
   const [assignmentPercentage, setAssignmentPercentage] = useState(5); // Default to 5%
-
 
   {/* QUIZZES DECLARATION */}
   const [quizColumns, setQuizColumns] = useState([]); // Initialize quiz columns
@@ -37,33 +36,63 @@ const ClassDetails = () => {
     students.map(() => Array(quizColumns.length).fill(0)));
   const [quizseatPercentage, setQuizseatPercentage] = useState(0);
 
-
-
   {/* RECITATION DECLARATION */}
   const [recitationColumns, setRecitationColumns] = useState([]);
   const [recitationScores, setRecitationScores] = useState([]);
   const [recitationPercentage, setRecitationPercentage] = useState(0);
 
-
-
   {/* CLASS STANDING DECLARATION */}
   const [csGradeScores, setCsGradeScores] = useState([]);
   const [csGradePercentage, setCsGradePercentage] = useState(0);
-
-
 
   {/* PBA DECLARATION */}
   const [pbaColumns, setPbaColumns] = useState([]);
   const [pbaGradeScores, setPbaGradeScores] = useState([]);
   const [pbaGradePercentage, setPbaGradePercentage] = useState(0);
   
-
-
   {/* MIDTERM DECLARATION */}  
   const [midtermExamScores, setMidtermExamScores] = useState([]);
   const [midtermExamPercentage, setMidtermExamPercentage] = useState(0);
 
 
+
+  {/*FOR FINALS*/}
+
+  {/* ATTENDANCE DECLARATION */}
+  const [finalsAttendanceColumns, setFinalsAttendanceColumns] = useState([{ id: 1, date: new Date() }]);
+  const [finalsTotalAttendanceDays, setFinalsTotalAttendanceDays] = useState(0);
+  const [finalsAttendanceData, setFinalsAttendanceData] = useState([]);
+  const [finalsAttendancePercentage, setFinalsAttendancePercentage] = useState(0); // Default value of 0
+
+  {/* ASSIGNMENT DECLARATION */}
+  const [finalsAssignmentColumns, setFinalsAssignmentColumns] = useState([]);
+  const [finalsAssignmentScores, setFinalsAssignmentScores] = useState([]);
+  const [finalsAssignmentPercentage, setFinalsAssignmentPercentage] = useState(5); // Default to 5%
+
+  {/* QUIZZES DECLARATION */}
+  const [finalsQuizColumns, setFinalsQuizColumns] = useState([]); // Initialize quiz columns
+  const [finalsQuizseatScores, setFinalsQuizseatScores] = useState(
+    students.map(() => Array(finalsQuizColumns.length).fill(0))
+  );
+  const [finalsQuizseatPercentage, setFinalsQuizseatPercentage] = useState(0);
+
+  {/* RECITATION DECLARATION */}
+  const [finalsRecitationColumns, setFinalsRecitationColumns] = useState([]);
+  const [finalsRecitationScores, setFinalsRecitationScores] = useState([]);
+  const [finalsRecitationPercentage, setFinalsRecitationPercentage] = useState(0);
+
+  {/* CLASS STANDING DECLARATION */}
+  const [finalsCsGradeScores, setFinalsCsGradeScores] = useState([]);
+  const [finalsCsGradePercentage, setFinalsCsGradePercentage] = useState(0);
+
+  {/* PBA DECLARATION */}
+  const [finalsPbaColumns, setFinalsPbaColumns] = useState([]);
+  const [finalsPbaGradeScores, setFinalsPbaGradeScores] = useState([]);
+  const [finalsPbaGradePercentage, setFinalsPbaGradePercentage] = useState(0);
+
+  {/* MIDTERM DECLARATION */}
+  const [finalsExamScores, setFinalsExamScores] = useState([]);
+  const [finalsExamPercentage, setFinalsExamPercentage] = useState(0);
 
 
   // Fetch existing students from StudentModel
@@ -82,14 +111,15 @@ const ClassDetails = () => {
         console.error('Error fetching existing students:', error);
     }
   };
-
   // Fetch existing students onload
   useEffect(() => {fetchExistingStudents();}, []);
 
   useEffect(() => {
     // Calculate total attendance days whenever attendanceColumns change
     const count = attendanceColumns.filter(col => col.date).length;
+    const finalscount = finalsAttendanceColumns.filter(col => col.date).length;
     setTotalAttendanceDays(count); // Update the total attendance days
+    setFinalsTotalAttendanceDays(finalscount);
   }, [attendanceColumns]);
   
   const addColumn = (setColumns) => {
@@ -113,6 +143,18 @@ const ClassDetails = () => {
   
   const handleAttendanceChange = (studentId, dateIndex, status) => {
     setAttendanceData((prevData) => {
+      const studentAttendance = prevData[studentId] || [];
+      const updatedAttendance = [...studentAttendance];
+
+      // Update or add the attendance record
+      updatedAttendance[dateIndex] = { date: new Date().toISOString().split('T')[0], status };
+
+      return {
+        ...prevData,
+        [studentId]: updatedAttendance,
+      };
+    });
+    setFinalsAttendanceData((prevData) => {
       const studentAttendance = prevData[studentId] || [];
       const updatedAttendance = [...studentAttendance];
 
@@ -176,14 +218,9 @@ const ClassDetails = () => {
     const componentScore = average * (percentage / 100);
     return componentScore.toFixed(2);
   };
-  
   // Example usage for student 1
   console.log(calculateAssignmentColumnAverage(1)); // Output: average of scores for student 1
  
-
-
-
-
   {/* QUIZZES/SEATWORKS */}
   useEffect(() => {
     // Adjust the length of quizseatScores based on the quizColumns length
@@ -201,7 +238,6 @@ const ClassDetails = () => {
     );
   }, [quizColumns]); // Trigger this effect when quizColumns changes
   
-
   const addQuizColumn = () => {
     setQuizColumns([...quizColumns, {}]);
     setQuizseatScores(prevScores => prevScores.map(scores => [...scores, 0]));
@@ -219,7 +255,6 @@ const ClassDetails = () => {
     );
   };
   
-  
   const handleQuizseatScoreChange = (studentIndex, quizIndex, score) => {
     console.log(`Updating scores for student ${studentIndex}, quiz ${quizIndex} to ${score}`);
     setQuizseatScores(prevScores =>
@@ -235,7 +270,6 @@ const ClassDetails = () => {
     );
   };
   
-
   const calculateQuizseatColumnAverage = (studentIndex) => {
     const scores = quizseatScores[studentIndex] || [];
     const validScores = scores.map(score => parseFloat(score) || 0);
@@ -257,8 +291,6 @@ const ClassDetails = () => {
     console.log(quizseatScores);
   }, [quizseatScores]);
   
-  
-  
   {/* RECITATION/PARTICIPATION */}
   const handleRecitationScoreChange = (studentId, recitationIndex, score) => {
     setRecitationScores(prevScores => {
@@ -270,7 +302,6 @@ const ClassDetails = () => {
       return updatedScores;
     });
   };
-  
   
   const calculateRecitationColumnAverage = (studentIndex) => {
     const scores = recitationScores[studentIndex] || [];
@@ -303,13 +334,6 @@ const ClassDetails = () => {
     const componentScore = average * (percentage / 100);
     return componentScore.toFixed(2); // Format to 2 decimal places
   };
-  
-  
-  
-
-
-  
-  
   
   
     
@@ -578,126 +602,95 @@ const ClassDetails = () => {
                         <option value="A">A</option>
                       </select>
                     </td>
-                  ))}
-
-                  
+                    ))}
+                    {/*EXPECTING ATTENDANCESCORES HERE*/}
                     <td></td>
                     <td>{totals.P}</td>
                     <td>{totals.L}</td>
                     <td>{totals.E}</td>
                     <td>{totals.A}</td>
-                    <td></td>
-                    <td></td>
+                    
+                    <td colspan = '2'><center>0.00%</center></td>
                     
 
-                  
-                    {assignmentColumns.map((_, index) => (
-                    <td key={index}>
-                      <input
-                        type="number"
-                        style={{ width: '70px' }}
-                        placeholder="Score"
-                        onChange={(e) => handleScoreChange(student.id, index, parseFloat(e.target.value) || 0)}
-                      />
-                    </td>
-                  ))}
-
-
-                    {assignmentScores.map((scores, studentIndex) => (
-                      <tr key={studentIndex}>
-
-                      </tr>
+                    {/*ASSIGNMENT COMPONENT: DEFINE ASSIGNMENTSCORES IN INPUT*/}
+                    {assignmentColumns.map((_, assignmentIndex) => (
+                      <td key={assignmentIndex}>
+                        <input
+                          type="number"
+                          style={{ width: '70px' }}
+                          placeholder="Score"
+                          value={assignmentScores[studentIndex]?.[assignmentIndex] || ''} // Set the value based on state
+                          onChange={(e) => handleScoreChange(studentIndex, assignmentIndex, parseFloat(e.target.value) || 0)}
+                        />
+                      </td>
                     ))}
+                    <td></td>
                     <td>{calculateAssignmentColumnAverage(student.id)}%</td> {/* Display average directly */}
                     <td>{calculateAssignmentComponentScore(student.id, assignmentPercentage)}%</td>
 
-
+                    {/*QUIZ COMPONENT: DEFINE QUIZSEATSCORES IN INPUT*/}
                     {quizColumns.map((_, quizIndex) => (
-  <td key={quizIndex}>
-    <input
-      type="number"
-      style={{ width: '70px' }}
-      placeholder="Score"
-      value={quizseatScores[studentIndex]?.[quizIndex] || ''}
-      onChange={(e) => handleQuizseatScoreChange(studentIndex, quizIndex, parseFloat(e.target.value) || 0)}
-    />
-  </td>
-))}
-
-
-
-
-
-                  {quizseatScores.map((scores, studentIndex) => (
-                    <tr key={studentIndex}>
-                      {quizColumns.map((_, quizIndex) => (
-                        <td key={quizIndex}>
-                          <input
-                            type="number"
-                            style={{ width: '70px' }}
-                            placeholder="Score"
-                            value={quizseatScores[studentIndex] ? quizseatScores[studentIndex][quizIndex] || '' : ''} 
-                            onChange={(e) => handleQuizseatScoreChange(studentIndex, quizIndex, parseFloat(e.target.value) || 0)}
-                          />
-                        </td>
-                      ))}
-                      <td></td>
-                      <td>{calculateQuizseatColumnAverage(studentIndex)}%</td>
-<td>{calculateQuizseatComponentScore(studentIndex, quizseatPercentage)}%</td>
-
-                    </tr>
-                  ))}
+                      <td key={quizIndex}>
+                        <input
+                          type="number"
+                          style={{ width: '70px' }}
+                          placeholder="Score"
+                          value={quizseatScores[studentIndex]?.[quizIndex] || ''}
+                          onChange={(e) => handleQuizseatScoreChange(studentIndex, quizIndex, parseFloat(e.target.value) || 0)}/>
+                      </td>
+                    ))}
+                    <td></td>
+                    <td>{calculateQuizseatColumnAverage(studentIndex)}%</td>
+                    <td>{calculateQuizseatComponentScore(studentIndex, quizseatPercentage)}%</td>
                     
-                    <td></td>
-                    <td></td>
-                    <td></td>
-
+                    {/*RECITATION COMPONENT: DEFINE RECITATIONSCORES IN INPUT*/}
                     {recitationColumns.map((_, index) => (
                       <td key={index}>
-                        <input type="number" style={{ width: '70px' }} placeholder="Score" />
+                        <input
+                          type="number"
+                          style={{ width: '70px' }}
+                          placeholder="Score" 
+                          value={recitationScores[studentIndex]?.[index] || ''}
+                          onChange={(e) => handleRecitationScoreChange(studentIndex, index, parseFloat(e.target.value) || 0)}/>
                       </td>
                     ))}
+                    <td></td>
+                    <td>{calculateRecitationColumnAverage(student.id)}%</td>
+                    <td>{calculateRecitationComponentScore(student.id, recitationPercentage)}%</td>
 
-                    {recitationScores.map((scores, studentIndex) => (
-                      <tr key={studentIndex}>
-                        {scores.map((score, index) => (
-                          <td key={index}>
-                            <input
-                              type="number"
-                              style={{ width: '70px' }}
-                              placeholder="Score"
-                              onChange={(e) => handleRecitationScoreChange(student.id, index, parseFloat(e.target.value) || 0)}
-                            />
-                          </td>
-                        ))}
-                        <td>{calculateRecitationColumnAverage(student.id)}%</td>
-                        <td>{calculateRecitationComponentScore(student.id, recitationPercentage)}%</td>
-                      </tr>
-                    ))}
-
+                    {/*CLASS STANDING TOTAL: ATTENDANCE + ASSIGN + QUIZSEAT + RECITATION*/}
+                    <td>0.00%</td>
                     
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-
+                    {/*PBA COMPONENT: DEFINE PBASCORES IN INPUT*/}
                     {pbaColumns.map((_, index) => (
                       <td key={index}>
-                        <input type="number" style={{ width: '70px' }} placeholder="Score" />
+                        <input
+                          type="number"
+                          style={{ width: '70px' }} 
+                          placeholder="Score" 
+                          />{/*INSERT VALUE AND ONCHANGE*/}
                       </td>
                     ))}
-                    
                     <td></td>
-                    <td></td>
-                    <td></td>
+                    <td>0.00%</td>
+                    <td>0.00%</td>
 
-                    <td><input type="number" style={{ width: '70px' }} placeholder="Score" /></td>
-                    <td></td>
-                    <td></td>
+                    {/*MIDTERMS EXAM COMPONENT*/}
+                    <td><input
+                          type="number"
+                          style={{ width: '70px' }}
+                          placeholder="Score"
+                          />{/*INSERT VALUE AND ONCHANGE*/}
+                    </td>
 
-                    <td></td>
-                    <td></td>
+                    <td colspan ='2' >0.00%</td>
 
+                    {/*MIDTERM GRADE: CLASS STANDING + PBA + MIDTERM EXAM*/}
+                    <td>Midterm</td>
+                    <td><center>1.0</center></td>
+
+                    {/*REMARKS DROP-DOWN*/}
                     <td>
                       <select>
                         <option value="Select">Select</option>
@@ -715,21 +708,8 @@ const ClassDetails = () => {
             </tbody>
           </table>
         </div>
-      );
+        );
 
-
-
-
-
-
-
-
-
-
-
-
-
-      
       {/* FINALS TAB */}
       case 'finals':
         return (
@@ -738,81 +718,107 @@ const ClassDetails = () => {
             <thead>
               <tr>
                 <th colSpan="2">Student Info</th>
-                <th colSpan={attendanceColumns.length + 7}>Attendance (P-Present; L-Late; E-Excuse; A-Absent)</th>
-                <th colSpan={assignmentColumns.length + 3} rowSpan={3}>Assignments 5%</th>
-                <th colSpan={quizColumns.length + 3} rowSpan={2}>Quizzes/Seatwork 10%</th> {/* New column header */}
-                <th colSpan={recitationColumns.length + 3} rowSpan={3}>Recitation/Participation 10%</th>
+                <th colSpan={finalsAttendanceColumns.length + 7}>Attendance (P-Present; L-Late; E-Excuse; A-Absent)</th>
+                <th colSpan={finalsAssignmentColumns.length + 3} rowSpan={3} style={{ padding: '60px' }} >Assignments</th>
+                <th colSpan={finalsQuizColumns.length + 3} rowSpan={2}>Quizzes/Seatwork</th> {/* New column header */}
+                <th colSpan={finalsRecitationColumns.length + 3} rowSpan={3}>Recitation/Participation</th>
                 <th colSpan="1" rowSpan="3">CS Grade</th>
-                <th colSpan={pbaColumns.length + 3} rowSpan={2}>Performance Based Assessment</th>
-                <th colSpan="3" rowSpan="3">Midterm Exam</th>
-                <th colSpan="1" rowSpan="3">Midterm Grade</th>
+                <th colSpan={finalsPbaColumns.length + 3} rowSpan={2}>Performance Based Assessment</th>
+                <th colSpan="3" rowSpan="3">Finals Exam</th>
+                <th colSpan="1" rowSpan="3">Finals Grade</th>
                 <th colSpan="1" rowSpan="4">Numerical Equivalent</th>
                 <th colSpan="1" rowSpan="4">Remarks</th>
               </tr>
+              
               <tr>
                 <th rowSpan="3">Student No</th>
                 <th rowSpan="3">Name</th>
+
+
+
                 {/* Attendance Columns */}
-                {attendanceColumns.map((column, index) => (
+                {finalsAttendanceColumns.map((column, index) => (
                   <th rowSpan="3">
                     <DatePicker
                       selected={column.date}
                       onChange={(date) =>
-                        setAttendanceColumns((prevColumns) =>
+                        setFinalsAttendanceColumns((prevColumns) =>
                           prevColumns.map((col, i) => (i === index ? { ...col, date } : col))
                         )
                       }
                       dateFormat="yyyy-MM-dd"
                     /> 
                     <button
-                      onClick={() => removeColumn(index, setAttendanceColumns)}
+                      onClick={() => removeColumn(index, setFinalsAttendanceColumns)}
                       style={{ background: 'none', border: 'none' }}
                     >
                       <FontAwesomeIcon icon={faMinus} />
                     </button>
                   </th>
                 ))}
+
+              
                 {/* Add Column Button */}
                 <th rowSpan="3" style={{ background: '#d1e7dd', padding: '0', border: 'none' }}>
-                  <button onClick={() => addColumn(setAttendanceColumns)} style={{ background: 'none', border: 'none' }}>
+                  <button onClick={() => addColumn(setFinalsAttendanceColumns)} style={{ background: 'none', border: 'none' }}>
                     <FontAwesomeIcon icon={faPlus} />
                   </button>
                 </th>
+
                 {/* New Row for No of Days and Input Field */}
                 <th colSpan="2">No of Days</th>
-                <th colSpan="2">
-                  <input type="text" style={{ width: '60px', marginLeft: '10px' }} />
-                </th>
-                <th colSpan="2" rowSpan="2">Attendance 5%</th>
+                  <th colSpan="2">
+                    <input
+                      type="text"
+                      style={{ width: '60px', marginLeft: '10px' }}
+                      value={finalsTotalAttendanceDays} // Display the total attendance days
+                      readOnly // Make the input field read-only
+                    />
+                  </th>
+                <th colSpan="2" rowSpan="2">Attendance</th>
               </tr>
               <tr>
+
                 {/* "Total Student Attendance" header placed below the "No of Days" and "Input Field" */}
                 <th colSpan="4">Total Student Attendance</th>
-                {/* Quiz Columns */}
-                {quizColumns.map((_, index) => (
+
+                
+                {/* Quiz Columns WITH REMOVE BUTTON */}
+                {finalsQuizColumns.map((_, index) => (
                   <th key={index}>
-                    <input type="number" style={{ width: '70px' }} placeholder="Items" />
+                    Q/S {index + 1}
+                    <button onClick={() => removeQuizColumn(index)} style={{ background: 'none', border: 'none' }}>
+                      <FontAwesomeIcon icon={faMinus} />
+                    </button>
                   </th>
                 ))}
+
                 <th rowSpan={2} style={{ background: '#d1e7dd', padding: '0', border: 'none' }}>
-                  <button onClick={() => addColumn(setQuizColumns)} style={{ background: 'none', border: 'none' }}>
+                  <button onClick={() => addQuizColumn(setFinalsQuizColumns)} style={{ background: 'none', border: 'none' }}>
                     <FontAwesomeIcon icon={faPlus} />
                   </button>
                 </th>
                 <th rowSpan={2}>Total</th>
-                <th rowSpan={2}>10%</th>
+                <th rowSpan={2}>
+                <input
+                type="number"
+                value={finalsQuizseatPercentage}
+                onChange={(e) => setFinalsQuizseatPercentage(e.target.value)}
+                style={{ width: '60px' }}
+              />
+                %</th>
     
                 {/* PBA Columns */}
-                {pbaColumns.map((_, index) => (
+                {finalsPbaColumns.map((_, index) => (
                   <th key={index} >
                     PBA {index + 1}
-                    <button onClick={() => removeColumn(index, setPbaColumns)} style={{ background: 'none', border: 'none' }}>
+                    <button onClick={() => removeColumn(index, setFinalsPbaColumns)} style={{ background: 'none', border: 'none' }}>
                       <FontAwesomeIcon icon={faMinus} />
                     </button>
                   </th>
                 ))}
                 <th rowSpan={2} style={{ background: '#d1e7dd', padding: '0', border: 'none' }}>
-                  <button onClick={() => addColumn(setPbaColumns)} style={{ background: 'none', border: 'none' }}>
+                  <button onClick={() => addColumn(setFinalsPbaColumns)} style={{ background: 'none', border: 'none' }}>
                     <FontAwesomeIcon icon={faPlus} />
                   </button>
                 </th>
@@ -825,55 +831,80 @@ const ClassDetails = () => {
                 <th colSpan="1">L</th>
                 <th colSpan="1">E</th>
                 <th colSpan="1">A</th>
-                <th colSpan="2">5%</th>
+                <th colSpan="2">
+                <input
+                type="number"
+                value={finalsAttendancePercentage}
+                onChange={(e) => setFinalsAttendancePercentage(e.target.value)}
+                style={{ width: '60px' }}
+              />
+                %</th>
     
-                {/* Assignment Columns */}
-                {assignmentColumns.map((_, index) => (
+                {/* Assignment Column Header */}
+                {finalsAssignmentColumns.map((_, index) => (
                   <th key={index}>
                     Assignment {index + 1}
-                    <button onClick={() => removeColumn(index, setAssignmentColumns)} style={{ background: 'none', border: 'none' }}>
+                    <button onClick={() => removeColumn(index, setFinalsAssignmentColumns)} style={{ background: 'none', border: 'none' }}>
                       <FontAwesomeIcon icon={faMinus} />
                     </button>
                   </th>
                 ))}
                 <th style={{ background: '#d1e7dd', padding: '0', border: 'none' }}>
-                  <button onClick={() => addColumn(setAssignmentColumns)} style={{ background: 'none', border: 'none' }}>
+                  <button onClick={() => addColumn(setFinalsAssignmentColumns)} style={{ background: 'none', border: 'none' }}>
                     <FontAwesomeIcon icon={faPlus} />
                   </button>
                 </th>
                 <th>Total</th>
-                <th>5%</th>
-    
-                {/* Quizzes/Seatwork Columns */}
-                {quizColumns.map((_, index) => (
-                  <th key={index}>
-                    Q/S {index + 1}
-                    <button onClick={() => removeColumn(index, setQuizColumns)} style={{ background: 'none', border: 'none' }}>
-                      <FontAwesomeIcon icon={faMinus} />
-                    </button>
-                  </th>
+                {/* Use a `td` for the input field */}
+                <th>
+            <input
+              type="number"
+              value={finalsAssignmentPercentage}
+              onChange={(e) => setFinalsAssignmentPercentage(e.target.value)}
+              style={{ width: '30px' }}
+            />%
+          </th>
+          
+                {/* Quizzes/Seatwork SCORE THRESHOLD */}
+                  {finalsQuizColumns.map((_, index) => (
+                    <th key={index}>
+                      <input type="number" style={{ width: '70px' }} placeholder="Items" />
+                    </th>
                 ))}
-    
+
                 {/* Recitation Columns */}
-                {recitationColumns.map((_, index) => (
+                {finalsRecitationColumns.map((_, index) => (
                   <th key={index}>
                     Recitation {index + 1}
-                    <button onClick={() => removeColumn(index, setRecitationColumns)} style={{ background: 'none', border: 'none' }}>
+                    <button onClick={() => removeColumn(index, setFinalsRecitationColumns)} style={{ background: 'none', border: 'none' }}>
                       <FontAwesomeIcon icon={faMinus} />
                     </button>
                   </th>
                 ))}
                 <th style={{ background: '#d1e7dd', padding: '0', border: 'none' }}>
-                  <button onClick={() => addColumn(setRecitationColumns)} style={{ background: 'none', border: 'none' }}>
+                  <button onClick={() => addColumn(setFinalsRecitationColumns)} style={{ background: 'none', border: 'none' }}>
                     <FontAwesomeIcon icon={faPlus} />
                   </button>
                 </th>
                 <th>Total</th>
-                <th>10%</th>
-                <th>30%</th>
+                <th>
+                <input
+                type="number"
+                value={finalsRecitationPercentage}
+                onChange={(e) => setFinalsRecitationPercentage(e.target.value)}
+                style={{ width: '30px' }}
+              />
+                %</th>
+                <th>
+                <input
+                type="number"
+                value={finalsCsGradePercentage}
+                onChange={(e) => finalsCsGradePercentage(e.target.value)}
+                style={{ width: '30px' }}
+              />
+                %</th>
     
-                {/* Quiz Columns */}
-                {pbaColumns.map((_, index) => (
+                {finalsPbaColumns.map((_, index) => (
                   <th>
                   <select>
                   <option value="Project">Select</option>
@@ -887,109 +918,164 @@ const ClassDetails = () => {
                 </th>
                 ))}
     
-              <th>30%</th>
+              <th>
+              <input
+                type="number"
+                value={finalsPbaGradePercentage}
+                onChange={(e) => finalsPbaGradePercentage(e.target.value)}
+                style={{ width: '30px' }}
+              />
+                %</th>
               <th>
                     <input type="number" style={{ width: '70px' }} placeholder="Items" />
               </th>
-              <th colSpan={2}>40%</th>
+              <th colSpan={2}>
+              <input
+                type="number"
+                value={finalsExamPercentage}
+                onChange={(e) => setFinalsExamPercentage(e.target.value)}
+                style={{ width: '30px' }}
+              />
+                %</th>
               <th>Total</th>
     
               </tr>
             </thead>
+
+
             <tbody>
-  {/* Iterate over each student in the students array */}
-  {students.map((student, studentIndex) => (
-    <tr key={studentIndex}> {/* Unique key for each row */}
-      <td>{student.studentNumber || 'Guest'}</td> {/* Display studentNumber */}
-      <td>{student.studentName || 'Guest'}</td> {/* Display studentName */}
-      
-      {attendanceColumns.map((_, index) => (
-        <td key={index}>
-          <select>
-            <option value="Select">Select</option>
-            <option value="P">P</option>
-            <option value="L">L</option>
-            <option value="E">E</option>
-            <option value="A">A</option>
-          </select>
-        </td>
-      ))}
-      
-      <td></td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td></td>
-      <td></td>
+              {students.map((student, studentIndex) => {
+                const totals = calculateTotals(student.id);
+                console.log(`Totals for ${student.id}:`, totals); // Calculate totals for this student
+                return (
+                  <tr key={student.id}>
+                    <td>{student.studentNumber || 'Guest'}</td>
+                    <td>{student.studentName || 'Guest'}</td>
 
-      {assignmentColumns.map((_, index) => (
-        <td key={index}>
-          <input type="number" style={{ width: '70px' }} placeholder="Score" />
-        </td>
-      ))}
-      
-      <td></td>
-      <td></td>
-      <td></td>
+                    
+                    
+                    {/* PLEA DROPDOWN */}
+                    {finalsAttendanceColumns.map((_, dateIndex) => (
+                    <td key={dateIndex}>  
+                      <select
+                        defaultValue={finalsAttendanceData[student.id]?.[dateIndex]?.status || 'Select'} // Set default value here
+                        onChange={(e) =>
+                          handleAttendanceChange(student.id, dateIndex, e.target.value)
+                        }
+                      >
+                        <option value="Select">Select</option>
+                        <option value="P">P</option>
+                        <option value="L">L</option>
+                        <option value="E">E</option>
+                        <option value="A">A</option>
+                      </select>
+                    </td>
+                    ))}
+                    {/*EXPECTING ATTENDANCESCORES HERE*/}
+                    <td></td>
+                    <td>{totals.P}</td>
+                    <td>{totals.L}</td>
+                    <td>{totals.E}</td>
+                    <td>{totals.A}</td>
+                    
+                    <td colspan = '2'><center>0.00%</center></td>
+                    
 
-      {quizColumns.map((_, index) => (
-        <td key={index}>
-          <input type="number" style={{ width: '70px' }} placeholder="Score" />
-        </td>
-      ))}
-      
-      <td></td>
-      <td></td>
-      <td></td>
+                    {/*ASSIGNMENT COMPONENT*/}
+                    {finalsAssignmentColumns.map((_, index) => (
+                      <td key={index}>
+                      <input
+                        type="number"
+                        style={{ width: '70px' }}
+                        placeholder="Score"
+                        value={finalsAssignmentScores[studentIndex]?.[index]}
+                        onChange={(e) => handleScoreChange(student.id, index, parseFloat(e.target.value) || 0)}/>
+                      </td>
+                    ))}
+                    <td></td>
+                    <td>{calculateAssignmentColumnAverage(student.id)}%</td> {/* Display average directly */}
+                    <td>{calculateAssignmentComponentScore(student.id, finalsAssignmentPercentage)}%</td>
 
-      {recitationColumns.map((_, index) => (
-        <td key={index}>
-          <input type="number" style={{ width: '70px' }} placeholder="Score" />
-        </td>
-      ))}
-      
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
+                    {/*QUIZ COMPONENT*/}
+                    {finalsQuizColumns.map((_, quizIndex) => (
+                      <td key={quizIndex}>
+                        <input
+                          type="number"
+                          style={{ width: '70px' }}
+                          placeholder="Score"
+                          value={finalsQuizseatScores[studentIndex]?.[quizIndex] || ''}
+                          onChange={(e) => handleQuizseatScoreChange(studentIndex, quizIndex, parseFloat(e.target.value) || 0)}/>
+                      </td>
+                    ))}
+                    <td></td>
+                    <td>{calculateQuizseatColumnAverage(studentIndex)}%</td>
+                    <td>{calculateQuizseatComponentScore(studentIndex, finalsQuizseatPercentage)}%</td>
+                    
+                    {/*RECITATION COMPONENT*/}
+                    {finalsRecitationColumns.map((_, index) => (
+                      <td key={index}>
+                        <input
+                          type="number"
+                          style={{ width: '70px' }}
+                          placeholder="Score" 
+                          value={finalsRecitationScores[studentIndex]?.[index] || ''}
+                          onChange={(e) => handleRecitationScoreChange(studentIndex, index, parseFloat(e.target.value) || 0)}/>
+                      </td>
+                    ))}
+                    <td></td>
+                    <td>{calculateRecitationColumnAverage(student.id)}%</td>
+                    <td>{calculateRecitationComponentScore(student.id, finalsRecitationPercentage)}%</td>
 
-      {pbaColumns.map((_, index) => (
-        <td key={index}>
-          <input type="number" style={{ width: '70px' }} placeholder="Score" />
-        </td>
-      ))}
-      
-      <td></td>
-      <td></td>
-      <td></td>
+                    {/*CLASS STANDING TOTAL: ATTENDANCE + ASSIGN + QUIZSEAT + RECITATION*/}
+                    <td>0.00%</td>
+                    
+                    {/*PBA COMPONENT*/}
+                    {finalsPbaColumns.map((_, index) => (
+                      <td key={index}>
+                        <input
+                          type="number"
+                          style={{ width: '70px' }}
+                          placeholder="Score"
+                          />
+                      </td>
+                    ))}
 
-      <td><input type="number" style={{ width: '70px' }} placeholder="Score" /></td>
-      <td></td>
-      <td></td>
+                    {/*EXPECTING PBASCORES HERE*/}
 
-      <td></td>
-      <td></td>
+                    <td></td>
+                    <td>0.00%</td>
+                    <td>0.00%</td>
 
-      <td>
-        <select>
-          <option value="Select">Select</option>
-          <option value="P">PASSED</option>
-          <option value="F">FAILED</option>
-          <option value="OD">OD</option>
-          <option value="UD">UD</option>
-          <option value="F">INC</option>
-          <option value="OD">NC</option>
-          <option value="UD"></option>
-        </select>
-      </td>
-    </tr>
-  ))}
-</tbody>
+                    {/*FINAL EXAM COMPONENT*/}
+                    <td><input type="number" style={{ width: '70px' }} placeholder="Score" /></td>
 
+                    {/*EXPECTING FINALSSCORES HERE*/}
+
+                    <td colspan ='2' >0.00%</td>
+
+                    {/*FINAL GRADE: CLASS STANDING + PBA + FINALS EXAM*/}
+                    <td>FINALS</td>
+                    <td><center>1.0</center></td>
+
+                    {/*REMARKS DROP-DOWN*/}
+                    <td>
+                      <select>
+                        <option value="Select">Select</option>
+                        <option value="P">PASSED</option>
+                        <option value="F">FAILED</option>
+                        <option value="OD">OD</option>
+                        <option value="UD">UD</option>
+                        <option value="INC">INC</option>
+                        <option value="NC">NC</option>
+                      </select>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
           </table>
         </div>
-      );
+        );
 
       
           case 'summary': 

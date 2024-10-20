@@ -1,13 +1,16 @@
 export default class PersonnelModel {
   constructor(id, personnelNumber, personnelPassword, personnelType,
-              personnelName, personnelSex, personnelEmail, 
+              personnelNameFirst, personnelNameMiddle,personnelNameLast,
+              personnelSex, personnelEmail, 
               personnelBirthDate, programNumber, programName,
-              personnelContact, personnelAddress) {
+              personnelContact, personnelAddress, academicYear) {
     this.id = id;
     this.personnelNumber = personnelNumber;
     this.personnelPassword = personnelPassword;
     this.personnelType = personnelType;
-    this.personnelName = personnelName;
+    this.personnelNameFirst = personnelNameFirst;
+    this.personnelNameMiddle = personnelNameMiddle;
+    this.personnelNameLast = personnelNameLast;
     this.personnelSex = personnelSex;
     this.personnelEmail = personnelEmail;
     this.personnelBirthDate = personnelBirthDate;
@@ -15,45 +18,60 @@ export default class PersonnelModel {
     this.programName = programName;
     this.personnelContact = personnelContact;
     this.personnelAddress = personnelAddress;
+    this.academicYear = academicYear;
   }
 
-  // Fetch specific personnel data by personnelNumber
-  static async fetchPersonnelData(personnelNumber) {
+  // Fetch specific personnel's credentials
+  static async LoginPersonnelData(personnelNumber, password) {
     try {
-      const response = await fetch(`http://localhost:5000/personnel/${personnelNumber}`);
+      const response = await fetch('http://localhost:5000/personnel/login', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ personnelNumber, password }), // Send credentials
+      });
       if (!response.ok) {
         throw new Error('Error fetching personnel data');
       }
       const data = await response.json();
 
-
-      sessionStorage.setItem('currentAcadYear', data.academicYear.academicYear);
-      console.log(data.academicYear.academicYear);
+      sessionStorage.setItem('currentAcadYear', data.academicYear);
+        console.log(data.academicYear);
       
-      return new PersonnelModel(
-        data.id,
-        data.personnelNumber,
-        data.personnelPassword,
-        data.personnelType,
-        data.personnelName,
-        data.personnelSex,
-        data.personnelEmail,
-        data.personnelBirthDate,
-        data.programNumber,
-        data.programName,
-        data.personnelContact,
-        data.personnelAddress
-      );
+        return new PersonnelModel(// Filtering the sensitive info
+          null,
+          data.personnelNumber,
+          null,
+          data.personnelType,
+          data.personnelNameFirst,
+          data.personnelNameMiddle,
+          data.personnelNameLast,
+          null,
+          null,
+          null,
+          data.programNumber,
+          null,
+          null,
+          null,
+          null
+        );
     } catch (error) {
       console.error('Error fetching personnel data:', error);
       throw error;
     }
   }
 
-  // Fetch all professors
-  static async getProfessors() {
+  // Fetch list of professors by program
+  static async getProfessorsbyProgram(programNumber, currentAcadYear) {
     try {
-      const response = await fetch(`http://localhost:5000/personnel?personnelType=professor`);
+      const response = await fetch(`http://localhost:5000/personnel/byProgram`,{
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ programNumber, currentAcadYear }), // Send credentials
+      });
       if (!response.ok) {
         throw new Error('Error fetching professors data');
       }
@@ -65,14 +83,17 @@ export default class PersonnelModel {
         prof.personnelNumber,
         prof.personnelPassword,
         prof.personnelType,
-        prof.personnelName,
+        prof.personnelNameFirst,
+        prof.personnelNameMiddle,
+        prof.personnelNameLast,
         prof.personnelSex,
         prof.personnelEmail,
         prof.personnelBirthDate,
         prof.programNumber,
         prof.programName,
         prof.personnelContact,
-        prof.personnelAddress
+        prof.personnelAddress,
+        prof.academicYear
       ));
     } catch (error) {
       console.error('Error fetching professors:', error);
@@ -103,8 +124,6 @@ static async insertPersonnel(personnelData) {
       throw error;
   }
 }
-
-
   // Update personnel data
 static async updatePersonnel(personnelNumber, updatedData) {
   try {

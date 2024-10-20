@@ -35,6 +35,7 @@ export default function ProgramHeadDashboard() {
   // Logout function
   const handleLogout = () => {
     navigate('/login');
+    sessionStorage.clear();
   };
 
   // Toggle dropdown menu visibility
@@ -71,7 +72,7 @@ export default function ProgramHeadDashboard() {
         {/* Logo and Welcome Message */}
         <img src="pcc.png" alt="Logo" className="college-logo ms-5 mb-3" />
         <div className="welcome-message mb-3 text-center">
-          Hello, {user ? user.personnelName : 'Guest'}!
+          Hello, {user ? user.personnelNameFirst : 'Guest'}!
         </div>
 
         {/* Navigation Menu */}
@@ -125,7 +126,7 @@ export default function ProgramHeadDashboard() {
           {/* User Information and Dropdown Menu */}
           <div className="user-info d-flex align-items-center position-relative" ref={dropdownRef}>
             <span className="me-2">
-              {user ? `${user.personnelName} (${user.personnelNumber})` : 'Guest'}
+              {user ? `${user.personnelNameFirst} (${user.personnelNumber})` : 'Guest'}
             </span>
             <FontAwesomeIcon
               icon={faUser}

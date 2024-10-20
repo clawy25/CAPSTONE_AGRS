@@ -53,13 +53,15 @@ export default function FacultyPage() {
     
     try {
       // Fetch the personnel data using the account number
-      const user = await PersonnelModel.fetchPersonnelData(accountNumber);
-  
+      const user = await PersonnelModel.LoginPersonnelData(accountNumber, password);
+
       if (user) {
         const credentials = {
             personnelNumber: user.personnelNumber,
             personnelType: user.personnelType,
-            personnelName: user.personnelName,
+            personnelNameFirst: user.personnelNameFirst,
+            personnelNameMiddle: user.personnelNameMiddle,
+            personnelNameLast: user.personnelNameLast,
             programNumber: user.programNumber
       };
       setUser(credentials); // Store the current user's credentials to UserContext
@@ -69,7 +71,7 @@ export default function FacultyPage() {
         navigate('/faculty-dashboard');
       } else if (user.personnelType === 'Head') {
         navigate('/programHead-dashboard');
-      } else if (user.personnelType === 'Registrar') {
+      } else if (user.personnelType === 'Registrar' || user.personnelType === 'Admin') {
         navigate('/registrar-dashboard');
       } else {
         setError('Unauthorized personnel type.');
@@ -170,5 +172,7 @@ export default function FacultyPage() {
     </div>
   );
 };
+
+
 
 

@@ -36,7 +36,7 @@ export default function FacultyDashboard () {
 
   const handleLogout = () => {
     navigate('/login');
-    localStorage.clear();
+    sessionStorage.clear();
   };
 
   const toggleDropdown = () => {
@@ -84,7 +84,7 @@ export default function FacultyDashboard () {
     <div className="dashboard-container d-flex">
       <div className={`sidebar bg-custom-color-green ${showSidebar ? 'd-block' : 'd-none d-md-block'}`}>
         <img src="pcc.png" alt="Logo" className="college-logo align-items-center ms-5 mb-3" />
-        <div className="welcome-message mb-3 text-center">Hello, {user ? user.personnelName : 'Guest'}!</div>
+        <div className="welcome-message mb-3 text-center">Hello, {user ? user.personnelNameFirst : 'Guest'}!</div>
         <nav className="menu mb-3">
           <Link
             to=""
@@ -123,7 +123,7 @@ export default function FacultyDashboard () {
           </button>
 
           <div className="user-info d-flex align-items-center position-relative" ref={dropdownRef}>
-            <span className="me-2">{user ? user.personnelName : 'Guest'} ({user ? user.personnelNumber : 'Unknown'})</span>
+            <span className="me-2">{user ? user.personnelNameFirst : 'Guest'} ({user ? user.personnelNumber : 'Unknown'})</span>
             <FontAwesomeIcon
               icon={faUser}
               className="user-icon"

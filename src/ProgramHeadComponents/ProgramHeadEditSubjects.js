@@ -36,7 +36,7 @@ export default function ProgramHeadEditCourses({ onBack }) {
   useEffect(() => {
     const fetchCourses = async () => {
       try {
-        const fetchedCourses = await CourseModel.fetchExistingCourses();
+        const fetchedCourses = await CourseModel.getCoursesbyProgram(user.programNumber, sessionStorage.getItem('currentAcadYear'));
         setYearData({ 'First Year': fetchedCourses });
       } catch (error) {
         console.error('Error fetching courses:', error);
@@ -87,7 +87,8 @@ export default function ProgramHeadEditCourses({ onBack }) {
         newCourse.courseLecture,
         newCourse.courseLaboratory,
         newCourse.coursePreRequisite,
-        newCourse.courseUnits
+        newCourse.courseUnits,
+        user.programNumber
       );
 
       const newCourseData = createdCourse.data && Array.isArray(createdCourse.data) ? createdCourse.data[0] : createdCourse;

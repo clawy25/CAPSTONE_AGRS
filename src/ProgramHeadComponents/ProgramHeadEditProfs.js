@@ -8,8 +8,8 @@ export default function ProgramHeadEditProfs({ onBack }) {
   const [professors, setProfessors] = useState([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [newProf, setNewProf] = useState({ number: '', name: '', email: '', phone: '', sex: '', address: '', birthDate: '' });
-  const [editProf, setEditProf] = useState({ number: '', name: '', email: '', phone: '', sex: '', address: '', birthDate: '' });
+  const [newProf, setNewProf] = useState({ number: '', firstname: '', middlename: '', lastname: '', email: '', phone: '', sex: '', address: '', birthDate: '' });
+  const [editProf, setEditProf] = useState({ number: '', firstname: '', middlename: '', lastname: '', email: '', phone: '', sex: '', address: '', birthDate: '' });
   const [activeProfIndex, setActiveProfIndex] = useState(null);
   const { user } = useContext(UserContext);
   const [existingPersonnelNumbers, setExistingPersonnelNumbers] = useState([]);
@@ -20,7 +20,7 @@ export default function ProgramHeadEditProfs({ onBack }) {
   useEffect(() => {
     async function fetchProfessors() {
       try {
-        const data = await PersonnelModel.getProfessors(); // Ensure this fetches correctly
+        const data = await PersonnelModel.getProfessorsbyProgram(user.programNumber, sessionStorage.getItem('currentAcadYear')); // Ensure this fetches correctly
         // Filter for only faculty personnel
         const facultyProfessors = data.filter(prof => prof.personnelType === 'Faculty');
         setProfessors(facultyProfessors);
@@ -41,13 +41,15 @@ export default function ProgramHeadEditProfs({ onBack }) {
   const handleShowEdit = (professor, index) => {
     setEditProf({
       number: professor.personnelNumber,
-      name: professor.personnelName,
+      firstname: professor.personnelNameFirst,
+      middlename: professor.personnelNameMiddle,
+      lastname: professor.personnelNameLast,
       email: professor.personnelEmail,
-      phone: professor.personnelContact, // Phone number
+      phone: professor.personnelContact,
       sex: professor.personnelSex,
       address: professor.personnelAddress, 
       type: professor.personnelType,
-      birthDate: professor.personnelBirthDate // Add birth date for editing
+      birthDate: professor.personnelBirthDate
     });
     setActiveProfIndex(index);
     setShowEditModal(true);
@@ -86,7 +88,9 @@ const handleAddProf = async () => {
     personnelNumber: nextPersonnelNumber, // Identification number
     personnelPassword: 'AgrsPcc2024', // Make sure this is handled by your backend
     personnelType: 'Faculty',
-    personnelName: newProf.name,
+    personnelNameFirst: newProf.firstname,
+    personnelNameMiddle: newProf.middlename,
+    personnelNameLast: newProf.lastname,
     personnelSex: newProf.sex,
     personnelEmail: newProf.email,
     personnelContact: newProf.phone, // Phone number
@@ -94,23 +98,20 @@ const handleAddProf = async () => {
     personnelBirthDate: newProf.birthDate, // Use the birth date from the form
     programNumber: user.programNumber,
     programName: user.programName,
+    academicYear: sessionStorage.getItem('currentAcadYear')
   };
   
     try {
       const response = await PersonnelModel.insertPersonnel(newProfessorData);
-      
       if (!response) {
         throw new Error('No response from server');
       }
-  
       // Update the state and close the modal after adding the professor
       setProfessors((prevState) => [...prevState, newProfessorData]);
-  
       // Close the modal only after the professor is successfully added
       handleCloseAdd(); 
-  
       // Resetting the form fields
-      setNewProf({ number: '', name: '', email: '', phone: '', sex: '', address: '', birthDate: '' });
+      setNewProf({ number: '', firstname: '', middlename:'', lastname:'', email: '', phone: '', sex: '', address: '', birthDate: '' });
       
     } catch (error) {
       console.error('Error adding professor:', error);
@@ -139,7 +140,9 @@ const handleAddProf = async () => {
   const handleEditProf = async () => {
     const updatedProfessorData = {
       personnelNumber: editProf.number,
-      personnelName: editProf.name,
+      personnelNameFirst: editProf.firstname,
+      personnelNameMiddle: editProf.middlename,
+      personnelNameLast: editProf.lastname,
       personnelEmail: editProf.email,
       personnelContact: editProf.phone, // Phone number
       personnelSex: editProf.sex,
@@ -192,7 +195,7 @@ const handleAddProf = async () => {
           professors.map((professor, index) => (
             <tr key={index}>
               <td>{professor.personnelNumber}</td>
-              <td>{professor.personnelName}</td>
+              <td>{`${professor.personnelNameFirst} ${professor.personnelNameMiddle} ${professor.personnelNameLast}`}</td>
               <td>{professor.personnelEmail}</td>
               <td>{professor.personnelContact}</td>
               <td>{professor.personnelSex}</td>
@@ -244,11 +247,31 @@ const handleAddProf = async () => {
               />
             </Form.Group>
             <Form.Group className="mb-3">
-              <Form.Label>Name</Form.Label>
+              <Form.Label>First Name</Form.Label>
               <Form.Control
                 type="text"
-                name="name"
-                value={newProf.name}
+                name="firstname"
+                value={newProf.firstname}
+                onChange={handleInputChange}
+                placeholder="Enter Name"
+              />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Middle Name</Form.Label>
+              <Form.Control
+                type="text"
+                name="middlename"
+                value={newProf.middlename}
+                onChange={handleInputChange}
+                placeholder="Enter Name"
+              />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Last Name</Form.Label>
+              <Form.Control
+                type="text"
+                name="lastname"
+                value={newProf.lastname}
                 onChange={handleInputChange}
                 placeholder="Enter Name"
               />
@@ -336,11 +359,31 @@ const handleAddProf = async () => {
               />
             </Form.Group>
             <Form.Group className="mb-3">
-              <Form.Label>Name</Form.Label>
+              <Form.Label>First Name</Form.Label>
               <Form.Control
                 type="text"
-                name="name"
-                value={editProf.name}
+                name="firstname"
+                value={editProf.firstname}
+                onChange={handleEditInputChange}
+                placeholder="Enter Name"
+              />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Middle Name</Form.Label>
+              <Form.Control
+                type="text"
+                name="middlename"
+                value={editProf.middlename}
+                onChange={handleEditInputChange}
+                placeholder="Enter Name"
+              />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Last Name</Form.Label>
+              <Form.Control
+                type="text"
+                name="lastname"
+                value={editProf.lastname}
                 onChange={handleEditInputChange}
                 placeholder="Enter Name"
               />

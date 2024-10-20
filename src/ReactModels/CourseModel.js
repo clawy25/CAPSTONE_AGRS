@@ -1,5 +1,7 @@
 export default class CourseModel {
-    constructor(id, courseCode, courseDescriptiveTitle, courseLecture, courseLaboratory, coursePreRequisite, courseUnits) {
+    constructor(id, courseCode, courseDescriptiveTitle, courseLecture, 
+                courseLaboratory, coursePreRequisite, courseUnits,
+                programNumber, academicYear) {
       this.id = id;
       this.courseCode = courseCode;
       this.courseDescriptiveTitle = courseDescriptiveTitle;
@@ -7,12 +9,20 @@ export default class CourseModel {
       this.courseLaboratory = courseLaboratory;
       this.coursePreRequisite = coursePreRequisite;
       this.courseUnits = courseUnits;
+      this.programNumber = programNumber;
+      this.academicYear = academicYear;
     }
   
     // Fetch all courses
-    static async fetchExistingCourses() {
+    static async getCoursesbyProgram(programNumber, currentAcadYear) {
       try {
-        const response = await fetch('http://localhost:5000/course');
+        const response = await fetch('http://localhost:5000/course/byProgram', {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ programNumber, currentAcadYear }), // Send credentials
+        });
         if (!response.ok) {
           throw new Error('Error fetching courses');
         }
@@ -26,7 +36,8 @@ export default class CourseModel {
           course.courseLecture,
           course.courseLaboratory,
           course.coursePreRequisite,
-          course.courseUnits
+          course.courseUnits,
+          course.academicYear
         ));
       } catch (error) {
         console.error('Error fetching courses:', error);
@@ -35,14 +46,16 @@ export default class CourseModel {
     }
   
     // Create and insert a new course
-    static async createAndInsertCourse(courseCode, courseDescriptiveTitle, courseLecture, courseLaboratory, coursePreRequisite, courseUnits) {
+    static async createAndInsertCourse(courseCode, courseDescriptiveTitle, courseLecture, courseLaboratory, coursePreRequisite, courseUnits, programNumber) {
       const courseData = {
         courseCode,
         courseDescriptiveTitle,
         courseLecture,
         courseLaboratory,
         coursePreRequisite,
-        courseUnits
+        courseUnits,
+        programNumber,
+        academicYear: sessionStorage.getItem('currentAcadYear')
       };
   
       try {
@@ -88,13 +101,15 @@ export default class CourseModel {
             data.courseLecture,
             data.courseLaboratory,
             data.coursePreRequisite,
-            data.courseUnits
+            data.courseUnits,
+            data.programNumber,
+            data.academicYear
           ); // Return an updated CourseModel instance
         } catch (error) {
           console.error('Error updating course:', error);
           throw error;
         }
-      }
+    }
     
       // Delete course by `id`
       static async deleteCourse(id) {

@@ -5,7 +5,7 @@ const supabase = require('./supabaseServer');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const app = express();
-const port = process.env.SUPA_PORT; // Use the PORT from .env or default to 5000
+const port = process.env.SUPA_PORT; // Use the PORT from .env
 app.use(cors({
     origin: 'http://localhost:3000', // Adjust this for your frontend URL
 }));
@@ -43,52 +43,65 @@ const generateToken = (personnel) => {
 };
 
 // Login as Personnel
-app.get('/personnel/:personnelNumber', async (req, res) => {
-  const { personnelNumber } = req.params;
+app.post('/personnel/login', async (req, res) => {
+    const { personnelNumber, password } = req.body;
+    try {
+        // Fetch personnel data based on personnelNumber
+        const { data: personnelData, error: personnelError } = await supabase
+            .from('personnel')
+            .select('*')
+            .eq('personnelNumber', personnelNumber)
+            .single();
+  
+        if (personnelError || !personnelData) {
+            return res.status(404).json({ error: 'Personnel not found' });
+        }
+        // Compare the provided password with the hashed password from the database
+        const isMatch = await bcrypt.compare(password, personnelData.personnelPassword);
+  
+        if (!isMatch) {
+            return res.status(401).json({ error: 'Invalid password' }); // Invalid password response
+        }
+        // If password is correct, generate a token
+        const token = generateToken(personnelData); // Replace this with your token generation logic
+        
+        // Set the token in a secure cookie
+        res.cookie('token', token, {
+            httpOnly: true, // Prevent JavaScript access
+            secure: process.env.NODE_ENV === 'production', // Send over HTTPS in production
+            sameSite: 'Strict', // Helps prevent CSRF attacks
+        });
+  
+        // Fetch academic year data
+        const { data: academicYear, error: academicYearError } = await supabase
+            .from('academicYear')
+            .select('academicYear')
+            .eq('isCurrent', true)
+            .single();
+  
+        if (academicYearError || !academicYear) {
+            console.log('Academic year not found');
+        }
+  
+        // Combine personnel data with academic year
+        const personnelWithAcadYear = {
+            personnelNumber: personnelData.personnelNumber,
+            personnelType: personnelData.personnelType,
+            personnelNameFirst: personnelData.personnelNameFirst,
+            personnelNameMiddle: personnelData.personnelNameMiddle,
+            personnelNameLast: personnelData.personnelNameLast,
+            programNumber: personnelData.programNumber,
+            academicYear: academicYear.academicYear // Attach academic year data
+        };
 
-  try {
-      // Fetch faculty data
-      const { data: personnelData, error: personnelError } = await supabase
-          .from('personnel')
-          .select('*')
-          .eq('personnelNumber', personnelNumber)
-          .single();
-
-      if (personnelError || !personnelData) {
-          return res.status(404).json({ error: 'Personnel not found' });
-      }
-
-      const token = generateToken(personnelData); // Generate token
-      
-      res.cookie('token', token, {
-        httpOnly: true, // Prevents JavaScript access
-        secure: process.env.NODE_ENV === 'production',   // Sends the cookie only over HTTPS (set to false for local development)
-        sameSite: 'Strict', // Helps prevent CSRF attacks
-      });
-
-      // Fetch academic year data
-      const { data: academicYear, error: academicYearError } = await supabase
-          .from('academicYear')
-          .select('academicYear')
-          .eq('isCurrent', true)
-          .single(); // Fetch single academic year
-
-      if (academicYearError || !academicYear) {
-         console.log('Academic year not found');
-      }
-
-  // Combine personnel data with academic year
-      const personnelWithAcadYear = {...personnelData, academicYear, // Attach academic year data
-      };
-
-      res.json(personnelWithAcadYear);
-  } catch (error) {
-      console.error('Error fetching personnel data:', error);
-      res.status(500).json({ error: 'Internal server error' });
-  }
+        res.json(personnelWithAcadYear); // Send the combined response
+  
+    } catch (error) {
+        console.error('Error fetching personnel data:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
 });
 
-  
 // Login as Student
 app.get('/student/:studentNumber', async (req, res) => {
     const { studentNumber } = req.params; // Get studentNumber from the URL parameter
@@ -177,9 +190,7 @@ app.get('/student', async (req, res) => {
         console.error('Error fetching students:', error); // Log the error
         res.status(500).json({ error: 'Internal server error' });
     }
-  });
-
-
+});
   
   // Get all timeline entries
 app.get('/timeline', async (req, res) => {
@@ -198,15 +209,19 @@ app.get('/timeline', async (req, res) => {
         console.error('Error fetching timeline:', error); // Log the error
         res.status(500).json({ error: 'Internal server error' });
     }
-  });
+});
   
-  // All personnels
-app.get('/personnel', async (req, res) => {
+  // All personnels by by Program + Current Academic Year
+app.post('/personnel/byProgram', async (req, res) => {
+    const { programNumber, currentAcadYear } = req.body;
     try {
-        // Fetch all personnel data
+        // Fetch all personnel data by programNumber and personnelType
         const { data: personnelData, error: personnelError } = await supabase
             .from('personnel')
-            .select('*');
+            .select('*')
+            .eq('programNumber', programNumber)
+            .eq('personnelType', 'Faculty')
+            .eq('academicYear',currentAcadYear);
   
         if (personnelError || !personnelData) {
             return res.status(500).json({ error: personnelError.message || 'Failed to fetch personnel data' });
@@ -224,7 +239,7 @@ app.get('/personnel', async (req, res) => {
             if (programError || !programData) {
                 return {
                     ...personnel,
-                    programName: null, // If program is not found, set name to null
+                    programName: null, // If program is not found, set to null
                 };
             }
   
@@ -239,7 +254,7 @@ app.get('/personnel', async (req, res) => {
         console.error('Error fetching personnel:', error); // Log the error
         res.status(500).json({ error: 'Internal server error' });
     }
-  });
+});
 
 
 
@@ -368,8 +383,6 @@ app.post('/personnel/upload', async (req, res) => {
     }
 });
 
-
-  
 //Insert new timeline
 app.post('/timeline/upload', async (req, res) => {
   try {
@@ -415,13 +428,15 @@ app.get('/program', async (req, res) => {
   }
 });
 
-
-// Get all subjects
-app.get('/course', async (req, res) => {
+// Get all course by Program + Current Academic Year
+app.post('/course/byProgram', async (req, res) => {
+    const { programNumber, currentAcadYear } = req.body;
     try {
         const { data, error } = await supabase
             .from('course')
-            .select('*');
+            .select('*')
+            .eq('programNumber', programNumber)
+            .eq('academicYear', currentAcadYear);
 
         if (error) {
             return res.status(500).json({ error: error.message });
@@ -429,7 +444,7 @@ app.get('/course', async (req, res) => {
 
         res.json(data);
     } catch (error) {
-        console.error('Error fetching subjects:', error);
+        console.error('Error fetching course:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
@@ -719,14 +734,6 @@ app.delete('/schedule/:id', async (req, res) => {
       return res.status(500).json({ success: false, message: 'Failed to delete schedule' });
     }
   });
-  
-
-
-
-
-
-
-
 
 
 // Start the server
