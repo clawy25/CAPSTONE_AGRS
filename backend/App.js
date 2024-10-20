@@ -258,6 +258,7 @@ app.post('/personnel/byProgram', async (req, res) => {
 
 
 
+
 // Insert new students
 app.post('/student/upload', async (req, res) => {
   try {
@@ -734,6 +735,99 @@ app.delete('/schedule/:id', async (req, res) => {
       return res.status(500).json({ success: false, message: 'Failed to delete schedule' });
     }
   });
+
+
+
+  // Get all academicYear
+app.get('/academicYear', async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('academicYear')
+            .select('*');
+
+        if (error) {
+            return res.status(500).json({ error: error.message });
+        }
+
+        res.json(data);
+    } catch (error) {
+        console.error('Error fetching academic year:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+
+
+
+
+  //Insert new section
+  app.post('/academicYear/upload', async (req, res) => {
+    const { data } = req.body;
+
+    try {
+        const { data: newYear, error } = await supabase
+            .from('academicYear')
+            .insert([data])
+            .single(); // Ensures we get the inserted record
+
+        if (error || !newYear) {
+            return res.status(400).json({ error: 'Error creating academic year' });
+        }
+
+        res.status(201).json(newYear); // Return the created year
+    } catch (error) {
+        console.error('Error creating academic year:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+
+  // Update academicYear by ID
+app.put('/academicYear/:id', async (req, res) => {
+    const { id } = req.params;
+    const { academicYear, isCurrent} = req.body;
+
+    try {
+        const { data, error } = await supabase
+            .from('academicYear')
+            .update({ academicYear, isCurrent})
+            .eq('id', id);
+
+        if (error) {
+            return res.status(500).json({ error: 'Failed to update academicYear' });
+        }
+
+        res.json({ message: 'Course updated successfully', data });
+    } catch (error) {
+        console.error('Error updating academic year:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+
+// Assuming you have personnelData as your data source
+app.post('/personnel/heads/byProgram', (req, res) => {
+  const { programNumber } = req.body; // Get the program number from the request body
+
+  // Filter the personnel data based on personnel type 'Head' and program number
+  const filteredHeads = personnelData.filter(
+    (personnel) =>
+      personnel.programNumber === programNumber && personnel.personnelType === 'Head'
+  );
+
+  // Select only the fields you need for the response
+  const responseData = filteredHeads.map(({ personnelNumber, personnelNameFirst, personnelNameMiddle, personnelNameLast, personnelType }) => ({
+    personnelNumber,
+    personnelNameFirst,
+    personnelNameMiddle,
+    personnelNameLast,
+    programNumber,  // Include the programNumber in the response
+    personnelType,
+  }));
+
+  // Return the filtered heads
+  res.json(responseData);
+});
 
 
 // Start the server

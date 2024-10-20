@@ -38,10 +38,8 @@ const App = () => {
         <Route path="/faculty-dashboard" element={<FacultyDashboard />} /> 
         <Route path="/grades" element={<Grades />} /> 
         <Route path="/class-details/:className" element={<ClassDetails />} />
-        <Route path="/registrar-dashboard" element={<RegistrarDashboard />} /> 
-        <Route path="/registrar-students" element={<RegistrarStudents />} /> 
+        <Route path="/registrar-dashboard/*" element={<RegistrarDashboard />} /> 
         <Route path="/programHead-dashboard" element={<ProgramHeadDashboard />} /> 
-
         <Route path="*" element={<ErrorPage />} />
       </Routes>
     </UserProvider>

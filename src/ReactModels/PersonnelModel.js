@@ -27,41 +27,45 @@ export default class PersonnelModel {
       const response = await fetch('http://localhost:5000/personnel/login', {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json',
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({ personnelNumber, password }), // Send credentials
       });
+  
       if (!response.ok) {
         throw new Error('Error fetching personnel data');
       }
+  
       const data = await response.json();
-
+  
+      // Store the academic year in sessionStorage
       sessionStorage.setItem('currentAcadYear', data.academicYear);
-        console.log(data.academicYear);
-      
-        return new PersonnelModel(// Filtering the sensitive info
-          null,
-          data.personnelNumber,
-          null,
-          data.personnelType,
-          data.personnelNameFirst,
-          data.personnelNameMiddle,
-          data.personnelNameLast,
-          null,
-          null,
-          null,
-          data.programNumber,
-          null,
-          null,
-          null,
-          null
-        );
+      console.log(data.academicYear);
+  
+      // Return a new instance of PersonnelModel with the additional fields
+      return new PersonnelModel( // Filtering the sensitive info
+        null,
+        data.personnelNumber,
+        null,
+        data.personnelType,
+        data.personnelNameFirst,
+        data.personnelNameMiddle,
+        data.personnelNameLast,
+        null,
+        null,
+        null,
+        data.programNumber, // This will now include the program number
+        null,
+        null,
+        null,
+        null
+      );
     } catch (error) {
       console.error('Error fetching personnel data:', error);
       throw error;
     }
   }
-
+  
   // Fetch list of professors by program
   static async getProfessorsbyProgram(programNumber, currentAcadYear) {
     try {
