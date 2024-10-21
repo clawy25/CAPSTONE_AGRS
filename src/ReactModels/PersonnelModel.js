@@ -105,6 +105,45 @@ export default class PersonnelModel {
     }
   }
 
+  static async fetchAllPersonnel() {
+    try {
+      const response = await fetch('http://localhost:5000/personnel', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Error fetching personnel details');
+      }
+
+      const data = await response.json();
+
+      // Map the data to an array of PersonnelModel instances
+      return data.map((person) => new PersonnelModel(
+        person.id,
+        person.personnelNumber,
+        person.personnelPassword,
+        person.personnelType,
+        person.personnelNameFirst,
+        person.personnelNameMiddle,
+        person.personnelNameLast,
+        person.personnelSex,
+        person.personnelEmail,
+        person.personnelBirthDate,
+        person.programNumber,
+        person.programName,
+        person.personnelContact,
+        person.personnelAddress,
+        person.academicYear
+      ));
+    } catch (error) {
+      console.error('Error fetching personnel details:', error);
+      throw error;
+    }
+  }
+
   // Insert personnel (if needed)
 static async insertPersonnel(personnelData) {
   try {

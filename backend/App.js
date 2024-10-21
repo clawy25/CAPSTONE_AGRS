@@ -805,29 +805,24 @@ app.put('/academicYear/:id', async (req, res) => {
 });
 
 
-// Assuming you have personnelData as your data source
-app.post('/personnel/heads/byProgram', (req, res) => {
-  const { programNumber } = req.body; // Get the program number from the request body
 
-  // Filter the personnel data based on personnel type 'Head' and program number
-  const filteredHeads = personnelData.filter(
-    (personnel) =>
-      personnel.programNumber === programNumber && personnel.personnelType === 'Head'
-  );
+app.get('/personnel', async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('personnel')
+            .select('*'); // Fetch all details from the personnel table
 
-  // Select only the fields you need for the response
-  const responseData = filteredHeads.map(({ personnelNumber, personnelNameFirst, personnelNameMiddle, personnelNameLast, personnelType }) => ({
-    personnelNumber,
-    personnelNameFirst,
-    personnelNameMiddle,
-    personnelNameLast,
-    programNumber,  // Include the programNumber in the response
-    personnelType,
-  }));
+        if (error) {
+            return res.status(500).json({ error: error.message });
+        }
 
-  // Return the filtered heads
-  res.json(responseData);
+        res.json(data); // Send the fetched data in the response
+    } catch (error) {
+        console.error('Error fetching personnel details:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
 });
+
 
 
 // Start the server

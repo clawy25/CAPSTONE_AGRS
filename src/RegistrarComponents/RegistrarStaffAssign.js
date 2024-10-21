@@ -4,33 +4,34 @@ import PersonnelModel from '../ReactModels/PersonnelModel';
 import ProgramModel from '../ReactModels/ProgramModel';
 import { UserContext } from '../Context/UserContext';
 
-export default function RegistrarProgramHead({ onBack }) {
+export default function RegistrarStaffAssign({ onBack }) {
   const [programHeads, setProgramHeads] = useState([]);
   const [personnelList, setPersonnelList] = useState([]);
   const [programNumbers, setProgramNumbers] = useState([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
 
-  const [newProgramHead, setNewProgramHead] = useState({ number: '', firstname: '', middlename: '', lastname: '', programNumber: '', personnelType: 'Head' });
-  const [editProgramHead, setEditProgramHead] = useState({ number: '', firstname: '', middlename: '', lastname: '', programNumber: '', personnelType: 'Head' });
+  const [newProgramHead, setNewProgramHead] = useState({ number: '', firstname: '', middlename: '', lastname: '', programNumber: '', personnelType: 'Registrar' });
+  const [editProgramHead, setEditProgramHead] = useState({ number: '', firstname: '', middlename: '', lastname: '', programNumber: '', personnelType: 'Registrar' });
   const [activeProgramHeadIndex, setActiveProgramHeadIndex] = useState(null);
   const { user } = useContext(UserContext);
-  const personnelTypes = ['Head', 'Registrar', 'Faculty', 'Admin'];
+  const personnelType = 'Registrar'; // Fixed personnel type for registrars
 
-  const fetchProgramHeads = async () => {
+  const personnelTypes = ['Head', 'Registrar', 'Faculty', 'Admin'];
+  const fetchRegistrarStaff = async () => {
     try {
       const programNumber = user.programNumber;
       const currentAcadYear = sessionStorage.getItem('currentAcadYear');
       const personnelData = await PersonnelModel.fetchAllPersonnel(programNumber, currentAcadYear);
-      const headProgramHeads = personnelData.filter((personnel) => personnel.personnelType === 'Head');
-      setProgramHeads(headProgramHeads);
+      const registrarProgramHeads = personnelData.filter((personnel) => personnel.personnelType === personnelType);
+      setProgramHeads(registrarProgramHeads);
     } catch (error) {
       console.error('Error fetching program heads:', error);
     }
   };
 
   useEffect(() => {
-    fetchProgramHeads();
+    fetchRegistrarStaff();
   }, [user.programNumber]);
 
   useEffect(() => {
@@ -39,8 +40,8 @@ export default function RegistrarProgramHead({ onBack }) {
         const programNumber = user.programNumber;
         const currentAcadYear = sessionStorage.getItem('currentAcadYear');
         const personnelData = await PersonnelModel.fetchAllPersonnel(programNumber, currentAcadYear);
-        const nonHeadPersonnel = personnelData.filter((personnel) => personnel.personnelType !== 'Head');
-        setPersonnelList(nonHeadPersonnel);
+        const nonRegistrarPersonnel = personnelData.filter((personnel) => personnel.personnelType !== personnelType);
+        setPersonnelList(nonRegistrarPersonnel);
       } catch (error) {
         console.error('Error fetching personnel list:', error);
       }
@@ -72,14 +73,17 @@ export default function RegistrarProgramHead({ onBack }) {
       middlename: programHead.personnelNameMiddle,
       lastname: programHead.personnelNameLast,
       programNumber: programHead.programNumber,
-      personnelType: programHead.personnelType,
+      personnelType: personnelType, // Ensure personnel type is set to 'Registrar'
     });
     setActiveProgramHeadIndex(index);
     setShowEditModal(true);
   };
 
   const handleCloseEdit = () => setShowEditModal(false);
- 
+
+
+
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setNewProgramHead((prevState) => ({ ...prevState, [name]: value }));
@@ -91,11 +95,11 @@ export default function RegistrarProgramHead({ onBack }) {
   };
 
   const handleAddProgramHead = async () => {
-    const { number: personnelNumber, programNumber, personnelType } = newProgramHead;
+    const { number: personnelNumber, programNumber } = newProgramHead;
 
     const updatedData = {
       programNumber,
-      personnelType: personnelType || 'Head',
+      personnelType, // Always 'Registrar'
     };
 
     try {
@@ -103,9 +107,9 @@ export default function RegistrarProgramHead({ onBack }) {
 
       if (response) {
         // Refresh the program heads list after adding
-        await fetchProgramHeads();
+        await fetchRegistrarStaff();
         handleCloseAdd();
-        setNewProgramHead({ number: '', firstname: '', middlename: '', lastname: '', programNumber: '', personnelType: 'Head' });
+        setNewProgramHead({ number: '', firstname: '', middlename: '', lastname: '', programNumber: '', personnelType }); // Reset fields
       }
     } catch (error) {
       console.error('Error adding program head:', error);
@@ -114,21 +118,25 @@ export default function RegistrarProgramHead({ onBack }) {
 
   const handleEditProgramHead = async () => {
     const updatedProgramHeadData = {
+      personnelNameFirst: editProgramHead.firstname,
+      personnelNameMiddle: editProgramHead.middlename,
+      personnelNameLast: editProgramHead.lastname,
       programNumber: editProgramHead.programNumber,
-      personnelType: editProgramHead.personnelType,
+      personnelType: editProgramHead.personnelType, // Updated type can be chosen in the modal
     };
-
+  
     try {
       const personnelNumber = programHeads[activeProgramHeadIndex].personnelNumber;
       await PersonnelModel.updatePersonnel(personnelNumber, updatedProgramHeadData);
-
+  
       // Refresh the program heads list after editing
-      await fetchProgramHeads();
-      handleCloseEdit();
+      await fetchRegistrarStaff();
+      handleCloseEdit(); // Close the modal after successful save
     } catch (error) {
       console.error('Error updating program head:', error);
     }
   };
+  
 
   const handlePersonnelChange = (event) => {
     const selectedNumber = event.target.value;
@@ -142,7 +150,7 @@ export default function RegistrarProgramHead({ onBack }) {
         middlename: selectedPersonnel.personnelNameMiddle || '',
         lastname: selectedPersonnel.personnelNameLast || '',
         number: selectedNumber,
-        personnelType: selectedPersonnel.personnelType || '',
+        personnelType, // Set personnel type to 'Registrar'
       });
     } else {
       setNewProgramHead({
@@ -151,7 +159,7 @@ export default function RegistrarProgramHead({ onBack }) {
         middlename: '',
         lastname: '',
         programNumber: '',
-        personnelType: '',
+        personnelType, // Default to 'Registrar'
       });
     }
   };
@@ -181,7 +189,7 @@ export default function RegistrarProgramHead({ onBack }) {
                 <td>{head.programNumber}</td>
                 <td>{head.personnelType}</td>
                 <td>
-                  
+                
                   <Button variant="warning" onClick={() => handleShowEdit(head, index)}>
                     Edit
                   </Button>
@@ -205,7 +213,7 @@ export default function RegistrarProgramHead({ onBack }) {
       {/* Add Program Head Modal */}
       <Modal show={showAddModal} onHide={handleCloseAdd}>
         <Modal.Header closeButton>
-          <Modal.Title>Add Program Head</Modal.Title>
+          <Modal.Title>Add Registrar Staff</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form>
@@ -235,7 +243,7 @@ export default function RegistrarProgramHead({ onBack }) {
             <Form.Group>
               <Form.Label>Program Number</Form.Label>
               <Form.Control as="select" name="programNumber" value={newProgramHead.programNumber} onChange={handleInputChange}>
-                <option value="">Select Program</option>
+                <option value="">Select Program Number</option>
                 {programNumbers.map((program) => (
                   <option key={program.programNumber} value={program.programNumber}>
                     {program.programNumber}
@@ -246,11 +254,8 @@ export default function RegistrarProgramHead({ onBack }) {
             <Form.Group>
               <Form.Label>Personnel Type</Form.Label>
               <Form.Control as="select" name="personnelType" value={newProgramHead.personnelType} onChange={handleInputChange}>
-                {personnelTypes.map((type) => (
-                  <option key={type} value={type}>
-                    {type}
-                  </option>
-                ))}
+                <option value="Registrar">Registrar</option>
+                {/* Add other personnel types if needed */}
               </Form.Control>
             </Form.Group>
           </Form>
@@ -268,13 +273,13 @@ export default function RegistrarProgramHead({ onBack }) {
       {/* Edit Program Head Modal */}
       <Modal show={showEditModal} onHide={handleCloseEdit}>
         <Modal.Header closeButton>
-          <Modal.Title>Edit Program Head</Modal.Title>
+          <Modal.Title>Edit Registrar Staff</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form>
             <Form.Group>
               <Form.Label>Personnel Number</Form.Label>
-              <Form.Control type="text" value={editProgramHead.number} readOnly />
+              <Form.Control readOnly value={editProgramHead.number} />
             </Form.Group>
             <Form.Group>
               <Form.Label>First Name</Form.Label>
@@ -291,6 +296,7 @@ export default function RegistrarProgramHead({ onBack }) {
             <Form.Group>
               <Form.Label>Program Number</Form.Label>
               <Form.Control as="select" name="programNumber" value={editProgramHead.programNumber} onChange={handleEditInputChange}>
+                <option value="">Select Program Number</option>
                 {programNumbers.map((program) => (
                   <option key={program.programNumber} value={program.programNumber}>
                     {program.programNumber}
@@ -299,15 +305,16 @@ export default function RegistrarProgramHead({ onBack }) {
               </Form.Control>
             </Form.Group>
             <Form.Group>
-              <Form.Label>Personnel Type</Form.Label>
-              <Form.Control as="select" name="personnelType" value={editProgramHead.personnelType} onChange={handleEditInputChange}>
+            <Form.Label>Personnel Type</Form.Label>
+            <Form.Control as="select" name="personnelType" value={editProgramHead.personnelType} onChange={handleEditInputChange}>
                 {personnelTypes.map((type) => (
-                  <option key={type} value={type}>
+                <option key={type} value={type}>
                     {type}
-                  </option>
+                </option>
                 ))}
-              </Form.Control>
+            </Form.Control>
             </Form.Group>
+
           </Form>
         </Modal.Body>
         <Modal.Footer>
@@ -320,11 +327,10 @@ export default function RegistrarProgramHead({ onBack }) {
         </Modal.Footer>
       </Modal>
 
-     
-
+      
       <div className="d-flex justify-content-end mt-3">
         <Button variant="success" onClick={handleShowAdd}>
-          Add Program Head
+          Add Registrar Staff
         </Button>
       </div>
     </div>

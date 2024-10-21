@@ -10,7 +10,7 @@ export default function HeadRegistrarAcademicYear() {
   
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
+
 
   const [newAcademicYear, setNewAcademicYear] = useState({
     academicYear: '',
@@ -22,7 +22,6 @@ export default function HeadRegistrarAcademicYear() {
     isCurrent: false,
   });
 
-  const [academicYearToDelete, setAcademicYearToDelete] = useState(null);
 
   // Fetch academic years when the component loads
   const fetchAcademicYears = async () => {
@@ -56,15 +55,7 @@ export default function HeadRegistrarAcademicYear() {
     setEditAcademicYear({ academicYear: '', isCurrent: false }); // Reset state
   };
 
-  const handleShowDelete = (year) => {
-    setAcademicYearToDelete(year);
-    setShowDeleteModal(true);
-  };
 
-  const handleCloseDelete = () => {
-    setAcademicYearToDelete(null); // Reset state
-    setShowDeleteModal(false);
-  };
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -79,20 +70,20 @@ export default function HeadRegistrarAcademicYear() {
  
   const handleAddAcademicYear = async () => {
     try {
-        setLoading(true); // Optional: show loading spinner
+        // Create and insert the new academic year
         const createdYear = await AcademicYearModel.createAndInsertAcademicYear(newAcademicYear);
         console.log('Created Year:', createdYear);
 
-        // Re-fetch the academic years after successful addition
-        await fetchAcademicYears();
-        setLoading(false); 
+        // Append the newly created year to the existing academic years
+        setAcademicYears((prevYears) => [...prevYears, createdYear]);
+
+        // Automatically close the add modal
+        handleCloseAdd();
     } catch (error) {
         console.error('Error adding academic year:', error);
-    } finally {
-        // Optional: hide loading spinner
-        handleCloseAdd(); // Close the modal after successful addition
     }
 };
+
 
   
 
@@ -111,20 +102,7 @@ export default function HeadRegistrarAcademicYear() {
   };
 
   // Handle deleting an academic year
-  const handleDeleteAcademicYear = async () => {
-    if (academicYearToDelete) {
-      try {
-        await AcademicYearModel.deleteAcademicYear(academicYearToDelete.academicYear);
-        console.log('Deleted Year:', academicYearToDelete.academicYear);
 
-        // Refetch the data to reflect the deletion
-        await fetchAcademicYears();
-        handleCloseDelete();
-      } catch (error) {
-        console.error('Error deleting academic year:', error);
-      }
-    }
-  };
 
   // Render the table
   const renderTable = () => (
@@ -145,7 +123,7 @@ export default function HeadRegistrarAcademicYear() {
               <td>{year.isCurrent ? 'Yes' : 'No'}</td>
               <td>
                 <Button variant="warning" onClick={() => handleShowEdit(year)} className="me-2">Edit</Button>
-                <Button variant="danger" onClick={() => handleShowDelete(year)}>Delete</Button>
+              
               </td>
             </tr>
           ))}
@@ -238,23 +216,7 @@ export default function HeadRegistrarAcademicYear() {
         </Modal.Footer>
       </Modal>
 
-      {/* Delete Modal */}
-      <Modal show={showDeleteModal} onHide={handleCloseDelete}>
-        <Modal.Header closeButton>
-          <Modal.Title>Delete Academic Year</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          Are you sure you want to delete this academic year?
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={handleCloseDelete}>
-            Cancel
-          </Button>
-          <Button variant="danger" onClick={handleDeleteAcademicYear}>
-            Delete
-          </Button>
-        </Modal.Footer>
-      </Modal>
+   
       
       {/* Add Academic Year Button */}
       <div className="d-flex justify-content-end mt-3">

@@ -4,6 +4,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons'; // Import back icon
 import RegistrarProgramHead from './RegistrarProgramHead';
+import RegistrarStaffAssign from './RegistrarStaffAssign';
 import '../App.css';
 
 export default function RegistrarStaff() {
@@ -90,7 +91,7 @@ export default function RegistrarStaff() {
                 <FontAwesomeIcon icon={faArrowLeft} className="me-2" />
                 Registrar Staff
               </button>
-              <div>Registrar Staff Content</div>
+              <RegistrarStaffAssign />
             </div>
           }
         />
