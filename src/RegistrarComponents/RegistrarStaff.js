@@ -72,9 +72,10 @@ export default function RegistrarStaff() {
                 className="btn d-flex align-items-center mb-3"
               >
                 <FontAwesomeIcon icon={faArrowLeft} className="me-2 custom-color-green-font" />
+                <h2 className='custom-color-green-font'>Program Head</h2>
                 
               </button>
-              <h2 className='custom-color-green-font'>Program Head</h2>
+              
               <RegistrarProgramHead />
             </div>
           }
@@ -90,9 +91,9 @@ export default function RegistrarStaff() {
                 className="btn d-flex align-items-center mb-3"
               >
                 <FontAwesomeIcon icon={faArrowLeft} className="me-2 custom-color-green-font" />
-                
+                <h2 className='custom-color-green-font'>Registrar Staff</h2>
               </button>
-              <h2 className='custom-color-green-font'>Registrar Staff</h2>
+              
               <RegistrarStaffAssign />
             </div>
           }

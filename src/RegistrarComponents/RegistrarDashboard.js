@@ -97,7 +97,7 @@ export default function RegistrarDashboard() {
             className={`menu-item d-flex align-items-center mb-2 ${location.pathname.startsWith('/registrar-dashboard/academicYear') ? 'active' : ''}`}
           >
             <FontAwesomeIcon icon={faUserTie} className="me-2" />
-            Academic Year
+            ACADEMIC YEAR
           </Link>
         </nav>
       </div>
