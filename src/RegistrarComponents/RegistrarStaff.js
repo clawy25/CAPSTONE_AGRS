@@ -69,11 +69,12 @@ export default function RegistrarStaff() {
             <div>
               <button
                 onClick={handleBackClick}
-                className="btn btn-link d-flex align-items-center mb-3"
+                className="btn d-flex align-items-center mb-3"
               >
-                <FontAwesomeIcon icon={faArrowLeft} className="me-2" />
-                Program Head
+                <FontAwesomeIcon icon={faArrowLeft} className="me-2 custom-color-green-font" />
+                
               </button>
+              <h2 className='custom-color-green-font'>Program Head</h2>
               <RegistrarProgramHead />
             </div>
           }
@@ -86,11 +87,12 @@ export default function RegistrarStaff() {
             <div>
               <button
                 onClick={handleBackClick}
-                className="btn btn-link d-flex align-items-center mb-3"
+                className="btn d-flex align-items-center mb-3"
               >
-                <FontAwesomeIcon icon={faArrowLeft} className="me-2" />
-                Registrar Staff
+                <FontAwesomeIcon icon={faArrowLeft} className="me-2 custom-color-green-font" />
+                
               </button>
+              <h2 className='custom-color-green-font'>Registrar Staff</h2>
               <RegistrarStaffAssign />
             </div>
           }

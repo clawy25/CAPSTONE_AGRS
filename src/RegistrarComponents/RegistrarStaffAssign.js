@@ -190,7 +190,7 @@ export default function RegistrarStaffAssign({ onBack }) {
                 <td>{head.personnelType}</td>
                 <td>
                 
-                  <Button variant="warning" onClick={() => handleShowEdit(head, index)}>
+                  <Button variant="success" onClick={() => handleShowEdit(head, index)}>
                     Edit
                   </Button>
                 </td>

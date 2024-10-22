@@ -106,12 +106,12 @@ export default function HeadRegistrarAcademicYear() {
 
   // Render the table
   const renderTable = () => (
-    <Table striped bordered hover>
-      <thead>
+    <Table bordered rounded hover className="table success-border">
+      <thead className='table-success'>
         <tr>
-          <th>Academic Year</th>
-          <th>Is Current</th>
-          <th>Actions</th>
+          <th className='custom-color-green-font custom-font'>Academic Year</th>
+          <th className='custom-color-green-font custom-font'>Is Current</th>
+          <th className='custom-color-green-font custom-font'>Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -122,7 +122,7 @@ export default function HeadRegistrarAcademicYear() {
               <td>{year.academicYear}</td>
               <td>{year.isCurrent ? 'Yes' : 'No'}</td>
               <td>
-                <Button variant="warning" onClick={() => handleShowEdit(year)} className="me-2">Edit</Button>
+                <Button variant="success" onClick={() => handleShowEdit(year)} className="me-2">Edit</Button>
               
               </td>
             </tr>
