@@ -95,24 +95,6 @@ const ClassDetails = () => {
   const [finalsExamScores, setFinalsExamScores] = useState([]);
   const [finalsExamPercentage, setFinalsExamPercentage] = useState(0);
 
-  // Function to calculate total CS Grade based on user-defined percentages
-  const calculateTotalCSGrade = () => {
-    // Calculate averages
-    const attendanceAverage = calculateAverage(Object.values(attendanceData).flatMap(att => att.map(a => a.status === 'present' ? 1 : 0)));
-    const assignmentAverage = calculateAverage(assignmentScores.flat());
-    const quizAverage = calculateAverage(quizseatScores.flat());
-    const recitationAverage = calculateAverage(recitationScores.flat());
-
-    // Apply user-defined percentages
-    const totalGrade =
-      (attendanceAverage * (attendancePercentage / 100)) +
-      (assignmentAverage * (assignmentPercentage / 100)) +
-      (quizAverage * (quizseatPercentage / 100)) +
-      (recitationAverage * (recitationPercentage / 100));
-
-    return totalGrade;
-  };
-
   // Fetch existing students from StudentModel
   const fetchExistingStudents = async () => {
     try {
@@ -140,12 +122,6 @@ const ClassDetails = () => {
     setFinalsTotalAttendanceDays(finalscount);
   }, [attendanceColumns]);
 
-  useEffect(() => {
-    // Initialize quiz seat scores and max scores based on students and quiz columns
-    setQuizseatScores(students.map(() => Array(quizColumns.length).fill(0)));
-    setQuizMaxScores(Array(quizColumns.length).fill(0)); // Initialize max scores
-  }, [students, quizColumns]);
-
   
   const addColumn = (setColumns) => {
     setColumns((prevColumns) => [...prevColumns, { id: prevColumns.length + 1 }]);
@@ -165,6 +141,7 @@ const ClassDetails = () => {
     setSearchTerm(event.target.value);
   };
 
+  //ATTENDANCE
   
   const handleAttendanceChange = (studentId, dateIndex, status) => {
     setAttendanceData((prevData) => {
@@ -210,6 +187,8 @@ const ClassDetails = () => {
     return calculatedPoints.toFixed(2); // Return the value with 2 decimal points
   };
 
+
+
 {/* ASSIGNMENTS */}
   const handleScoreChange = (studentId, assignmentIndex, score) => {
     setAssignmentScores(prevScores => {
@@ -249,49 +228,68 @@ const ClassDetails = () => {
   console.log(calculateAssignmentColumnAverage(1)); // Output: average of scores for student 1
 
   
-  const addQuizColumn = () => {
-    // Add a new quiz column to quizColumns
-    setQuizColumns(prev => [...prev, {}]);
-  
-    // Update quizseatScores to include a new column while keeping existing data
-    setQuizseatScores(prevScores => 
-      prevScores.map(studentScores => [...studentScores, 0]) // Append 0 to each student's scores
+  //QUIZZES/SEAT
+
+  useEffect(() => {
+    // Initialize quizseatScores only when students change, keeping existing quiz columns intact
+    setQuizseatScores(prevScores =>
+      students.map((_, index) => prevScores[index] || Array(quizColumns.length).fill(0)) // Retain previous scores
     );
   
-    // Update max scores as well
+    // Initialize quizMaxScores to match the length of quizColumns, keeping existing data intact
+    setQuizMaxScores(prevMaxScores => 
+      prevMaxScores.length < quizColumns.length 
+        ? [...prevMaxScores, ...Array(quizColumns.length - prevMaxScores.length).fill(0)] 
+        : prevMaxScores
+    );
+  }, [students]);
+  
+  
+  
+  
+  const addQuizColumn = () => {
+    // Add a new quiz column (no need to modify quizseatScores here)
+    setQuizColumns(prevColumns => [...prevColumns, {}]);
+  
+    // Update quizseatScores: Ensure existing student quiz scores are retained and a new score is appended
+    setQuizseatScores(prevScores =>
+      prevScores.map(studentScores => [...studentScores, 0]) // Append a new score (0) for the new column
+    );
+  
+    // Update quizMaxScores: Ensure existing max scores are retained and append a default value for the new column
     setQuizMaxScores(prevMaxScores => [...prevMaxScores, 0]);
   };
+  
+  
+  
   
   const removeQuizColumn = (indexToRemove) => {
     setQuizColumns(prevColumns => prevColumns.filter((_, index) => index !== indexToRemove));
   
-    // Update quizseatScores by removing the corresponding column
-    setQuizseatScores(prevScores => 
-      prevScores.map(studentScores => 
-        studentScores.filter((_, index) => index !== indexToRemove)
+    setQuizseatScores(prevScores =>
+      prevScores.map(studentScores =>
+        studentScores.filter((_, index) => index !== indexToRemove) // Remove the column at the specified index
       )
     );
   
-    // Remove corresponding max score
     setQuizMaxScores(prevMaxScores => 
       prevMaxScores.filter((_, index) => index !== indexToRemove)
     );
   };
   
-  
-
   const handleQuizseatScoreChange = (studentIndex, quizIndex, score) => {
     setQuizseatScores(prevScores =>
       prevScores.map((scores, index) => {
         if (index === studentIndex) {
           const updatedScores = [...scores];
-          updatedScores[quizIndex] = score;
+          updatedScores[quizIndex] = score; // Set the new score for the quiz
           return updatedScores;
         }
         return scores;
       })
     );
   };
+  
 
   const handleMaxScoreChange = (quizIndex, value) => {
     setQuizMaxScores(prev => {
@@ -326,8 +324,13 @@ const ClassDetails = () => {
   };
   
   useEffect(() => {
-    console.log(quizseatScores);
+    console.log('Updated quizseatScores:', quizseatScores);
   }, [quizseatScores]);
+  
+  
+  
+
+
   
   {/* RECITATION/PARTICIPATION */}
   const handleRecitationScoreChange = (studentId, recitationIndex, score) => {
@@ -380,6 +383,27 @@ const ClassDetails = () => {
     const componentScore = average * (percentage / 100);
     return componentScore.toFixed(2); // Format to 2 decimal places
   };
+
+
+  //CLASS STANDING
+   // Function to calculate total CS Grade based on user-defined percentages
+   const calculateTotalCSGrade = () => {
+    // Calculate averages
+    const attendanceAverage = calculateAverage(Object.values(attendanceData).flatMap(att => att.map(a => a.status === 'present' ? 1 : 0)));
+    const assignmentAverage = calculateAverage(assignmentScores.flat());
+    const quizAverage = calculateAverage(quizseatScores.flat());
+    const recitationAverage = calculateAverage(recitationScores.flat());
+
+    // Apply user-defined percentages
+    const totalGrade =
+      (attendanceAverage * (attendancePercentage / 100)) +
+      (assignmentAverage * (assignmentPercentage / 100)) +
+      (quizAverage * (quizseatPercentage / 100)) +
+      (recitationAverage * (recitationPercentage / 100));
+
+    return totalGrade;
+  };
+
   
     {/* PBA */}
       // Handle PBA score change with validation for scores between 50-100
@@ -419,6 +443,8 @@ const ClassDetails = () => {
   
     return { total: average, pbaGrade };
   };
+
+
 
 
    {/* MIDTERM EXAM */}
@@ -514,35 +540,35 @@ const ClassDetails = () => {
                 
                 {/* Quiz Columns WITH REMOVE BUTTON */}
                 {quizColumns.map((_, index) => (
-            <th key={index} rowSpan={2}>
-              Q/S {index + 1}
-              <button onClick={() => removeQuizColumn(index)} style={{ background: 'none', border: 'none' }}>
-                <FontAwesomeIcon icon={faMinus} />
-              </button>
-              <input
-                type="number"
-                value={quizMaxScores[index] || 0}
-                onChange={(e) => handleMaxScoreChange(index, parseFloat(e.target.value) || 0)}
-                style={{ width: '50px' }} // Adjust width as needed
-                placeholder="Max"
-              />
-            </th>
-          ))}
+                <th key={index} rowSpan={2}>
+                  Q/S {index + 1}
+                  <button onClick={() => removeQuizColumn(index)} style={{ background: 'none', border: 'none' }}>
+                    <FontAwesomeIcon icon={faMinus} />
+                  </button>
+                  <input
+                    type="number"
+                    value={quizMaxScores[index] || 0}
+                    onChange={(e) => handleMaxScoreChange(index, parseFloat(e.target.value) || 0)}
+                    style={{ width: '50px' }} // Adjust width as needed
+                    placeholder="Max"
+                  />
+                </th>
+              ))}
 
-          <th rowSpan={2} style={{ background: '#d1e7dd', padding: '0', border: 'none' }}>
-                      <button onClick={addQuizColumn} style={{ background: 'none', border: 'none' }}>
-                        <FontAwesomeIcon icon={faPlus} />
-                      </button>
-                    </th>
-                <th rowSpan={2}>Total</th>
-                <th rowSpan={2}>
-                <input
-                type="number"
-                value={quizseatPercentage}
-                onChange={(e) => setQuizseatPercentage(e.target.value)}
-                style={{ width: '60px' }}
-              />
-                %</th>
+              <th rowSpan={2} style={{ background: '#d1e7dd', padding: '0', border: 'none' }}>
+                          <button onClick={addQuizColumn} style={{ background: 'none', border: 'none' }}>
+                            <FontAwesomeIcon icon={faPlus} />
+                          </button>
+                        </th>
+                    <th rowSpan={2}>Total</th>
+                    <th rowSpan={2}>
+                    <input
+                    type="number"
+                    value={quizseatPercentage}
+                    onChange={(e) => setQuizseatPercentage(e.target.value)}
+                    style={{ width: '60px' }}
+                  />
+                    %</th>
     
                   {/* PBA Columns */}
                   {pbaColumns.map((_, index) => (
@@ -744,15 +770,15 @@ const ClassDetails = () => {
 
                     {/*QUIZ COMPONENT: DEFINE QUIZSEATSCORES IN INPUT*/}
                     {quizColumns.map((_, quizIndex) => (
-                    <td key={quizIndex}>
-                      <input
-                        type="number"
-                        style={{ width: '70px' }}
-                        placeholder="Score"
-                        value={quizseatScores[studentIndex]?.[quizIndex] || ''}
-                        onChange={(e) => handleQuizseatScoreChange(studentIndex, quizIndex, parseFloat(e.target.value) || 0)}
-                      />
-                  </td>
+                      <td key={quizIndex}>
+                        <input
+                          type="number"
+                          style={{ width: '70px' }}
+                          placeholder="Score"
+                          value={quizseatScores[studentIndex]?.[quizIndex] || ''} // Ensure that the input shows the current score
+                          onChange={(e) => handleQuizseatScoreChange(studentIndex, quizIndex, parseFloat(e.target.value) || 0)}
+                        />
+                      </td>
                     ))}
                     <td></td>
                     <td>{calculateTotalScore(studentIndex)}%</td> {/* Total Column */}
@@ -777,21 +803,21 @@ const ClassDetails = () => {
                     <td>{calculateTotalCSGrade().toFixed(2)}%</td>
                     
                     {pbaColumns.map((_, quizIndex) => (
-              <td key={quizIndex}>
-                <input
-                  type="number"
-                  style={{ width: '70px' }}
-                  placeholder="Score"
-                  value={studentScores[quizIndex] !== undefined ? studentScores[quizIndex] : ''} // Display the score if it exists
-                  onChange={(e) => handlePBAScoreChange(studentIndex, quizIndex, parseFloat(e.target.value) || 0)}
-                  min="50"
-                  max="100"
-                />
-              </td>
-            ))}
-            <td></td>
-            <td>{total.toFixed(2)}</td> {/* This should display the correct average */}
-            <td>{pbaGrade.toFixed(2)}</td> {/* This displays the PBA grade */}
+                      <td key={quizIndex}>
+                        <input
+                          type="number"
+                          style={{ width: '70px' }}
+                          placeholder="Score"
+                          value={studentScores[quizIndex] !== undefined ? studentScores[quizIndex] : ''} // Display the score if it exists
+                          onChange={(e) => handlePBAScoreChange(studentIndex, quizIndex, parseFloat(e.target.value) || 0)}
+                          min="50"
+                          max="100"
+                        />
+                      </td>
+                    ))}
+                    <td></td>
+                    <td>{total.toFixed(2)}</td> {/* This should display the correct average */}
+                    <td>{pbaGrade.toFixed(2)}</td> {/* This displays the PBA grade */}
 
                     {/*MIDTERMS EXAM COMPONENT*/}
                     <td>
