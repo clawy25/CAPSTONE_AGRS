@@ -16,15 +16,15 @@ export default function RegistrarStaffAssign({ onBack }) {
   const [activeProgramHeadIndex, setActiveProgramHeadIndex] = useState(null);
   const { user } = useContext(UserContext);
   const personnelType = 'Registrar'; // Fixed personnel type for registrars
+  
+  const currentAcadYear = sessionStorage.getItem('currentAcadYear');
 
   const personnelTypes = ['Head', 'Registrar', 'Faculty', 'Admin'];
   const fetchRegistrarStaff = async () => {
     try {
-      const programNumber = user.programNumber;
-      const currentAcadYear = sessionStorage.getItem('currentAcadYear');
-      const personnelData = await PersonnelModel.fetchAllPersonnel(programNumber, currentAcadYear);
-      const registrarProgramHeads = personnelData.filter((personnel) => personnel.personnelType === personnelType);
-      setProgramHeads(registrarProgramHeads);
+      const personnelData = await PersonnelModel.fetchAllPersonnel(currentAcadYear);
+      const registrarStaff = personnelData.filter((personnel) => personnel.personnelType === personnelType);
+      setProgramHeads(registrarStaff);
     } catch (error) {
       console.error('Error fetching program heads:', error);
     }
@@ -37,9 +37,7 @@ export default function RegistrarStaffAssign({ onBack }) {
   useEffect(() => {
     async function fetchPersonnelList() {
       try {
-        const programNumber = user.programNumber;
-        const currentAcadYear = sessionStorage.getItem('currentAcadYear');
-        const personnelData = await PersonnelModel.fetchAllPersonnel(programNumber, currentAcadYear);
+        const personnelData = await PersonnelModel.fetchAllPersonnel(currentAcadYear);
         const nonRegistrarPersonnel = personnelData.filter((personnel) => personnel.personnelType !== personnelType);
         setPersonnelList(nonRegistrarPersonnel);
       } catch (error) {
@@ -210,7 +208,7 @@ export default function RegistrarStaffAssign({ onBack }) {
     <div className="container-fluid bg-white p-2 px-4 rounded">
       {renderTable()}
 
-      {/* Add Program Head Modal */}
+      {/* Add Registrar Staff Modal */}
       <Modal show={showAddModal} onHide={handleCloseAdd}>
         <Modal.Header closeButton>
           <Modal.Title>Add Registrar Staff</Modal.Title>
@@ -270,7 +268,7 @@ export default function RegistrarStaffAssign({ onBack }) {
         </Modal.Footer>
       </Modal>
 
-      {/* Edit Program Head Modal */}
+      {/* Edit Registrar Staff Modal */}
       <Modal show={showEditModal} onHide={handleCloseEdit}>
         <Modal.Header closeButton>
           <Modal.Title>Edit Registrar Staff</Modal.Title>

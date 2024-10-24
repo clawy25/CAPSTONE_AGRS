@@ -15,13 +15,12 @@ export default function RegistrarProgramHead({ onBack }) {
   const [editProgramHead, setEditProgramHead] = useState({ number: '', firstname: '', middlename: '', lastname: '', programNumber: '', personnelType: 'Head' });
   const [activeProgramHeadIndex, setActiveProgramHeadIndex] = useState(null);
   const { user } = useContext(UserContext);
-  const personnelTypes = ['Head', 'Registrar', 'Faculty', 'Admin'];
+  const personnelTypes = ['Head', 'Faculty'];
+  const currentAcadYear = sessionStorage.getItem('currentAcadYear');
 
   const fetchProgramHeads = async () => {
     try {
-      const programNumber = user.programNumber;
-      const currentAcadYear = sessionStorage.getItem('currentAcadYear');
-      const personnelData = await PersonnelModel.fetchAllPersonnel(programNumber, currentAcadYear);
+      const personnelData = await PersonnelModel.fetchAllPersonnel(currentAcadYear);
       const headProgramHeads = personnelData.filter((personnel) => personnel.personnelType === 'Head');
       setProgramHeads(headProgramHeads);
     } catch (error) {
@@ -36,11 +35,9 @@ export default function RegistrarProgramHead({ onBack }) {
   useEffect(() => {
     async function fetchPersonnelList() {
       try {
-        const programNumber = user.programNumber;
-        const currentAcadYear = sessionStorage.getItem('currentAcadYear');
-        const personnelData = await PersonnelModel.fetchAllPersonnel(programNumber, currentAcadYear);
-        const nonHeadPersonnel = personnelData.filter((personnel) => personnel.personnelType !== 'Head');
-        setPersonnelList(nonHeadPersonnel);
+        const personnelData = await PersonnelModel.fetchAllPersonnel(currentAcadYear);
+        const FacultyPersonnel = personnelData.filter((personnel) => personnel.personnelType === 'Faculty');
+        setPersonnelList(FacultyPersonnel);
       } catch (error) {
         console.error('Error fetching personnel list:', error);
       }
@@ -99,6 +96,21 @@ export default function RegistrarProgramHead({ onBack }) {
     };
 
     try {
+      {/*VERIFY FIRST IF THERE IS EXISTING PROGRAM HEAD ON THE SELECTED PROGRAM NUMBER*/}
+      // Fetch the personnel list for the selected program number
+      const verify = await PersonnelModel.getProfessorsbyProgram(programNumber, currentAcadYear);
+
+      console.log(verify);
+      // Check if there is an existing program head
+      const existingHead = verify.find(personnel => personnel.personnelType === 'Head');
+
+      if (existingHead) {
+        // Handle the case where a program head already exists
+        console.warn('A program head already exists for this program.');
+        alert('This program already has a head assigned. Please remove the existing head before adding a new one.');
+        return;
+      }
+
       const response = await PersonnelModel.updatePersonnel(personnelNumber, updatedData);
 
       if (response) {
@@ -117,6 +129,22 @@ export default function RegistrarProgramHead({ onBack }) {
       programNumber: editProgramHead.programNumber,
       personnelType: editProgramHead.personnelType,
     };
+
+    {/*VERIFY FIRST IF THERE IS EXISTING PROGRAM HEAD ON THE SELECTED PROGRAM NUMBER*/}
+      // Fetch the personnel list for the selected program number
+      const verify = await PersonnelModel.getProfessorsbyProgram(updatedProgramHeadData.programNumber, currentAcadYear);
+
+      console.log(verify);
+      // Check if there is an existing program head
+      const existingHead = verify.find(personnel => personnel.personnelType === 'Head');
+
+      if (existingHead) {
+        // Handle the case where a program head already exists
+        console.warn('A program head already exists for this program.');
+        alert('This program already has a head assigned. Please remove the existing head before adding a new one.');
+        return;
+      }
+
 
     try {
       const personnelNumber = programHeads[activeProgramHeadIndex].personnelNumber;

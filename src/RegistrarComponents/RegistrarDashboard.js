@@ -85,6 +85,10 @@ export default function RegistrarDashboard() {
             <FontAwesomeIcon icon={faChalkboardTeacher} className="me-2" />
             PROFESSORS
           </Link>
+
+          {/*RESTRICTED ACCESS TO ADMIN ONLY*/}
+          {user?.personnelType === 'Admin' && ( 
+        <>
           <Link 
             to="/registrar-dashboard/staff" 
             className={`menu-item d-flex align-items-center mb-2 ${location.pathname.startsWith('/registrar-dashboard/staff') ? 'active' : ''}`}
@@ -99,6 +103,8 @@ export default function RegistrarDashboard() {
             <FontAwesomeIcon icon={faUserTie} className="me-2" />
             ACADEMIC YEAR
           </Link>
+        </>
+          )}
         </nav>
       </div>
 

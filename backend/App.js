@@ -211,7 +211,7 @@ app.get('/timeline', async (req, res) => {
     }
 });
   
-  // All personnels by by Program + Current Academic Year
+  // All personnels by Program + Current Academic Year
 app.post('/personnel/byProgram', async (req, res) => {
     const { programNumber, currentAcadYear } = req.body;
     try {
@@ -220,7 +220,6 @@ app.post('/personnel/byProgram', async (req, res) => {
             .from('personnel')
             .select('*')
             .eq('programNumber', programNumber)
-            .eq('personnelType', 'Faculty')
             .eq('academicYear',currentAcadYear);
   
         if (personnelError || !personnelData) {
@@ -255,8 +254,26 @@ app.post('/personnel/byProgram', async (req, res) => {
         res.status(500).json({ error: 'Internal server error' });
     }
 });
+ // All personnels by Current Academic Year
+app.post('/personnel', async (req, res) => {
+    const { currentAcadYear } = req.body;
+    try {
+        const { data, error } = await supabase
+            .from('personnel')
+            .select('*')
+            .eq('academicYear', currentAcadYear);
 
 
+        if (error) {
+            return res.status(500).json({ error: error.message });
+        }
+
+        res.json(data); // Send the fetched data in the response
+    } catch (error) {
+        console.error('Error fetching personnel details:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
 
 
 // Insert new students
@@ -800,25 +817,6 @@ app.put('/academicYear/:id', async (req, res) => {
         res.json({ message: 'Course updated successfully', data });
     } catch (error) {
         console.error('Error updating academic year:', error);
-        res.status(500).json({ error: 'Internal server error' });
-    }
-});
-
-
-
-app.get('/personnel', async (req, res) => {
-    try {
-        const { data, error } = await supabase
-            .from('personnel')
-            .select('*'); // Fetch all details from the personnel table
-
-        if (error) {
-            return res.status(500).json({ error: error.message });
-        }
-
-        res.json(data); // Send the fetched data in the response
-    } catch (error) {
-        console.error('Error fetching personnel details:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });

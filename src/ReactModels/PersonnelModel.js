@@ -54,7 +54,7 @@ export default class PersonnelModel {
         null,
         null,
         null,
-        data.programNumber, // This will now include the program number
+        data.programNumber,
         null,
         null,
         null,
@@ -105,13 +105,14 @@ export default class PersonnelModel {
     }
   }
 
-  static async fetchAllPersonnel() {
+  static async fetchAllPersonnel(currentAcadYear) {
     try {
-      const response = await fetch('http://localhost:5000/personnel', {
-        method: 'GET',
+      const response = await fetch('http://localhost:5000/personnel',{
+        method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-        }
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ currentAcadYear }), // Send credentials
       });
 
       if (!response.ok) {
