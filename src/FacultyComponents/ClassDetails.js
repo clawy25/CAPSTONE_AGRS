@@ -20,83 +20,77 @@ const ClassDetails = () => {
   {/* FOR MIDTERMS */}
 
   {/* ATTENDANCE DECLARATION */}
-  const [attendanceColumns, setAttendanceColumns] = useState([{ id: 1, date: new Date() }]);
-  const [totalAttendanceDays, setTotalAttendanceDays] = useState(0);
-  const [attendanceData, setAttendanceData] = useState([]);
-  const [attendancePercentage, setAttendancePercentage] = useState(0);
+  const [midtermAttendanceColumns, setmidtermAttendanceColumns] = useState([{ id: 1, date: new Date() }]);
+  const [midtermTotalAttendanceDays, setmidtermTotalAttendanceDays] = useState(0);
+  const [midtermAttendanceData, setmidtermAttendanceData] = useState([]);
+  const [midtermAttendancePercentage, setmidtermAttendancePercentage] = useState(5);
 
   {/* ASSIGNMENT DECLARATION */}
-  const [assignmentColumns, setAssignmentColumns] = useState([]);
-  const [assignmentScores, setAssignmentScores] = useState([]);
-  const [assignmentPercentage, setAssignmentPercentage] = useState(5); // Default to 5%
+  const [midtermAssignmentColumns, setmidtermAssignmentColumns] = useState([]);
+  const [midtermAssignmentScores, setmidtermAssignmentScores] = useState([]);
+  const [midtermAssignmentPercentage, setmidtermAssignmentPercentage] = useState(10); // Default to 10%
 
   // QUIZZES DECLARATION
-  const [quizColumns, setQuizColumns] = useState([]); // Initialize quiz columns
-  const [quizseatScores, setQuizseatScores] = useState([]); // Scores for each quiz
-  const [quizMaxScores, setQuizMaxScores] = useState([]); // Maximum scores for each quiz
-  const [quizseatPercentage, setQuizseatPercentage] = useState(0);
-
+  const [midtermQuizColumns, setmidtermQuizColumns] = useState([]); // Initialize quiz columns
+  const [midtermQuizScores, setmidtermQuizScores] = useState([]); // Scores for each quiz
+  const [midtermQuizMaxScores, setmidtermQuizMaxScores] = useState([]); // Maximum scores for each quiz
+  const [midtermQuizPercentage, setmidtermQuizPercentage] = useState(20);
 
   {/* RECITATION DECLARATION */}
-  const [recitationColumns, setRecitationColumns] = useState([]);
-  const [recitationScores, setRecitationScores] = useState([]);
-  const [recitationPercentage, setRecitationPercentage] = useState(0);
-
-  {/* CLASS STANDING DECLARATION */}
-  const [csGradeScores, setCsGradeScores] = useState([]);
-  const [csGradePercentage, setCsGradePercentage] = useState(0);
+  const [midtermRecitationColumns, setmidtermRecitationColumns] = useState([]);
+  const [midtermRecitationScores, setmidtermRecitationScores] = useState([]);
+  const [midtermRecitationPercentage, setmidtermRecitationPercentage] = useState(15);
 
    // PBA Declaration
-   const [pbaColumns, setPbaColumns] = useState([]);
-   const [pbaGradeScores, setPbaGradeScores] = useState([]);  // Store scores for each PBA column per student
-   const [pbaGradePercentage, setPbaGradePercentage] = useState(0);
+   const [midtermPBAColumns, setmidtermPBAColumns] = useState([]);
+   const [midtermPBAGradeScores, setmidtermPBAGradeScores] = useState([]);  // Store scores for each PBA column per student
+   const [midtermPBAGradePercentage, setmidtermPBAGradePercentage] = useState(20);
   
-  // MIDTERM DECLARATION
+  // MIDTERM EXAM DECLARATION
   const [midtermExamScores, setMidtermExamScores] = useState({});
-  const [midtermExamPercentage, setMidtermExamPercentage] = useState(0);
-  const [totalItems, setTotalItems] = useState(100); // Default total number of items is 100
+  const [midtermExamPercentage, setMidtermExamPercentage] = useState(30);
+  const [midtermTotalItems, setmidtermTotalItems] = useState(50); // Default total number of items is 100
 
   //REMARKS
   const [remarks, setRemarks] = useState({});
 
-
   {/*FOR FINALS*/}
 
   {/* ATTENDANCE DECLARATION */}
-  const [finalsAttendanceColumns, setFinalsAttendanceColumns] = useState([{ id: 1, date: new Date() }]);
-  const [finalsTotalAttendanceDays, setFinalsTotalAttendanceDays] = useState(0);
-  const [finalsAttendanceData, setFinalsAttendanceData] = useState([]);
-  const [finalsAttendancePercentage, setFinalsAttendancePercentage] = useState(0); // Default value of 0
+  const [finalsAttendanceColumns, setfinalsAttendanceColumns] = useState([{ id: 1, date: new Date() }]);
+  const [finalsTotalAttendanceDays, setfinalsTotalAttendanceDays] = useState(0);
+  const [finalsAttendanceData, setfinalsAttendanceData] = useState([]);
+  const [finalsAttendancePercentage, setfinalsAttendancePercentage] = useState(5); // Default value of 0
 
   {/* ASSIGNMENT DECLARATION */}
-  const [finalsAssignmentColumns, setFinalsAssignmentColumns] = useState([]);
-  const [finalsAssignmentScores, setFinalsAssignmentScores] = useState([]);
-  const [finalsAssignmentPercentage, setFinalsAssignmentPercentage] = useState(5); // Default to 5%
+  const [finalsAssignmentColumns, setfinalsAssignmentColumns] = useState([]);
+  const [finalsAssignmentScores, setfinalsAssignmentScores] = useState([]);
+  const [finalsAssignmentPercentage, setfinalsAssignmentPercentage] = useState(10); // Default to 5%
 
   {/* QUIZZES DECLARATION */}
-  const [finalsQuizColumns, setFinalsQuizColumns] = useState([]); // Initialize quiz columns
-  const [finalsQuizseatScores, setFinalsQuizseatScores] = useState(
+  const [finalsQuizColumns, setfinalsQuizColumns] = useState([]); // Initialize quiz columns
+  const [finalsQuizScores, setfinalsQuizScores] = useState(
     students.map(() => Array(finalsQuizColumns.length).fill(0))
   );
-  const [finalsQuizseatPercentage, setFinalsQuizseatPercentage] = useState(0);
+  const [finalsQuizMaxScores, setfinalsQuizMaxScores] = useState([]);
+  const [finalsQuizPercentage, setfinalsQuizPercentage] = useState(20);
 
   {/* RECITATION DECLARATION */}
-  const [finalsRecitationColumns, setFinalsRecitationColumns] = useState([]);
-  const [finalsRecitationScores, setFinalsRecitationScores] = useState([]);
-  const [finalsRecitationPercentage, setFinalsRecitationPercentage] = useState(0);
-
-  {/* CLASS STANDING DECLARATION */}
-  const [finalsCsGradeScores, setFinalsCsGradeScores] = useState([]);
-  const [finalsCsGradePercentage, setFinalsCsGradePercentage] = useState(0);
+  const [finalsRecitationColumns, setfinalsRecitationColumns] = useState([]);
+  const [finalsRecitationScores, setfinalsRecitationScores] = useState([]);
+  const [finalsRecitationPercentage, setfinalsRecitationPercentage] = useState(15);
 
   {/* PBA DECLARATION */}
-  const [finalsPbaColumns, setFinalsPbaColumns] = useState([]);
-  const [finalsPbaGradeScores, setFinalsPbaGradeScores] = useState([]);
-  const [finalsPbaGradePercentage, setFinalsPbaGradePercentage] = useState(0);
+  const [finalsPBAColumns, setfinalsPBAColumns] = useState([]);
+  const [finalsPBAGradeScores, setfinalsPBAGradeScores] = useState([]);
+  const [finalsPBAGradePercentage, setfinalsPBAGradePercentage] = useState(20);
 
-  {/* MIDTERM DECLARATION */}
-  const [finalsExamScores, setFinalsExamScores] = useState([]);
-  const [finalsExamPercentage, setFinalsExamPercentage] = useState(0);
+  {/* FINAL EXAM DECLARATION */}
+  const [finalsExamScores, setfinalsExamScores] = useState([]);
+  const [finalsExamPercentage, setfinalsExamPercentage] = useState(30);
+  const [finalsTotalItems, setfinalsTotalItems] = useState(50);
+
+
 
   // Fetch existing students from StudentModel
   const fetchExistingStudents = async () => {
@@ -117,37 +111,44 @@ const ClassDetails = () => {
   // Fetch existing students onload
   useEffect(() => {fetchExistingStudents();}, []);
 
+  {/*ATTENDANCE FOR MIDTERM AND FINALS (COMPLETE)*/}
   useEffect(() => {
-    // Calculate total attendance days whenever attendanceColumns change
-    const count = attendanceColumns.filter(col => col.date).length;
+    const count = midtermAttendanceColumns.filter(col => col.date).length;
     const finalscount = finalsAttendanceColumns.filter(col => col.date).length;
-    setTotalAttendanceDays(count); // Update the total attendance days
-    setFinalsTotalAttendanceDays(finalscount);
-  }, [attendanceColumns]);
+    setmidtermTotalAttendanceDays(count); // Update the total attendance days
+    setfinalsTotalAttendanceDays(finalscount);
+  }, [midtermAttendanceColumns, finalsAttendanceColumns]);
 
-  
+  {/*ADD AND REMOVE COLUMN FOR MIDTERM AND FINALS (COMPLETE)*/}
   const addColumn = (setColumns) => {
     setColumns((prevColumns) => [...prevColumns, { id: prevColumns.length + 1 }]);
   };
-
   const removeColumn = (index, setColumns) => {
     setColumns((prevColumns) => prevColumns.filter((_, i) => i !== index));
   };
 
-  // Function to handle period change
+  {/*SELECT FOR PERIOD (SWITCH CASES)*/}
   const handlePeriodChange = (period) => {
     setSelectedPeriod(period);
   };
-
-  // Function to handle search input changes
   const handleSearchChange = (event) => {
     setSearchTerm(event.target.value);
   };
 
-  //ATTENDANCE
-  
+  {/*ATTENDANCE CHANGE HANDLER FOR BOTH PERIOD (COMPLETE)*/}
   const handleAttendanceChange = (studentId, dateIndex, status) => {
-    setAttendanceData((prevData) => {
+    setmidtermAttendanceData((prevData) => {
+      const studentAttendance = prevData[studentId] || [];
+      const updatedAttendance = [...studentAttendance];
+
+      updatedAttendance[dateIndex] = { date: new Date().toISOString().split('T')[0], status };
+
+      return {
+        ...prevData,
+        [studentId]: updatedAttendance,
+      };
+    });
+    setfinalsAttendanceData((prevData) => {
       const studentAttendance = prevData[studentId] || [];
       const updatedAttendance = [...studentAttendance];
 
@@ -160,8 +161,31 @@ const ClassDetails = () => {
     });
   };
 
-  const getAttendanceTotals = (studentId) => {
-    const studentAttendance = attendanceData[studentId] || [];
+  {/*ATTENDANCE TOTALS FOR BOTH PERIOD (COMPLETE)*/}
+  const getMidtermAttendanceTotals = (studentId) => {
+    const studentAttendance = midtermAttendanceData[studentId] || [];
+    const Atotals = { P: 0, L: 0, E: 0, A: 0 };
+    let points = 100;
+
+    studentAttendance.forEach(({ status }) => {
+      if (status === 'P') Atotals.P++;
+      else if (status === 'L') Atotals.L++;
+      else if (status === 'E') Atotals.E++;
+      else if (status === 'A') Atotals.A++;
+    });
+
+
+    const convertedAbsents = Math.floor(Atotals.L / 3); // 3 Lates = 1 Absent
+    Atotals.A += convertedAbsents; // Add converted absents to total absents
+    Atotals.L = Atotals.L % 3; // Remaining lates after conversion
+
+    points -= Atotals.A * 3; // Deduct points for each Absent
+    points -= Atotals.E * 3; // Deduct points for each Excused
+
+    return { Atotals, points };
+  };
+  const getFinalsAttendanceTotals = (studentId) => {
+    const studentAttendance = finalsAttendanceData[studentId] || [];
     const Atotals = { P: 0, L: 0, E: 0, A: 0 };
     let points = 100;
 
@@ -183,18 +207,31 @@ const ClassDetails = () => {
     return { Atotals, points };
   };
 
-  const getAttendanceScorePercentage = (points) => {
+  {/*ATTENDANCE SCORES FOR BOTH PERIOD (COMPLETE)*/}
+  const getMidtermAttendanceScorePercentage = (points) => {
     const totalComputations = 100; // Assuming this is the maximum point you are working with
-    const attendanceInputPercentage = attendancePercentage / 100; // Convert percentage to decimal
+    const attendanceInputPercentage = midtermAttendancePercentage / 100; // Convert percentage to decimal
+    const calculatedPoints = Math.max(0, (points / totalComputations) * attendanceInputPercentage * totalComputations);
+    return calculatedPoints.toFixed(2); // Return the value with 2 decimal points
+  };
+  const getFinalsAttendanceScorePercentage = (points) => {
+    const totalComputations = 100; // Assuming this is the maximum point you are working with
+    const attendanceInputPercentage = finalsAttendancePercentage / 100; // Convert percentage to decimal
     const calculatedPoints = Math.max(0, (points / totalComputations) * attendanceInputPercentage * totalComputations);
     return calculatedPoints.toFixed(2); // Return the value with 2 decimal points
   };
 
-
-
-{/* ASSIGNMENTS */}
+  {/* ASSIGNMENTS SCORES FOR BOTH PERIOD (COMPLETE) */}
   const handleScoreChange = (studentId, assignmentIndex, score) => {
-    setAssignmentScores(prevScores => {
+    setmidtermAssignmentScores(prevScores => {
+      const updatedScores = [...prevScores]; // Create a shallow copy of the array
+      if (!updatedScores[studentId]) {
+        updatedScores[studentId] = []; // Initialize an array for this student if it doesn't exist
+      }
+      updatedScores[studentId][assignmentIndex] = score; // Update the score for the student and assignment
+      return updatedScores;
+    });
+    setfinalsAssignmentScores(prevScores => {
       const updatedScores = [...prevScores]; // Create a shallow copy of the array
       if (!updatedScores[studentId]) {
         updatedScores[studentId] = []; // Initialize an array for this student if it doesn't exist
@@ -203,9 +240,10 @@ const ClassDetails = () => {
       return updatedScores;
     });
   };
-  
-  const calculateAssignmentColumnAverage = (studentIndex) => {
-    const scores = assignmentScores[studentIndex] || [];
+
+  {/* ASSIGNMENTS AVERAGE FOR MIDTERM */}
+  const calculateMidtermAssignmentColumnAverage = (studentIndex) => {
+    const scores = midtermAssignmentScores[studentIndex] || [];
     
     // Filter out non-numeric values and ensure scores are numbers
     const validScores = scores.map(score => parseFloat(score) || 0);
@@ -218,70 +256,115 @@ const ClassDetails = () => {
   
     return average.toFixed(2); // Optional: format to 2 decimal places
   };
+  {/* ASSIGNMENTS AVERAGE FOR FINALS */}
+  const calculateFinalsAssignmentColumnAverage = (studentIndex) => {
+    const scores = finalsAssignmentScores[studentIndex] || [];
+    
+    // Filter out non-numeric values and ensure scores are numbers
+    const validScores = scores.map(score => parseFloat(score) || 0);
+    
+    // Calculate the sum of the scores
+    const sum = validScores.reduce((acc, score) => acc + score, 0);
+    
+    // Calculate the average (check for divide by zero)
+    const average = validScores.length > 0 ? sum / validScores.length : 0;
   
-  const calculateAssignmentComponentScore = (studentIndex, percentage) => {
-    const scores = assignmentScores[studentIndex] || [];
+    return average.toFixed(2); // Optional: format to 2 decimal places
+  };
+
+  {/* ASSIGNMENTS COMPONENT FOR MIDTERM */}
+  const calculateMidtermAssignmentComponentScore = (studentIndex, percentage) => {
+    const scores = midtermAssignmentScores[studentIndex] || [];
     const validScores = scores.map(score => parseFloat(score) || 0);
     const sum = validScores.reduce((acc, score) => acc + score, 0);
     const average = validScores.length > 0 ? sum / validScores.length : 0;
     const componentScore = average * (percentage / 100);
     return componentScore.toFixed(2);
   };
-  // Example usage for student 1
-  console.log(calculateAssignmentColumnAverage(1)); // Output: average of scores for student 1
+  {/* ASSIGNMENTS COMPONENT FOR FINALS */}
+  const calculateFinalsAssignmentComponentScore = (studentIndex, percentage) => {
+    const scores = finalsAssignmentScores[studentIndex] || [];
+    const validScores = scores.map(score => parseFloat(score) || 0);
+    const sum = validScores.reduce((acc, score) => acc + score, 0);
+    const average = validScores.length > 0 ? sum / validScores.length : 0;
+    const componentScore = average * (percentage / 100);
+    return componentScore.toFixed(2);
+  };
 
-  
-  //QUIZZES/SEAT
-
+  //QUIZ COLUMNS FOR BOTH PERIODS (COMPLETE)
   useEffect(() => {
-    // Initialize quizseatScores only when students change, keeping existing quiz columns intact
-    setQuizseatScores(prevScores =>
-      students.map((_, index) => prevScores[index] || Array(quizColumns.length).fill(0)) // Retain previous scores
+    setmidtermQuizScores(prevScores =>
+      students.map((_, index) => prevScores[index] || Array(midtermQuizColumns.length).fill(0)) // Retain previous scores
     );
-  
-    // Initialize quizMaxScores to match the length of quizColumns, keeping existing data intact
-    setQuizMaxScores(prevMaxScores => 
-      prevMaxScores.length < quizColumns.length 
-        ? [...prevMaxScores, ...Array(quizColumns.length - prevMaxScores.length).fill(0)] 
+    setmidtermQuizMaxScores(prevMaxScores => 
+      prevMaxScores.length < midtermQuizColumns.length 
+        ? [...prevMaxScores, ...Array(midtermQuizColumns.length - prevMaxScores.length).fill(0)] 
+        : prevMaxScores
+    );
+
+    setfinalsQuizScores(prevScores =>
+      students.map((_, index) => prevScores[index] || Array(finalsQuizColumns.length).fill(0)) // Retain previous scores
+    );
+    setfinalsQuizMaxScores(prevMaxScores => 
+      prevMaxScores.length < finalsQuizColumns.length 
+        ? [...prevMaxScores, ...Array(finalsQuizColumns.length - prevMaxScores.length).fill(0)] 
         : prevMaxScores
     );
   }, [students]);
   
-  
-  
-  
+  {/*ADD QUIZ COLUMNS FOR BOTH PERIODS (COMPLETE)*/}
   const addQuizColumn = () => {
-    // Add a new quiz column (no need to modify quizseatScores here)
-    setQuizColumns(prevColumns => [...prevColumns, {}]);
-  
-    // Update quizseatScores: Ensure existing student quiz scores are retained and a new score is appended
-    setQuizseatScores(prevScores =>
+    //MIDTERM
+    setmidtermQuizColumns(prevColumns => [...prevColumns, {}]);
+    setmidtermQuizScores(prevScores =>
       prevScores.map(studentScores => [...studentScores, 0]) // Append a new score (0) for the new column
     );
-  
-    // Update quizMaxScores: Ensure existing max scores are retained and append a default value for the new column
-    setQuizMaxScores(prevMaxScores => [...prevMaxScores, 0]);
+    setmidtermQuizMaxScores(prevMaxScores => [...prevMaxScores, 0]);
+    //FINALS
+    setfinalsQuizColumns(prevColumns => [...prevColumns, {}]);
+    setfinalsQuizScores(prevScores =>
+      prevScores.map(studentScores => [...studentScores, 0]) // Append a new score (0) for the new column
+    );
+    setfinalsQuizMaxScores(prevMaxScores => [...prevMaxScores, 0]);
   };
   
-  
-  
-  
+  {/*REMOVE QUIZ COLUMNS FOR BOTH PERIODS (COMPLETE)*/}
   const removeQuizColumn = (indexToRemove) => {
-    setQuizColumns(prevColumns => prevColumns.filter((_, index) => index !== indexToRemove));
-  
-    setQuizseatScores(prevScores =>
+    //MIDTERM
+    setmidtermQuizColumns(prevColumns => prevColumns.filter((_, index) => index !== indexToRemove));
+    setmidtermQuizScores(prevScores =>
       prevScores.map(studentScores =>
         studentScores.filter((_, index) => index !== indexToRemove) // Remove the column at the specified index
       )
     );
-  
-    setQuizMaxScores(prevMaxScores => 
+    setmidtermQuizMaxScores(prevMaxScores => 
+      prevMaxScores.filter((_, index) => index !== indexToRemove)
+    );
+    //FINALS
+    setfinalsQuizColumns(prevColumns => prevColumns.filter((_, index) => index !== indexToRemove));
+    setfinalsQuizScores(prevScores =>
+      prevScores.map(studentScores =>
+        studentScores.filter((_, index) => index !== indexToRemove) // Remove the column at the specified index
+      )
+    );
+    setfinalsQuizMaxScores(prevMaxScores => 
       prevMaxScores.filter((_, index) => index !== indexToRemove)
     );
   };
   
-  const handleQuizseatScoreChange = (studentIndex, quizIndex, score) => {
-    setQuizseatScores(prevScores =>
+  {/*QUIZ SCORE CHANGE HANDLER FOR BOTH PERIOD (COMPLETE)*/}
+  const handleQuizScoreChange = (studentIndex, quizIndex, score) => {
+    setmidtermQuizScores(prevScores =>
+      prevScores.map((scores, index) => {
+        if (index === studentIndex) {
+          const updatedScores = [...scores];
+          updatedScores[quizIndex] = score; // Set the new score for the quiz
+          return updatedScores;
+        }
+        return scores;
+      })
+    );
+    setfinalsQuizScores(prevScores =>
       prevScores.map((scores, index) => {
         if (index === studentIndex) {
           const updatedScores = [...scores];
@@ -292,24 +375,43 @@ const ClassDetails = () => {
       })
     );
   };
-  
 
+  {/*QUIZ MAX SCORE CHANGE HANDLER FOR BOTH PERIOD (COMPLETE)*/}
   const handleMaxScoreChange = (quizIndex, value) => {
-    setQuizMaxScores(prev => {
+    setmidtermQuizMaxScores(prev => {
       const updatedMaxScores = [...prev];
-      updatedMaxScores[quizIndex] = value; // Update the max score for this quiz
+      updatedMaxScores[quizIndex] = value;
+      return updatedMaxScores;
+    });
+    setfinalsQuizMaxScores(prev => {
+      const updatedMaxScores = [...prev];
+      updatedMaxScores[quizIndex] = value;
       return updatedMaxScores;
     });
   };
-
+  
+  
+  {/*EQUIVALENT RATE FOR BOTH PERIOD*/}
   const calculateEquivalentRate = (score, maxScore) => {
     if (maxScore === 0) return 0; // Prevent division by zero
     return ((score / maxScore) * 50) + 50;
   };
 
-  const calculateQuizseatComponentScore = (studentIndex, percentage) => {
-    const scores = quizseatScores[studentIndex] || [];
-    const maxScores = quizMaxScores; // Use the max scores
+  {/* QUIZ COMPONENT FOR MIDTERM */}
+  const calculateMidtermQuizComponentScore = (studentIndex, percentage) => {
+    const scores = midtermQuizScores[studentIndex] || [];
+    const maxScores = midtermQuizMaxScores; // Use the max scores
+    const equivalentRates = scores.map((score, index) => calculateEquivalentRate(score, maxScores[index]));
+    const totalEquivalentRate = equivalentRates.reduce((acc, rate) => acc + rate, 0);
+    const averageEquivalentRate = equivalentRates.length > 0 ? totalEquivalentRate / equivalentRates.length : 0;
+
+    const componentScore = averageEquivalentRate * (percentage / 100);
+    return componentScore.toFixed(2);
+  };
+  {/* QUIZ COMPONENT FOR FINALS */}
+  const calculateFinalsQuizComponentScore = (studentIndex, percentage) => {
+    const scores = finalsQuizScores[studentIndex] || [];
+    const maxScores = finalsQuizMaxScores; // Use the max scores
     const equivalentRates = scores.map((score, index) => calculateEquivalentRate(score, maxScores[index]));
     const totalEquivalentRate = equivalentRates.reduce((acc, rate) => acc + rate, 0);
     const averageEquivalentRate = equivalentRates.length > 0 ? totalEquivalentRate / equivalentRates.length : 0;
@@ -318,26 +420,36 @@ const ClassDetails = () => {
     return componentScore.toFixed(2);
   };
 
-  const calculateTotalScore = (studentIndex) => {
-    const scores = quizseatScores[studentIndex] || [];
-    const maxScores = quizMaxScores; // Use the max scores
+  {/* QUIZ MAX FOR MIDTERM */}
+  const calculateMidtermQuizTotalScore = (studentIndex) => {
+    const scores = midtermQuizScores[studentIndex] || [];
+    const maxScores = midtermQuizMaxScores; // Use the max scores
+    const equivalentRates = scores.map((score, index) => calculateEquivalentRate(score, maxScores[index]));
+    const totalEquivalentRate = equivalentRates.reduce((acc, rate) => acc + rate, 0);
+    return (totalEquivalentRate / equivalentRates.length).toFixed(2); // Return the total equivalent rate
+  };
+  {/* QUIZ MAX FOR FINALS */}
+  const calculateFinalsQuizTotalScore = (studentIndex) => {
+    const scores = finalsQuizScores[studentIndex] || [];
+    const maxScores = finalsQuizMaxScores; // Use the max scores
     const equivalentRates = scores.map((score, index) => calculateEquivalentRate(score, maxScores[index]));
     const totalEquivalentRate = equivalentRates.reduce((acc, rate) => acc + rate, 0);
     return (totalEquivalentRate / equivalentRates.length).toFixed(2); // Return the total equivalent rate
   };
   
-  useEffect(() => {
-    console.log('Updated quizseatScores:', quizseatScores);
-  }, [quizseatScores]);
-  
-  
-  
-
-
-  
   {/* RECITATION/PARTICIPATION */}
+
+  {/* RECITATION CHANGE HANDLER FOR BOTH PERIOD (COMPLETE)*/}
   const handleRecitationScoreChange = (studentId, recitationIndex, score) => {
-    setRecitationScores(prevScores => {
+    setmidtermRecitationScores(prevScores => {
+      const updatedScores = [...prevScores];
+      if (!updatedScores[studentId]) {
+        updatedScores[studentId] = [];
+      }
+      updatedScores[studentId][recitationIndex] = score;
+      return updatedScores;
+    });
+    setfinalsRecitationScores(prevScores => {
       const updatedScores = [...prevScores];
       if (!updatedScores[studentId]) {
         updatedScores[studentId] = [];
@@ -347,16 +459,33 @@ const ClassDetails = () => {
     });
   };
 
+  //UNUSED FUNCTION. DELETE IF UNNEEDED
+  {/*
     // Function to calculate average scores
     const calculateAverage = (scores) => {
       if (!scores.length) return 0;
       const total = scores.reduce((sum, score) => sum + (score || 0), 0);
       return total / scores.length;
-    };
+    };*/}
 
+  {/*RECITATION AVERAGE FOR MIDTERM*/}
+  const calculateMidtermRecitationColumnAverage = (studentIndex) => {
+    const scores = midtermRecitationScores[studentIndex] || [];
   
-  const calculateRecitationColumnAverage = (studentIndex) => {
-    const scores = recitationScores[studentIndex] || [];
+    // Filter out non-numeric values and ensure scores are numbers
+    const validScores = scores.map(score => parseFloat(score) || 0);
+  
+    // Calculate the sum of the scores
+    const sum = validScores.reduce((acc, score) => acc + score, 0);
+  
+    // Calculate the average (check for divide by zero)
+    const average = validScores.length > 0 ? sum / validScores.length : 0;
+  
+    return average.toFixed(2); // Format to 2 decimal places
+  };
+  {/*RECITATION AVERAGE FOR FINALS*/}
+  const calculateFinalsRecitationColumnAverage = (studentIndex) => {
+    const scores = finalsRecitationScores[studentIndex] || [];
   
     // Filter out non-numeric values and ensure scores are numbers
     const validScores = scores.map(score => parseFloat(score) || 0);
@@ -370,8 +499,26 @@ const ClassDetails = () => {
     return average.toFixed(2); // Format to 2 decimal places
   };
   
-  const calculateRecitationComponentScore = (studentIndex, percentage) => {
-    const scores = recitationScores[studentIndex] || [];
+  {/*RECITATION COMPONENT FOR MIDTERM*/}
+  const calculateMidtermRecitationComponentScore = (studentIndex, percentage) => {
+    const scores = midtermRecitationScores[studentIndex] || [];
+    
+    // Filter out non-numeric values and ensure scores are numbers
+    const validScores = scores.map(score => parseFloat(score) || 0);
+    
+    // Calculate the sum of the scores
+    const sum = validScores.reduce((acc, score) => acc + score, 0);
+    
+    // Calculate the average
+    const average = validScores.length > 0 ? sum / validScores.length : 0;
+    
+    // Multiply by the percentage and return the score
+    const componentScore = average * (percentage / 100);
+    return componentScore.toFixed(2); // Format to 2 decimal places
+  };
+  {/*RECITATION COMPONENT FOR FINALS*/}
+  const calculateFinalsRecitationComponentScore = (studentIndex, percentage) => {
+    const scores = finalsRecitationScores[studentIndex] || [];
     
     // Filter out non-numeric values and ensure scores are numbers
     const validScores = scores.map(score => parseFloat(score) || 0);
@@ -387,22 +534,21 @@ const ClassDetails = () => {
     return componentScore.toFixed(2); // Format to 2 decimal places
   };
 
-
-  //CLASS STANDING
+  //CLASS STANDING FOR MIDTERMS
    // Function to calculate total CS Grade based on user-defined percentages
-   const calculateTotalCSGrade = (studentIndex) => {
+  const calculateTotalMidtermCSGrade = (studentIndex) => {
     // Calculate attendance score percentage (out of 100 based on Attendance score)
-    const attendanceScore = getAttendanceTotals(studentIndex).points; // Get points from Attendance calculation
-    const attendanceComponent = (attendanceScore / 100) * attendancePercentage;
+    const attendanceScore = getMidtermAttendanceTotals(studentIndex).points; // Get points from Attendance calculation
+    const attendanceComponent = (attendanceScore / 100) * midtermAttendancePercentage;
   
     // Calculate assignment score percentage
-    const assignmentScore = calculateAssignmentComponentScore(studentIndex, assignmentPercentage);
+    const assignmentScore = calculateMidtermAssignmentComponentScore(studentIndex, midtermAssignmentPercentage);
   
     // Calculate quiz score percentage
-    const quizScore = calculateQuizseatComponentScore(studentIndex, quizseatPercentage);
+    const quizScore = calculateMidtermQuizComponentScore(studentIndex, midtermQuizPercentage);
   
     // Calculate recitation score percentage
-    const recitationScore = calculateRecitationComponentScore(studentIndex, recitationPercentage);
+    const recitationScore = calculateMidtermRecitationComponentScore(studentIndex, midtermRecitationPercentage);
   
     // Total CS Grade as the sum of all components
     const totalCSGrade = attendanceComponent + 
@@ -412,27 +558,75 @@ const ClassDetails = () => {
   
     return totalCSGrade.toFixed(2); // Return the total percentage, formatted to 2 decimal places
   };
-
-  const calculateTotalCSPercentage = () => {
+  const calculateTotalMidtermCSPercentage = () => {
     // Calculate the total of the inputted percentages
     const totalCSPercentage = 
-      parseFloat(attendancePercentage || 0) + 
-      parseFloat(assignmentPercentage || 0) + 
-      parseFloat(quizseatPercentage || 0) + 
-      parseFloat(recitationPercentage || 0);
+      parseFloat(midtermAttendancePercentage || 0) + 
+      parseFloat(midtermAssignmentPercentage || 0) + 
+      parseFloat(midtermQuizPercentage || 0) + 
+      parseFloat(midtermRecitationPercentage || 0);
   
     return totalCSPercentage.toFixed(); // Format to 2 decimal places
   };
   
+  //CLASS STANDING FOR FINALS
+   // Function to calculate total CS Grade based on user-defined percentages
+  const calculateTotalFinalsCSGrade = (studentIndex) => {
+    // Calculate attendance score percentage (out of 100 based on Attendance score)
+    const attendanceScore = getFinalsAttendanceTotals(studentIndex).points; // Get points from Attendance calculation
+    const attendanceComponent = (attendanceScore / 100) * finalsAttendancePercentage;
   
+    // Calculate assignment score percentage
+    const assignmentScore = calculateFinalsAssignmentComponentScore(studentIndex, finalsAssignmentPercentage);
   
+    // Calculate quiz score percentage
+    const quizScore = calculateFinalsQuizComponentScore(studentIndex, finalsQuizPercentage);
   
-
+    // Calculate recitation score percentage
+    const recitationScore = calculateFinalsRecitationComponentScore(studentIndex, finalsRecitationPercentage);
+  
+    // Total CS Grade as the sum of all components
+    const totalCSGrade = attendanceComponent + 
+                         parseFloat(assignmentScore) + 
+                         parseFloat(quizScore) + 
+                         parseFloat(recitationScore);
+  
+    return totalCSGrade.toFixed(2); // Return the total percentage, formatted to 2 decimal places
+  };
+  const calculateTotalFinalsCSPercentage = () => {
+    // Calculate the total of the inputted percentages
+    const totalCSPercentage = 
+      parseFloat(finalsAttendancePercentage || 0) + 
+      parseFloat(finalsAssignmentPercentage || 0) + 
+      parseFloat(finalsQuizPercentage || 0) + 
+      parseFloat(finalsRecitationPercentage || 0);
+  
+    return totalCSPercentage.toFixed(); // Format to 2 decimal places
+  };
   
     {/* PBA */}
       // Handle PBA score change with validation for scores between 50-100
   const handlePBAScoreChange = (studentIndex, scoreIndex, newScore) => {
-    setPbaGradeScores(prevScores => {
+    setmidtermPBAGradeScores(prevScores => {
+      // Copy the current scores array
+      const updatedScores = [...prevScores];
+  
+      // Initialize the student's scores array if not already present
+      if (!Array.isArray(updatedScores[studentIndex])) {
+        updatedScores[studentIndex] = [];
+      }
+  
+      // Ensure that the student's scores array has enough slots for all quizzes
+      while (updatedScores[studentIndex].length <= scoreIndex) {
+        updatedScores[studentIndex].push(0); // Initialize missing quizzes with a default score of 0
+      }
+  
+      // Update the specific quiz score
+      updatedScores[studentIndex][scoreIndex] = newScore;
+  
+      return updatedScores;
+    });
+    setfinalsPBAGradeScores(prevScores => {
       // Copy the current scores array
       const updatedScores = [...prevScores];
   
@@ -452,10 +646,9 @@ const ClassDetails = () => {
       return updatedScores;
     });
   };
-  
 
-  // Calculate the total and PBA grade for each student
-  const calculateTotalsAndPBA = (studentScores, pbaGradePercentage) => {
+  {/* PBA CALCULATION FOR BOTH PERIOD (COMPLETE)*/}
+  const calculateTotalsAndPBA = (studentScores, PBAGradePercentage) => {
     // Calculate the total score
     const total = studentScores.reduce((sum, score) => sum + score, 0);
   
@@ -463,45 +656,53 @@ const ClassDetails = () => {
     const average = total / studentScores.length;
   
     // Calculate the PBA grade (using the percentage provided)
-    const pbaGrade = average * (pbaGradePercentage / 100);
+    const pbaGrade = average * (PBAGradePercentage / 100);
   
     return { total: average, pbaGrade };
   };
 
-
-
-
-   {/* MIDTERM EXAM */}
-     // Handle changes in student scores
-  const handleMTScoreChange = (studentId, score) => {
+   {/* SEMESTRAL EXAM */}
+   
+   {/* EXAM SCORE CHANGE HANDLER FOR BOTH PERIOD (COMPLETE)*/}
+  const handleExamScoreChange = (studentId, score) => {
     setMidtermExamScores((prevScores) => ({
+      ...prevScores,
+      [studentId]: score,
+    }));
+    setfinalsExamScores((prevScores) => ({
       ...prevScores,
       [studentId]: score,
     }));
   };
 
   // Computation functions
-  const calculatePercentage = (score) => {
-    return ((score / totalItems) * 50) + 50;
+  const calculateMidtermPercentage = (score) => {
+    return ((score / midtermTotalItems) * 50) + 50;
+  };
+  const calculateFinalPercentage = (score) => {
+    return ((score / finalsTotalItems) * 50) + 50;
   };
 
-  const calculateWeightedScore = (percentage) => {
+  const calculateMidtermWeightedScore = (percentage) => {
     return (percentage * midtermExamPercentage) / 100;
+  };
+  const calculateFinalWeightedScore = (percentage) => {
+    return (percentage * finalsExamPercentage) / 100;
   };
 
 
   //MIDTERM GRADE
   const calculateMidtermGrade = (studentIndex) => {
     // 1. Calculate the CS Grade
-    const csGrade = parseFloat(calculateTotalCSGrade(studentIndex)) || 0;
+    const csGrade = parseFloat(calculateTotalMidtermCSGrade(studentIndex)) || 0;
   
     // 2. Calculate the PBA Grade (Performance-Based Assessment)
-    const pbaScores = pbaGradeScores[studentIndex] || [];
-    const { pbaGrade } = calculateTotalsAndPBA(pbaScores, pbaGradePercentage);
+    const pbaScores = midtermPBAGradeScores[studentIndex] || [];
+    const { pbaGrade } = calculateTotalsAndPBA(pbaScores, midtermPBAGradePercentage);
     
     // 3. Calculate the Midterm Exam score (using the midterm exam percentage)
     const midtermExamScore = midtermExamScores[students[studentIndex].id] || 0;
-    const midtermExamPercentageScore = calculatePercentage(midtermExamScore); // Adjust the score into percentage
+    const midtermExamPercentageScore = calculateMidtermPercentage(midtermExamScore); // Adjust the score into percentage
     const weightedMidtermExamScore = (midtermExamPercentageScore * midtermExamPercentage) / 100; // Weighted by midterm exam percentage
   
     // 4. Calculate the total Midterm Grade
@@ -510,17 +711,62 @@ const ClassDetails = () => {
     return totalMidtermGrade.toFixed(2); // Return the total midterm grade formatted to 2 decimal places
   };
 
+  //FINAL GRADE
+  const calculateFinalsGrade = (studentIndex) => {
+    // 1. Calculate the CS Grade
+    const csGrade = parseFloat(calculateTotalFinalsCSGrade(studentIndex)) || 0;
+  
+    // 2. Calculate the PBA Grade (Performance-Based Assessment)
+    const pbaScores = finalsPBAGradeScores[studentIndex] || [];
+    const { pbaGrade } = calculateTotalsAndPBA(pbaScores, finalsPBAGradePercentage);
+    
+    // 3. Calculate the Midterm Exam score (using the midterm exam percentage)
+    const finalsExamScore = finalsExamScores[students[studentIndex].id] || 0;
+    const finalsExamPercentageScore = calculateFinalPercentage(finalsExamScore); // Adjust the score into percentage
+    const weightedFinalsExamScore = (finalsExamPercentageScore * finalsExamPercentage) / 100; // Weighted by midterm exam percentage
+  
+    // 4. Calculate the total Midterm Grade
+    const totalFinalsGrade = csGrade + parseFloat(pbaGrade) + parseFloat(weightedFinalsExamScore);
+  
+    return totalFinalsGrade.toFixed(2); // Return the total midterm grade formatted to 2 decimal places
+  };
 
-  //NUMERICAL EQUIVALENT AND REMARKS
 
-  const getNumericalEquivalentAndRemarks = (studentId, grade, studentIndex) => {
+  //NUMERICAL EQUIVALENT AND REMARKS FOR MIDTERM
+  const getMidtermNumericalEquivalentAndRemarks = (studentId, grade, studentIndex) => {
     // If there's a manual selection for the student, return the selected remark
     if (remarks[studentId]) {
       return { numEq: "-", remarks: remarks[studentId] };
     }
   
     // If any component has blank scores, return INC for remarks
-    if (hasBlankScores(studentIndex)) {
+    if (MidtermhasBlankScores(studentIndex)) {
+      return { numEq: "-", remarks: "INC" };
+    }
+  
+    // Otherwise, calculate based on the grade
+    if (grade >= 99 && grade <= 100) return { numEq: (1.00).toFixed(2), remarks: "PASSED" };
+    if (grade >= 96 && grade < 99) return { numEq: (1.25).toFixed(2), remarks: "PASSED" };
+    if (grade >= 93 && grade < 96) return { numEq: (1.50).toFixed(2), remarks: "PASSED" };
+    if (grade >= 90 && grade < 93) return { numEq: (1.75).toFixed(2), remarks: "PASSED" };
+    if (grade >= 87 && grade < 90) return { numEq: (2.00).toFixed(2), remarks: "PASSED" };
+    if (grade >= 84 && grade < 87) return { numEq: (2.25).toFixed(2), remarks: "PASSED" };
+    if (grade >= 81 && grade < 84) return { numEq: (2.50).toFixed(2), remarks: "PASSED" };
+    if (grade >= 78 && grade < 81) return { numEq: (2.75).toFixed(2), remarks: "PASSED" };
+    if (grade >= 75 && grade < 78) return { numEq: (3.00).toFixed(2), remarks: "PASSED" };
+    if (grade < 75) return { numEq: (5.00).toFixed(2), remarks: "FAILED" };
+  
+    return { numEq: "-", remarks: "-" };
+  };
+  //NUMERICAL EQUIVALENT AND REMARKS FOR FINALS
+  const getFinalsNumericalEquivalentAndRemarks = (studentId, grade, studentIndex) => {
+    // If there's a manual selection for the student, return the selected remark
+    if (remarks[studentId]) {
+      return { numEq: "-", remarks: remarks[studentId] };
+    }
+  
+    // If any component has blank scores, return INC for remarks
+    if (FinalshasBlankScores(studentIndex)) {
       return { numEq: "-", remarks: "INC" };
     }
   
@@ -539,9 +785,6 @@ const ClassDetails = () => {
     return { numEq: "-", remarks: "-" };
   };
   
-  
-  
-
   const handleRemarksChange = (studentId, selectedRemark) => {
     setRemarks(prevRemarks => ({
       ...prevRemarks,
@@ -549,24 +792,44 @@ const ClassDetails = () => {
     }));
   };
 
-
-  // FOR INC 
-  const hasBlankScores = (studentIndex) => {
+  // REMARKS FOR MIDTERM
+  const MidtermhasBlankScores = (studentIndex) => {
     // Check for blank attendance scores
-    const attendanceScores = attendanceData[students[studentIndex].id] || [];
+    const attendanceScores = midtermAttendanceData[students[studentIndex].id] || [];
     const isAttendanceIncomplete = attendanceScores.some(score => score.status === "Select" || !score.status);
   
     // Check for blank assignment scores
-    const isAssignmentIncomplete = assignmentScores[studentIndex]?.some(score => score === "" || score === null || score === undefined);
+    const isAssignmentIncomplete = midtermAssignmentScores[studentIndex]?.some(score => score === "" || score === null || score === undefined);
   
     // Check for blank quiz scores
-    const isQuizIncomplete = quizseatScores[studentIndex]?.some(score => score === "" || score === null || score === undefined);
+    const isQuizIncomplete = midtermQuizScores[studentIndex]?.some(score => score === "" || score === null || score === undefined);
   
     // Check for blank recitation scores
-    const isRecitationIncomplete = recitationScores[studentIndex]?.some(score => score === "" || score === null || score === undefined);
+    const isRecitationIncomplete = midtermRecitationScores[studentIndex]?.some(score => score === "" || score === null || score === undefined);
   
     // Check for blank exam scores
     const isMidtermExamIncomplete = midtermExamScores[students[studentIndex].id] === "" || midtermExamScores[students[studentIndex].id] === null || midtermExamScores[students[studentIndex].id] === undefined;
+  
+    // If any component has blank scores, return true
+    return isAttendanceIncomplete || isAssignmentIncomplete || isQuizIncomplete || isRecitationIncomplete || isMidtermExamIncomplete;
+  };
+  // REMARKS FOR FINALS
+  const FinalshasBlankScores = (studentIndex) => {
+    // Check for blank attendance scores
+    const attendanceScores = finalsAttendanceData[students[studentIndex].id] || [];
+    const isAttendanceIncomplete = attendanceScores.some(score => score.status === "Select" || !score.status);
+  
+    // Check for blank assignment scores
+    const isAssignmentIncomplete = finalsAssignmentScores[studentIndex]?.some(score => score === "" || score === null || score === undefined);
+  
+    // Check for blank quiz scores
+    const isQuizIncomplete = finalsQuizScores[studentIndex]?.some(score => score === "" || score === null || score === undefined);
+  
+    // Check for blank recitation scores
+    const isRecitationIncomplete = finalsRecitationScores[studentIndex]?.some(score => score === "" || score === null || score === undefined);
+  
+    // Check for blank exam scores
+    const isMidtermExamIncomplete = finalsExamScores[students[studentIndex].id] === "" || midtermExamScores[students[studentIndex].id] === null || midtermExamScores[students[studentIndex].id] === undefined;
   
     // If any component has blank scores, return true
     return isAttendanceIncomplete || isAssignmentIncomplete || isQuizIncomplete || isRecitationIncomplete || isMidtermExamIncomplete;
@@ -590,12 +853,12 @@ const ClassDetails = () => {
             <thead>
               <tr>
                 <th colSpan="2">Student Info</th>
-                <th colSpan={attendanceColumns.length + 7}>Attendance (P-Present; L-Late; E-Excuse; A-Absent)</th>
-                <th colSpan={assignmentColumns.length + 3} rowSpan={3} style={{ padding: '60px' }} >Assignments</th>
-                <th colSpan={quizColumns.length + 3} rowSpan={2}>Quizzes/Seatwork</th> {/* New column header */}
-                <th colSpan={recitationColumns.length + 3} rowSpan={3}>Recitation/Participation</th>
+                <th colSpan={midtermAttendanceColumns.length + 7}>Attendance (P-Present; L-Late; E-Excuse; A-Absent)</th>
+                <th colSpan={midtermAssignmentColumns.length + 3} rowSpan={3} style={{ padding: '60px' }} >Assignments</th>
+                <th colSpan={midtermQuizColumns.length + 3} rowSpan={2}>Quizzes/Seatwork</th> {/* New column header */}
+                <th colSpan={midtermRecitationColumns.length + 3} rowSpan={3}>Recitation/Participation</th>
                 <th colSpan="1" rowSpan="3">CS Grade</th>
-                <th colSpan={pbaColumns.length + 3} rowSpan={2}>Performance Based Assessment</th>
+                <th colSpan={midtermPBAColumns.length + 3} rowSpan={2}>Performance Based Assessment</th>
                 <th colSpan="3" rowSpan="3">Midterm Exam</th>
                 <th colSpan="1" rowSpan="3">Midterm Grade</th>
                 <th colSpan="1" rowSpan="4">Numerical Equivalent</th>
@@ -608,19 +871,19 @@ const ClassDetails = () => {
 
 
 
-                {attendanceColumns.map((column, index) => (
+                {midtermAttendanceColumns.map((column, index) => (
                 <th key={index} rowSpan="3">
                   <DatePicker
                     selected={column.date}
                     onChange={(date) =>
-                      setAttendanceColumns((prevColumns) =>
+                      setmidtermAttendanceColumns((prevColumns) =>
                         prevColumns.map((col, i) => (i === index ? { ...col, date } : col))
                       )
                     }
                     dateFormat="yyyy-MM-dd"
                   />
                   <button
-                    onClick={() => removeColumn(index, setAttendanceColumns)}
+                    onClick={() => removeColumn(index, setmidtermAttendanceColumns)}
                     style={{ background: 'none', border: 'none' }}
                   >
                     <FontAwesomeIcon icon={faMinus} />
@@ -629,7 +892,7 @@ const ClassDetails = () => {
               ))}
 
               <th rowSpan="3" style={{ background: '#d1e7dd', padding: '0', border: 'none' }}>
-                <button onClick={() => addColumn(setAttendanceColumns)} style={{ background: 'none', border: 'none' }}>
+                <button onClick={() => addColumn(setmidtermAttendanceColumns)} style={{ background: 'none', border: 'none' }}>
                   <FontAwesomeIcon icon={faPlus} />
                 </button>
               </th>
@@ -639,7 +902,7 @@ const ClassDetails = () => {
                 <input
                   type="text"
                   style={{ width: '60px', marginLeft: '10px' }}
-                  value={totalAttendanceDays}
+                  value={midtermTotalAttendanceDays}
                   readOnly
                 />
               </th>
@@ -649,7 +912,7 @@ const ClassDetails = () => {
               <th colSpan="4">Total Student Attendance</th>
                 
                 {/* Quiz Columns WITH REMOVE BUTTON */}
-                {quizColumns.map((_, index) => (
+                {midtermQuizColumns.map((_, index) => (
                 <th key={index} rowSpan={2}>
                   Q/S {index + 1}
                   <button onClick={() => removeQuizColumn(index)} style={{ background: 'none', border: 'none' }}>
@@ -657,7 +920,7 @@ const ClassDetails = () => {
                   </button>
                   <input
                     type="number"
-                    value={quizMaxScores[index] || 0}
+                    value={midtermQuizMaxScores[index] || 0}
                     onChange={(e) => handleMaxScoreChange(index, parseFloat(e.target.value) || 0)}
                     style={{ width: '50px' }} // Adjust width as needed
                     placeholder="Max"
@@ -674,23 +937,23 @@ const ClassDetails = () => {
                     <th rowSpan={2}>
                     <input
                     type="number"
-                    value={quizseatPercentage}
-                    onChange={(e) => setQuizseatPercentage(e.target.value)}
+                    value={midtermQuizPercentage}
+                    onChange={(e) => setmidtermQuizPercentage(e.target.value)}
                     style={{ width: '60px' }}
                   />
                     %</th>
     
                   {/* PBA Columns */}
-                  {pbaColumns.map((_, index) => (
+                  {midtermPBAColumns.map((_, index) => (
                     <th key={index}>
                       PBA {index + 1}
-                      <button onClick={() => removeColumn(index, setPbaColumns)} style={{ background: 'none', border: 'none' }}>
+                      <button onClick={() => removeColumn(index, setmidtermPBAColumns)} style={{ background: 'none', border: 'none' }}>
                         <FontAwesomeIcon icon={faMinus} />
                       </button>
                     </th>
                   ))}
                   <th rowSpan={2} style={{ background: '#d1e7dd', padding: '0', border: 'none' }}>
-                    <button onClick={() => addColumn(setPbaColumns)} style={{ background: 'none', border: 'none' }}>
+                    <button onClick={() => addColumn(setmidtermPBAColumns)} style={{ background: 'none', border: 'none' }}>
                       <FontAwesomeIcon icon={faPlus} />
                     </button>
                   </th>
@@ -705,23 +968,23 @@ const ClassDetails = () => {
               <th colSpan="2">
                 <input
                   type="number"
-                  value={attendancePercentage}
-                  onChange={(e) => setAttendancePercentage(e.target.value)}
+                  value={midtermAttendancePercentage}
+                  onChange={(e) => setmidtermAttendancePercentage(e.target.value)}
                   style={{ width: '60px' }}
                 />
                 %</th>
     
                 {/* Assignment Column Header */}
-                {assignmentColumns.map((_, index) => (
+                {midtermAssignmentColumns.map((_, index) => (
                   <th key={index}>
                     Assignment {index + 1}
-                    <button onClick={() => removeColumn(index, setAssignmentColumns)} style={{ background: 'none', border: 'none' }}>
+                    <button onClick={() => removeColumn(index, setmidtermAssignmentColumns)} style={{ background: 'none', border: 'none' }}>
                       <FontAwesomeIcon icon={faMinus} />
                     </button>
                   </th>
                 ))}
                 <th style={{ background: '#d1e7dd', padding: '0', border: 'none' }}>
-                  <button onClick={() => addColumn(setAssignmentColumns)} style={{ background: 'none', border: 'none' }}>
+                  <button onClick={() => addColumn(setmidtermAssignmentColumns)} style={{ background: 'none', border: 'none' }}>
                     <FontAwesomeIcon icon={faPlus} />
                   </button>
                 </th>
@@ -730,22 +993,22 @@ const ClassDetails = () => {
                 <th>
             <input
               type="number"
-              value={assignmentPercentage}
-              onChange={(e) => setAssignmentPercentage(e.target.value)}
+              value={midtermAssignmentPercentage}
+              onChange={(e) => setmidtermAssignmentPercentage(e.target.value)}
               style={{ width: '30px' }}
             />%
           </th>
                 {/* Recitation Columns */}
-                {recitationColumns.map((_, index) => (
+                {midtermRecitationColumns.map((_, index) => (
                   <th key={index}>
                     Recitation {index + 1}
-                    <button onClick={() => removeColumn(index, setRecitationColumns)} style={{ background: 'none', border: 'none' }}>
+                    <button onClick={() => removeColumn(index, setmidtermRecitationColumns)} style={{ background: 'none', border: 'none' }}>
                       <FontAwesomeIcon icon={faMinus} />
                     </button>
                   </th>
                 ))}
                 <th style={{ background: '#d1e7dd', padding: '0', border: 'none' }}>
-                  <button onClick={() => addColumn(setRecitationColumns)} style={{ background: 'none', border: 'none' }}>
+                  <button onClick={() => addColumn(setmidtermRecitationColumns)} style={{ background: 'none', border: 'none' }}>
                     <FontAwesomeIcon icon={faPlus} />
                   </button>
                 </th>
@@ -753,14 +1016,14 @@ const ClassDetails = () => {
                 <th>
                 <input
                 type="number"
-                value={recitationPercentage}
-                onChange={(e) => setRecitationPercentage(e.target.value)}
+                value={midtermRecitationPercentage}
+                onChange={(e) => setmidtermRecitationPercentage(e.target.value)}
                 style={{ width: '30px' }}
               />
                 %</th>
-                <th>{calculateTotalCSPercentage()}%</th>
+                <th>{calculateTotalMidtermCSPercentage()}%</th>
     
-                {pbaColumns.map((_, index) => (
+                {midtermPBAColumns.map((_, index) => (
                   <th key={index}>
                     <select>
                       <option value="Project">Select</option>
@@ -777,8 +1040,8 @@ const ClassDetails = () => {
                 <th>
                   <input
                     type="number"
-                    value={pbaGradePercentage}
-                    onChange={(e) => setPbaGradePercentage(parseFloat(e.target.value) || 0)}
+                    value={midtermPBAGradePercentage}
+                    onChange={(e) => setmidtermPBAGradePercentage(parseFloat(e.target.value) || 0)}
                     style={{ width: '50px' }}
                     min="0"
                     max="100"
@@ -788,8 +1051,8 @@ const ClassDetails = () => {
                 <th>
                     <input
                       type="number"
-                      value={totalItems}
-                      onChange={(e) => setTotalItems(e.target.value)}
+                      value={midtermTotalItems}
+                      onChange={(e) => setmidtermTotalItems(e.target.value)}
                       style={{ width: '70px' }}
                       placeholder="Items"
                     />
@@ -811,16 +1074,16 @@ const ClassDetails = () => {
 
             <tbody>
               {students.map((student, studentIndex) => {
-                const studentScores = pbaGradeScores[studentIndex] || [];
+                const studentScores = midtermPBAGradeScores[studentIndex] || [];
        
-                const { total, pbaGrade } = calculateTotalsAndPBA(studentScores, pbaGradePercentage);
+                const { total, pbaGrade } = calculateTotalsAndPBA(studentScores, midtermPBAGradePercentage);
                 const score = midtermExamScores[student.id] || 0;
-                const percentage = calculatePercentage(score);
-                const weightedScore = calculateWeightedScore(percentage).toFixed(2);
-                const { Atotals, points } = getAttendanceTotals(student.id);
-                const attendancePercentageScore = getAttendanceScorePercentage(points); 
+                const percentage = calculateMidtermPercentage(score);
+                const weightedScore = calculateMidtermWeightedScore(percentage).toFixed(2);
+                const { Atotals, points } = getMidtermAttendanceTotals(student.id);
+                const midtermAttendancePercentageScore = getMidtermAttendanceScorePercentage(points); 
                 const midtermGrade = calculateMidtermGrade(studentIndex); // Calculate the midterm grade
-                const { numEq, remarks: autoRemarks } = getNumericalEquivalentAndRemarks(student.id, midtermGrade, studentIndex); // Pass studentIndex to check for blank scores
+                const { numEq, remarks: autoRemarks } = getMidtermNumericalEquivalentAndRemarks(student.id, midtermGrade, studentIndex); // Pass studentIndex to check for blank scores
               
               
 
@@ -835,10 +1098,10 @@ const ClassDetails = () => {
                     
       
 
-                    {attendanceColumns.map((_, dateIndex) => (
+                    {midtermAttendanceColumns.map((_, dateIndex) => (
                     <td key={dateIndex}>
                       <select
-                        defaultValue={attendanceData[student.id]?.[dateIndex]?.status || 'Select'}
+                        defaultValue={midtermAttendanceData[student.id]?.[dateIndex]?.status || 'Select'}
                         onChange={(e) => handleAttendanceChange(student.id, dateIndex, e.target.value)}
                       >
                         <option value="Select">Select</option>
@@ -858,60 +1121,60 @@ const ClassDetails = () => {
                   <td>{Atotals.A}</td> {/* Absent count */}
 
                   <td>{points.toFixed(2)}</td>
-                  <td>{attendancePercentageScore} %</td>
+                  <td>{midtermAttendancePercentageScore} %</td>
                     
 
-                    {/*ASSIGNMENT COMPONENT: DEFINE ASSIGNMENTSCORES IN INPUT*/}
-                    {assignmentColumns.map((_, assignmentIndex) => (
+                    {/*ASSIGNMENT COMPONENT: DEFINE midtermAssignmentScores IN INPUT*/}
+                    {midtermAssignmentColumns.map((_, assignmentIndex) => (
                       <td key={assignmentIndex}>
                         <input
                           type="number"
                           style={{ width: '70px' }}
                           placeholder="Score"
-                          value={assignmentScores[studentIndex]?.[assignmentIndex] || ''} // Set the value based on state
+                          value={midtermAssignmentScores[studentIndex]?.[assignmentIndex] || ''} // Set the value based on state
                           onChange={(e) => handleScoreChange(studentIndex, assignmentIndex, parseFloat(e.target.value) || 0)}
                         />
                       </td>
                     ))}
                     <td></td>
-                    <td>{calculateAssignmentColumnAverage(student.id)}%</td> {/* Display average directly */}
-                    <td>{calculateAssignmentComponentScore(student.id, assignmentPercentage)}%</td>
+                    <td>{calculateMidtermAssignmentColumnAverage(student.id)}%</td> {/* Display average directly */}
+                    <td>{calculateMidtermAssignmentComponentScore(student.id, midtermAssignmentPercentage)}%</td>
 
-                    {/*QUIZ COMPONENT: DEFINE QUIZSEATSCORES IN INPUT*/}
-                    {quizColumns.map((_, quizIndex) => (
+                    {/*QUIZ COMPONENT: DEFINE midtermQuizScores IN INPUT*/}
+                    {midtermQuizColumns.map((_, quizIndex) => (
                       <td key={quizIndex}>
                         <input
                           type="number"
                           style={{ width: '70px' }}
                           placeholder="Score"
-                          value={quizseatScores[studentIndex]?.[quizIndex] || ''} // Ensure that the input shows the current score
-                          onChange={(e) => handleQuizseatScoreChange(studentIndex, quizIndex, parseFloat(e.target.value) || 0)}
+                          value={midtermQuizScores[studentIndex]?.[quizIndex] || ''} // Ensure that the input shows the current score
+                          onChange={(e) => handleQuizScoreChange(studentIndex, quizIndex, parseFloat(e.target.value) || 0)}
                         />
                       </td>
                     ))}
                     <td></td>
-                    <td>{calculateTotalScore(studentIndex)}%</td> {/* Total Column */}
-                    <td>{(calculateQuizseatComponentScore(studentIndex, quizseatPercentage))}%</td>
+                    <td>{calculateMidtermQuizTotalScore(studentIndex)}%</td> {/* Total Column */}
+                    <td>{(calculateMidtermQuizComponentScore(studentIndex, midtermQuizPercentage))}%</td>
                     
-                    {/*RECITATION COMPONENT: DEFINE RECITATIONSCORES IN INPUT*/}
-                    {recitationColumns.map((_, index) => (
+                    {/*RECITATION COMPONENT: DEFINE midtermRecitationScores IN INPUT*/}
+                    {midtermRecitationColumns.map((_, index) => (
                       <td key={index}>
                         <input
                           type="number"
                           style={{ width: '70px' }}
                           placeholder="Score" 
-                          value={recitationScores[studentIndex]?.[index] || ''}
+                          value={midtermRecitationScores[studentIndex]?.[index] || ''}
                           onChange={(e) => handleRecitationScoreChange(studentIndex, index, parseFloat(e.target.value) || 0)}/>
                       </td>
                     ))}
                     <td></td>
-                    <td>{calculateRecitationColumnAverage(student.id)}%</td>
-                    <td>{calculateRecitationComponentScore(student.id, recitationPercentage)}%</td>
+                    <td>{calculateMidtermRecitationColumnAverage(student.id)}%</td>
+                    <td>{calculateMidtermRecitationComponentScore(student.id, midtermRecitationPercentage)}%</td>
 
                     {/*CLASS STANDING TOTAL: ATTENDANCE + ASSIGN + QUIZSEAT + RECITATION*/}
-                    <td>{calculateTotalCSGrade(studentIndex)}%</td>
+                    <td>{calculateTotalMidtermCSGrade(studentIndex)}%</td>
                     
-                    {pbaColumns.map((_, quizIndex) => (
+                    {midtermPBAColumns.map((_, quizIndex) => (
                       <td key={quizIndex}>
                         <input
                           type="number"
@@ -933,7 +1196,7 @@ const ClassDetails = () => {
                         <input
                           type="number"
                           value={score}
-                          onChange={(e) => handleMTScoreChange(student.id, e.target.value)}
+                          onChange={(e) => handleExamScoreChange(student.id, e.target.value)}
                           style={{ width: '70px' }}
                           placeholder="Score"
                         />
@@ -968,19 +1231,19 @@ const ClassDetails = () => {
         </div>
         );
 
-        case 'finals':
-          return (
+      case 'finals':
+        return (
             <div style={{ overflowX: 'auto', maxHeight: '500px' }}>
             <table className="details-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr>
                   <th colSpan="2">Student Info</th>
-                  <th colSpan={attendanceColumns.length + 7}>Attendance (P-Present; L-Late; E-Excuse; A-Absent)</th>
-                  <th colSpan={assignmentColumns.length + 3} rowSpan={3} style={{ padding: '60px' }} >Assignments</th>
-                  <th colSpan={quizColumns.length + 3} rowSpan={2}>Quizzes/Seatwork</th> {/* New column header */}
-                  <th colSpan={recitationColumns.length + 3} rowSpan={3}>Recitation/Participation</th>
+                  <th colSpan={finalsAttendanceColumns.length + 7}>Attendance (P-Present; L-Late; E-Excuse; A-Absent)</th>
+                  <th colSpan={finalsAssignmentColumns.length + 3} rowSpan={3} style={{ padding: '60px' }} >Assignments</th>
+                  <th colSpan={finalsQuizColumns.length + 3} rowSpan={2}>Quizzes/Seatwork</th> {/* New column header */}
+                  <th colSpan={finalsRecitationColumns.length + 3} rowSpan={3}>Recitation/Participation</th>
                   <th colSpan="1" rowSpan="3">CS Grade</th>
-                  <th colSpan={pbaColumns.length + 3} rowSpan={2}>Performance Based Assessment</th>
+                  <th colSpan={finalsPBAColumns.length + 3} rowSpan={2}>Performance Based Assessment</th>
                   <th colSpan="3" rowSpan="3">Final Exam</th>
                   <th colSpan="1" rowSpan="3">Final Grade</th>
                   <th colSpan="1" rowSpan="4">Numerical Equivalent</th>
@@ -993,19 +1256,19 @@ const ClassDetails = () => {
   
   
   
-                  {attendanceColumns.map((column, index) => (
+                  {finalsAttendanceColumns.map((column, index) => (
                   <th key={index} rowSpan="3">
                     <DatePicker
                       selected={column.date}
                       onChange={(date) =>
-                        setAttendanceColumns((prevColumns) =>
+                        setfinalsAttendanceColumns((prevColumns) =>
                           prevColumns.map((col, i) => (i === index ? { ...col, date } : col))
                         )
                       }
                       dateFormat="yyyy-MM-dd"
                     />
                     <button
-                      onClick={() => removeColumn(index, setAttendanceColumns)}
+                      onClick={() => removeColumn(index, setfinalsAttendanceColumns)}
                       style={{ background: 'none', border: 'none' }}
                     >
                       <FontAwesomeIcon icon={faMinus} />
@@ -1014,7 +1277,7 @@ const ClassDetails = () => {
                 ))}
   
                 <th rowSpan="3" style={{ background: '#d1e7dd', padding: '0', border: 'none' }}>
-                  <button onClick={() => addColumn(setAttendanceColumns)} style={{ background: 'none', border: 'none' }}>
+                  <button onClick={() => addColumn(setfinalsAttendanceColumns)} style={{ background: 'none', border: 'none' }}>
                     <FontAwesomeIcon icon={faPlus} />
                   </button>
                 </th>
@@ -1024,7 +1287,7 @@ const ClassDetails = () => {
                   <input
                     type="text"
                     style={{ width: '60px', marginLeft: '10px' }}
-                    value={totalAttendanceDays}
+                    value={finalsTotalAttendanceDays}
                     readOnly
                   />
                 </th>
@@ -1034,7 +1297,7 @@ const ClassDetails = () => {
                 <th colSpan="4">Total Student Attendance</th>
                   
                   {/* Quiz Columns WITH REMOVE BUTTON */}
-                  {quizColumns.map((_, index) => (
+                  {finalsQuizColumns.map((_, index) => (
                   <th key={index} rowSpan={2}>
                     Q/S {index + 1}
                     <button onClick={() => removeQuizColumn(index)} style={{ background: 'none', border: 'none' }}>
@@ -1042,7 +1305,7 @@ const ClassDetails = () => {
                     </button>
                     <input
                       type="number"
-                      value={quizMaxScores[index] || 0}
+                      value={finalsQuizMaxScores[index] || 0}
                       onChange={(e) => handleMaxScoreChange(index, parseFloat(e.target.value) || 0)}
                       style={{ width: '50px' }} // Adjust width as needed
                       placeholder="Max"
@@ -1059,23 +1322,23 @@ const ClassDetails = () => {
                       <th rowSpan={2}>
                       <input
                       type="number"
-                      value={quizseatPercentage}
-                      onChange={(e) => setQuizseatPercentage(e.target.value)}
+                      value={finalsQuizPercentage}
+                    onChange={(e) => setfinalsQuizPercentage(e.target.value)}
                       style={{ width: '60px' }}
                     />
                       %</th>
       
                     {/* PBA Columns */}
-                    {pbaColumns.map((_, index) => (
+                    {finalsPBAColumns.map((_, index) => (
                       <th key={index}>
                         PBA {index + 1}
-                        <button onClick={() => removeColumn(index, setPbaColumns)} style={{ background: 'none', border: 'none' }}>
+                        <button onClick={() => removeColumn(index, setfinalsPBAColumns)} style={{ background: 'none', border: 'none' }}>
                           <FontAwesomeIcon icon={faMinus} />
                         </button>
                       </th>
                     ))}
                     <th rowSpan={2} style={{ background: '#d1e7dd', padding: '0', border: 'none' }}>
-                      <button onClick={() => addColumn(setPbaColumns)} style={{ background: 'none', border: 'none' }}>
+                      <button onClick={() => addColumn(setfinalsPBAColumns)} style={{ background: 'none', border: 'none' }}>
                         <FontAwesomeIcon icon={faPlus} />
                       </button>
                     </th>
@@ -1090,23 +1353,23 @@ const ClassDetails = () => {
                 <th colSpan="2">
                   <input
                     type="number"
-                    value={attendancePercentage}
-                    onChange={(e) => setAttendancePercentage(e.target.value)}
+                    value={finalsAttendancePercentage}
+                    onChange={(e) => setfinalsAttendancePercentage(e.target.value)}
                     style={{ width: '60px' }}
                   />
                   %</th>
       
                   {/* Assignment Column Header */}
-                  {assignmentColumns.map((_, index) => (
+                  {finalsAssignmentColumns.map((_, index) => (
                     <th key={index}>
                       Assignment {index + 1}
-                      <button onClick={() => removeColumn(index, setAssignmentColumns)} style={{ background: 'none', border: 'none' }}>
+                      <button onClick={() => removeColumn(index, setfinalsAssignmentColumns)} style={{ background: 'none', border: 'none' }}>
                         <FontAwesomeIcon icon={faMinus} />
                       </button>
                     </th>
                   ))}
                   <th style={{ background: '#d1e7dd', padding: '0', border: 'none' }}>
-                    <button onClick={() => addColumn(setAssignmentColumns)} style={{ background: 'none', border: 'none' }}>
+                    <button onClick={() => addColumn(setfinalsAssignmentColumns)} style={{ background: 'none', border: 'none' }}>
                       <FontAwesomeIcon icon={faPlus} />
                     </button>
                   </th>
@@ -1115,22 +1378,22 @@ const ClassDetails = () => {
                   <th>
               <input
                 type="number"
-                value={assignmentPercentage}
-                onChange={(e) => setAssignmentPercentage(e.target.value)}
+                value={finalsAssignmentPercentage}
+                onChange={(e) => setfinalsAssignmentPercentage(e.target.value)}
                 style={{ width: '30px' }}
               />%
             </th>
                   {/* Recitation Columns */}
-                  {recitationColumns.map((_, index) => (
+                  {finalsRecitationColumns.map((_, index) => (
                     <th key={index}>
                       Recitation {index + 1}
-                      <button onClick={() => removeColumn(index, setRecitationColumns)} style={{ background: 'none', border: 'none' }}>
+                      <button onClick={() => removeColumn(index, setfinalsRecitationColumns)} style={{ background: 'none', border: 'none' }}>
                         <FontAwesomeIcon icon={faMinus} />
                       </button>
                     </th>
                   ))}
                   <th style={{ background: '#d1e7dd', padding: '0', border: 'none' }}>
-                    <button onClick={() => addColumn(setRecitationColumns)} style={{ background: 'none', border: 'none' }}>
+                    <button onClick={() => addColumn(setfinalsRecitationColumns)} style={{ background: 'none', border: 'none' }}>
                       <FontAwesomeIcon icon={faPlus} />
                     </button>
                   </th>
@@ -1138,14 +1401,14 @@ const ClassDetails = () => {
                   <th>
                   <input
                   type="number"
-                  value={recitationPercentage}
-                  onChange={(e) => setRecitationPercentage(e.target.value)}
+                  value={finalsRecitationPercentage}
+                  onChange={(e) => setfinalsRecitationPercentage(e.target.value)}
                   style={{ width: '30px' }}
                 />
                   %</th>
-                  <th>{calculateTotalCSPercentage()}%</th>
+                  <th>{calculateTotalFinalsCSPercentage()}%</th>
       
-                  {pbaColumns.map((_, index) => (
+                  {finalsPBAColumns.map((_, index) => (
                     <th key={index}>
                       <select>
                         <option value="Project">Select</option>
@@ -1162,8 +1425,8 @@ const ClassDetails = () => {
                   <th>
                     <input
                       type="number"
-                      value={pbaGradePercentage}
-                      onChange={(e) => setPbaGradePercentage(parseFloat(e.target.value) || 0)}
+                      value={finalsPBAGradePercentage}
+                      onChange={(e) => setfinalsPBAGradePercentage(parseFloat(e.target.value) || 0)}
                       style={{ width: '50px' }}
                       min="0"
                       max="100"
@@ -1173,8 +1436,8 @@ const ClassDetails = () => {
                   <th>
                       <input
                         type="number"
-                        value={totalItems}
-                        onChange={(e) => setTotalItems(e.target.value)}
+                        value={midtermTotalItems}
+                        onChange={(e) => setmidtermTotalItems(e.target.value)}
                         style={{ width: '70px' }}
                         placeholder="Items"
                       />
@@ -1182,8 +1445,8 @@ const ClassDetails = () => {
                     <th colSpan="2">
                       <input
                         type="number"
-                        value={midtermExamPercentage}
-                        onChange={(e) => setMidtermExamPercentage(e.target.value)}
+                        value={finalsExamPercentage}
+                        onChange={(e) => setfinalsExamPercentage(e.target.value)}
                         style={{ width: '30px' }}
                         placeholder="%"
                       />
@@ -1196,16 +1459,16 @@ const ClassDetails = () => {
   
               <tbody>
                 {students.map((student, studentIndex) => {
-                  const studentScores = pbaGradeScores[studentIndex] || [];
+                  const studentScores = finalsPBAGradeScores[studentIndex] || [];
          
-                  const { total, pbaGrade } = calculateTotalsAndPBA(studentScores, pbaGradePercentage);
-                  const score = midtermExamScores[student.id] || 0;
-                  const percentage = calculatePercentage(score);
-                  const weightedScore = calculateWeightedScore(percentage).toFixed(2);
-                  const { Atotals, points } = getAttendanceTotals(student.id);
-                  const attendancePercentageScore = getAttendanceScorePercentage(points); 
-                  const midtermGrade = calculateMidtermGrade(studentIndex); // Calculate the midterm grade
-                  const { numEq, remarks: autoRemarks } = getNumericalEquivalentAndRemarks(student.id, midtermGrade, studentIndex); // Pass studentIndex to check for blank scores
+                  const { total, pbaGrade } = calculateTotalsAndPBA(studentScores, finalsPBAGradePercentage);
+                  const score = finalsExamScores[student.id] || 0;
+                  const percentage = calculateFinalPercentage(score);
+                  const weightedScore = calculateFinalWeightedScore(percentage).toFixed(2);
+                  const { Atotals, points } = getFinalsAttendanceTotals(student.id);
+                  const finalsAttendancePercentageScore = getFinalsAttendanceScorePercentage(points); 
+                  const midtermGrade = calculateFinalsGrade(studentIndex); // Calculate the midterm grade
+                  const { numEq, remarks: autoRemarks } = getFinalsNumericalEquivalentAndRemarks(student.id, midtermGrade, studentIndex); // Pass studentIndex to check for blank scores
                 
                 
   
@@ -1220,10 +1483,10 @@ const ClassDetails = () => {
                       
         
   
-                      {attendanceColumns.map((_, dateIndex) => (
+                      {finalsAttendanceColumns.map((_, dateIndex) => (
                       <td key={dateIndex}>
                         <select
-                          defaultValue={attendanceData[student.id]?.[dateIndex]?.status || 'Select'}
+                          defaultValue={finalsAttendanceData[student.id]?.[dateIndex]?.status || 'Select'}
                           onChange={(e) => handleAttendanceChange(student.id, dateIndex, e.target.value)}
                         >
                           <option value="Select">Select</option>
@@ -1243,60 +1506,60 @@ const ClassDetails = () => {
                     <td>{Atotals.A}</td> {/* Absent count */}
   
                     <td>{points.toFixed(2)}</td>
-                    <td>{attendancePercentageScore} %</td>
+                    <td>{finalsAttendancePercentageScore} %</td>
                       
   
                       {/*ASSIGNMENT COMPONENT: DEFINE ASSIGNMENTSCORES IN INPUT*/}
-                      {assignmentColumns.map((_, assignmentIndex) => (
+                      {finalsAssignmentColumns.map((_, assignmentIndex) => (
                         <td key={assignmentIndex}>
                           <input
                             type="number"
                             style={{ width: '70px' }}
                             placeholder="Score"
-                            value={assignmentScores[studentIndex]?.[assignmentIndex] || ''} // Set the value based on state
+                            value={finalsAssignmentScores[studentIndex]?.[assignmentIndex] || ''} // Set the value based on state
                             onChange={(e) => handleScoreChange(studentIndex, assignmentIndex, parseFloat(e.target.value) || 0)}
                           />
                         </td>
                       ))}
                       <td></td>
-                      <td>{calculateAssignmentColumnAverage(student.id)}%</td> {/* Display average directly */}
-                      <td>{calculateAssignmentComponentScore(student.id, assignmentPercentage)}%</td>
+                      <td>{calculateFinalsAssignmentColumnAverage(student.id)}%</td> {/* Display average directly */}
+                      <td>{calculateFinalsAssignmentComponentScore(student.id, finalsAssignmentPercentage)}%</td>
   
                       {/*QUIZ COMPONENT: DEFINE QUIZSEATSCORES IN INPUT*/}
-                      {quizColumns.map((_, quizIndex) => (
+                      {finalsQuizColumns.map((_, quizIndex) => (
                         <td key={quizIndex}>
                           <input
                             type="number"
                             style={{ width: '70px' }}
                             placeholder="Score"
-                            value={quizseatScores[studentIndex]?.[quizIndex] || ''} // Ensure that the input shows the current score
-                            onChange={(e) => handleQuizseatScoreChange(studentIndex, quizIndex, parseFloat(e.target.value) || 0)}
+                            value={finalsQuizScores[studentIndex]?.[quizIndex] || ''} // Ensure that the input shows the current score
+                            onChange={(e) => handleQuizScoreChange(studentIndex, quizIndex, parseFloat(e.target.value) || 0)}
                           />
                         </td>
                       ))}
                       <td></td>
-                      <td>{calculateTotalScore(studentIndex)}%</td> {/* Total Column */}
-                      <td>{(calculateQuizseatComponentScore(studentIndex, quizseatPercentage))}%</td>
+                      <td>{calculateFinalsQuizTotalScore(studentIndex)}%</td> {/* Total Column */}
+                      <td>{(calculateFinalsQuizComponentScore(studentIndex, finalsQuizPercentage))}%</td>
                       
                       {/*RECITATION COMPONENT: DEFINE RECITATIONSCORES IN INPUT*/}
-                      {recitationColumns.map((_, index) => (
+                      {finalsRecitationColumns.map((_, index) => (
                         <td key={index}>
                           <input
                             type="number"
                             style={{ width: '70px' }}
                             placeholder="Score" 
-                            value={recitationScores[studentIndex]?.[index] || ''}
+                            value={finalsRecitationScores[studentIndex]?.[index] || ''}
                             onChange={(e) => handleRecitationScoreChange(studentIndex, index, parseFloat(e.target.value) || 0)}/>
                         </td>
                       ))}
                       <td></td>
-                      <td>{calculateRecitationColumnAverage(student.id)}%</td>
-                      <td>{calculateRecitationComponentScore(student.id, recitationPercentage)}%</td>
+                      <td>{calculateFinalsRecitationColumnAverage(student.id)}%</td>
+                      <td>{calculateFinalsRecitationComponentScore(student.id, finalsRecitationPercentage)}%</td>
   
                       {/*CLASS STANDING TOTAL: ATTENDANCE + ASSIGN + QUIZSEAT + RECITATION*/}
-                      <td>{calculateTotalCSGrade(studentIndex)}%</td>
+                      <td>{calculateTotalFinalsCSGrade(studentIndex)}%</td>
                       
-                      {pbaColumns.map((_, quizIndex) => (
+                      {finalsPBAColumns.map((_, quizIndex) => (
                         <td key={quizIndex}>
                           <input
                             type="number"
@@ -1318,7 +1581,7 @@ const ClassDetails = () => {
                           <input
                             type="number"
                             value={score}
-                            onChange={(e) => handleMTScoreChange(student.id, e.target.value)}
+                            onChange={(e) => handleExamScoreChange(student.id, e.target.value)}
                             style={{ width: '70px' }}
                             placeholder="Score"
                           />
@@ -1327,7 +1590,7 @@ const ClassDetails = () => {
                         <td>{weightedScore}%</td>
   
                       {/*MIDTERM GRADE: CLASS STANDING + PBA + MIDTERM EXAM*/}
-                      <td>{calculateMidtermGrade(studentIndex)}</td>
+                      <td>{calculateFinalsGrade(studentIndex)}</td>
                       <td><center>{numEq}</center></td>
   
                       {/*REMARKS DROP-DOWN*/}
