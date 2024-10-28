@@ -136,7 +136,7 @@ const ClassDetails = () => {
   };
 
   {/*ATTENDANCE CHANGE HANDLER FOR BOTH PERIOD (COMPLETE)*/}
-  const handleAttendanceChange = (studentId, dateIndex, status) => {
+  const handleMidtermAttendanceChange = (studentId, dateIndex, status) => {
     setmidtermAttendanceData((prevData) => {
       const studentAttendance = prevData[studentId] || [];
       const updatedAttendance = [...studentAttendance];
@@ -148,6 +148,8 @@ const ClassDetails = () => {
         [studentId]: updatedAttendance,
       };
     });
+  };
+  const handleFinalsAttendanceChange = (studentId, dateIndex, status) => {
     setfinalsAttendanceData((prevData) => {
       const studentAttendance = prevData[studentId] || [];
       const updatedAttendance = [...studentAttendance];
@@ -353,7 +355,7 @@ const ClassDetails = () => {
   };
   
   {/*QUIZ SCORE CHANGE HANDLER FOR BOTH PERIOD (COMPLETE)*/}
-  const handleQuizScoreChange = (studentIndex, quizIndex, score) => {
+  const handleMidtermQuizScoreChange = (studentIndex, quizIndex, score) => {
     setmidtermQuizScores(prevScores =>
       prevScores.map((scores, index) => {
         if (index === studentIndex) {
@@ -364,6 +366,8 @@ const ClassDetails = () => {
         return scores;
       })
     );
+  };
+  const handleFinalsQuizScoreChange = (studentIndex, quizIndex, score) => {
     setfinalsQuizScores(prevScores =>
       prevScores.map((scores, index) => {
         if (index === studentIndex) {
@@ -377,12 +381,14 @@ const ClassDetails = () => {
   };
 
   {/*QUIZ MAX SCORE CHANGE HANDLER FOR BOTH PERIOD (COMPLETE)*/}
-  const handleMaxScoreChange = (quizIndex, value) => {
+  const handleMidtermMaxScoreChange = (quizIndex, value) => {
     setmidtermQuizMaxScores(prev => {
       const updatedMaxScores = [...prev];
       updatedMaxScores[quizIndex] = value;
       return updatedMaxScores;
     });
+  };
+  const handleFinalsMaxScoreChange = (quizIndex, value) => {
     setfinalsQuizMaxScores(prev => {
       const updatedMaxScores = [...prev];
       updatedMaxScores[quizIndex] = value;
@@ -440,7 +446,7 @@ const ClassDetails = () => {
   {/* RECITATION/PARTICIPATION */}
 
   {/* RECITATION CHANGE HANDLER FOR BOTH PERIOD (COMPLETE)*/}
-  const handleRecitationScoreChange = (studentId, recitationIndex, score) => {
+  const handleMidtermRecitationScoreChange = (studentId, recitationIndex, score) => {
     setmidtermRecitationScores(prevScores => {
       const updatedScores = [...prevScores];
       if (!updatedScores[studentId]) {
@@ -449,6 +455,8 @@ const ClassDetails = () => {
       updatedScores[studentId][recitationIndex] = score;
       return updatedScores;
     });
+  };
+  const handleFinalsRecitationScoreChange = (studentId, recitationIndex, score) => {
     setfinalsRecitationScores(prevScores => {
       const updatedScores = [...prevScores];
       if (!updatedScores[studentId]) {
@@ -606,7 +614,7 @@ const ClassDetails = () => {
   
     {/* PBA */}
       // Handle PBA score change with validation for scores between 50-100
-  const handlePBAScoreChange = (studentIndex, scoreIndex, newScore) => {
+  const handleMidtermPBAScoreChange = (studentIndex, scoreIndex, newScore) => {
     setmidtermPBAGradeScores(prevScores => {
       // Copy the current scores array
       const updatedScores = [...prevScores];
@@ -626,6 +634,8 @@ const ClassDetails = () => {
   
       return updatedScores;
     });
+  };
+  const handleFinalsPBAScoreChange = (studentIndex, scoreIndex, newScore) => {
     setfinalsPBAGradeScores(prevScores => {
       // Copy the current scores array
       const updatedScores = [...prevScores];
@@ -664,11 +674,13 @@ const ClassDetails = () => {
    {/* SEMESTRAL EXAM */}
    
    {/* EXAM SCORE CHANGE HANDLER FOR BOTH PERIOD (COMPLETE)*/}
-  const handleExamScoreChange = (studentId, score) => {
+  const handleMidtermExamScoreChange = (studentId, score) => {
     setMidtermExamScores((prevScores) => ({
       ...prevScores,
       [studentId]: score,
     }));
+  };
+  const handleFinalsExamScoreChange = (studentId, score) => {
     setfinalsExamScores((prevScores) => ({
       ...prevScores,
       [studentId]: score,
@@ -689,7 +701,6 @@ const ClassDetails = () => {
   const calculateFinalWeightedScore = (percentage) => {
     return (percentage * finalsExamPercentage) / 100;
   };
-
 
   //MIDTERM GRADE
   const calculateMidtermGrade = (studentIndex) => {
@@ -921,7 +932,7 @@ const ClassDetails = () => {
                   <input
                     type="number"
                     value={midtermQuizMaxScores[index] || 0}
-                    onChange={(e) => handleMaxScoreChange(index, parseFloat(e.target.value) || 0)}
+                    onChange={(e) => handleMidtermMaxScoreChange(index, parseFloat(e.target.value) || 0)}
                     style={{ width: '50px' }} // Adjust width as needed
                     placeholder="Max"
                   />
@@ -1102,7 +1113,7 @@ const ClassDetails = () => {
                     <td key={dateIndex}>
                       <select
                         defaultValue={midtermAttendanceData[student.id]?.[dateIndex]?.status || 'Select'}
-                        onChange={(e) => handleAttendanceChange(student.id, dateIndex, e.target.value)}
+                        onChange={(e) => handleMidtermAttendanceChange(student.id, dateIndex, e.target.value)}
                       >
                         <option value="Select">Select</option>
                         <option value="P">P</option>
@@ -1148,7 +1159,7 @@ const ClassDetails = () => {
                           style={{ width: '70px' }}
                           placeholder="Score"
                           value={midtermQuizScores[studentIndex]?.[quizIndex] || ''} // Ensure that the input shows the current score
-                          onChange={(e) => handleQuizScoreChange(studentIndex, quizIndex, parseFloat(e.target.value) || 0)}
+                          onChange={(e) => handleMidtermQuizScoreChange(studentIndex, quizIndex, parseFloat(e.target.value) || 0)}
                         />
                       </td>
                     ))}
@@ -1164,7 +1175,7 @@ const ClassDetails = () => {
                           style={{ width: '70px' }}
                           placeholder="Score" 
                           value={midtermRecitationScores[studentIndex]?.[index] || ''}
-                          onChange={(e) => handleRecitationScoreChange(studentIndex, index, parseFloat(e.target.value) || 0)}/>
+                          onChange={(e) => handleMidtermRecitationScoreChange(studentIndex, index, parseFloat(e.target.value) || 0)}/>
                       </td>
                     ))}
                     <td></td>
@@ -1181,7 +1192,7 @@ const ClassDetails = () => {
                           style={{ width: '70px' }}
                           placeholder="Score"
                           value={studentScores[quizIndex] !== undefined ? studentScores[quizIndex] : ''} // Display the score if it exists
-                          onChange={(e) => handlePBAScoreChange(studentIndex, quizIndex, parseFloat(e.target.value) || 0)}
+                          onChange={(e) => handleMidtermPBAScoreChange(studentIndex, quizIndex, parseFloat(e.target.value) || 0)}
                           min="50"
                           max="100"
                         />
@@ -1196,7 +1207,7 @@ const ClassDetails = () => {
                         <input
                           type="number"
                           value={score}
-                          onChange={(e) => handleExamScoreChange(student.id, e.target.value)}
+                          onChange={(e) => handleMidtermExamScoreChange(student.id, e.target.value)}
                           style={{ width: '70px' }}
                           placeholder="Score"
                         />
@@ -1306,7 +1317,7 @@ const ClassDetails = () => {
                     <input
                       type="number"
                       value={finalsQuizMaxScores[index] || 0}
-                      onChange={(e) => handleMaxScoreChange(index, parseFloat(e.target.value) || 0)}
+                      onChange={(e) => handleFinalsMaxScoreChange(index, parseFloat(e.target.value) || 0)}
                       style={{ width: '50px' }} // Adjust width as needed
                       placeholder="Max"
                     />
@@ -1436,8 +1447,8 @@ const ClassDetails = () => {
                   <th>
                       <input
                         type="number"
-                        value={midtermTotalItems}
-                        onChange={(e) => setmidtermTotalItems(e.target.value)}
+                        value={finalsTotalItems}
+                        onChange={(e) => setfinalsTotalItems(e.target.value)}
                         style={{ width: '70px' }}
                         placeholder="Items"
                       />
@@ -1487,7 +1498,7 @@ const ClassDetails = () => {
                       <td key={dateIndex}>
                         <select
                           defaultValue={finalsAttendanceData[student.id]?.[dateIndex]?.status || 'Select'}
-                          onChange={(e) => handleAttendanceChange(student.id, dateIndex, e.target.value)}
+                          onChange={(e) => handleFinalsAttendanceChange(student.id, dateIndex, e.target.value)}
                         >
                           <option value="Select">Select</option>
                           <option value="P">P</option>
@@ -1533,7 +1544,7 @@ const ClassDetails = () => {
                             style={{ width: '70px' }}
                             placeholder="Score"
                             value={finalsQuizScores[studentIndex]?.[quizIndex] || ''} // Ensure that the input shows the current score
-                            onChange={(e) => handleQuizScoreChange(studentIndex, quizIndex, parseFloat(e.target.value) || 0)}
+                            onChange={(e) => handleFinalsQuizScoreChange(studentIndex, quizIndex, parseFloat(e.target.value) || 0)}
                           />
                         </td>
                       ))}
@@ -1549,7 +1560,7 @@ const ClassDetails = () => {
                             style={{ width: '70px' }}
                             placeholder="Score" 
                             value={finalsRecitationScores[studentIndex]?.[index] || ''}
-                            onChange={(e) => handleRecitationScoreChange(studentIndex, index, parseFloat(e.target.value) || 0)}/>
+                            onChange={(e) => handleFinalsRecitationScoreChange(studentIndex, index, parseFloat(e.target.value) || 0)}/>
                         </td>
                       ))}
                       <td></td>
@@ -1566,7 +1577,7 @@ const ClassDetails = () => {
                             style={{ width: '70px' }}
                             placeholder="Score"
                             value={studentScores[quizIndex] !== undefined ? studentScores[quizIndex] : ''} // Display the score if it exists
-                            onChange={(e) => handlePBAScoreChange(studentIndex, quizIndex, parseFloat(e.target.value) || 0)}
+                            onChange={(e) => handleFinalsPBAScoreChange(studentIndex, quizIndex, parseFloat(e.target.value) || 0)}
                             min="50"
                             max="100"
                           />
@@ -1581,7 +1592,7 @@ const ClassDetails = () => {
                           <input
                             type="number"
                             value={score}
-                            onChange={(e) => handleExamScoreChange(student.id, e.target.value)}
+                            onChange={(e) => handleFinalsExamScoreChange(student.id, e.target.value)}
                             style={{ width: '70px' }}
                             placeholder="Score"
                           />
