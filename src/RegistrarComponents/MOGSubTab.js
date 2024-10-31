@@ -2,18 +2,10 @@ import React, { useState } from 'react';
 import { Tab, Tabs, Table, Button } from 'react-bootstrap';
 import '../App.css'
 
-export default function RegistrarYearSectionTab() {
+export default function MOGSubTab() {
 
   // State variables for toggling button states for each year
   const [firstYearFirstSemToggled, setFirstYearFirstSemToggled] = useState(false);
-  const [firstYearSecondSemToggled, setFirstYearSecondSemToggled] = useState(false);
-  const [secondYearFirstSemToggled, setSecondYearFirstSemToggled] = useState(false);
-  const [secondYearSecondSemToggled, setSecondYearSecondSemToggled] = useState(false);
-  const [thirdYearFirstSemToggled, setThirdYearFirstSemToggled] = useState(false);
-  const [thirdYearSecondSemToggled, setThirdYearSecondSemToggled] = useState(false);
-  const [fourthYearFirstSemToggled, setFourthYearFirstSemToggled] = useState(false);
-  const [fourthYearSecondSemToggled, setFourthYearSecondSemToggled] = useState(false);
-
   const renderTable = () => (
     <Table hover className="table table-hover success-border">
       <thead className="table-success">
@@ -54,29 +46,18 @@ export default function RegistrarYearSectionTab() {
    
     <div className='container-fluid bg-white p-2 px-4 rounded'>
 
-<Tabs defaultActiveKey="1st" id="year-tabs" className="mb-3">
-        {/* First Year Tab */}
-        <Tab eventKey="1st" title={<span className="custom-color-green-font custom-font">First Year</span>}>
-          <Tabs className="mb-3">
-            <Tab eventKey="Fsem" title={<span className="custom-color-green-font custom-font">First Sem</span>}>
-              <Button
+      
+<Button
                 variant={firstYearFirstSemToggled ? 'success' : 'secondary'}
                 onClick={() => setFirstYearFirstSemToggled(!firstYearFirstSemToggled)}
                 style={{ width: '100%', marginBottom: '20px' }}
               >
-                {firstYearFirstSemToggled ? 'CSOG' : 'CSOG'}
+                {firstYearFirstSemToggled ? 'MOG' : 'MOG'}
               </Button>
-            </Tab>
-            <Tab eventKey="Ssem" title={<span className="custom-color-green-font custom-font">Second Sem</span>}>
-              <Button
-                variant={firstYearSecondSemToggled ? 'success' : 'secondary'}
-                onClick={() => setFirstYearSecondSemToggled(!firstYearSecondSemToggled)}
-                style={{ width: '100%', marginBottom: '20px' }}
-              >
-                {firstYearSecondSemToggled ? 'CSOG' : 'CSOG'}
-              </Button>
-            </Tab>
-          </Tabs>
+
+<Tabs defaultActiveKey="1st" id="year-tabs" className="mb-3">
+        {/* First Year Tab */}
+        <Tab eventKey="1st" title={<span className="custom-color-green-font custom-font">First Year</span>}>
           <Tabs className="mb-3">
             <Tab eventKey="1A" title={<span className="custom-color-green-font custom-font">1A</span>}>
               {renderTable()}
@@ -108,26 +89,6 @@ export default function RegistrarYearSectionTab() {
         {/* Second Year Tab */}
         <Tab eventKey="2nd" title={<span className="custom-color-green-font custom-font">Second Year</span>}>
           <Tabs className="mb-3">
-            <Tab eventKey="Fsem" title={<span className="custom-color-green-font custom-font">First Sem</span>}>
-              <Button
-                variant={secondYearFirstSemToggled ? 'success' : 'secondary'}
-                onClick={() => setSecondYearFirstSemToggled(!secondYearFirstSemToggled)}
-                style={{ width: '100%', marginBottom: '20px' }}
-              >
-                {secondYearFirstSemToggled ? 'CSOG' : 'CSOG'}
-              </Button>
-            </Tab>
-            <Tab eventKey="Ssem" title={<span className="custom-color-green-font custom-font">Second Sem</span>}>
-              <Button
-                variant={secondYearSecondSemToggled ? 'success' : 'secondary'}
-                onClick={() => setSecondYearSecondSemToggled(!secondYearSecondSemToggled)}
-                style={{ width: '100%', marginBottom: '20px' }}
-              >
-                {secondYearSecondSemToggled ? 'CSOG' : 'CSOG'}
-              </Button>
-            </Tab>
-          </Tabs>
-          <Tabs className="mb-3">
             <Tab eventKey="2A" title={<span className="custom-color-green-font custom-font">2A</span>}>
               {renderTable()}
             </Tab>
@@ -158,26 +119,6 @@ export default function RegistrarYearSectionTab() {
         {/* Third Year Tab */}
         <Tab eventKey="3rd" title={<span className="custom-color-green-font custom-font">Third Year</span>}>
           <Tabs className="mb-3">
-            <Tab eventKey="Fsem" title={<span className="custom-color-green-font custom-font">First Sem</span>}>
-              <Button
-                variant={thirdYearFirstSemToggled ? 'success' : 'secondary'}
-                onClick={() => setThirdYearFirstSemToggled(!thirdYearFirstSemToggled)}
-                style={{ width: '100%', marginBottom: '20px' }}
-              >
-                {thirdYearFirstSemToggled ? 'CSOG' : 'CSOG'}
-              </Button>
-            </Tab>
-            <Tab eventKey="Ssem" title={<span className="custom-color-green-font custom-font">Second Sem</span>}>
-              <Button
-                variant={thirdYearSecondSemToggled ? 'success' : 'secondary'}
-                onClick={() => setThirdYearSecondSemToggled(!thirdYearSecondSemToggled)}
-                style={{ width: '100%', marginBottom: '20px' }}
-              >
-                {thirdYearSecondSemToggled ? 'CSOG' : 'CSOG'}
-              </Button>
-            </Tab>
-          </Tabs>
-          <Tabs className="mb-3">
             <Tab eventKey="3A" title={<span className="custom-color-green-font custom-font">3A</span>}>
               {renderTable()}
             </Tab>
@@ -207,26 +148,6 @@ export default function RegistrarYearSectionTab() {
 
         {/* Fourth Year Tab */}
         <Tab eventKey="4th" title={<span className="custom-color-green-font custom-font">Fourth Year</span>}>
-          <Tabs className="mb-3">
-            <Tab eventKey="Fsem" title={<span className="custom-color-green-font custom-font">First Sem</span>}>
-              <Button
-                variant={fourthYearFirstSemToggled ? 'success' : 'secondary'}
-                onClick={() => setFourthYearFirstSemToggled(!fourthYearFirstSemToggled)}
-                style={{ width: '100%', marginBottom: '20px' }}
-              >
-                {fourthYearFirstSemToggled ? 'CSOG' : 'CSOG'}
-              </Button>
-            </Tab>
-            <Tab eventKey="Ssem" title={<span className="custom-color-green-font custom-font">Second Sem</span>}>
-              <Button
-                variant={fourthYearSecondSemToggled ? 'success' : 'secondary'}
-                onClick={() => setFourthYearSecondSemToggled(!fourthYearSecondSemToggled)}
-                style={{ width: '100%', marginBottom: '20px' }}
-              >
-                {fourthYearSecondSemToggled ? 'CSOG' : 'CSOG'}
-              </Button>
-            </Tab>
-          </Tabs>
           <Tabs className="mb-3">
             <Tab eventKey="4A" title={<span className="custom-color-green-font custom-font">4A</span>}>
               {renderTable()}

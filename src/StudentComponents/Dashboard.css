@@ -350,7 +350,7 @@
 .submenu {
   display: flex;
   flex-direction: column;
-  background-color: #008800;
+  background-color: #004d00;
   padding: 10px;
   border-radius: 4px;
 }
@@ -1077,18 +1077,23 @@ font-weight: bold; /* Make text bold */
 .submenu {
 display: flex;
 flex-direction: column;
-background-color: #008800;
+background-color: #004d00;
 padding: 10px;
 border-radius: 4px;
+padding: 10px; /* Optional: add some padding */
+border-radius: 5px; /* Optional: add rounded corners */
+box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Optional: add some shadow */
 }
 
 .submenu-item {
+color: #F7FE28;
 padding: 10px;
 cursor: pointer;
+text-decoration: none; /* Remove underline */
 }
 
 .submenu-item:hover {
-background-color: #ddd;
+background-color: #006600;
 }
 
 .dropdown-menu {
@@ -1100,6 +1105,12 @@ border: 1px solid #ddd;
 border-radius: 4px;
 box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
+
+.submenu-item.active {
+  background-color: #006600; /* Example active background */
+  color: yellow;
+}
+
 
 .dropdown-item {
 padding: 10px;
