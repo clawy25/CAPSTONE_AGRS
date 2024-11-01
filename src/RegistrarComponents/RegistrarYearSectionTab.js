@@ -1,262 +1,169 @@
-import React, { useState } from 'react';
-import { Tab, Tabs, Table, Button } from 'react-bootstrap';
-import '../App.css'
+import React, { useState, useEffect } from 'react';
+import { Table, Form, Button, Row, Col } from 'react-bootstrap';
+import AcademicYearModel from '../ReactModels/AcademicYearModel';
+import YearLevelModel from '../ReactModels/YearLevelModel';
+import ProgramModel from '../ReactModels/ProgramModel';
+import SectionModel from '../ReactModels/SectionModel';
 
-export default function RegistrarYearSectionTab() {
+const MasterlistOfGradesTable = () => {
+  const [academicYear, setAcademicYear] = useState('');
+  const [yearLevel, setYearLevel] = useState('');
+  const [semester, setSemester] = useState('First'); // Default to "First" semester
+  const [program, setProgram] = useState('');
+  const [sections, setSections] = useState(Array(8).fill(null).map((_, index) => `Section ${index + 1}`));
 
-  // State variables for toggling button states for each year
-  const [firstYearFirstSemToggled, setFirstYearFirstSemToggled] = useState(false);
-  const [firstYearSecondSemToggled, setFirstYearSecondSemToggled] = useState(false);
-  const [secondYearFirstSemToggled, setSecondYearFirstSemToggled] = useState(false);
-  const [secondYearSecondSemToggled, setSecondYearSecondSemToggled] = useState(false);
-  const [thirdYearFirstSemToggled, setThirdYearFirstSemToggled] = useState(false);
-  const [thirdYearSecondSemToggled, setThirdYearSecondSemToggled] = useState(false);
-  const [fourthYearFirstSemToggled, setFourthYearFirstSemToggled] = useState(false);
-  const [fourthYearSecondSemToggled, setFourthYearSecondSemToggled] = useState(false);
+  const [academicYears, setAcademicYears] = useState([]);
+  const [yearLevels, setYearLevels] = useState([]);
+  const [programs, setPrograms] = useState([]);
+  const [selectedProgramId, setSelectedProgramId] = useState(null);
 
-  const renderTable = () => (
-    <Table hover className="table table-hover success-border">
-      <thead className="table-success">
-        <tr>
-          <th className='custom-color-green-font custom-font'>Subjects</th>
-          <th className='custom-color-green-font custom-font'>Professor</th>
-          <th className='custom-color-green-font custom-font'>Class Record Link</th>
-          <th className='custom-color-green-font custom-font'>Grade Sheet Link</th>
-          <th className='custom-color-green-font custom-font'>SoG Link</th>
-        </tr>
-      </thead>
-      <tbody className='bg-white'>
-        {[
-          { subject: 'Mathematics 101', professor: 'Prof. Smith', classRecord: '#', gradeSheet: '#', sog: '#' },
-          { subject: 'English 101', professor: 'Prof. Johnson', classRecord: '#', gradeSheet: '#', sog: '#' },
-          { subject: 'Computer Science 101', professor: 'Prof. Williams', classRecord: '#', gradeSheet: '#', sog: '#' },
-          { subject: 'Physics 101', professor: 'Prof. Brown', classRecord: '#', gradeSheet: '#', sog: '#' },
-          { subject: 'Chemistry 101', professor: 'Prof. Davis', classRecord: '#', gradeSheet: '#', sog: '#' },
-          { subject: 'History 101', professor: 'Prof. Wilson', classRecord: '#', gradeSheet: '#', sog: '#' },
-          { subject: 'Biology 101', professor: 'Prof. Garcia', classRecord: '#', gradeSheet: '#', sog: '#' },
-          { subject: 'Philosophy 101', professor: 'Prof. Martinez', classRecord: '#', gradeSheet: '#', sog: '#' },
-          { subject: 'Statistics 101', professor: 'Prof. Rodriguez', classRecord: '#', gradeSheet: '#', sog: '#' },
-          { subject: 'Economics 101', professor: 'Prof. Hernandez', classRecord: '#', gradeSheet: '#', sog: '#' }
-        ].map((entry, index) => (
-          <tr key={index}>
-            <td>{entry.subject}</td>
-            <td>{entry.professor}</td>
-            <td><a href={entry.classRecord} className='custom-color-green-font custom-font'>Class Record</a></td>
-            <td><a href={entry.gradeSheet} className='custom-color-green-font custom-font'>Grade Sheet</a></td>
-            <td><a href={entry.sog} className='custom-color-green-font custom-font'>SoG</a></td>
-          </tr>
-        ))}
-      </tbody>
-    </Table>
-  );
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const fetchedAcademicYears = await AcademicYearModel.fetchExistingAcademicYears();
+        setAcademicYears(fetchedAcademicYears);
+        if (fetchedAcademicYears.length > 0) {
+          setAcademicYear(fetchedAcademicYears[0].academicYear); // Set first academic year as default
+        }
+
+        const fetchedYearLevels = await YearLevelModel.fetchExistingYearLevels();
+        setYearLevels(fetchedYearLevels);
+        if (fetchedYearLevels.length > 0) {
+          setYearLevel(fetchedYearLevels[0].yearName); // Set first year level as default
+        }
+
+        const fetchedPrograms = await ProgramModel.fetchAllPrograms();
+        setPrograms(fetchedPrograms);
+        if (fetchedPrograms.length > 0) {
+          setProgram(fetchedPrograms[0].programName); // Set first program as default
+        }
+
+        setSections(Array(8).fill(null).map((_, index) => `Section ${index + 1}`));
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const columns = ["ITEM", "SNUMBER", "STUDENT NAME", "PAN101", "HUM101", "STS101", "VE101", "NSTP102", "PE12", "LIT101"];
+  const weightedColumns = ["PAN101", "HUM101", "STS101", "VE101", "NSTP102", "PE12", "LIT101", "WGA"];
+  const professors = ["Oreta", "Gatdula", "Escaran", "Sagun", "Bautista", "Dela Cruz", "Ramos"];
+
+  const handleView = () => {
+    const selectedProgram = programs.find((prog) => prog.programName === program);
+    if (selectedProgram && academicYear && yearLevel && semester) {
+      setSelectedProgramId(selectedProgram.id);
+    } else {
+      setSelectedProgramId(null);
+    }
+  };
+
+  const printCSOG = () => {
+    // Open the PDF file from the public folder in a new tab
+    window.open('/SOG.pdf', '_blank');
+  };
 
   return (
-   
-    <div className='container-fluid bg-white p-2 px-4 rounded'>
+    <div>
+      <Row className="mb-4 bg-white rounded p-3 m-1">
+        <Col>
+          <Form.Group controlId="academicYear">
+            <Form.Label>Academic Year</Form.Label>
+            <Form.Control as="select" value={academicYear} onChange={(e) => setAcademicYear(e.target.value)}>
+              {academicYears.map((year) => (
+                <option key={year.id} value={year.academicYear}>
+                  {year.academicYear}
+                </option>
+              ))}
+            </Form.Control>
+          </Form.Group>
+        </Col>
+        <Col>
+          <Form.Group controlId="yearLevel">
+            <Form.Label>Year Level</Form.Label>
+            <Form.Control as="select" value={yearLevel} onChange={(e) => setYearLevel(e.target.value)}>
+              {yearLevels.map((level) => (
+                <option key={level.id} value={level.yearName}>
+                  {level.yearName}
+                </option>
+              ))}
+            </Form.Control>
+          </Form.Group>
+        </Col>
+        <Col>
+          <Form.Group controlId="semester">
+            <Form.Label>Semester</Form.Label>
+            <Form.Control as="select" value={semester} onChange={(e) => setSemester(e.target.value)}>
+              <option value="First">First</option>
+              <option value="Second">Second</option>
+            </Form.Control>
+          </Form.Group>
+        </Col>
+        <Col>
+          <Form.Group controlId="program">
+            <Form.Label>Program</Form.Label>
+            <Form.Control as="select" value={program} onChange={(e) => setProgram(e.target.value)}>
+              {programs.map((prog) => (
+                <option key={prog.id} value={prog.programName}>
+                  {prog.programName}
+                </option>
+              ))}
+            </Form.Control>
+          </Form.Group>
+        </Col>
+        <Col className="d-flex align-items-end ">
+          <Button className="w-25 btn-success me-2" onClick={handleView}>View</Button>
+          <Button className="w-75 btn-success" onClick={printCSOG}>Download CSOG</Button>
+        </Col>
+      </Row>
 
-<Tabs defaultActiveKey="1st" id="year-tabs" className="mb-3">
-        {/* First Year Tab */}
-        <Tab eventKey="1st" title={<span className="custom-color-green-font custom-font">First Year</span>}>
-          <Tabs className="mb-3">
-            <Tab eventKey="Fsem" title={<span className="custom-color-green-font custom-font">First Sem</span>}>
-              <Button
-                variant={firstYearFirstSemToggled ? 'success' : 'secondary'}
-                onClick={() => setFirstYearFirstSemToggled(!firstYearFirstSemToggled)}
-                style={{ width: '100%', marginBottom: '20px' }}
-              >
-                {firstYearFirstSemToggled ? 'CSOG' : 'CSOG'}
-              </Button>
-            </Tab>
-            <Tab eventKey="Ssem" title={<span className="custom-color-green-font custom-font">Second Sem</span>}>
-              <Button
-                variant={firstYearSecondSemToggled ? 'success' : 'secondary'}
-                onClick={() => setFirstYearSecondSemToggled(!firstYearSecondSemToggled)}
-                style={{ width: '100%', marginBottom: '20px' }}
-              >
-                {firstYearSecondSemToggled ? 'CSOG' : 'CSOG'}
-              </Button>
-            </Tab>
-          </Tabs>
-          <Tabs className="mb-3">
-            <Tab eventKey="1A" title={<span className="custom-color-green-font custom-font">1A</span>}>
-              {renderTable()}
-            </Tab>
-            <Tab eventKey="1B" title={<span className="custom-color-green-font custom-font">1B</span>}>
-              {renderTable()}
-            </Tab>
-            <Tab eventKey="1C" title={<span className="custom-color-green-font custom-font">1C</span>}>
-              {renderTable()}
-            </Tab>
-            <Tab eventKey="1D" title={<span className="custom-color-green-font custom-font">1D</span>}>
-              {renderTable()}
-            </Tab>
-            <Tab eventKey="1E" title={<span className="custom-color-green-font custom-font">1E</span>}>
-              {renderTable()}
-            </Tab>
-            <Tab eventKey="1F" title={<span className="custom-color-green-font custom-font">1F</span>}>
-              {renderTable()}
-            </Tab>
-            <Tab eventKey="1G" title={<span className="custom-color-green-font custom-font">1G</span>}>
-              {renderTable()}
-            </Tab>
-            <Tab eventKey="1H" title={<span className="custom-color-green-font custom-font">1H</span>}>
-              {renderTable()}
-            </Tab>
-          </Tabs>
-        </Tab>
-
-        {/* Second Year Tab */}
-        <Tab eventKey="2nd" title={<span className="custom-color-green-font custom-font">Second Year</span>}>
-          <Tabs className="mb-3">
-            <Tab eventKey="Fsem" title={<span className="custom-color-green-font custom-font">First Sem</span>}>
-              <Button
-                variant={secondYearFirstSemToggled ? 'success' : 'secondary'}
-                onClick={() => setSecondYearFirstSemToggled(!secondYearFirstSemToggled)}
-                style={{ width: '100%', marginBottom: '20px' }}
-              >
-                {secondYearFirstSemToggled ? 'CSOG' : 'CSOG'}
-              </Button>
-            </Tab>
-            <Tab eventKey="Ssem" title={<span className="custom-color-green-font custom-font">Second Sem</span>}>
-              <Button
-                variant={secondYearSecondSemToggled ? 'success' : 'secondary'}
-                onClick={() => setSecondYearSecondSemToggled(!secondYearSecondSemToggled)}
-                style={{ width: '100%', marginBottom: '20px' }}
-              >
-                {secondYearSecondSemToggled ? 'CSOG' : 'CSOG'}
-              </Button>
-            </Tab>
-          </Tabs>
-          <Tabs className="mb-3">
-            <Tab eventKey="2A" title={<span className="custom-color-green-font custom-font">2A</span>}>
-              {renderTable()}
-            </Tab>
-            <Tab eventKey="2B" title={<span className="custom-color-green-font custom-font">2B</span>}>
-              {renderTable()}
-            </Tab>
-            <Tab eventKey="2C" title={<span className="custom-color-green-font custom-font">2C</span>}>
-              {renderTable()}
-            </Tab>
-            <Tab eventKey="2D" title={<span className="custom-color-green-font custom-font">2D</span>}>
-              {renderTable()}
-            </Tab>
-            <Tab eventKey="2E" title={<span className="custom-color-green-font custom-font">2E</span>}>
-              {renderTable()}
-            </Tab>
-            <Tab eventKey="2F" title={<span className="custom-color-green-font custom-font">2F</span>}>
-              {renderTable()}
-            </Tab>
-            <Tab eventKey="2G" title={<span className="custom-color-green-font custom-font">2G</span>}>
-              {renderTable()}
-            </Tab>
-            <Tab eventKey="2H" title={<span className="custom-color-green-font custom-font">2H</span>}>
-              {renderTable()}
-            </Tab>
-          </Tabs>
-        </Tab>
-
-        {/* Third Year Tab */}
-        <Tab eventKey="3rd" title={<span className="custom-color-green-font custom-font">Third Year</span>}>
-          <Tabs className="mb-3">
-            <Tab eventKey="Fsem" title={<span className="custom-color-green-font custom-font">First Sem</span>}>
-              <Button
-                variant={thirdYearFirstSemToggled ? 'success' : 'secondary'}
-                onClick={() => setThirdYearFirstSemToggled(!thirdYearFirstSemToggled)}
-                style={{ width: '100%', marginBottom: '20px' }}
-              >
-                {thirdYearFirstSemToggled ? 'CSOG' : 'CSOG'}
-              </Button>
-            </Tab>
-            <Tab eventKey="Ssem" title={<span className="custom-color-green-font custom-font">Second Sem</span>}>
-              <Button
-                variant={thirdYearSecondSemToggled ? 'success' : 'secondary'}
-                onClick={() => setThirdYearSecondSemToggled(!thirdYearSecondSemToggled)}
-                style={{ width: '100%', marginBottom: '20px' }}
-              >
-                {thirdYearSecondSemToggled ? 'CSOG' : 'CSOG'}
-              </Button>
-            </Tab>
-          </Tabs>
-          <Tabs className="mb-3">
-            <Tab eventKey="3A" title={<span className="custom-color-green-font custom-font">3A</span>}>
-              {renderTable()}
-            </Tab>
-            <Tab eventKey="3B" title={<span className="custom-color-green-font custom-font">3B</span>}>
-              {renderTable()}
-            </Tab>
-            <Tab eventKey="3C" title={<span className="custom-color-green-font custom-font">3C</span>}>
-              {renderTable()}
-            </Tab>
-            <Tab eventKey="3D" title={<span className="custom-color-green-font custom-font">3D</span>}>
-              {renderTable()}
-            </Tab>
-            <Tab eventKey="3E" title={<span className="custom-color-green-font custom-font">3E</span>}>
-              {renderTable()}
-            </Tab>
-            <Tab eventKey="3F" title={<span className="custom-color-green-font custom-font">3F</span>}>
-              {renderTable()}
-            </Tab>
-            <Tab eventKey="3G" title={<span className="custom-color-green-font custom-font">3G</span>}>
-              {renderTable()}
-            </Tab>
-            <Tab eventKey="3H" title={<span className="custom-color-green-font custom-font">3H</span>}>
-              {renderTable()}
-            </Tab>
-          </Tabs>
-        </Tab>
-
-        {/* Fourth Year Tab */}
-        <Tab eventKey="4th" title={<span className="custom-color-green-font custom-font">Fourth Year</span>}>
-          <Tabs className="mb-3">
-            <Tab eventKey="Fsem" title={<span className="custom-color-green-font custom-font">First Sem</span>}>
-              <Button
-                variant={fourthYearFirstSemToggled ? 'success' : 'secondary'}
-                onClick={() => setFourthYearFirstSemToggled(!fourthYearFirstSemToggled)}
-                style={{ width: '100%', marginBottom: '20px' }}
-              >
-                {fourthYearFirstSemToggled ? 'CSOG' : 'CSOG'}
-              </Button>
-            </Tab>
-            <Tab eventKey="Ssem" title={<span className="custom-color-green-font custom-font">Second Sem</span>}>
-              <Button
-                variant={fourthYearSecondSemToggled ? 'success' : 'secondary'}
-                onClick={() => setFourthYearSecondSemToggled(!fourthYearSecondSemToggled)}
-                style={{ width: '100%', marginBottom: '20px' }}
-              >
-                {fourthYearSecondSemToggled ? 'CSOG' : 'CSOG'}
-              </Button>
-            </Tab>
-          </Tabs>
-          <Tabs className="mb-3">
-            <Tab eventKey="4A" title={<span className="custom-color-green-font custom-font">4A</span>}>
-              {renderTable()}
-            </Tab>
-            <Tab eventKey="4B" title={<span className="custom-color-green-font custom-font">4B</span>}>
-              {renderTable()}
-            </Tab>
-            <Tab eventKey="4C" title={<span className="custom-color-green-font custom-font">4C</span>}>
-              {renderTable()}
-            </Tab>
-            <Tab eventKey="4D" title={<span className="custom-color-green-font custom-font">4D</span>}>
-              {renderTable()}
-            </Tab>
-            <Tab eventKey="4E" title={<span className="custom-color-green-font custom-font">4E</span>}>
-              {renderTable()}
-            </Tab>
-            <Tab eventKey="4F" title={<span className="custom-color-green-font custom-font">4F</span>}>
-              {renderTable()}
-            </Tab>
-            <Tab eventKey="4G" title={<span className="custom-color-green-font custom-font">4G</span>}>
-              {renderTable()}
-            </Tab>
-            <Tab eventKey="4H" title={<span className="custom-color-green-font custom-font">4H</span>}>
-              {renderTable()}
-            </Tab>
-            
-          </Tabs>
-        </Tab>
-      </Tabs>
+      {selectedProgramId && (
+        <div style={{ overflowX: 'auto', marginBottom: '20px' }}>
+          <h5 className="text-center">{program}</h5>
+          {sections.map((section, sectionIndex) => (
+            <Table bordered key={sectionIndex} className="text-center">
+              <thead className='table-success'>
+                <tr>
+                  <th colSpan="3" className='custom-color-green-font'>{`${program} - ${section}`}</th>
+                  {columns.slice(3).map((col, index) => (
+                    <th key={index} className='custom-color-green-font'>{professors[index]}</th>
+                  ))}
+                  <th colSpan={weightedColumns.length} className='bg-success text-white'>
+                    WEIGHTED GRADE AVERAGE
+                  </th>
+                </tr>
+                <tr>
+                  {columns.map((col, index) => (
+                    <td key={index} className='bg-success text-white'>{col}</td>
+                  ))}
+                  {weightedColumns.map((col, index) => (
+                    <td key={`wg-${index}`} className='bg-success text-white'>{col}</td>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className='table-success'>
+                {Array.from({ length: 15 }).map((_, rowIndex) => (
+                  <tr key={rowIndex}>
+                    <td className='bg-white'>{rowIndex + 1}</td>
+                    <td className='bg-white'>-</td>
+                    <td className='bg-white'>-</td>
+                    {columns.slice(3).map((_, colIndex) => (
+                      <td key={`col-${colIndex}`} className='bg-white'></td>
+                    ))}
+                    {weightedColumns.map((_, colIndex) => (
+                      <td key={`wg-col-${colIndex}`}>0.0</td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+          ))}
+        </div>
+      )}
     </div>
- 
   );
-}
+};
+
+export default MasterlistOfGradesTable;
