@@ -6,7 +6,8 @@ import DatePicker from 'react-datepicker';
 import StudentModel from '../ReactModels/StudentModel';
 import 'react-datepicker/dist/react-datepicker.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { calculatePLEAStatus } from './GradesComputation';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const ClassDetails = () => {
 
@@ -224,7 +225,7 @@ const ClassDetails = () => {
   };
 
   {/* ASSIGNMENTS SCORES FOR BOTH PERIOD (COMPLETE) */}
-  const handleScoreChange = (studentId, assignmentIndex, score) => {
+  const handleMidtermAssignmentScoreChange = (studentId, assignmentIndex, score) => {
     setmidtermAssignmentScores(prevScores => {
       const updatedScores = [...prevScores]; // Create a shallow copy of the array
       if (!updatedScores[studentId]) {
@@ -233,6 +234,10 @@ const ClassDetails = () => {
       updatedScores[studentId][assignmentIndex] = score; // Update the score for the student and assignment
       return updatedScores;
     });
+  };
+
+  // ASSIGNMENT SCORES FOR FINALS PERIOD
+  const handleFinalAssignmentScoreChange = (studentId, assignmentIndex, score) => {
     setfinalsAssignmentScores(prevScores => {
       const updatedScores = [...prevScores]; // Create a shallow copy of the array
       if (!updatedScores[studentId]) {
@@ -242,6 +247,7 @@ const ClassDetails = () => {
       return updatedScores;
     });
   };
+
 
   {/* ASSIGNMENTS AVERAGE FOR MIDTERM */}
   const calculateMidtermAssignmentColumnAverage = (studentIndex) => {
@@ -315,20 +321,24 @@ const ClassDetails = () => {
   }, [students]);
   
   {/*ADD QUIZ COLUMNS FOR BOTH PERIODS (COMPLETE)*/}
-  const addQuizColumn = () => {
-    //MIDTERM
+  // ADD MIDTERM QUIZ COLUMN
+  const addMidtermQuizColumn = () => {
     setmidtermQuizColumns(prevColumns => [...prevColumns, {}]);
     setmidtermQuizScores(prevScores =>
       prevScores.map(studentScores => [...studentScores, 0]) // Append a new score (0) for the new column
     );
     setmidtermQuizMaxScores(prevMaxScores => [...prevMaxScores, 0]);
-    //FINALS
+  };
+
+  // ADD FINALS QUIZ COLUMN
+  const addFinalQuizColumn = () => {
     setfinalsQuizColumns(prevColumns => [...prevColumns, {}]);
     setfinalsQuizScores(prevScores =>
       prevScores.map(studentScores => [...studentScores, 0]) // Append a new score (0) for the new column
     );
     setfinalsQuizMaxScores(prevMaxScores => [...prevMaxScores, 0]);
   };
+
   
   {/*REMOVE QUIZ COLUMNS FOR BOTH PERIODS (COMPLETE)*/}
   const removeQuizColumn = (indexToRemove) => {
@@ -614,26 +624,26 @@ const ClassDetails = () => {
   
     {/* PBA */}
       // Handle PBA score change with validation for scores between 50-100
-  const handleMidtermPBAScoreChange = (studentIndex, scoreIndex, newScore) => {
-    setmidtermPBAGradeScores(prevScores => {
-      // Copy the current scores array
-      const updatedScores = [...prevScores];
-  
-      // Initialize the student's scores array if not already present
-      if (!Array.isArray(updatedScores[studentIndex])) {
-        updatedScores[studentIndex] = [];
-      }
-  
-      // Ensure that the student's scores array has enough slots for all quizzes
-      while (updatedScores[studentIndex].length <= scoreIndex) {
-        updatedScores[studentIndex].push(0); // Initialize missing quizzes with a default score of 0
-      }
-  
-      // Update the specific quiz score
-      updatedScores[studentIndex][scoreIndex] = newScore;
-  
-      return updatedScores;
-    });
+    const handleMidtermPBAScoreChange = (studentIndex, scoreIndex, newScore) => {
+      setmidtermPBAGradeScores(prevScores => {
+        // Copy the current scores array
+        const updatedScores = [...prevScores];
+    
+        // Initialize the student's scores array if not already present
+        if (!Array.isArray(updatedScores[studentIndex])) {
+          updatedScores[studentIndex] = [];
+        }
+    
+        // Ensure that the student's scores array has enough slots for all quizzes
+        while (updatedScores[studentIndex].length <= scoreIndex) {
+          updatedScores[studentIndex].push(0); // Initialize missing quizzes with a default score of 0
+        }
+    
+        // Update the specific quiz score
+        updatedScores[studentIndex][scoreIndex] = newScore;
+    
+        return updatedScores;
+      });
   };
   const handleFinalsPBAScoreChange = (studentIndex, scoreIndex, newScore) => {
     setfinalsPBAGradeScores(prevScores => {
@@ -658,8 +668,11 @@ const ClassDetails = () => {
   };
 
   {/* PBA CALCULATION FOR BOTH PERIOD (COMPLETE)*/}
-  const calculateTotalsAndPBA = (studentScores, PBAGradePercentage) => {
-    // Calculate the total score
+  const calculateTotalsAndPBA = (studentScores = [], PBAGradePercentage) => {
+    // Check if studentScores is an array with elements
+    if (!Array.isArray(studentScores) || studentScores.length === 0) {
+      return { total: 0, pbaGrade: 0 }; // Default values when scores are unavailable
+    }
     const total = studentScores.reduce((sum, score) => sum + score, 0);
   
     // Calculate the average score (total divided by number of quizzes)
@@ -718,9 +731,16 @@ const ClassDetails = () => {
   
     // 4. Calculate the total Midterm Grade
     const totalMidtermGrade = csGrade + parseFloat(pbaGrade) + parseFloat(weightedMidtermExamScore);
-  
-    return totalMidtermGrade.toFixed(2); // Return the total midterm grade formatted to 2 decimal places
-  };
+      
+    //Erra: I'm trying to integrate a toast message that can indicate that the grade exceeds 100 but it's not functional yet. Maybe di ko pa lang din nalinaw yung logic niya kaya di ko pa mapagana
+      if (totalMidtermGrade > 100) {
+        console.log("Toast Warning Triggered"); // For debugging
+        toast.warning("Grade cannot exceed 100. Kindly check your component percent allotment.");
+    }
+      
+      const cappedTotal = Math.min(100, totalMidtermGrade); // Cap at 100
+      return cappedTotal.toFixed(2); // Return the capped total formatted to 2 decimal places
+    };
 
   //FINAL GRADE
   const calculateFinalsGrade = (studentIndex) => {
@@ -854,7 +874,7 @@ const ClassDetails = () => {
 
   
     
-{/* MIDTERMS TAB */}
+  {/* MIDTERMS TAB */}
   const renderTableContent = () => {
     switch (selectedPeriod) {
       case 'midterm':
@@ -940,7 +960,7 @@ const ClassDetails = () => {
               ))}
 
               <th rowSpan={2} style={{ background: '#d1e7dd', padding: '0', border: 'none' }}>
-                          <button onClick={addQuizColumn} style={{ background: 'none', border: 'none' }}>
+                          <button onClick={addMidtermQuizColumn} style={{ background: 'none', border: 'none' }}>
                             <FontAwesomeIcon icon={faPlus} />
                           </button>
                         </th>
@@ -1143,7 +1163,7 @@ const ClassDetails = () => {
                           style={{ width: '70px' }}
                           placeholder="Score"
                           value={midtermAssignmentScores[studentIndex]?.[assignmentIndex] || ''} // Set the value based on state
-                          onChange={(e) => handleScoreChange(studentIndex, assignmentIndex, parseFloat(e.target.value) || 0)}
+                          onChange={(e) => handleMidtermAssignmentScoreChange(studentIndex, assignmentIndex, parseFloat(e.target.value) || 0)}
                         />
                       </td>
                     ))}
@@ -1325,7 +1345,7 @@ const ClassDetails = () => {
                 ))}
   
                 <th rowSpan={2} style={{ background: '#d1e7dd', padding: '0', border: 'none' }}>
-                            <button onClick={addQuizColumn} style={{ background: 'none', border: 'none' }}>
+                            <button onClick={addFinalQuizColumn} style={{ background: 'none', border: 'none' }}>
                               <FontAwesomeIcon icon={faPlus} />
                             </button>
                           </th>
@@ -1528,7 +1548,7 @@ const ClassDetails = () => {
                             style={{ width: '70px' }}
                             placeholder="Score"
                             value={finalsAssignmentScores[studentIndex]?.[assignmentIndex] || ''} // Set the value based on state
-                            onChange={(e) => handleScoreChange(studentIndex, assignmentIndex, parseFloat(e.target.value) || 0)}
+                            onChange={(e) => handleFinalAssignmentScoreChange(studentIndex, assignmentIndex, parseFloat(e.target.value) || 0)}
                           />
                         </td>
                       ))}
@@ -1627,12 +1647,12 @@ const ClassDetails = () => {
           </div>
           );
   
-        
-            case 'summary': 
+      
+
+          case 'summary':
             return (
               <table className="details-table">
                 <thead>
-  
                   <tr>
                     <th rowSpan="2">Student No</th>
                     <th rowSpan="2">Student Name</th>
@@ -1643,96 +1663,46 @@ const ClassDetails = () => {
                     <th rowSpan="2">Remarks</th>
                   </tr>
                   <tr>
-                    <th>Class Standing 30%</th>
-                    <th>Performance Based Assessment 30%</th>
-                    <th>Midterm Exam 40%</th>
-                    <th>Midterm Grade</th>
-                    <th>Class Standing 30%</th>
-                    <th>Performance Based Assessment 30%</th>
+                    <th>Class Standing {calculateTotalMidtermCSPercentage()}%</th> {/* working */}
+                    <th>Performance Based Assessment {midtermPBAGradePercentage}%</th> {/* working */}
+                    <th>Midterm Exam {calculateMidtermPercentage()}%</th>
+                    <th>Midterm Grade {calculateMidtermGrade}</th>
+                    <th>Class Standing {calculateTotalFinalsCSPercentage()}%</th> {/* working */}
+                    <th>Performance Based Assessment {finalsPBAGradePercentage}%</th>
                     <th>Final Exam 40%</th>
                     <th>Final Grade</th>
                   </tr>
                 </thead>
                 <tbody>
-     
-                  <tr>
-                    <td>123456</td>
-                    <td>John Doe</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                  </tr>
-                  <tr>
-                    <td>234567</td>
-                    <td>Jane Smith</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                  </tr>
-                  <tr>
-                    <td>345678</td>
-                    <td>Michael Brown</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                  </tr>
-                  <tr>
-                    <td>456789</td>
-                    <td>Alice Johnson</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                  </tr>
-                  <tr>
-                    <td>567890</td>
-                    <td>David Wilson</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                  </tr>
+                  {students.map((student, studentIndex) => (
+                    <tr key={student.id}>
+                      <td>{student.studentNumber || 'Guest'}</td>
+                      <td>{student.studentName || 'Guest'}</td>
+                      {/* Midterm Class Standing */}
+                      <td>{calculateTotalMidtermCSGrade(studentIndex)}</td>
+                      
+                      {/* Midterm PBA */}
+                      <td>{calculateTotalsAndPBA(midtermPBAGradeScores[studentIndex], midtermPBAGradePercentage).pbaGrade}</td>
+                      
+                      {/* Midterm Exam */}
+                      <td>{calculateMidtermWeightedScore(calculateMidtermPercentage(midtermExamScores[student.id]))}</td>
+
+                      
+                      {/* Total Midterm Grade */}
+                      <td>{calculateMidtermGrade(studentIndex)}</td>
+                      <td>{student.finalsClassStanding || ''}</td>
+                      <td>{student.finalsPBA || ''}</td>
+                      <td>{student.finalExam || ''}</td>
+                      <td>{student.finalGrade || ''}</td>
+                      <td>{student.semestralGrade || ''}</td>
+                      <td>{student.numericalEquivalent || ''}</td>
+                      <td>{student.remarks || ''}</td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             );
+
         
             case 'gradeSheet':
               return (
