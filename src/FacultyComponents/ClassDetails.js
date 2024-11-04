@@ -477,15 +477,6 @@ const ClassDetails = () => {
     });
   };
 
-  //UNUSED FUNCTION. DELETE IF UNNEEDED
-  {/*
-    // Function to calculate average scores
-    const calculateAverage = (scores) => {
-      if (!scores.length) return 0;
-      const total = scores.reduce((sum, score) => sum + (score || 0), 0);
-      return total / scores.length;
-    };*/}
-
   {/*RECITATION AVERAGE FOR MIDTERM*/}
   const calculateMidtermRecitationColumnAverage = (studentIndex) => {
     const scores = midtermRecitationScores[studentIndex] || [];
@@ -866,6 +857,50 @@ const ClassDetails = () => {
     return isAttendanceIncomplete || isAssignmentIncomplete || isQuizIncomplete || isRecitationIncomplete || isMidtermExamIncomplete;
   };
   
+
+
+  // Constants for midterm and finals weight
+const MIDTERM_WEIGHT = 0.4; // 40%
+const FINALS_WEIGHT = 0.6;  // 60%
+
+// Function to calculate the Semestral Grade based on Midterm and Finals Grades
+const calculateSemestralGrade = (midtermGrade, finalsGrade) => {
+  // Applying weights to midterm and finals grades
+  const weightedMidterm = midtermGrade * MIDTERM_WEIGHT;
+  const weightedFinals = finalsGrade * FINALS_WEIGHT;
+
+  // Calculating the semestral grade and ensuring it does not exceed 100
+  const semestralGrade = Math.min(100, weightedMidterm + weightedFinals);
+  return semestralGrade.toFixed(2); // Format to 2 decimal places
+};
+
+// Semestral Grade Numerical Equivalent and Remarks Constant
+const getSemestralNumericalEquivalentAndRemarks = (studentId, grade, hasBlankScores) => {
+  // If there's a manual selection for the student, return the selected remark
+  if (remarks[studentId]) {
+    return { numEq: "-", remarks: remarks[studentId] };
+  }
+
+  // If any component has blank scores, return INC for remarks
+  if (hasBlankScores) {
+    return { numEq: "-", remarks: "INC" };
+  }
+
+  // Otherwise, calculate based on the grade
+  if (grade >= 99 && grade <= 100) return { numEq: "1.00", remarks: "PASSED" };
+  if (grade >= 96 && grade < 99) return { numEq: "1.25", remarks: "PASSED" };
+  if (grade >= 93 && grade < 96) return { numEq: "1.50", remarks: "PASSED" };
+  if (grade >= 90 && grade < 93) return { numEq: "1.75", remarks: "PASSED" };
+  if (grade >= 87 && grade < 90) return { numEq: "2.00", remarks: "PASSED" };
+  if (grade >= 84 && grade < 87) return { numEq: "2.25", remarks: "PASSED" };
+  if (grade >= 81 && grade < 84) return { numEq: "2.50", remarks: "PASSED" };
+  if (grade >= 78 && grade < 81) return { numEq: "2.75", remarks: "PASSED" };
+  if (grade >= 75 && grade < 78) return { numEq: "3.00", remarks: "PASSED" };
+  if (grade < 75) return { numEq: "5.00", remarks: "FAILED" };
+
+  return { numEq: "-", remarks: "-" };
+};
+
   
   
 
@@ -1666,10 +1701,10 @@ const ClassDetails = () => {
                     <th>Class Standing {calculateTotalMidtermCSPercentage()}%</th> {/* working */}
                     <th>Performance Based Assessment {midtermPBAGradePercentage}%</th> {/* working */}
                     <th>Midterm Exam {calculateMidtermPercentage()}%</th>
-                    <th>Midterm Grade {calculateMidtermGrade}</th>
+                    <th>Midterm Grade</th>
                     <th>Class Standing {calculateTotalFinalsCSPercentage()}%</th> {/* working */}
                     <th>Performance Based Assessment {finalsPBAGradePercentage}%</th>
-                    <th>Final Exam 40%</th>
+                    <th>Final Exam {calculateFinalPercentage()}%</th>
                     <th>Final Grade</th>
                   </tr>
                 </thead>
@@ -1678,25 +1713,25 @@ const ClassDetails = () => {
                     <tr key={student.id}>
                       <td>{student.studentNumber || 'Guest'}</td>
                       <td>{student.studentName || 'Guest'}</td>
-                      {/* Midterm Class Standing */}
                       <td>{calculateTotalMidtermCSGrade(studentIndex)}</td>
-                      
-                      {/* Midterm PBA */}
                       <td>{calculateTotalsAndPBA(midtermPBAGradeScores[studentIndex], midtermPBAGradePercentage).pbaGrade}</td>
-                      
-                      {/* Midterm Exam */}
                       <td>{calculateMidtermWeightedScore(calculateMidtermPercentage(midtermExamScores[student.id]))}</td>
-
-                      
-                      {/* Total Midterm Grade */}
                       <td>{calculateMidtermGrade(studentIndex)}</td>
-                      <td>{student.finalsClassStanding || ''}</td>
-                      <td>{student.finalsPBA || ''}</td>
-                      <td>{student.finalExam || ''}</td>
-                      <td>{student.finalGrade || ''}</td>
-                      <td>{student.semestralGrade || ''}</td>
-                      <td>{student.numericalEquivalent || ''}</td>
-                      <td>{student.remarks || ''}</td>
+                      <td>{calculateTotalFinalsCSGrade(studentIndex)}</td>
+                      <td>{calculateTotalsAndPBA(finalsPBAGradeScores[studentIndex], finalsPBAGradePercentage).pbaGrade}</td>
+                      <td>{calculateFinalWeightedScore(calculateFinalPercentage(finalsExamScores[student.id]))}</td>
+                      <td>{calculateFinalsGrade(studentIndex)}</td>
+                      <td>{calculateSemestralGrade(calculateMidtermGrade(studentIndex), calculateFinalsGrade(studentIndex))}</td>
+                    <td>
+                      {getSemestralNumericalEquivalentAndRemarks(student.id,
+                        calculateSemestralGrade(calculateMidtermGrade(studentIndex), calculateFinalsGrade(studentIndex)),
+                        MidtermhasBlankScores(studentIndex) || FinalshasBlankScores(studentIndex)).numEq}
+                    </td>
+                    <td>
+                      {getSemestralNumericalEquivalentAndRemarks(student.id,
+                        calculateSemestralGrade(calculateMidtermGrade(studentIndex), calculateFinalsGrade(studentIndex)),
+                        MidtermhasBlankScores(studentIndex) || FinalshasBlankScores(studentIndex)).remarks}
+                    </td>
                     </tr>
                   ))}
                 </tbody>
@@ -1708,7 +1743,6 @@ const ClassDetails = () => {
               return (
                 <table className="details-table">
                   <thead>
-     
                     <tr>
                       <th>Student No</th>
                       <th>Student Name</th>
@@ -1720,60 +1754,54 @@ const ClassDetails = () => {
                     </tr>
                   </thead>
                   <tbody>
-     
-                    <tr>
-                      <td>123456</td>
-                      <td>John Doe</td>
-                      <td></td>
-                      <td></td>
-                      <td></td>
-                      <td></td>
-                      <td></td>
-                    </tr>
-  
-                    <tr>
-                      <td>234567</td>
-                      <td>Jane Smith</td>
-                      <td></td>
-                      <td></td>
-                      <td></td>
-                      <td></td>
-                      <td></td>
-                    </tr>
-  
-                    <tr>
-                      <td>345678</td>
-                      <td>Michael Brown</td>
-                      <td></td>
-                      <td></td>
-                      <td></td>
-                      <td></td>
-                      <td></td>
-                    </tr>
-  
-                    <tr>
-                      <td>456789</td>
-                      <td>Alice Johnson</td>
-                      <td></td>
-                      <td></td>
-                      <td></td>
-                      <td></td>
-                      <td></td>
-                    </tr>
-  
-                    <tr>
-                      <td>567890</td>
-                      <td>David Wilson</td>
-                      <td></td>
-                      <td></td>
-                      <td></td>
-                      <td></td>
-                      <td></td>
-                    </tr>
-  
+                    {students.map((student, studentIndex) => (
+                      <tr key={student.id}>
+                        <td>{student.studentNumber || 'Guest'}</td>
+                        <td>{student.studentName || 'Guest'}</td>
+                        
+                        {/* Midterm Grade */}
+                        <td>{calculateMidtermGrade(studentIndex)}</td>
+                        
+                        {/* Final Grade */}
+                        <td>{calculateFinalsGrade(studentIndex)}</td>
+                        
+                        {/* Semestral Grade */}
+                        <td>
+                          {calculateSemestralGrade(
+                            calculateMidtermGrade(studentIndex),
+                            calculateFinalsGrade(studentIndex)
+                          )}
+                        </td>
+                        
+                        {/* Numerical Grade */}
+                        <td>
+                          {getSemestralNumericalEquivalentAndRemarks(
+                            student.id,
+                            calculateSemestralGrade(
+                              calculateMidtermGrade(studentIndex),
+                              calculateFinalsGrade(studentIndex)
+                            ),
+                            MidtermhasBlankScores(studentIndex) || FinalshasBlankScores(studentIndex)
+                          ).numEq}
+                        </td>
+                        
+                        {/* Remarks */}
+                        <td>
+                          {getSemestralNumericalEquivalentAndRemarks(
+                            student.id,
+                            calculateSemestralGrade(
+                              calculateMidtermGrade(studentIndex),
+                              calculateFinalsGrade(studentIndex)
+                            ),
+                            MidtermhasBlankScores(studentIndex) || FinalshasBlankScores(studentIndex)
+                          ).remarks}
+                        </td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               );
+            
         default:
           return <p>Please select a period.</p>;
       }
