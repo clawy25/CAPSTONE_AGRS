@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import RegistrarYearSectionTab from './RegistrarYearSectionTab';
+
 import ProgramModel from '../ReactModels/ProgramModel'; // Import the ProgramModel
 import '../App.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -31,11 +31,7 @@ export default function RegistrarProfessor() {
     fetchPrograms();
   }, []);
 
-  // Function to switch to the year/section tab
-  const goToYearSectionTab = (program) => {
-    setSelectedProgram(program);
-    setActiveView('yearSectionTab');
-  };
+
 
   // Function to go back to the professor view
   const goBackToProfessorView = () => {
@@ -61,7 +57,7 @@ export default function RegistrarProfessor() {
                   <button
                     className="btn btn-bg-custom-color-green custom-color-font fs-5 rounded custom-font d-flex align-items-center justify-content-center"
                     style={{ height: '200px', width: '100%' }}
-                    onClick={() => goToYearSectionTab(program.programName)} // Switch to Year Section Tab with program
+                     // Switch to Year Section Tab with program
                   >
                     <span className="ms-2">{program.programName}</span>
                   </button>
@@ -78,7 +74,7 @@ export default function RegistrarProfessor() {
               <button
                 className="btn btn-bg-custom-color-green custom-color-font fs-5 rounded custom-font d-flex align-items-center justify-content-center"
                 style={{ height: '200px', width: '100%' }}
-                onClick={() => goToYearSectionTab('Archives')}
+                
               >
                 <span className="ms-2">Archives</span>
               </button>
@@ -89,7 +85,7 @@ export default function RegistrarProfessor() {
               <button
                 className="btn btn-bg-custom-color-green custom-color-font fs-5 rounded custom-font d-flex align-items-center justify-content-center"
                 style={{ height: '200px', width: '100%' }}
-                onClick={() => goToYearSectionTab('Latin Honors')}
+                
               >
                 <span className="ms-2">Latin Honors</span>
               </button>
@@ -111,7 +107,7 @@ export default function RegistrarProfessor() {
           </div>
 
           {/* Year and Section Tab Component, pass the selected program */}
-          <RegistrarYearSectionTab selectedProgram={selectedProgram} />
+         
         </div>
       )}
     </section>
