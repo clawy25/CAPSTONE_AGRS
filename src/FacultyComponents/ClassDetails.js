@@ -1158,7 +1158,7 @@ const getSemestralNumericalEquivalentAndRemarks = (studentId, grade, hasBlankSco
                 return (
                   <tr key={student.id}>
                     <td>{student.studentNumber || 'Guest'}</td>
-                    <td>{student.studentName || 'Guest'}</td>
+                    <td>{student.studentNameLast || ''}, {student.studentNameFirst || ''} {student.studentNameMiddle || ''}</td>
 
                     
                     
@@ -1543,7 +1543,7 @@ const getSemestralNumericalEquivalentAndRemarks = (studentId, grade, hasBlankSco
                   return (
                     <tr key={student.id}>
                       <td>{student.studentNumber || 'Guest'}</td>
-                      <td>{student.studentName || 'Guest'}</td>
+                      <td>{student.studentNameLast || ''}, {student.studentNameFirst || ''} {student.studentNameMiddle || ''}</td>
   
                       
                       
@@ -1712,7 +1712,7 @@ const getSemestralNumericalEquivalentAndRemarks = (studentId, grade, hasBlankSco
                   {students.map((student, studentIndex) => (
                     <tr key={student.id}>
                       <td>{student.studentNumber || 'Guest'}</td>
-                      <td>{student.studentName || 'Guest'}</td>
+                      <td>{student.studentNameLast || ''}, {student.studentNameFirst || ''} {student.studentNameMiddle || ''}</td>
                       <td>{calculateTotalMidtermCSGrade(studentIndex)}</td>
                       <td>{calculateTotalsAndPBA(midtermPBAGradeScores[studentIndex], midtermPBAGradePercentage).pbaGrade}</td>
                       <td>{calculateMidtermWeightedScore(calculateMidtermPercentage(midtermExamScores[student.id]))}</td>
@@ -1757,7 +1757,7 @@ const getSemestralNumericalEquivalentAndRemarks = (studentId, grade, hasBlankSco
                     {students.map((student, studentIndex) => (
                       <tr key={student.id}>
                         <td>{student.studentNumber || 'Guest'}</td>
-                        <td>{student.studentName || 'Guest'}</td>
+                        <td>{student.studentNameLast || ''}, {student.studentNameFirst || ''} {student.studentNameMiddle || ''}</td>
                         
                         {/* Midterm Grade */}
                         <td>{calculateMidtermGrade(studentIndex)}</td>

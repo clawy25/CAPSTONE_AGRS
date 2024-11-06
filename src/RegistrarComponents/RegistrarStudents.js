@@ -5,14 +5,14 @@ import { faSearch, faFileAlt, faCog, faFileSignature, faFilter } from '@fortawes
 import * as XLSX from 'xlsx';
 import StudentModel from '../ReactModels/StudentModel';
 import TimelineModel from '../ReactModels/TimelineModel';
-import SectionModel from '../ReactModels/SectionModel';
+import ProgramModel from '../ReactModels/ProgramModel';
 
 export default function RegistrarStudents() {
     const [searchQuery, setSearchQuery] = useState('');
     const [filterOption, setFilterOption] = useState('All');
     const [showFilterDropdown, setShowFilterDropdown] = useState(false);
     const [students, setStudents] = useState([]);
-    const [sections, setSections] = useState([]);
+    const [programs, setPrograms] = useState([]);
 
     // Fetch existing students from StudentModel
     const fetchExistingStudents = async () => {
@@ -24,19 +24,19 @@ export default function RegistrarStudents() {
         }
     };
 
-    const fetchExistingSections = async () => {
+    const fetchExistingPrograms = async () => {
         try {
-            const existingSections = await SectionModel.fetchExistingSections();
-            setSections(existingSections);
+            const existingPrograms = await ProgramModel.fetchAllPrograms();
+            setPrograms(existingPrograms);
         } catch (error) {
-            console.error('Error fetching existing sections:', error);
+            console.error('Error fetching existing programs:', error);
         }
     };
 
-    // Fetch existing students and sections onload
+    // Fetch existing students and programs onload
     useEffect(() => {
         fetchExistingStudents();
-        fetchExistingSections();
+        fetchExistingPrograms();
     }, []);
 
     // Insert the list of newStudents into the database
@@ -66,7 +66,7 @@ export default function RegistrarStudents() {
             const data = XLSX.utils.sheet_to_json(sheet);
 
             const existingStudentNumbers = new Set(students.map(student => student.studentNumber));
-            const existingSectionNumbers = sections.map(section => section.sectionNumber);
+            
             const newStudents = [];
             const currentYear = new Date().getFullYear();
             const nextYear = currentYear + 1;
@@ -75,23 +75,23 @@ export default function RegistrarStudents() {
             const semester = currentMonth >= 7 && currentMonth <= 12 ? 1 : 2;
 
             for (const row of data) {
-                const studentPassword = row["studentPassword"] || '';
-                let studentType = row["studentType"] || 'Regular'; // Default to 'Regular'
-                const studentName = row["studentName"] || '';
-                const studentGender = row["studentGender"] || '';
-                const studentEmail = row["studentEmail"] || '';
-                const studentBirthDate = row["studentBirthDate"] || '';
-                const studentPccEmail = row["studentPccEmail"] || '';
-                const studentProgramNumber = row["studentProgramNumber"] || '';
-                const studentProgramName = row["Program Name"] || '';
-                const studentContact = ''; //Set to empty
-                const studentAddress = ''; //Set to empty
-                let assignedSection = ''; //Set to empty
+                let studentPassword;
+                let studentType = row["Status"] || 'Regular'; // Default to 'Regular'
+                const studentNameFirst = row["Given Name"] || '';
+                const studentNameMiddle = row["Middle Name"] || '';
+                const studentNameLast = row["Last Name"] || '';
+                const studentSex = row["Gender"] || '';
+                const studentEmail = row["Personal Email"] || '';
+                const studentBirthDate = row["Birth Date"] || '';
+                let studentPccEmail;
+                const studentProgramName = row["Program"] || '';
+                const studentContact = row["Contact No."] || '';
+                const studentAddress = row["Address"];
 
                 // Validate the row and add it to newStudents if valid
-                if (validateRow(row, existingStudentNumbers)) {
-                    const admissionYear = row["studentAdmissionYr"] || ''; // Admission year
-                    const admissionYearInt = parseInt(row["studentAdmissionYr"], 10);
+                if (validateRow(studentNameFirst, studentNameMiddle, studentNameLast, studentContact)) {
+                    const admissionYear = row["Year Admitted"] || ''; // Admission year
+                    const admissionYearInt = parseInt(row["Year Admitted"], 10);
                     let studentYrLevel = 1; // Default to 1
                     let studentNumber = '';
                     if (admissionYearInt < currentYear) {
@@ -103,27 +103,40 @@ export default function RegistrarStudents() {
                             studentType = 'Graduated';
                         }
 
+                        //AUTO-GENERATE PASSWORD AND PCC EMAIL
+                        studentPassword = generatePassword(studentNameFirst,studentNameLast, admissionYear);
+                        studentPccEmail = generatePCCemail(studentNameFirst, studentNameLast, admissionYearInt);
+
                     } else if (admissionYearInt === currentYear) {
                         studentYrLevel = 1; // First year if admission year is the current year
                         studentNumber = generateNextStudentNumber(existingStudentNumbers, currentYear); // Generate number based on current year
                     }
 
-                    if (studentYrLevel <= 4){
-                        assignedSection = generateNextSectionNumber(admissionYear, studentProgramNumber, existingSectionNumbers);
-                    }
+
+                    //SETTING THE PROGRAM NUMBERS; MAY ADD VALIDATIONS WITH THE YEAR
+                    let studentProgramNumber;
+                    programs.forEach(program => {
+                        if (studentProgramName === program.programName) {
+                            studentProgramNumber = program.programNumber;
+                        }
+                    });
+                    
 
                     // Ensure unique student number
                     while (existingStudentNumbers.has(studentNumber)) {
                         studentNumber = generateNextStudentNumber(existingStudentNumbers, admissionYearInt);
                     }
+
                     // Add new student to the array
                     newStudents.push(new StudentModel(
                         students.length + newStudents.length + 1, // Generate ID
                         studentNumber,
                         studentPassword,
                         studentType,
-                        studentName,
-                        studentGender,
+                        studentNameFirst,
+                        studentNameMiddle,
+                        studentNameLast,
+                        studentSex,
                         studentEmail,
                         studentBirthDate,
                         studentPccEmail,
@@ -135,11 +148,9 @@ export default function RegistrarStudents() {
                         studentAddress
                     ));
 
-                    console.log('Academic Year:', academicYear);
-                    console.log('Semester:', semester);
+                    
                     // Insert timeline data if yearLevel is 4 or below
                     if (studentYrLevel <= 4) {
-                        await SectionModel.createAndInsertSection(assignedSection, studentProgramNumber, studentNumber);
                         await TimelineModel.createAndInsertTimeline(academicYear, studentNumber, studentYrLevel, semester, new Date(), null);
                     }
 
@@ -155,6 +166,17 @@ export default function RegistrarStudents() {
         };
 
         reader.readAsArrayBuffer(file);
+    };
+
+    //AUTOMATE GENERATION OF PCC EMAIL
+    const generatePCCemail = (FirstName, LastName, admissionYear) => {
+        const PCCemail = `${LastName.toLowerCase()}_${FirstName.toLowerCase()}${admissionYear}@paranaquecitycollege.edu.ph`;
+        return PCCemail;
+    };
+    
+    const generatePassword = (FirstName, LastName, admissionYear) => {
+        const password = `${FirstName}${admissionYear}${LastName}`;
+        return password;
     };
     
     // Modify the generateNextStudentNumber function to accept a year parameter
@@ -176,6 +198,7 @@ export default function RegistrarStudents() {
         return `${year}-${nextNumber.toString().padStart(6, '0')}`; // Format as '2024-000001'
     };
 
+    {/* DONT DELETE THIS YET
     const generateNextSectionNumber = (year, studentProgramNumber, existingSectionNumbers) => {
         let highestNumber = 1;
         let sectionCount = 0;
@@ -212,19 +235,25 @@ export default function RegistrarStudents() {
     
         // Return the new or current section number
         return `${year}-${studentProgramNumber}-${highestNumber.toString().padStart(3, '0')}`; // Format as '2024-101-001'
-    };
+    };*/}
     
-    
-    
-    
-
     // Validate each row
-    const validateRow = (row, existingStudentNumbers) => {
-        if (!row.studentName) {
-            return false; // Invalid row
-        }
-        return true; // Valid row
+    const validateRow = (studentNameFirst, studentNameMiddle, studentNameLast, studentContact) => {
+    const hasCompleteName = studentNameFirst && studentNameMiddle && studentNameLast;
+    if (!hasCompleteName) {
+        return false; // Invalid row
+    }
+    // Validate contact number (must be 11 digits)
+    const isValidContact = studentContact && /^\d{11}$/.test(studentContact);
+    if (!isValidContact) {
+        return false; // Invalid row
+    }
+
+    // Add other validations if necessary
+
+    return true; // Row is valid
     };
+
 
     const handleSearch = (e) => {
         setSearchQuery(e.target.value);
@@ -246,8 +275,10 @@ export default function RegistrarStudents() {
     const filteredStudents = students.filter(student => {
         const searchQueryLower = searchQuery.toLowerCase();
         return (
-            (student.studentName && student.studentName.toLowerCase().includes(searchQueryLower)) ||
+            (student.studentNameFirst && student.studentNameFirst.toLowerCase().includes(searchQueryLower)) ||
+            (student.studentNameLast && student.studentNameLast.toLowerCase().includes(searchQueryLower)) ||
             (student.studentNumber && student.studentNumber.toLowerCase().includes(searchQueryLower)) ||
+            (student.admissionYear && student.admissionYear.toLowerCase().includes(searchQueryLower)) ||
             (student.studentType && student.studentType.toLowerCase().includes(searchQueryLower)) &&
             (filterOption === 'All' || student.studentType === filterOption)
         );
@@ -297,7 +328,7 @@ export default function RegistrarStudents() {
                     {/* Upper right: Import Student Classlist button */}
                     <div className="col-12 col-md-6 d-flex justify-content-end align-items-center">
                         <button className="btn btn-success custom-font w-100 w-md-50" onClick={() => document.querySelector('input[type="file"]').click()}> {/* Use w-md-50 for 50% width on desktop */}
-                            <FontAwesomeIcon icon={faFileAlt} /> Import Student Classlist {/* Font Awesome file icon */}
+                            <FontAwesomeIcon icon={faFileAlt} /> Import Students {/* Font Awesome file icon */}
                         </button>
                         <input 
                             type="file" 
@@ -320,7 +351,7 @@ export default function RegistrarStudents() {
                                         <th className='custom-color-green-font custom-font'>Name</th>
                                         <th className='custom-color-green-font custom-font'>Student Number</th>
                                         <th className='custom-color-green-font custom-font'>Admission Year</th>
-                                        <th className='custom-color-green-font custom-font'>Section</th>
+                                        <th className='custom-color-green-font custom-font'>PCC Email</th>
                                         <th className='custom-color-green-font custom-font'>Course</th>
                                         <th className='custom-color-green-font custom-font'>Status</th>
                                         <th className='custom-color-green-font custom-font'>Actions</th>
@@ -328,16 +359,13 @@ export default function RegistrarStudents() {
                                 </thead>
                                 <tbody className='bg-white'>
                                     {filteredStudents.map((student) => {
-                                        // Find the section that matches the student's studentNumber
-                                        const matchingSection = sections.find(section => section.studentNumber === student.studentNumber);
-                                        const sectionNumber = matchingSection ? matchingSection.sectionNumber : 'N/A';
                                         return (
                                             <tr key={student.id}>
                                                 <td className='custom-color-green-font'>{student.id}</td>
-                                                <td className='custom-color-green-font'>{student.studentName}</td>
+                                                <td className='custom-color-green-font'>{student.studentNameLast || ''}, {student.studentNameFirst || ''} {student.studentNameMiddle || ''}</td>
                                                 <td className='custom-color-green-font'>{student.studentNumber}</td>
                                                 <td className='custom-color-green-font'>{student.studentAdmissionYr}</td>
-                                                <td className='custom-color-green-font'>{sectionNumber}</td>
+                                                <td className='custom-color-green-font'>{student.studentPccEmail}</td>
                                                 <td className='custom-color-green-font'>{student.studentProgramName}</td>
                                                 <td>
                                                 <select

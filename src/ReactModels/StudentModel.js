@@ -1,6 +1,7 @@
 export default class StudentModel {
   constructor(id, studentNumber, studentPassword, studentType,
-              studentName, studentSex, studentEmail, 
+              studentNameFirst,studentNameMiddle, studentNameLast,
+              studentSex, studentEmail, 
               studentBirthDate, studentPccEmail, studentAdmissionYr, 
               studentYrLevel, studentProgramNumber, studentProgramName,
               studentContact, studentAddress) {
@@ -8,7 +9,9 @@ export default class StudentModel {
       this.studentNumber = studentNumber;
       this.studentPassword = studentPassword;
       this.studentType = studentType;
-      this.studentName = studentName;
+      this.studentNameFirst = studentNameFirst;
+      this.studentNameMiddle = studentNameMiddle;
+      this.studentNameLast = studentNameLast;
       this.studentSex = studentSex;
       this.studentEmail = studentEmail;
       this.studentBirthDate = studentBirthDate;
@@ -45,7 +48,9 @@ export default class StudentModel {
               data.studentNumber,
               data.studentPassword,
               data.studentType,
-              data.studentName,
+              data.studentNameFirst,
+              data.studentNameMiddle,
+              data.studentNameLast,
               data.studentSex,
               data.studentEmail,
               data.studentBirthDate,
@@ -79,7 +84,9 @@ export default class StudentModel {
               student.studentNumber,
               student.studentPassword,
               student.studentType,
-              student.studentName,
+              student.studentNameFirst,
+              student.studentNameMiddle,
+              student.studentNameLast,
               student.studentSex,
               student.studentEmail,
               student.studentBirthDate,
@@ -103,7 +110,9 @@ export default class StudentModel {
             studentNumber: student.studentNumber,
             studentPassword: student.studentPassword,
             studentType: student.studentType,
-            studentName: student.studentName,
+            studentNameFirst: student.studentNameFirst,
+            studentNameMiddle: student.studentNameMiddle,
+            studentNameLast: student.studentNameLast,
             studentSex: student.studentSex,
             studentEmail: student.studentEmail,
             studentBirthDate: 
@@ -114,8 +123,8 @@ export default class StudentModel {
             studentAdmissionYr: student.studentAdmissionYr,
             studentYrLevel: student.studentYrLevel,
             studentProgramNumber: student.studentProgramNumber,
-            studentContact: '',
-            studentAddress: ''
+            studentContact: student.studentContact,
+            studentAddress: student.studentAddress
         }));
 
         const response = await fetch('http://localhost:5000/student/upload', {

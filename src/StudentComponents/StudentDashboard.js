@@ -75,7 +75,7 @@ export default function StudentDashboard() {
           &times;
         </button>
               <img src="pcc.png" alt="Logo" className="college-logo align-items-center ms-5 mb-3" />
-              <div className="welcome-message mb-3 text-center">Hello, {user ? user.studentName : 'Student'}!</div>
+              <div className="welcome-message mb-3 text-center">Hello, {user ? user.studentNameFirst : 'Student'}!</div>
               <nav className="menu mb-3">
                 <Link
                     to=""
@@ -116,7 +116,7 @@ export default function StudentDashboard() {
           </button>
 
           <div className="user-info d-flex align-items-center position-relative" ref={dropdownRef}>
-            <span className="me-2">{user ? user.studentName : 'Student'} ({user ? user.studentNumber : 'Unknown'})</span>
+            <span className="me-2">{user ? user.studentNameFirst : 'Student'} ({user ? user.studentNumber : 'Unknown'})</span>
             <FontAwesomeIcon
               icon={faUser}
               className="user-icon"
