@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Modal, Button, Form, Spinner, Alert, Row } from 'react-bootstrap';
+import { Table, Modal, Button, Form, Spinner, Alert, Row, Col } from 'react-bootstrap';
 import AcademicYearModel from '../ReactModels/AcademicYearModel'; // Update with the actual path
 import '../App.css';
 
@@ -189,7 +189,7 @@ export default function HeadRegistrarAcademicYear() {
   ];
 
   const renderProgramsTable = () => (
-    <Table bordered hover className="mt-4">
+    <Table bordered hover className="mt-2">
       <thead className='table-success'>
         <tr>
           <th className='custom-color-green-font custom-font'>Current Programs</th>
@@ -214,12 +214,21 @@ export default function HeadRegistrarAcademicYear() {
   );
 
   return (
-    <>
-    <Form className="p-3 bg-white border border-success rounded">
-    <Row className="align-items-center">
+
+    
+      <div className='container-fluid bg-white p-4 rounded mt-3'>
+       
+    <Row>
+      <Col>
+      <h3 className="mt-2 custom-color-green-font custom-font" >Programs</h3>
+      
+      
+      </Col>
+
+      <Col>
       <Form.Group className="mb-3">
-        <Form.Label className='custom-color-green-font custom-font'>Select Academic Year</Form.Label>
-        <Form.Select value={selectedAcademicYear} onChange={handleSelectChange}>
+        {/*<Form.Label className='custom-color-green-font custom-font'>Select Academic Year</Form.Label>*/}
+        <Form.Select className='p-2 mt-2' value={selectedAcademicYear} onChange={handleSelectChange}>
           <option value="">Select an academic year</option>
           {academicYears.map((year) => (
             <option key={year.id} value={year.academicYear}>
@@ -232,12 +241,9 @@ export default function HeadRegistrarAcademicYear() {
           )}
         </Form.Select>
       </Form.Group>
-      </Row>
-      </Form>
-      <div className='container-fluid bg-white p-4 rounded mt-3'>
-        <h3 className="mt-2 custom-color-green-font custom-font" >Programs</h3>
-      {renderProgramsTable()}
-
+      </Col>
+    </Row>
+    {renderProgramsTable()}
       <Button variant="success" className="mt-3" onClick={handleShowProgramAdd}>
         Add Program
       </Button>
@@ -386,6 +392,6 @@ export default function HeadRegistrarAcademicYear() {
         </Modal.Footer>
       </Modal>
     </div>
-    </>
+
   );
 }
