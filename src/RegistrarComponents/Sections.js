@@ -6,7 +6,7 @@ import ProgramModel from '../ReactModels/ProgramModel';
 import SectionModel from '../ReactModels/SectionModel';
 
 const Sections = () => {
-  const [academicYear, setAcademicYear] = useState('');
+  const [academicYear, setAcademicYear] = useState('2023-2024'); // Set default academic year based on available data
   const [yearLevel, setYearLevel] = useState('');
   const [semester, setSemester] = useState('First'); // Default to "First" semester
   const [program, setProgram] = useState('');
@@ -22,6 +22,10 @@ const Sections = () => {
   const [showModal, setShowModal] = useState(false);
   const [newSection, setNewSection] = useState(''); // Track the new section to be added
 
+  const [modalProgram, setModalProgram] = useState('');
+  const [modalYearLevel, setModalYearLevel] = useState('');
+  const [modalSemester, setModalSemester] = useState('First'); // Default to "First" semester
+
   const [professors, setProfessors] = useState([
     'Prof. John Doe',
     'Prof. Jane Smith',
@@ -34,20 +38,32 @@ const Sections = () => {
   // Mock data for subjects
   const [subjects, setSubjects] = useState([
     {
+      
       subjectCode: 'CS101',
       subjectDescription: 'Introduction to Computer Science',
+      program: 'BSREM',
+      academicYear: '2023-2024',
+      yearLevel: 'Freshman',
+      semester: 'First',
+      section: 'A',
       lectureUnits: 3,
       labUnits: 1,
       schedule: { day: 'Mon', startTime: '8:00 AM', endTime: '10:00 AM' },
-      professor: 'Prof. John Doe',
+      professor: 'Prof. John Doe'
+
     },
     {
       subjectCode: 'CS102',
       subjectDescription: 'Data Structures and Algorithms',
+      program: 'BSREM',
+      academicYear: '2023-2024',
+      yearLevel: 'Freshman',
+      semester: 'First',
+      section: 'B',
       lectureUnits: 3,
       labUnits: 2,
       schedule: { day: 'Tue', startTime: '9:00 AM', endTime: '12:00 PM' },
-      professor: 'Prof. Jane Smith',
+      professor: 'Prof. Jane Smith'
     },
     // Add more subjects as needed
   ]);
@@ -69,6 +85,11 @@ const Sections = () => {
     {
       studentNumber: '20210101',
       studentName: 'Alice Johnson',
+      program: 'BSREM',
+      academicYear: '2023-2024',
+      yearLevel: 'Freshman',
+      semester: 'First',
+      section: 'A',
       contactNumber: '09123456789',
       email: 'alice.johnson@pcc.edu',
       address: '1234 Main St, Parañaque',
@@ -76,12 +97,39 @@ const Sections = () => {
     {
       studentNumber: '20210102',
       studentName: 'Bob Smith',
+      program: 'BSREM',
+      academicYear: '2023-2024',
+      yearLevel: 'Freshman',
+      semester: 'First',
+      section: 'B',
       contactNumber: '09123456780',
       email: 'bob.smith@pcc.edu',
       address: '5678 Elm St, Parañaque',
     },
     // Add more students as needed
   ];
+
+  const filteredSubjects = subjects.filter(
+    (subject) =>
+      subject.academicYear === academicYear &&
+      subject.program === program &&
+      subject.yearLevel === yearLevel &&
+      subject.semester === semester &&
+      subject.section === selectedSection
+  );
+
+  const filteredStudents = students.filter(
+    (student) =>
+      student.academicYear === academicYear &&
+      student.program === program &&
+      student.yearLevel === yearLevel &&
+      student.semester === semester &&
+      student.section === selectedSection
+  );
+  
+  
+
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -241,7 +289,7 @@ const Sections = () => {
               </tr>
             </thead>
             <tbody>
-              {subjects.map((subject, index) => (
+              {filteredSubjects.map((subject, index) => (
                 <tr key={index}>
                   <td>{subject.subjectCode}</td>
                   <td>{subject.subjectDescription}</td>
@@ -312,7 +360,7 @@ const Sections = () => {
               </tr>
             </thead>
             <tbody>
-              {students.map((student, index) => (
+              {filteredStudents.map((student, index) => (
                 <tr key={index}>
                   <td>{student.studentNumber}</td>
                   <td>{student.studentName}</td>
@@ -332,15 +380,64 @@ const Sections = () => {
           <Modal.Title>Add Section</Modal.Title>
         </Modal.Header>
         <Modal.Body>
+                    {/* Dropdown for Program */}
+                    <Form.Group controlId="modalProgram">
+            <Form.Label>Program</Form.Label>
+            <Form.Control
+              as="select"
+              value={modalProgram}
+              onChange={(e) => setModalProgram(e.target.value)}
+            >
+              {programs.map((prog) => (
+                <option key={prog.id} value={prog.programName}>
+                  {prog.programName}
+                </option>
+              ))}
+            </Form.Control>
+          </Form.Group>
+
+          {/* Dropdown for Year Level */}
+          <Form.Group controlId="modalYearLevel">
+            <Form.Label>Year Level</Form.Label>
+            <Form.Control
+              as="select"
+              value={modalYearLevel}
+              onChange={(e) => setModalYearLevel(e.target.value)}
+            >
+              {yearLevels.map((level) => (
+                <option key={level.id} value={level.yearName}>
+                  {level.yearName}
+                </option>
+              ))}
+            </Form.Control>
+          </Form.Group>
+
+          {/* Dropdown for Semester */}
+          <Form.Group controlId="modalSemester">
+            <Form.Label>Semester</Form.Label>
+            <Form.Control
+              as="select"
+              value={modalSemester}
+              onChange={(e) => setModalSemester(e.target.value)}
+            >
+              <option value="First">First</option>
+              <option value="Second">Second</option>
+            </Form.Control>
+          </Form.Group>
+
+
+          {/* New Section Text Field */}
           <Form.Group controlId="newSection">
             <Form.Label>New Section</Form.Label>
             <Form.Control
               type="text"
               value={newSection}
               onChange={(e) => setNewSection(e.target.value)}
-              disabled
+              enabled
             />
           </Form.Group>
+
+          
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={closeModal}>Close</Button>
