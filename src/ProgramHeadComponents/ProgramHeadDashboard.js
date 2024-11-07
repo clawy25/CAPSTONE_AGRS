@@ -104,7 +104,7 @@ export default function ProgramHeadDashboard() {
               }}
             >
               <FontAwesomeIcon icon={faChalkboardTeacher} className="me-2" />
-              CLASS DESIGNATION
+              CLASS SCHEDULING
               <FontAwesomeIcon icon={showClassDesignationSubMenu ? faAngleUp : faAngleDown} className="ms-auto" />
             </div>
 
@@ -116,7 +116,7 @@ export default function ProgramHeadDashboard() {
                   onClick={() => handleSectionChange(SECTIONS.CURRICULUM)} // Change section on click
                 >
                   <FontAwesomeIcon icon={faTable} className="me-2" />
-                  Curriculum
+                  CURRICULUM
                 </Link>
               </div>
             )}

@@ -11,6 +11,7 @@ import '../App.css';
 import { UserContext } from '../Context/UserContext';
 import CSOG from './CSOG';
 import MOG from './MOG';
+import Sections from './Sections'; // Import Sections component
 
 export default function RegistrarDashboard() {
   const navigate = useNavigate();
@@ -18,6 +19,7 @@ export default function RegistrarDashboard() {
   const [showDropdown, setShowDropdown] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
   const [showGradesSubMenu, setShowGradesSubMenu] = useState(false);
+  const [showStudentsSubMenu, setShowStudentsSubMenu] = useState(false); // State for showing Sections submenu
   const dropdownRef = useRef(null);
   const location = useLocation();
 
@@ -65,14 +67,29 @@ export default function RegistrarDashboard() {
         <img src="pcc.png" alt="Logo" className="college-logo align-items-center ms-5 mb-3" />
         <div className="welcome-message mb-3 text-center">Hello, {user ? user.personnelNameFirst : 'Guest'}!</div>
         <nav className="menu mb-3">
-          <Link 
-            to="/registrar-dashboard/students" 
-            className={`menu-item d-flex align-items-center mb-2 ${location.pathname === '/registrar-dashboard/students' ? 'active' : ''}`}
-            onClick={() => setShowGradesSubMenu(false)}
+        <div 
+            className="menu-item d-flex align-items-center mb-2" 
+            onClick={() => {
+              setShowStudentsSubMenu(!showStudentsSubMenu);
+              navigate('/registrar-dashboard/students'); // Directly navigate to RegistrarStudents
+            }}
           >
             <FontAwesomeIcon icon={faUser} className="me-2" />
             STUDENTS
-          </Link>
+            <FontAwesomeIcon icon={showStudentsSubMenu ? faChevronUp : faChevronDown} className="ms-auto" />
+          </div>
+          
+          {showStudentsSubMenu && (
+            <div className="submenu">
+              <Link 
+                to="/registrar-dashboard/sections" 
+                className={`submenu-item d-flex align-items-center mb-2 ${location.pathname === '/registrar-dashboard/sections' ? 'active' : ''}`}
+              >
+                <FontAwesomeIcon icon={faTable} className="me-2" />
+                SECTIONS
+              </Link>
+            </div>
+          )}
           <div className="menu-item d-flex align-items-center mb-2" onClick={() => setShowGradesSubMenu(!showGradesSubMenu)}>
             <FontAwesomeIcon icon={faGraduationCap} className="me-2" />
             GRADES
@@ -162,6 +179,7 @@ export default function RegistrarDashboard() {
 
         <Routes>
           <Route path="students" element={<RegistrarStudents />} />
+          <Route path="sections" element={<Sections />} /> {/* Sections as submenu */}
           <Route path="grades" element={<RegistrarGrades />} />
           <Route path="csog" element={<CSOG />} />
           <Route path="mog" element={<MOG />} />
