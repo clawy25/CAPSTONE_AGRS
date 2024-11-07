@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Table, Form, Button, Row, Col, Modal } from 'react-bootstrap';
 import AcademicYearModel from '../ReactModels/AcademicYearModel';
 import YearLevelModel from '../ReactModels/YearLevelModel';
+import CourseModel from '../ReactModels/CourseModel'; // Assuming CourseModel handles fetching courses based on academic year, year level, and semester.
 
 const CurriculumPage = () => {
   const [academicYear, setAcademicYear] = useState('');
@@ -11,9 +12,10 @@ const CurriculumPage = () => {
 
   const [academicYears, setAcademicYears] = useState([]);
   const [yearLevels, setYearLevels] = useState([]);
-  const [courses, setCourses] = useState([]); // State to hold course data
+  const [courses, setCourses] = useState([]); // State to hold course data for the selected academic year, year level, and semester
   const [showModal, setShowModal] = useState(false); // State to toggle Add/Edit modal
   const [currentCourse, setCurrentCourse] = useState(null); // Track the course being edited
+  const [coursesCache, setCoursesCache] = useState({}); // Cache for storing courses based on academic year, year level, and semester
 
   useEffect(() => {
     const fetchData = async () => {
@@ -37,6 +39,39 @@ const CurriculumPage = () => {
     fetchData();
   }, []);
 
+  // Fetch the courses based on selected academic year, year level, and semester
+  const fetchCourses = async () => {
+    const cacheKey = `${academicYear}-${yearLevel}-${semester}`;
+    
+    // Check if the courses for the current combination are already in the cache
+    if (coursesCache[cacheKey]) {
+      setCourses(coursesCache[cacheKey]); // If courses are cached, use them
+    } else {
+      try {
+        const fetchedCourses = await CourseModel.fetchCoursesByYearLevel(
+          academicYear,
+          yearLevel,
+          semester
+        );
+        setCourses(fetchedCourses); // Update the courses state with fetched data
+        setCoursesCache((prevCache) => ({
+          ...prevCache,
+          [cacheKey]: fetchedCourses, // Cache the fetched courses
+        }));
+      } catch (error) {
+        console.error("Error fetching courses:", error);
+      }
+    }
+  };
+
+  // Trigger fetchCourses whenever academicYear, yearLevel, or semester changes
+  useEffect(() => {
+    if (academicYear && yearLevel && semester) {
+      setCourses([]); // Clear current courses data
+      fetchCourses(); // Fetch new courses or get from cache
+    }
+  }, [academicYear, yearLevel, semester]);
+
   const handleView = () => {
     if (academicYear && yearLevel && semester) {
       setShowTable(true);
@@ -46,28 +81,44 @@ const CurriculumPage = () => {
   // Handle course form submission
   const handleCourseSubmit = (e) => {
     e.preventDefault();
-
+  
     const form = e.target;
-    const newCourse = {
+    const updatedCourse = {
       courseCode: form.courseCode.value,
       title: form.title.value,
       lectureUnits: form.lectureUnits.value,
       labUnits: form.labUnits.value,
       prerequisite: form.prerequisite.value,
     };
-
+  
+    const cacheKey = `${academicYear}-${yearLevel}-${semester}`;
+    
     if (currentCourse) {
-      // Edit course
-      setCourses(courses.map(course => course.courseCode === currentCourse.courseCode ? newCourse : course));
+      // Editing an existing course
+      const updatedCourses = courses.map(course =>
+        course.courseCode === currentCourse.courseCode ? updatedCourse : course
+      );
+      
+      setCourses(updatedCourses); // Update the courses in state
+      setCoursesCache((prevCache) => ({
+        ...prevCache,
+        [cacheKey]: updatedCourses, // Update the cache with edited course
+      }));
     } else {
-      // Add new course
-      setCourses([...courses, newCourse]);
+      // Adding a new course
+      const newCourses = [...courses, updatedCourse];
+      
+      setCourses(newCourses); // Update the courses in state
+      setCoursesCache((prevCache) => ({
+        ...prevCache,
+        [cacheKey]: newCourses, // Update the cache with new course added
+      }));
     }
-
-    setShowModal(false); // Close the modal after submission
-    setCurrentCourse(null); // Reset editing course
+  
+    setShowModal(false); // Close the modal
+    setCurrentCourse(null); // Reset currentCourse to null after edit/add
   };
-
+  
   const handleEditCourse = (course) => {
     setCurrentCourse(course); // Set course for editing
     setShowModal(true); // Show modal
@@ -76,6 +127,19 @@ const CurriculumPage = () => {
   const handleAddCourse = () => {
     setCurrentCourse(null); // No course to edit, so reset
     setShowModal(true); // Show modal for adding a new course
+  };
+
+  const handleDeleteCourse = (courseCode) => {
+    // Delete the course with the given courseCode
+    const updatedCourses = courses.filter(course => course.courseCode !== courseCode);
+    setCourses(updatedCourses);
+
+    // Update the cache with the modified courses list
+    const cacheKey = `${academicYear}-${yearLevel}-${semester}`;
+    setCoursesCache((prevCache) => ({
+      ...prevCache,
+      [cacheKey]: updatedCourses,
+    }));
   };
 
   return (
@@ -145,6 +209,9 @@ const CurriculumPage = () => {
                     <Button variant="success" className="me-2" onClick={() => handleEditCourse(course)}>
                       Edit
                     </Button>
+                    <Button variant="danger" onClick={() => handleDeleteCourse(course.courseCode)}>
+                      Delete
+                    </Button>
                   </td>
                 </tr>
               ))}
@@ -164,7 +231,7 @@ const CurriculumPage = () => {
       {/* Modal for Add/Edit Course */}
       <Modal show={showModal} onHide={() => setShowModal(false)}>
         <Modal.Header closeButton>
-          <Modal.Title>{currentCourse ? 'Edit Course' : 'Add Course'}</Modal.Title>
+          <Modal.Title>{currentCourse ? 'Edit Course' : 'Add New Course'}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form onSubmit={handleCourseSubmit}>
@@ -201,14 +268,14 @@ const CurriculumPage = () => {
               />
             </Form.Group>
             <Form.Group controlId="prerequisite">
-              <Form.Label>Prerequisite</Form.Label>
+              <Form.Label>Pre-requisite</Form.Label>
               <Form.Control
                 type="text"
                 defaultValue={currentCourse ? currentCourse.prerequisite : ''}
                 required
               />
             </Form.Group>
-            <Button variant="success" type="submit" className="mt-3">
+            <Button type="submit" variant="primary" className="mt-3 w-100">
               {currentCourse ? 'Save Changes' : 'Add Course'}
             </Button>
           </Form>
