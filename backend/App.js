@@ -446,6 +446,53 @@ app.get('/program', async (req, res) => {
   }
 });
 
+//DELETE PROGRAM BY PROGRAM NUMBER
+app.delete('/program/:programNumber', async (req, res) => {
+    const { programNumber } = req.params;
+
+    try {
+        const { data, error } = await supabase
+            .from('program')
+            .delete('*')
+            .eq('programNumber', programNumber);
+
+        if (error) {
+            return res.status(500).json({ error: 'Failed to delete program' });
+        }
+
+        res.json({ message: 'Program deleted successfully', data });
+    } catch (error) {
+        console.error('Error deleting Program:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Insert new students
+app.post('/program/upload', async (req, res) => {
+    try {
+        const newProgramData = req.body.data;//This is in array format
+  
+        // Validate newProgramData
+        if (!Array.isArray(newProgramData) || newProgramData.length === 0) {
+            return res.status(400).json({ message: 'Invalid data format or no students to insert' });
+        }
+  
+        // Perform bulk insertion using Supabase
+        const { data, error } = await supabase
+            .from('program') // Replace with your table name
+            .insert(newProgramData);
+  
+        if (error) {
+            throw error;
+        }
+  
+        res.status(200).json(data);
+    } catch (error) {
+        console.error('Error inserting programs:', error);
+        res.status(500).json({ message: `Error inserting programs: ${error.message || 'Unknown error'}` });
+    }
+  });
+
 // Get all course by Program + Current Academic Year
 app.post('/course/byProgram', async (req, res) => {
     const { programNumber, currentAcadYear } = req.body;

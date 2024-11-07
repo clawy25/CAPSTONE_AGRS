@@ -1,10 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Table, Modal, Button, Form, Spinner, Alert, Row, Col } from 'react-bootstrap';
-import AcademicYearModel from '../ReactModels/AcademicYearModel'; // Update with the actual path
+import AcademicYearModel from '../ReactModels/AcademicYearModel';
+import ProgramModel from '../ReactModels/ProgramModel';
 import '../App.css';
+import { UserContext } from '../Context/UserContext';
 
 export default function HeadRegistrarAcademicYear() {
+  const { user } = useContext(UserContext);
   const [academicYears, setAcademicYears] = useState([]);
+  const [program, setPrograms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -25,7 +29,7 @@ export default function HeadRegistrarAcademicYear() {
 
   // State for new and edit program
   const [newProgram, setNewProgram] = useState({ name: '', years: '', levels: [] });
-  const [editProgram, setEditProgram] = useState({ name: '', years: '', levels: [] });
+  const [editProgram, setEditProgram] = useState({ name: '', years: '', levels: [], programNumber: '' });
 
   // Fetch Academic Years
   const fetchAcademicYears = async () => {
@@ -40,9 +44,49 @@ export default function HeadRegistrarAcademicYear() {
     }
   };
 
+  // Fetch All Programs
+  const fetchPrograms = async () => {
+    setLoading(true);
+    try {
+      const programs = await ProgramModel.fetchAllPrograms();
+      setPrograms(programs);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchAcademicYears();
+    fetchPrograms();
   }, []);
+
+  const getYearPrefix = (academicYear) => {
+    const [startYear] = academicYear.split('-');
+    return startYear.slice(-2) + (parseInt(startYear.slice(-2)) + 1).toString().padStart(2, '0');
+  };
+
+  const generateProgramNumber = (academicYear) => {
+    const yearPrefix = getYearPrefix(academicYear); // e.g., "2425" for "2024-2025"
+
+    const matchingProgramNumbers = program
+        .map(p => p.programNumber.toString()) // Ensure programNumber is a string
+        .filter(number => number.startsWith(yearPrefix)); // Filter based on the year prefix
+
+    // Determine the next sequential number based on existing ones
+    let nextNumber = 1;
+    if (matchingProgramNumbers.length > 0) {
+        // Extract the last two digits of the program number to get the sequential part
+        const maxNumber = Math.max(...matchingProgramNumbers.map(number => parseInt(number.slice(-2))));
+        nextNumber = maxNumber + 1;
+    }
+
+    // Construct the new program number, ensuring two digits for the sequential part
+    return `${yearPrefix}${nextNumber.toString().padStart(2, '0')}`;
+  };
+
+
 
   // Handlers for modals
   const handleShowAdd = () => setShowAddModal(true);
@@ -62,19 +106,27 @@ export default function HeadRegistrarAcademicYear() {
   };
 
   const handleShowProgramAdd = () => setShowProgramAddModal(true);
+
   const handleCloseProgramAdd = () => {
+    fetchPrograms();
     setShowProgramAddModal(false);
     setNewProgram({ name: '', years: '', levels: [] });
   };
 
-  const handleShowProgramEdit = (program) => {
-    setEditProgram(program);
+  const handleShowProgramEdit = (programName, programNumOfYear, summerlevels, programNumber) => {
+    setEditProgram({
+      name: programName,
+      years: programNumOfYear,
+      levels: summerlevels,
+      programNumber: programNumber
+    });
     setShowProgramEditModal(true);
   };
 
   const handleCloseProgramEdit = () => {
+    fetchPrograms();
     setShowProgramEditModal(false);
-    setEditProgram({ name: '', years: '', levels: [] });
+    setEditProgram({ name: '', years: '', levels: [] , programNumber: ''});
   };
 
   // Handle input changes
@@ -97,16 +149,23 @@ export default function HeadRegistrarAcademicYear() {
   const handleYearLevelsChange = (e, programType) => {
     const { value, checked } = e.target;
     const programState = programType === 'new' ? newProgram : editProgram;
+    
+    // Parse the value to an integer since the checkboxes are using number values
+    const level = parseInt(value, 10);
+  
+    // Update the levels array by either adding or removing the level
     const updatedLevels = checked
-      ? [...programState.levels, value]
-      : programState.levels.filter((level) => level !== value);
-
+      ? [...programState.levels, level]
+      : programState.levels.filter((levelItem) => levelItem !== level);
+  
+    // Update the state based on programType
     if (programType === 'new') {
       setNewProgram((prevState) => ({ ...prevState, levels: updatedLevels }));
     } else {
       setEditProgram((prevState) => ({ ...prevState, levels: updatedLevels }));
     }
   };
+  
 
   // Add a new academic year
   const handleAddAcademicYear = async () => {
@@ -130,15 +189,80 @@ export default function HeadRegistrarAcademicYear() {
     handleCloseEdit();
   };
 
-  // Add a new program
-  const handleAddProgram = () => {
-    console.log('New Program:', newProgram);
+  // Adding program closes the modal
+  const handleAddProgram = async (name, years, summerlevels) => {
+    const programNumber = generateProgramNumber(selectedAcademicYear);
+    
+    const lastProgram = program.reduce((max, p) => (p.id > max ? p.id : max), 0);
+    let newId = lastProgram + 1;  // Increment the highest id found
+
+    const newProgramsData = (summerlevels.length > 0 ? summerlevels : [null]).map((level) => ({
+      id: newId++,
+      programName: name,
+      programNumber: programNumber,
+      noOfYears: years,
+      yearLevelwithSummer: level,
+      academicYear: selectedAcademicYear
+    }));
+  
+    try {
+
+      const response = await ProgramModel.createAndInsertProgram(newProgramsData);
+  
+      if (!response) {
+        throw new Error('No response from server');
+      }
+  
+    } catch (error) {
+      console.error(error);
+    }
     handleCloseProgramAdd();
   };
+  
 
-  // Edit an existing program
-  const handleEditProgram = () => {
-    console.log('Edit Program:', editProgram);
+  // Editing program closes the modal
+  const handleEditProgram = async (name, years, summerlevels, programNumber) => {
+    // Clean up summerlevels to ensure it only has either non-null values or a single null
+    if (summerlevels.some(level => level !== null)) {
+      summerlevels = summerlevels.filter(level => level !== null);
+    } else if (summerlevels.length === 0) {
+      summerlevels = [null];
+    }
+    
+    if(programNumber){
+      try {
+        const response = await ProgramModel.deletePrograms(programNumber);
+    
+        if (!response) {
+          throw new Error('No response from server');
+        }
+    
+      } catch (error) {
+        console.error(error);
+      }
+
+      const lastProgram = program.reduce((max, p) => (p.id > max ? p.id : max), 0);
+      let newId = lastProgram + 1;  // Increment the highest id found
+      const newProgramsData = (summerlevels.length > 0 ? summerlevels : [null]).map((level) => ({
+        id: newId++,
+        programName: name,
+        programNumber: programNumber,
+        noOfYears: years,
+        yearLevelwithSummer: level,
+        academicYear: selectedAcademicYear
+      }));
+
+      console.log(newProgramsData);
+      try {
+        const response = await ProgramModel.createAndInsertProgram(newProgramsData);
+    
+        if (!response) {
+          throw new Error('No response from server');
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    };
     handleCloseProgramEdit();
   };
 
@@ -161,7 +285,7 @@ export default function HeadRegistrarAcademicYear() {
   const renderYearLevelCheckboxes = (programType) => {
     const program = programType === 'new' ? newProgram : editProgram;
     const years = parseInt(program.years, 10) || 0;
-
+  
     return (
       <Form.Group className="mb-3">
         <Form.Label>Select Year Levels with Summer</Form.Label>
@@ -171,23 +295,14 @@ export default function HeadRegistrarAcademicYear() {
             type="checkbox"
             label={`Year ${i + 1}`}
             value={i + 1}
-            checked={program.levels.includes((i + 1).toString())}
-            onChange={(e) => handleYearLevelsChange(e, programType)}
+            checked={program.levels.includes(i + 1)} // Check if the current year level is in program.levels
+            onChange={(e) => handleYearLevelsChange(e, programType)} // Call the function on change
           />
         ))}
       </Form.Group>
     );
   };
-
-  // Program Data (Static for Example)
-  const programs = [
-    { name: "BSREM", years: 4, levels: [1, 2, 3, 4] },
-    { name: "BSHM", years: 4, levels: [1, 2, 3, 4] },
-    { name: "BSTM", years: 4, levels: [1, 2, 3, 4] },
-    { name: "BSEntrep", years: 5, levels: [1, 2, 3, 4, 5] },
-    { name: "New Program", years: "X", levels: ["X"] },
-  ];
-
+  
   const renderProgramsTable = () => (
     <Table bordered hover className="mt-2">
       <thead className='table-success'>
@@ -199,17 +314,52 @@ export default function HeadRegistrarAcademicYear() {
         </tr>
       </thead>
       <tbody>
-        {programs.map((program, index) => (
-          <tr key={index}>
-            <td>{program.name}</td>
-            <td>{program.years}</td>
-            <td>{program.levels.join(" ")}</td>
-            <td>
-              <Button variant="success" onClick={() => handleShowProgramEdit(program)}>Edit</Button>
-            </td>
-          </tr>
-        ))}
+        {program
+          .filter((program) => program.academicYear === selectedAcademicYear) // Filter by selected academic year
+          .reduce((acc, currProgram) => {
+          // Find an existing entry for the same programName, programNumber, and academicYear
+          const existingProgram = acc.find(
+            (entry) =>
+              entry.programName === currProgram.programName &&
+              entry.programNumber === currProgram.programNumber &&
+              entry.programNumOfYear === currProgram.programNumOfYear
+          );
+
+        if (existingProgram) { 
+          // If found, add the summerlevel (if it's not already in the list)
+          if (!existingProgram.summerlevels.includes(currProgram.programYrLvlSummer)) {
+            existingProgram.summerlevels.push(currProgram.programYrLvlSummer);
+          }
+        } else {
+          // If not found, create a new entry
+          acc.push({
+            programName: currProgram.programName,
+            programNumber: currProgram.programNumber,
+            programNumOfYear: currProgram.programNumOfYear,
+            summerlevels: [currProgram.programYrLvlSummer],
+          });
+      }
+
+      return acc;
+    }, []) // Initialize the accumulator as an empty array
+    .map((program) => (
+      <tr key={program.programNumber}>
+        <td>{program.programName}</td>
+        <td>{program.programNumOfYear}</td>
+        <td>
+            {program.summerlevels.length > 0
+              ? program.summerlevels
+            .sort((a, b) => a - b) // Sort the summer levels numerically (if they're numbers)
+            .join(', ') // Join the sorted summer levels with commas
+            : 'No summer levels available'}
+        </td>
+        <td>
+          <Button variant="success" onClick={() => handleShowProgramEdit(program.programName, program.programNumOfYear, program.summerlevels, program.programNumber)}>Edit</Button>
+        </td>
+      </tr>
+    ))}
       </tbody>
+
     </Table>
   );
 
@@ -229,8 +379,14 @@ export default function HeadRegistrarAcademicYear() {
       <Form.Group className="mb-3">
         {/*<Form.Label className='custom-color-green-font custom-font'>Select Academic Year</Form.Label>*/}
         <Form.Select className='p-2 mt-2' value={selectedAcademicYear} onChange={handleSelectChange}>
-          <option value="">Select an academic year</option>
-          {academicYears.map((year) => (
+          <option value="">Select Academic Year</option>
+          {academicYears
+          .sort((a, b) => {
+            let yearA = parseInt(a.academicYear.split('-')[0]);
+            let yearB = parseInt(b.academicYear.split('-')[0]);
+            return yearB - yearA; //SWITCH THESE TWO FOR ASC TO DESC ORDER
+          })
+          .map((year) => (
             <option key={year.id} value={year.academicYear}>
               {year.academicYear}
             </option>
@@ -244,9 +400,13 @@ export default function HeadRegistrarAcademicYear() {
       </Col>
     </Row>
     {renderProgramsTable()}
+    {selectedAcademicYear === academicYears.find(year => year.isCurrent)?.academicYear && (
+      <>
       <Button variant="success" className="mt-3" onClick={handleShowProgramAdd}>
         Add Program
       </Button>
+      </>
+    )}
 
       {/* Modals for Academic Year */}
       <Modal show={showAddModal} onHide={handleCloseAdd}>
@@ -334,23 +494,26 @@ export default function HeadRegistrarAcademicYear() {
             </Form.Group>
             <Form.Group className="mb-3">
               <Form.Label>Number of Years</Form.Label>
-              <Form.Select
+              <Form.Control
+                type="text"
                 name="years"
                 value={newProgram.years}
                 onChange={handleInputChange}
-              >
-                <option value="">Select number of years</option>
-                {[1, 2, 3, 4, 5].map((year) => (
-                  <option key={year} value={year}>{year}</option>
-                ))}
-              </Form.Select>
+                placeholder="(0-9)"
+                maxLength={1}
+                onKeyDown={(e) => {
+                  if (!/[0-9]/.test(e.key) && e.key !== "Backspace" && e.key !== "Tab" && e.key !== "ArrowLeft" && e.key !== "ArrowRight") {
+                    e.preventDefault(); // Prevent any non-numeric character
+                  }
+                }}
+              />
             </Form.Group>
-            {renderYearLevelCheckboxes('new')}
+            {renderYearLevelCheckboxes('new', null)}
           </Form>
         </Modal.Body>
         <Modal.Footer>
           <Button className='border-success bg-white custom-color-green-font' onClick={handleCloseProgramAdd}>Close</Button>
-          <Button variant="success" onClick={handleAddProgram}>Add Program</Button>
+          <Button variant="success" onClick={() => handleAddProgram(newProgram.name, newProgram.years, newProgram.levels)}>Add Program</Button>
         </Modal.Footer>
       </Modal>
 
@@ -372,23 +535,26 @@ export default function HeadRegistrarAcademicYear() {
             </Form.Group>
             <Form.Group className="mb-3">
               <Form.Label>Number of Years</Form.Label>
-              <Form.Select
+              <Form.Control
+                type="text"
                 name="years"
                 value={editProgram.years}
                 onChange={handleInputChange}
-              >
-                <option value="">Select number of years</option>
-                {[1, 2, 3, 4, 5].map((year) => (
-                  <option key={year} value={year}>{year}</option>
-                ))}
-              </Form.Select>
+                placeholder="(0-9)"
+                maxLength={1}
+                onKeyDown={(e) => {
+                  if (!/[0-9]/.test(e.key) && e.key !== "Backspace" && e.key !== "Tab" && e.key !== "ArrowLeft" && e.key !== "ArrowRight") {
+                    e.preventDefault(); // Prevent any non-numeric character
+                  }
+                }}
+              />
             </Form.Group>
-            {renderYearLevelCheckboxes('edit')}
+            {renderYearLevelCheckboxes('edit', editProgram.levels)}
           </Form>
         </Modal.Body>
         <Modal.Footer>
           <Button className='border-success bg-white custom-color-green-font' onClick={handleCloseProgramEdit}>Close</Button>
-          <Button variant="success" onClick={handleEditProgram}>Save Changes</Button>
+          <Button variant="success" onClick={() => handleEditProgram (editProgram.name, editProgram.years, editProgram.levels, editProgram.programNumber)}>Save Changes</Button>
         </Modal.Footer>
       </Modal>
     </div>

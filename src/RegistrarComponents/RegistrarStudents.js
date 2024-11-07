@@ -317,7 +317,6 @@ export default function RegistrarStudents() {
                                 <div className="dropdown-menu show" style={{ position: 'absolute', zIndex: 100 }}>
                                     <button className="dropdown-item" onClick={() => handleFilterChange('All')}>All</button>
                                     <button className="dropdown-item" onClick={() => handleFilterChange('Year')}>Year</button>
-                                    <button className="dropdown-item" onClick={() => handleFilterChange('Section')}>Section</button>
                                     <button className="dropdown-item" onClick={() => handleFilterChange('Program')}>Program</button>
                                     <button className="dropdown-item" onClick={() => handleFilterChange('Status')}>Status</button>
                                 </div>
@@ -347,24 +346,20 @@ export default function RegistrarStudents() {
                             <table className="table table-hover ">
                                 <thead className="table-success">
                                     <tr>
-                                        <th className='custom-color-green-font custom-font'>Item No.</th>
-                                        <th className='custom-color-green-font custom-font'>Name</th>
-                                        <th className='custom-color-green-font custom-font'>Student Number</th>
-                                        <th className='custom-color-green-font custom-font'>Admission Year</th>
-                                        <th className='custom-color-green-font custom-font'>PCC Email</th>
-                                        <th className='custom-color-green-font custom-font'>Course</th>
-                                        <th className='custom-color-green-font custom-font'>Status</th>
-                                        <th className='custom-color-green-font custom-font'>Actions</th>
+                                        <th className='custom-color-green-font custom-font'style={{ textAlign: 'center' }}>Student Number</th>
+                                        <th className='custom-color-green-font custom-font'style={{ textAlign: 'center' }}>Name</th>
+                                        <th className='custom-color-green-font custom-font'style={{ textAlign: 'center' }}>PCC Email</th>
+                                        <th className='custom-color-green-font custom-font'style={{ textAlign: 'center' }}>Course</th>
+                                        <th className='custom-color-green-font custom-font'style={{ textAlign: 'center' }}>Status</th>
+                                        <th className='custom-color-green-font custom-font'style={{ textAlign: 'center' }}>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody className='bg-white'>
                                     {filteredStudents.map((student) => {
                                         return (
                                             <tr key={student.id}>
-                                                <td className='custom-color-green-font'>{student.id}</td>
-                                                <td className='custom-color-green-font'>{student.studentNameLast || ''}, {student.studentNameFirst || ''} {student.studentNameMiddle || ''}</td>
                                                 <td className='custom-color-green-font'>{student.studentNumber}</td>
-                                                <td className='custom-color-green-font'>{student.studentAdmissionYr}</td>
+                                                <td className='custom-color-green-font'>{student.studentNameLast || ''}, {student.studentNameFirst || ''} {student.studentNameMiddle || ''}</td>
                                                 <td className='custom-color-green-font'>{student.studentPccEmail}</td>
                                                 <td className='custom-color-green-font'>{student.studentProgramName}</td>
                                                 <td>

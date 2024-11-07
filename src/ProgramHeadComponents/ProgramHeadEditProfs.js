@@ -86,7 +86,7 @@ const handleAddProf = async () => {
 
   const newProfessorData = {
     personnelNumber: nextPersonnelNumber, // Identification number
-    personnelPassword: 'AgrsPcc2024', // Make sure this is handled by your backend
+    personnelPassword: 'Agrspcc2024', // Make sure this is handled by your backend
     personnelType: 'Faculty',
     personnelNameFirst: newProf.firstname,
     personnelNameMiddle: newProf.middlename,
