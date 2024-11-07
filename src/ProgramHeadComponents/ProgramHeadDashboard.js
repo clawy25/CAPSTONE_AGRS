@@ -1,18 +1,19 @@
 import React, { useState, useEffect, useRef, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUser, faGraduationCap, faBars, faChalkboardTeacher } from '@fortawesome/free-solid-svg-icons';
+import { faUser, faGraduationCap, faBars, faChalkboardTeacher, faAngleDown, faAngleUp, faTable } from '@fortawesome/free-solid-svg-icons';
 import '../App.css';
 import { UserContext } from '../Context/UserContext';
 import ProgramHeadGrades from './ProgramHeadGrades';
 import ProgramHeadClassDesig from './ProgramHeadClassDesig';
-
+import CurriculumPage from './CurriculumPage'; // Import CurriculumPage
 
 export default function ProgramHeadDashboard() {
   const navigate = useNavigate();
   const { user } = useContext(UserContext);
   const [showDropdown, setShowDropdown] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
+  const [showClassDesignationSubMenu, setShowClassDesignationSubMenu] = useState(false);
   const [selectedSection, setSelectedSection] = useState('grades');
   const [programHeadView, setProgramHeadView] = useState('professor');
   const [selectedProgram, setSelectedProgram] = useState(null);
@@ -25,6 +26,12 @@ export default function ProgramHeadDashboard() {
     HRIS: 'hris',
     PROFILE: 'profile',
     CHANGEPASSWORD: 'change-password',
+    CURRICULUM: 'curriculum', // Add curriculum section key
+  };
+
+  // Toggle Class Designation submenu
+  const toggleClassDesignationSubMenu = () => {
+    setShowClassDesignationSubMenu((prev) => !prev);
   };
 
   // Log user data when it changes
@@ -87,15 +94,33 @@ export default function ProgramHeadDashboard() {
             GRADES
           </Link>
 
-          {/* Class Designation Section Link */}
-          <Link
-            to="#"
-            className={`menu-item d-flex align-items-center mb-2 ${selectedSection === SECTIONS.CLASSDESIGNATION ? 'active' : ''}`}
-            onClick={() => handleSectionChange(SECTIONS.CLASSDESIGNATION)}
-          >
-            <FontAwesomeIcon icon={faChalkboardTeacher} className="me-2" />
-            CLASS DESIGNATION
-          </Link>
+          {/* Class Designation Section with Dropdown Submenu */}
+          <div className="menu-item-wrapper">
+            <div
+              className={`menu-item d-flex align-items-center mb-2 ${selectedSection === SECTIONS.CLASSDESIGNATION ? 'active' : ''}`}
+              onClick={() => {
+                setSelectedSection(SECTIONS.CLASSDESIGNATION);
+                toggleClassDesignationSubMenu();
+              }}
+            >
+              <FontAwesomeIcon icon={faChalkboardTeacher} className="me-2" />
+              CLASS DESIGNATION
+              <FontAwesomeIcon icon={showClassDesignationSubMenu ? faAngleUp : faAngleDown} className="ms-auto" />
+            </div>
+
+            {showClassDesignationSubMenu && (
+              <div className="submenu">
+                <Link 
+                  to="#"
+                  className="submenu-item d-flex align-items-center mb-2"
+                  onClick={() => handleSectionChange(SECTIONS.CURRICULUM)} // Change section on click
+                >
+                  <FontAwesomeIcon icon={faTable} className="me-2" />
+                  Curriculum
+                </Link>
+              </div>
+            )}
+          </div>
 
           {/* HRIS Section Link */}
           <Link
@@ -113,17 +138,14 @@ export default function ProgramHeadDashboard() {
       <div className="main-content flex-grow-1">
         {/* Header Section */}
         <header className="header d-flex justify-content-between align-items-center p-3 border-bottom rounded">
-          {/* College Name (Visible only on larger screens) */}
           <h1 className="m-0 custom-color-green-font custom-font d-none d-md-block">
             PARAÑAQUE CITY COLLEGE
           </h1>
 
-          {/* Sidebar Toggle Button (Visible only on mobile screens) */}
           <button className="btn btn-link custom-color-green-font d-md-none" onClick={toggleSidebar} aria-label="Toggle Sidebar">
             <FontAwesomeIcon icon={faBars} size="lg" />
           </button>
 
-          {/* User Information and Dropdown Menu */}
           <div className="user-info d-flex align-items-center position-relative" ref={dropdownRef}>
             <span className="me-2">
               {user ? `${user.personnelNameFirst} (${user.personnelNumber})` : 'Guest'}
@@ -156,20 +178,19 @@ export default function ProgramHeadDashboard() {
           {/* Grades Section */}
           {selectedSection === SECTIONS.GRADES && (
             <ProgramHeadGrades 
-            programHeadView={programHeadView}
-            setProgramHeadView={setProgramHeadView}
-            setSelectedProgram={setSelectedProgram}
-            selectedProgram={selectedProgram}
-          />
+              programHeadView={programHeadView}
+              setProgramHeadView={setProgramHeadView}
+              setSelectedProgram={setSelectedProgram}
+              selectedProgram={selectedProgram}
+            />
           )}
 
           {/* Class Designation Section */}
           {selectedSection === SECTIONS.CLASSDESIGNATION && (
             <ProgramHeadClassDesig
-            programHeadView={programHeadView} 
-            setProgramHeadView={setProgramHeadView}
-          
-          />
+              programHeadView={programHeadView} 
+              setProgramHeadView={setProgramHeadView}
+            />
           )}
 
           {/* HRIS Section */}
@@ -192,17 +213,16 @@ export default function ProgramHeadDashboard() {
           {selectedSection === SECTIONS.CHANGEPASSWORD && (
             <section className="card border-success p-3">
               <h2 className="custom-color-green-font custom-font">Change Password</h2>
+              <input type="password" placeholder="Current Password" className="form-control custom-color-green-font mb-2" required />
               <input type="password" placeholder="New Password" className="form-control custom-color-green-font mb-2" required />
               <button className="btn custom-color-font bg-custom-color-green p-2">
-                Save
+                Change Password
               </button>
             </section>
           )}
 
-          {/* Program Head Grades Validation Component */}
-          {programHeadView === 'yearSectionTab' && (
-            <ProgramHeadGrades selectedProgram={selectedProgram} /> // Include the validation component
-          )}
+          {/* Curriculum Section */}
+          {selectedSection === SECTIONS.CURRICULUM && <CurriculumPage />}
         </div>
       </div>
     </div>
