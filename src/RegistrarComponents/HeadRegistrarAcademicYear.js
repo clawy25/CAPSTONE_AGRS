@@ -141,7 +141,17 @@ export default function HeadRegistrarAcademicYear() {
     } else if (showProgramAddModal) {
       setNewProgram((prevState) => ({ ...prevState, [name]: updatedValue }));
     } else if (showProgramEditModal) {
-      setEditProgram((prevState) => ({ ...prevState, [name]: updatedValue }));
+      setEditProgram((prevState) => {
+        // If the "years" field is changed, reset the checkboxes
+        if (name === "years") {
+          return {
+            ...prevState,
+            [name]: updatedValue,
+            levels: [] // Reset levels array to uncheck all checkboxes
+          };
+        }
+        return { ...prevState, [name]: updatedValue };
+      });
     }
   };
 

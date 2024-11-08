@@ -5,20 +5,18 @@ import ProgramModel from '../ReactModels/ProgramModel';
 import { UserContext } from '../Context/UserContext';
 
 export default function RegistrarStaffAssign({ onBack }) {
+  const { user } = useContext(UserContext);
   const [programHeads, setProgramHeads] = useState([]);
   const [personnelList, setPersonnelList] = useState([]);
   const [programNumbers, setProgramNumbers] = useState([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-
-  const [newProgramHead, setNewProgramHead] = useState({ number: '', firstname: '', middlename: '', lastname: '', programNumber: '', personnelType: 'Registrar' });
-  const [editProgramHead, setEditProgramHead] = useState({ number: '', firstname: '', middlename: '', lastname: '', programNumber: '', personnelType: 'Registrar' });
+  const [newRegistrar, setnewRegistrar] = useState({ number: '', firstname: '', middlename: '', lastname: '', programNumber: '', personnelType: 'Registrar' });
+  const [editRegistrar, seteditRegistrar] = useState({ number: '', firstname: '', middlename: '', lastname: '', programNumber: '', personnelType: 'Registrar' });
   const [activeProgramHeadIndex, setActiveProgramHeadIndex] = useState(null);
-  const { user } = useContext(UserContext);
-  const personnelType = 'Registrar'; // Fixed personnel type for registrars
   
   const currentAcadYear = sessionStorage.getItem('currentAcadYear');
-
+  const personnelType = 'Registrar';
   const personnelTypes = ['Head', 'Registrar', 'Faculty', 'Admin'];
   const fetchRegistrarStaff = async () => {
     try {
@@ -29,22 +27,19 @@ export default function RegistrarStaffAssign({ onBack }) {
       console.error('Error fetching program heads:', error);
     }
   };
+  const fetchPersonnelList = async () =>{
+    try {
+      const personnelData = await PersonnelModel.fetchAllPersonnel(currentAcadYear);
+      const nonRegistrarPersonnel = personnelData.filter((personnel) => personnel.personnelType === 'Faculty');
+      setPersonnelList(nonRegistrarPersonnel);
+    } catch (error) {
+      console.error('Error fetching personnel list:', error);
+    }
+  };
+
 
   useEffect(() => {
     fetchRegistrarStaff();
-  }, [user.programNumber]);
-
-  useEffect(() => {
-    async function fetchPersonnelList() {
-      try {
-        const personnelData = await PersonnelModel.fetchAllPersonnel(currentAcadYear);
-        const nonRegistrarPersonnel = personnelData.filter((personnel) => personnel.personnelType !== personnelType);
-        setPersonnelList(nonRegistrarPersonnel);
-      } catch (error) {
-        console.error('Error fetching personnel list:', error);
-      }
-    }
-
     fetchPersonnelList();
   }, [user.programNumber]);
 
@@ -65,7 +60,7 @@ export default function RegistrarStaffAssign({ onBack }) {
   const handleCloseAdd = () => setShowAddModal(false);
 
   const handleShowEdit = (programHead, index) => {
-    setEditProgramHead({
+    seteditRegistrar({
       number: programHead.personnelNumber,
       firstname: programHead.personnelNameFirst,
       middlename: programHead.personnelNameMiddle,
@@ -84,16 +79,16 @@ export default function RegistrarStaffAssign({ onBack }) {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setNewProgramHead((prevState) => ({ ...prevState, [name]: value }));
+    setnewRegistrar((prevState) => ({ ...prevState, [name]: value }));
   };
 
   const handleEditInputChange = (e) => {
     const { name, value } = e.target;
-    setEditProgramHead((prevState) => ({ ...prevState, [name]: value }));
+    seteditRegistrar((prevState) => ({ ...prevState, [name]: value }));
   };
 
-  const handleAddProgramHead = async () => {
-    const { number: personnelNumber, programNumber } = newProgramHead;
+  const handleAddRegistrar = async () => {
+    const { number: personnelNumber, programNumber } = newRegistrar;
 
     const updatedData = {
       programNumber,
@@ -101,26 +96,25 @@ export default function RegistrarStaffAssign({ onBack }) {
     };
 
     try {
-      const response = await PersonnelModel.updatePersonnel(personnelNumber, updatedData);
 
-      if (response) {
-        // Refresh the program heads list after adding
-        await fetchRegistrarStaff();
-        handleCloseAdd();
-        setNewProgramHead({ number: '', firstname: '', middlename: '', lastname: '', programNumber: '', personnelType }); // Reset fields
-      }
+      await PersonnelModel.updatePersonnel(personnelNumber, updatedData);
+
     } catch (error) {
       console.error('Error adding program head:', error);
     }
+
+    fetchRegistrarStaff();
+      handleCloseAdd();
+      setnewRegistrar({ number: '', firstname: '', middlename: '', lastname: '', programNumber: '', personnelType });
   };
 
-  const handleEditProgramHead = async () => {
+  const handleeditRegistrar = async () => {
     const updatedProgramHeadData = {
-      personnelNameFirst: editProgramHead.firstname,
-      personnelNameMiddle: editProgramHead.middlename,
-      personnelNameLast: editProgramHead.lastname,
-      programNumber: editProgramHead.programNumber,
-      personnelType: editProgramHead.personnelType, // Updated type can be chosen in the modal
+      personnelNameFirst: editRegistrar.firstname,
+      personnelNameMiddle: editRegistrar.middlename,
+      personnelNameLast: editRegistrar.lastname,
+      programNumber: editRegistrar.programNumber,
+      personnelType: editRegistrar.personnelType, // Updated type can be chosen in the modal
     };
   
     try {
@@ -142,8 +136,8 @@ export default function RegistrarStaffAssign({ onBack }) {
     const selectedPersonnel = personnelList.find(personnel => personnel.personnelNumber === selectedNumber);
 
     if (selectedPersonnel) {
-      setNewProgramHead({
-        ...newProgramHead,
+      setnewRegistrar({
+        ...newRegistrar,
         firstname: selectedPersonnel.personnelNameFirst || '',
         middlename: selectedPersonnel.personnelNameMiddle || '',
         lastname: selectedPersonnel.personnelNameLast || '',
@@ -151,7 +145,7 @@ export default function RegistrarStaffAssign({ onBack }) {
         personnelType, // Set personnel type to 'Registrar'
       });
     } else {
-      setNewProgramHead({
+      setnewRegistrar({
         number: selectedNumber,
         firstname: '',
         middlename: '',
@@ -171,7 +165,7 @@ export default function RegistrarStaffAssign({ onBack }) {
             <th className='custom-font custom-color-green-font'>First Name</th>
             <th className='custom-font custom-color-green-font'>Middle Name</th>
             <th className='custom-font custom-color-green-font'>Last Name</th>
-            <th className='custom-font custom-color-green-font'>Program Number</th>
+            <th className='custom-font custom-color-green-font'>Program</th>
             <th className='custom-font custom-color-green-font'>Personnel Type</th>
             <th className='custom-font custom-color-green-font'>Actions</th>
           </tr>
@@ -196,7 +190,7 @@ export default function RegistrarStaffAssign({ onBack }) {
             ))
           ) : (
             <tr>
-              <td colSpan="7">No Program Heads available</td>
+              <td colSpan="7">No Registrar Staff available</td>
             </tr>
           )}
         </tbody>
@@ -217,7 +211,7 @@ export default function RegistrarStaffAssign({ onBack }) {
           <Form>
             <Form.Group>
               <Form.Label>Personnel Number</Form.Label>
-              <Form.Control as="select" name="number" value={newProgramHead.number} onChange={handlePersonnelChange}>
+              <Form.Control as="select" name="number" value={newRegistrar.number} onChange={handlePersonnelChange}>
                 <option value="">Select Personnel Number</option>
                 {personnelList.map((personnel) => (
                   <option key={personnel.personnelNumber} value={personnel.personnelNumber}>
@@ -228,30 +222,30 @@ export default function RegistrarStaffAssign({ onBack }) {
             </Form.Group>
             <Form.Group>
               <Form.Label>First Name</Form.Label>
-              <Form.Control type="text" name="firstname" value={newProgramHead.firstname} onChange={handleInputChange} />
+              <Form.Control type="text" name="firstname" value={newRegistrar.firstname} onChange={handleInputChange} />
             </Form.Group>
             <Form.Group>
               <Form.Label>Middle Name</Form.Label>
-              <Form.Control type="text" name="middlename" value={newProgramHead.middlename} onChange={handleInputChange} />
+              <Form.Control type="text" name="middlename" value={newRegistrar.middlename} onChange={handleInputChange} />
             </Form.Group>
             <Form.Group>
               <Form.Label>Last Name</Form.Label>
-              <Form.Control type="text" name="lastname" value={newProgramHead.lastname} onChange={handleInputChange} />
+              <Form.Control type="text" name="lastname" value={newRegistrar.lastname} onChange={handleInputChange} />
             </Form.Group>
             <Form.Group>
               <Form.Label>Program Number</Form.Label>
-              <Form.Control as="select" name="programNumber" value={newProgramHead.programNumber} onChange={handleInputChange}>
+              <Form.Control as="select" name="programNumber" value={newRegistrar.programNumber} onChange={handleInputChange}>
                 <option value="">Select Program Number</option>
                 {programNumbers.map((program) => (
                   <option key={program.programNumber} value={program.programNumber}>
-                    {program.programNumber}
+                    {program.programName}
                   </option>
                 ))}
               </Form.Control>
             </Form.Group>
             <Form.Group>
               <Form.Label>Personnel Type</Form.Label>
-              <Form.Control as="select" name="personnelType" value={newProgramHead.personnelType} onChange={handleInputChange}>
+              <Form.Control as="select" name="personnelType" value={newRegistrar.personnelType} onChange={handleInputChange}>
                 <option value="Registrar">Registrar</option>
                 {/* Add other personnel types if needed */}
               </Form.Control>
@@ -262,7 +256,7 @@ export default function RegistrarStaffAssign({ onBack }) {
           <Button variant="secondary" onClick={handleCloseAdd}>
             Close
           </Button>
-          <Button variant="primary" onClick={handleAddProgramHead}>
+          <Button variant="primary" onClick={handleAddRegistrar}>
             Add Program Head
           </Button>
         </Modal.Footer>
@@ -277,34 +271,34 @@ export default function RegistrarStaffAssign({ onBack }) {
           <Form>
             <Form.Group>
               <Form.Label>Personnel Number</Form.Label>
-              <Form.Control readOnly value={editProgramHead.number} />
+              <Form.Control readOnly value={editRegistrar.number} />
             </Form.Group>
             <Form.Group>
               <Form.Label>First Name</Form.Label>
-              <Form.Control type="text" name="firstname" value={editProgramHead.firstname} onChange={handleEditInputChange} />
+              <Form.Control type="text" name="firstname" value={editRegistrar.firstname} onChange={handleEditInputChange} />
             </Form.Group>
             <Form.Group>
               <Form.Label>Middle Name</Form.Label>
-              <Form.Control type="text" name="middlename" value={editProgramHead.middlename} onChange={handleEditInputChange} />
+              <Form.Control type="text" name="middlename" value={editRegistrar.middlename} onChange={handleEditInputChange} />
             </Form.Group>
             <Form.Group>
               <Form.Label>Last Name</Form.Label>
-              <Form.Control type="text" name="lastname" value={editProgramHead.lastname} onChange={handleEditInputChange} />
+              <Form.Control type="text" name="lastname" value={editRegistrar.lastname} onChange={handleEditInputChange} />
             </Form.Group>
             <Form.Group>
               <Form.Label>Program Number</Form.Label>
-              <Form.Control as="select" name="programNumber" value={editProgramHead.programNumber} onChange={handleEditInputChange}>
+              <Form.Control as="select" name="programNumber" value={editRegistrar.programNumber} onChange={handleEditInputChange}>
                 <option value="">Select Program Number</option>
                 {programNumbers.map((program) => (
                   <option key={program.programNumber} value={program.programNumber}>
-                    {program.programNumber}
+                    {program.programName}
                   </option>
                 ))}
               </Form.Control>
             </Form.Group>
             <Form.Group>
             <Form.Label>Personnel Type</Form.Label>
-            <Form.Control as="select" name="personnelType" value={editProgramHead.personnelType} onChange={handleEditInputChange}>
+            <Form.Control as="select" name="personnelType" value={editRegistrar.personnelType} onChange={handleEditInputChange}>
                 {personnelTypes.map((type) => (
                 <option key={type} value={type}>
                     {type}
@@ -319,7 +313,7 @@ export default function RegistrarStaffAssign({ onBack }) {
           <Button variant="secondary" onClick={handleCloseEdit}>
             Close
           </Button>
-          <Button variant="primary" onClick={handleEditProgramHead}>
+          <Button variant="primary" onClick={handleeditRegistrar}>
             Save Changes
           </Button>
         </Modal.Footer>

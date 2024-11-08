@@ -16,44 +16,32 @@ export default function RegistrarProgramHead({ onBack }) {
   const [editProgramHead, setEditProgramHead] = useState({ number: '', firstname: '', middlename: '', lastname: '', programNumber: '', personnelType: 'Head' });
   const [activeProgramHeadIndex, setActiveProgramHeadIndex] = useState(null);
   const personnelTypes = ['Head', 'Faculty'];
-  const [currentAcademicYear, setcurrentAcademicYear] = useState([]);
+  const currentAcadYear = sessionStorage.getItem('currentAcadYear');
 
-  const fetchCurrentAcadYear = async () => {
-    try {
-      const years = await AcademicYearModel.fetchExistingAcademicYears();
-      years.filter((currentAcadYear) => currentAcadYear.isCurrent === false);
-      setcurrentAcademicYear(years);
-    } catch (error) {
-        console.error('Error fetching current academic Year:', error);
-    }
-  };
 
   const fetchProgramHeads = async () => {
     try {
-      const personnelData = await PersonnelModel.fetchAllPersonnel(currentAcademicYear.academicYear);
+      const personnelData = await PersonnelModel.fetchAllPersonnel(currentAcadYear);
       const headProgramHeads = personnelData.filter((personnel) => personnel.personnelType === 'Head');
       setProgramHeads(headProgramHeads);
+      console.log(programHeads);
+      
     } catch (error) {
       console.error('Error fetching program heads:', error);
     }
   };
-
-  useEffect(() => {
-    fetchCurrentAcadYear();
-    fetchProgramHeads();
-  }, [user.programNumber]);
-
-  useEffect(() => {
-    async function fetchPersonnelList() {
-      try {
-        const personnelData = await PersonnelModel.fetchAllPersonnel(currentAcadYear);
-        const FacultyPersonnel = personnelData.filter((personnel) => personnel.personnelType === 'Faculty');
-        setPersonnelList(FacultyPersonnel);
-      } catch (error) {
-        console.error('Error fetching personnel list:', error);
-      }
+  const fetchPersonnelList = async () =>{
+    try {
+      const personnelData = await PersonnelModel.fetchAllPersonnel(currentAcadYear);
+      const FacultyPersonnel = personnelData.filter((personnel) => personnel.personnelType === 'Faculty');
+      setPersonnelList(FacultyPersonnel);
+    } catch (error) {
+      console.error('Error fetching personnel list:', error);
     }
+  };
 
+  useEffect(() => {
+    fetchProgramHeads();
     fetchPersonnelList();
   }, [user.programNumber]);
 
@@ -122,47 +110,46 @@ export default function RegistrarProgramHead({ onBack }) {
         return;
       }
 
-      const response = await PersonnelModel.updatePersonnel(personnelNumber, updatedData);
+      await PersonnelModel.updatePersonnel(personnelNumber, updatedData);
+
     } catch (error) {
       console.error('Error adding program head:', error);
     }
     fetchProgramHeads();
+    fetchPersonnelList();
     handleCloseAdd();
     setNewProgramHead({ number: '', firstname: '', middlename: '', lastname: '', programNumber: '', personnelType: 'Head' });
   };
 
-  const handleEditProgramHead = async () => {
+  const handleEditProgramHead = async (editPersonnelNumber) => {
+
     const updatedProgramHeadData = {
       programNumber: editProgramHead.programNumber,
       personnelType: editProgramHead.personnelType,
     };
 
-    {/*VERIFY FIRST IF THERE IS EXISTING PROGRAM HEAD ON THE SELECTED PROGRAM NUMBER*/}
-      // Fetch the personnel list for the selected program number
+    try{
+      // Fetch the personnel list for the selected program
       const verify = await PersonnelModel.getProfessorsbyProgram(updatedProgramHeadData.programNumber, currentAcadYear);
-
-      console.log(verify);
-      // Check if there is an existing program head
+      // Check if there is an existing program head on the selected program
       const existingHead = verify.find(personnel => personnel.personnelType === 'Head');
 
-      if (existingHead) {
+      if (existingHead && (existingHead.personnelNumber !== editPersonnelNumber)) {
         // Handle the case where a program head already exists
         console.warn('A program head already exists for this program.');
         alert('This program already has a head assigned. Please remove the existing head before adding a new one.');
         return;
       }
 
-
-    try {
       const personnelNumber = programHeads[activeProgramHeadIndex].personnelNumber;
       await PersonnelModel.updatePersonnel(personnelNumber, updatedProgramHeadData);
-
-      // Refresh the program heads list after editing
-      await fetchProgramHeads();
-      handleCloseEdit();
-    } catch (error) {
-      console.error('Error updating program head:', error);
+      
+    }catch (error) {
+      console.error('Error editing program head:', error);
     }
+    fetchProgramHeads();
+    fetchPersonnelList();
+    handleCloseEdit();
   };
 
   const handlePersonnelChange = (event) => {
@@ -200,7 +187,7 @@ export default function RegistrarProgramHead({ onBack }) {
             <th className='custom-font custom-color-green-font'>First Name</th>
             <th className='custom-font custom-color-green-font'>Middle Name</th>
             <th className='custom-font custom-color-green-font'>Last Name</th>
-            <th className='custom-font custom-color-green-font'>Program Number</th>
+            <th className='custom-font custom-color-green-font'>Program</th>
             <th className='custom-font custom-color-green-font'>Personnel Type</th>
             <th className='custom-font custom-color-green-font'>Actions</th>
           </tr>
@@ -213,7 +200,7 @@ export default function RegistrarProgramHead({ onBack }) {
                 <td>{head.personnelNameFirst}</td>
                 <td>{head.personnelNameMiddle}</td>
                 <td>{head.personnelNameLast}</td>
-                <td>{head.programNumber}</td>
+                <td>{head.programName}</td>
                 <td>{head.personnelType}</td>
                 <td>
                   
@@ -273,7 +260,7 @@ export default function RegistrarProgramHead({ onBack }) {
                 <option value="">Select Program</option>
                 {programNumbers.map((program) => (
                   <option key={program.programNumber} value={program.programNumber}>
-                    {program.programNumber}
+                    {program.programName}
                   </option>
                 ))}
               </Form.Control>
@@ -328,7 +315,7 @@ export default function RegistrarProgramHead({ onBack }) {
               <Form.Control as="select" name="programNumber" value={editProgramHead.programNumber} onChange={handleEditInputChange}>
                 {programNumbers.map((program) => (
                   <option key={program.programNumber} value={program.programNumber}>
-                    {program.programNumber}
+                    {program.programName}
                   </option>
                 ))}
               </Form.Control>
@@ -349,7 +336,7 @@ export default function RegistrarProgramHead({ onBack }) {
           <Button variant="secondary" onClick={handleCloseEdit}>
             Close
           </Button>
-          <Button variant="primary" onClick={handleEditProgramHead}>
+          <Button variant="primary" onClick={() => handleEditProgramHead(editProgramHead.number)}>
             Save Changes
           </Button>
         </Modal.Footer>

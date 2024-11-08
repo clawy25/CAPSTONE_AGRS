@@ -258,17 +258,39 @@ app.post('/personnel/byProgram', async (req, res) => {
 app.post('/personnel', async (req, res) => {
     const { currentAcadYear } = req.body;
     try {
-        const { data, error } = await supabase
+        const { data: personnelData, error: personnelError } = await supabase
             .from('personnel')
             .select('*')
             .eq('academicYear', currentAcadYear);
 
 
-        if (error) {
-            return res.status(500).json({ error: error.message });
+        if (personnelError || !personnelData) {
+            return res.status(500).json({ error: personnelError.message });
         }
 
-        res.json(data); // Send the fetched data in the response
+        // Prepare an array to hold personnel data with program names
+        const personnelWithPrograms = await Promise.all(personnelData.map(async (personnel) => {
+            // Fetch program data based on the student's program number
+            const { data: programData, error: programError } = await supabase
+                .from('program')
+                .select('*')
+                .eq('programNumber', personnel.programNumber) // Match with the programNumber
+                .single(); // Expect a single result
+  
+            if (programError || !programData) {
+                return {
+                    ...personnel,
+                    programName: null, // If program is not found, set to null
+                };
+            }
+  
+            return {
+                ...personnel,
+                programName: programData.programName, // Add program name
+            };
+        }));
+  
+        res.json(personnelWithPrograms); // Return the array of personnels with program names
     } catch (error) {
         console.error('Error fetching personnel details:', error);
         res.status(500).json({ error: 'Internal server error' });
