@@ -6,6 +6,7 @@ import * as XLSX from 'xlsx';
 import StudentModel from '../ReactModels/StudentModel';
 import TimelineModel from '../ReactModels/TimelineModel';
 import ProgramModel from '../ReactModels/ProgramModel';
+import AcademicYearModel from '../ReactModels/AcademicYearModel';
 
 export default function RegistrarStudents() {
     const [searchQuery, setSearchQuery] = useState('');
@@ -13,6 +14,17 @@ export default function RegistrarStudents() {
     const [showFilterDropdown, setShowFilterDropdown] = useState(false);
     const [students, setStudents] = useState([]);
     const [programs, setPrograms] = useState([]);
+    const [currentAcademicYear, setcurrentAcademicYear] = useState([]);
+
+    const fetchCurrentAcadYear = async () => {
+        try {
+          const years = await AcademicYearModel.fetchExistingAcademicYears();
+          years.filter((currentAcadYear) => currentAcadYear.isCurrent === false);
+          setcurrentAcademicYear(years);
+        } catch (error) {
+            console.error('Error fetching current academic Year:', error);
+        }
+      };
 
     // Fetch existing students from StudentModel
     const fetchExistingStudents = async () => {
@@ -27,6 +39,7 @@ export default function RegistrarStudents() {
     const fetchExistingPrograms = async () => {
         try {
             const existingPrograms = await ProgramModel.fetchAllPrograms();
+            existingPrograms.filter((programs) => programs.academicYear !== currentAcademicYear.academicYear);
             setPrograms(existingPrograms);
         } catch (error) {
             console.error('Error fetching existing programs:', error);
@@ -35,6 +48,7 @@ export default function RegistrarStudents() {
 
     // Fetch existing students and programs onload
     useEffect(() => {
+        fetchCurrentAcadYear();
         fetchExistingStudents();
         fetchExistingPrograms();
     }, []);
@@ -113,10 +127,12 @@ export default function RegistrarStudents() {
                     }
 
 
-                    //SETTING THE PROGRAM NUMBERS; MAY ADD VALIDATIONS WITH THE YEAR
+                    //SETTING THE PROGRAM NUMBERS; ADDED CURRENT ACADEMIC YEAR VALIDATION
                     let studentProgramNumber;
+                    let studentadmissionAcadYear = admissionYear + '-' + (parseInt(admissionYear) + 1);
+
                     programs.forEach(program => {
-                        if (studentProgramName === program.programName) {
+                        if (studentProgramName === program.programName && studentadmissionAcadYear === currentAcademicYear.academicYear) {
                             studentProgramNumber = program.programNumber;
                         }
                     });
@@ -349,7 +365,7 @@ export default function RegistrarStudents() {
                                         <th className='custom-color-green-font custom-font'style={{ textAlign: 'center' }}>Student Number</th>
                                         <th className='custom-color-green-font custom-font'style={{ textAlign: 'center' }}>Name</th>
                                         <th className='custom-color-green-font custom-font'style={{ textAlign: 'center' }}>PCC Email</th>
-                                        <th className='custom-color-green-font custom-font'style={{ textAlign: 'center' }}>Course</th>
+                                        <th className='custom-color-green-font custom-font'style={{ textAlign: 'center' }}>Program</th>
                                         <th className='custom-color-green-font custom-font'style={{ textAlign: 'center' }}>Status</th>
                                         <th className='custom-color-green-font custom-font'style={{ textAlign: 'center' }}>Actions</th>
                                     </tr>

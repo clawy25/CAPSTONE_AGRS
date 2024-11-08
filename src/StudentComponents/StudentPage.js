@@ -8,8 +8,8 @@ import { UserContext } from '../Context/UserContext';
 
 export default function StudentPage() {
   const navigate = useNavigate();
-  const [studentId, setStudentId] = useState('2021-000001');
-  const [password, setPassword] = useState('Ty_5D!Qm0o');
+  const [studentId, setStudentId] = useState('2015-000001');
+  const [password, setPassword] = useState('Emma2015Welch');
   const { setUser } = useContext(UserContext);
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);

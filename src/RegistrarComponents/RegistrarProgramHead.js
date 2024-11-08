@@ -3,24 +3,34 @@ import { Table, Modal, Button, Form } from 'react-bootstrap';
 import PersonnelModel from '../ReactModels/PersonnelModel';
 import ProgramModel from '../ReactModels/ProgramModel';
 import { UserContext } from '../Context/UserContext';
+import AcademicYearModel from '../ReactModels/AcademicYearModel';
 
 export default function RegistrarProgramHead({ onBack }) {
+  const { user } = useContext(UserContext);
   const [programHeads, setProgramHeads] = useState([]);
   const [personnelList, setPersonnelList] = useState([]);
   const [programNumbers, setProgramNumbers] = useState([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-
-  const [newProgramHead, setNewProgramHead] = useState({ number: '', firstname: '', middlename: '', lastname: '', programNumber: '', personnelType: 'Head' });
+  const [newProgramHead, setNewProgramHead] = useState({ number: '', firstname: '', middlename: '', lastname: '', programNumber: '', personnelType: '' });
   const [editProgramHead, setEditProgramHead] = useState({ number: '', firstname: '', middlename: '', lastname: '', programNumber: '', personnelType: 'Head' });
   const [activeProgramHeadIndex, setActiveProgramHeadIndex] = useState(null);
-  const { user } = useContext(UserContext);
   const personnelTypes = ['Head', 'Faculty'];
-  const currentAcadYear = sessionStorage.getItem('currentAcadYear');
+  const [currentAcademicYear, setcurrentAcademicYear] = useState([]);
+
+  const fetchCurrentAcadYear = async () => {
+    try {
+      const years = await AcademicYearModel.fetchExistingAcademicYears();
+      years.filter((currentAcadYear) => currentAcadYear.isCurrent === false);
+      setcurrentAcademicYear(years);
+    } catch (error) {
+        console.error('Error fetching current academic Year:', error);
+    }
+  };
 
   const fetchProgramHeads = async () => {
     try {
-      const personnelData = await PersonnelModel.fetchAllPersonnel(currentAcadYear);
+      const personnelData = await PersonnelModel.fetchAllPersonnel(currentAcademicYear.academicYear);
       const headProgramHeads = personnelData.filter((personnel) => personnel.personnelType === 'Head');
       setProgramHeads(headProgramHeads);
     } catch (error) {
@@ -29,6 +39,7 @@ export default function RegistrarProgramHead({ onBack }) {
   };
 
   useEffect(() => {
+    fetchCurrentAcadYear();
     fetchProgramHeads();
   }, [user.programNumber]);
 
@@ -112,16 +123,12 @@ export default function RegistrarProgramHead({ onBack }) {
       }
 
       const response = await PersonnelModel.updatePersonnel(personnelNumber, updatedData);
-
-      if (response) {
-        // Refresh the program heads list after adding
-        await fetchProgramHeads();
-        handleCloseAdd();
-        setNewProgramHead({ number: '', firstname: '', middlename: '', lastname: '', programNumber: '', personnelType: 'Head' });
-      }
     } catch (error) {
       console.error('Error adding program head:', error);
     }
+    fetchProgramHeads();
+    handleCloseAdd();
+    setNewProgramHead({ number: '', firstname: '', middlename: '', lastname: '', programNumber: '', personnelType: 'Head' });
   };
 
   const handleEditProgramHead = async () => {
