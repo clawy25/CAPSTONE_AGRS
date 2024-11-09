@@ -101,6 +101,7 @@ export default function RegistrarStudents() {
                 const studentProgramName = row["Program"] || '';
                 const studentContact = row["Contact No."] || '';
                 const studentAddress = row["Address"];
+                const isABMgraduate = row["ABM Graduate"] || true;
 
                 // Validate the row and add it to newStudents if valid
                 if (validateRow(studentNameFirst, studentNameMiddle, studentNameLast, studentContact)) {
@@ -161,7 +162,8 @@ export default function RegistrarStudents() {
                         studentProgramNumber,
                         studentProgramName,
                         studentContact,
-                        studentAddress
+                        studentAddress,
+                        isABMgraduate
                     ));
 
                     

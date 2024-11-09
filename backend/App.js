@@ -471,12 +471,14 @@ app.get('/program', async (req, res) => {
 //DELETE PROGRAM BY PROGRAM NUMBER
 app.delete('/program/:programNumber', async (req, res) => {
     const { programNumber } = req.params;
+    const { academicYear } = req.query; // Use query parameter instead
 
     try {
         const { data, error } = await supabase
             .from('program')
-            .delete('*')
-            .eq('programNumber', programNumber);
+            .delete()
+            .eq('programNumber', programNumber)
+            .eq('academicYear', academicYear);
 
         if (error) {
             return res.status(500).json({ error: 'Failed to delete program' });
@@ -484,10 +486,11 @@ app.delete('/program/:programNumber', async (req, res) => {
 
         res.json({ message: 'Program deleted successfully', data });
     } catch (error) {
-        console.error('Error deleting Program:', error);
+        console.error('Error deleting program:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
+
 
 // Insert new students
 app.post('/program/upload', async (req, res) => {

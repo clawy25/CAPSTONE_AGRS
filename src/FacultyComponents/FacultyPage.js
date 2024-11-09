@@ -62,8 +62,9 @@ export default function FacultyPage() {
             personnelNameFirst: user.personnelNameFirst,
             personnelNameMiddle: user.personnelNameMiddle,
             personnelNameLast: user.personnelNameLast,
-            programNumber: user.programNumber
-      };
+            programNumber: user.programNumber,
+            academicYear: user.academicYear
+        };
       setUser(credentials); // Store the current user's credentials to UserContext
 
       // Navigate based on personnel type

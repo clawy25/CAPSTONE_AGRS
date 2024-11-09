@@ -1,7 +1,8 @@
 export default class CourseModel {
     constructor(id, courseCode, courseDescriptiveTitle, courseLecture, 
                 courseLaboratory, coursePreRequisite, courseUnits,
-                programNumber, academicYear) {
+                programNumber,courseYearLevel, courseSemester, isBridgingCourse,
+                academicYear) {
       this.id = id;
       this.courseCode = courseCode;
       this.courseDescriptiveTitle = courseDescriptiveTitle;
@@ -10,6 +11,9 @@ export default class CourseModel {
       this.coursePreRequisite = coursePreRequisite;
       this.courseUnits = courseUnits;
       this.programNumber = programNumber;
+      this.courseYearLevel = courseYearLevel;
+      this.courseSemester = courseSemester;
+      this.isBridgingCourse = isBridgingCourse;
       this.academicYear = academicYear;
     }
   
@@ -37,6 +41,9 @@ export default class CourseModel {
           course.courseLaboratory,
           course.coursePreRequisite,
           course.courseUnits,
+          course.courseYearLevel,
+          course.courseSemester,
+          course.isBridgingCourse,
           course.academicYear
         ));
       } catch (error) {
@@ -46,7 +53,10 @@ export default class CourseModel {
     }
   
     // Create and insert a new course
-    static async createAndInsertCourse(courseCode, courseDescriptiveTitle, courseLecture, courseLaboratory, coursePreRequisite, courseUnits, programNumber) {
+    static async createAndInsertCourse(courseCode, courseDescriptiveTitle, courseLecture,
+      courseLaboratory, coursePreRequisite, courseUnits, programNumber, courseYearLevel, 
+      courseSemester, isBridgingCourse) {
+        
       const courseData = {
         courseCode,
         courseDescriptiveTitle,
@@ -55,6 +65,9 @@ export default class CourseModel {
         coursePreRequisite,
         courseUnits,
         programNumber,
+        courseYearLevel,
+        courseSemester,
+        isBridgingCourse,
         academicYear: sessionStorage.getItem('currentAcadYear')
       };
   

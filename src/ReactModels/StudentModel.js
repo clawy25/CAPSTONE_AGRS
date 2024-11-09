@@ -4,7 +4,7 @@ export default class StudentModel {
               studentSex, studentEmail, 
               studentBirthDate, studentPccEmail, studentAdmissionYr, 
               studentYrLevel, studentProgramNumber, studentProgramName,
-              studentContact, studentAddress) {
+              studentContact, studentAddress, isABMgraduate) {
       this.id = id;
       this.studentNumber = studentNumber;
       this.studentPassword = studentPassword;
@@ -22,6 +22,7 @@ export default class StudentModel {
       this.studentProgramName = studentProgramName;
       this.studentContact = studentContact;
       this.studentAddress = studentAddress;
+      this.isABMgraduate = isABMgraduate;
 
       // Add more here if needed
   }
@@ -60,7 +61,8 @@ export default class StudentModel {
               data.studentProgramNumber,
               data.studentProgramName,
               data.studentContact,
-              data.studentAddress
+              data.studentAddress,
+              data.isABMgraduate
           );
       } catch (error) {
           console.error('Error fetching student data:', error);
@@ -94,7 +96,8 @@ export default class StudentModel {
               student.studentAdmissionYr,
               student.studentYrLevel,
               student.studentProgramNumber,
-              student.studentProgramName
+              student.studentProgramName,
+              student.isABMgraduate
           ));
       } catch (error) {
           console.error('Error fetching existing students:', error);
@@ -124,7 +127,8 @@ export default class StudentModel {
             studentYrLevel: student.studentYrLevel,
             studentProgramNumber: student.studentProgramNumber,
             studentContact: student.studentContact,
-            studentAddress: student.studentAddress
+            studentAddress: student.studentAddress,
+            isABMgraduate: student.isABMgraduate
         }));
 
         const response = await fetch('http://localhost:5000/student/upload', {

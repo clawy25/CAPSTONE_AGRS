@@ -79,21 +79,25 @@ export default class ProgramModel {
         }
     }
 
-    static async deletePrograms(programNumber) {
+    static async deletePrograms(programNumber, academicYear) {
         try {
-          const response = await fetch(`http://localhost:5000/program/${programNumber}`, {
+          const response = await fetch(`http://localhost:5000/program/${programNumber}?academicYear=${academicYear}`, {
             method: 'DELETE',
-        });
-      
+            headers: {
+                'Content-Type': 'application/json',
+            },
+          });
+        
           if (!response.ok) {
-            throw new Error('Error deleting personnel');
+            throw new Error('Error deleting program');
           }
-      
+    
           const data = await response.json();
-          return data; // Return response or success message
+          return data;
         } catch (error) {
           console.error('Error deleting program:', error);
           throw error;
         }
     }
+    
 }

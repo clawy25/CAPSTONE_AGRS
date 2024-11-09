@@ -1,13 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Table, Form, Button, Row, Col, Modal } from 'react-bootstrap';
 import AcademicYearModel from '../ReactModels/AcademicYearModel';
 import YearLevelModel from '../ReactModels/YearLevelModel';
-import CourseModel from '../ReactModels/CourseModel'; // Assuming CourseModel handles fetching courses based on academic year, year level, and semester.
+import CourseModel from '../ReactModels/CourseModel';
+import ProgramModel from '../ReactModels/ProgramModel';
+import { UserContext } from '../Context/UserContext'; // Assuming CourseModel handles fetching courses based on academic year, year level, and semester.
 
 const CurriculumPage = () => {
-  const [academicYear, setAcademicYear] = useState('');
-  const [yearLevel, setYearLevel] = useState('');
-  const [semester, setSemester] = useState('First');
+  const { user } = useContext(UserContext);
+  const [program, setPrograms] = useState([]);
+  const [selectedAcademicYear, setSelectedAcademicYear] = useState('');
+  const [selectedYearLevel, setSelectedYearLevel] = useState('');
+  const [selectedSemester, setSelectedSemester] = useState('');
   const [showTable, setShowTable] = useState(false);
 
   const [academicYears, setAcademicYears] = useState([]);
@@ -16,32 +20,88 @@ const CurriculumPage = () => {
   const [showModal, setShowModal] = useState(false); // State to toggle Add/Edit modal
   const [currentCourse, setCurrentCourse] = useState(null); // Track the course being edited
   const [coursesCache, setCoursesCache] = useState({}); // Cache for storing courses based on academic year, year level, and semester
+  
+  const fetchAcademicYearsAndPrograms = async () => {
+    try {
+      // Fetch academic years and programs
+      const fetchedAcademicYears = await AcademicYearModel.fetchExistingAcademicYears();
+      setAcademicYears(fetchedAcademicYears);
+  
+      const programs = await ProgramModel.fetchAllPrograms();
+      const userProgram = programs.filter(program => program.programNumber === user.programNumber);
+  
+      if (userProgram.length > 0) {
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const fetchedAcademicYears = await AcademicYearModel.fetchExistingAcademicYears();
-        setAcademicYears(fetchedAcademicYears);
-        if (fetchedAcademicYears.length > 0) {
-          setAcademicYear(fetchedAcademicYears[0].academicYear);
-        }
+        const data = [];
 
-        const fetchedYearLevels = await YearLevelModel.fetchExistingYearLevels();
-        setYearLevels(fetchedYearLevels);
-        if (fetchedYearLevels.length > 0) {
-          setYearLevel(fetchedYearLevels[0].yearName);
-        }
-      } catch (error) {
-        console.error("Error fetching data:", error);
+        userProgram.forEach(row => {
+          // Find if there is an existing entry for the academic year
+          let existingAcadYear = data.find(item => item.academicYear === row.academicYear);
+        
+          if (!existingAcadYear) {
+            // If not found, create a new entry
+
+            const listYrlevels = [];
+            const numYrs = row.programNumOfYear;
+            
+            for (let i = 1; i <= numYrs; i++){
+              listYrlevels.push(i)
+            } //Output should be [1,2,3,4] based on row.programNumOfYear
+
+
+
+            const summerlevels = [];
+            userProgram.forEach(row => {
+              summerlevels.push(row.programYrLvlSummer);
+            });
+
+            const semesters = [];
+
+            for (let i = 1; i <= numYrs; i++){
+              if (summerlevels.includes(i)){
+                for (let j = 1; j <= 3; j++){
+                  semesters.push({
+                    yearLevel: i,
+                    semester: j
+                  })
+                }
+              } else {
+                for (let j = 1; j <= 2; j++){
+                  semesters.push({
+                    yearLevel: i,
+                    semester: j
+                  })
+                }
+              }
+            }
+
+
+            const entry = {
+              academicYear: row.academicYear,
+              yearLevels: listYrlevels,
+              semesters: semesters // Initialize the set with the academic year
+            };
+            data.push(entry);  // Push the new entry into the data array
+          }
+        });
+        
+        console.log(data);
+        setPrograms(data);
       }
-    };
-
-    fetchData();
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  };
+  
+  
+  useEffect(() => {
+    fetchAcademicYearsAndPrograms();
   }, []);
+
 
   // Fetch the courses based on selected academic year, year level, and semester
   const fetchCourses = async () => {
-    const cacheKey = `${academicYear}-${yearLevel}-${semester}`;
+    const cacheKey = `${selectedAcademicYear}-${selectedYearLevel}-${selectedSemester}`;
     
     // Check if the courses for the current combination are already in the cache
     if (coursesCache[cacheKey]) {
@@ -49,9 +109,9 @@ const CurriculumPage = () => {
     } else {
       try {
         const fetchedCourses = await CourseModel.fetchCoursesByYearLevel(
-          academicYear,
-          yearLevel,
-          semester
+          selectedAcademicYear,
+          selectedYearLevel,
+          selectedSemester
         );
         setCourses(fetchedCourses); // Update the courses state with fetched data
         setCoursesCache((prevCache) => ({
@@ -64,18 +124,34 @@ const CurriculumPage = () => {
     }
   };
 
-  // Trigger fetchCourses whenever academicYear, yearLevel, or semester changes
+  // Trigger fetchCourses whenever academicYear, selectedYearLevel, or semester changes
   useEffect(() => {
-    if (academicYear && yearLevel && semester) {
+    if (selectedAcademicYear && selectedYearLevel && selectedSemester) {
       setCourses([]); // Clear current courses data
       fetchCourses(); // Fetch new courses or get from cache
     }
-  }, [academicYear, yearLevel, semester]);
+  }, [selectedAcademicYear, selectedYearLevel, selectedSemester]);
 
   const handleView = () => {
-    if (academicYear && yearLevel && semester) {
+    if (selectedAcademicYear && selectedYearLevel && selectedSemester) {
       setShowTable(true);
     }
+  };
+
+  const handleAcademicYearChange = (e) => {
+    const selectedYear = e.target.value;
+    setSelectedAcademicYear(selectedYear);
+    setSelectedYearLevel('');  // Reset Year Level when Academic Year changes
+    setSelectedSemester('');
+  };
+
+  const handleYearLevelChange = (e) => {
+    setSelectedYearLevel(e.target.value);
+    setSelectedSemester(''); // Reset Semester when Year Level changes
+  };
+
+  const handleSemesterChange = (e) => {
+    setSelectedSemester(e.target.value);
   };
 
   // Handle course form submission
@@ -91,7 +167,7 @@ const CurriculumPage = () => {
       prerequisite: form.prerequisite.value,
     };
   
-    const cacheKey = `${academicYear}-${yearLevel}-${semester}`;
+    const cacheKey = `${selectedAcademicYear}-${selectedYearLevel}-${selectedSemester}`;
     
     if (currentCourse) {
       // Editing an existing course
@@ -135,7 +211,7 @@ const CurriculumPage = () => {
     setCourses(updatedCourses);
 
     // Update the cache with the modified courses list
-    const cacheKey = `${academicYear}-${yearLevel}-${semester}`;
+    const cacheKey = `${selectedAcademicYear}-${selectedYearLevel}-${selectedSemester}`;
     setCoursesCache((prevCache) => ({
       ...prevCache,
       [cacheKey]: updatedCourses,
@@ -149,34 +225,70 @@ const CurriculumPage = () => {
         <Col>
           <Form.Group controlId="academicYear">
             <Form.Label>Academic Year</Form.Label>
-            <Form.Control as="select" value={academicYear} onChange={(e) => setAcademicYear(e.target.value)}>
-              {academicYears.map((year) => (
-                <option key={year.id} value={year.academicYear}>
-                  {year.academicYear}
-                </option>
-              ))}
+            <Form.Control name ="acad" as="select" value={selectedAcademicYear} onChange={handleAcademicYearChange}>
+            <option value="">Select Acad Year</option>
+            {program
+    .sort((a, b) => {
+      let yearA = parseInt(a.academicYear.split('-')[0]);
+      let yearB = parseInt(b.academicYear.split('-')[0]);
+      return yearB - yearA; // Sorting in descending order
+    })
+    .map((program) => (
+      <option key={program.academicYear} value={program.academicYear}>
+        {program.academicYear}
+      </option>
+    ))
+  }
             </Form.Control>
           </Form.Group>
         </Col>
         <Col>
-          <Form.Group controlId="yearLevel">
+          <Form.Group controlId="selectedYearLevel">
             <Form.Label>Year Level</Form.Label>
-            <Form.Control as="select" value={yearLevel} onChange={(e) => setYearLevel(e.target.value)}>
-              {yearLevels.map((level) => (
-                <option key={level.id} value={level.yearName}>
-                  {level.yearName}
+            <Form.Control 
+            name="year" 
+            as="select" 
+            value={selectedYearLevel} 
+            onChange={handleYearLevelChange}
+            disabled={!selectedAcademicYear} // Disable if no Academic Year is selected
+            >
+              <option value="">Select Year Level</option>
+            {program
+              .filter(p => p.academicYear === selectedAcademicYear) // Filter by selected academic year
+              .flatMap(p => p.yearLevels) // Get year levels for selected academic year
+              .map(level => (
+                <option key={level} value={level}>
+                  Year {level}
                 </option>
               ))}
-            </Form.Control>
+          </Form.Control>
           </Form.Group>
         </Col>
         <Col>
           <Form.Group controlId="semester">
             <Form.Label>Semester</Form.Label>
-            <Form.Control as="select" value={semester} onChange={(e) => setSemester(e.target.value)}>
-              <option value="First">First</option>
-              <option value="Second">Second</option>
-            </Form.Control>
+            <Form.Control 
+            name="sem" 
+            as="select" 
+            value={selectedSemester} 
+            onChange={handleSemesterChange}
+            disabled={!selectedYearLevel || !selectedAcademicYear} // Disable if no Year Level is selected
+            >
+              <option value="">Select Semester</option>
+              {program
+  .filter(p => p.academicYear === selectedAcademicYear) // Filter by selected academic year
+  .flatMap(p => // Flatten semesters after filtering by year level
+    p.semesters
+      .filter(semester => semester.yearLevel === parseInt(selectedYearLevel)) // Filter semesters by selected year level
+      .map(semester => (
+        <option key={semester.semester} value={semester.semester}>
+          Year {semester.yearLevel} - Semester {semester.semester}
+        </option>
+      ))
+  )
+}
+
+          </Form.Control>
           </Form.Group>
         </Col>
         <Col className="d-flex align-items-end">

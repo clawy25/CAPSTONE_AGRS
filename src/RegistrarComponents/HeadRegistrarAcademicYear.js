@@ -238,10 +238,12 @@ export default function HeadRegistrarAcademicYear() {
     } else if (summerlevels.length === 0) {
       summerlevels = [null];
     }
+
+    const academicYear = selectedAcademicYear;
     
     if(programNumber){
       try {
-        const response = await ProgramModel.deletePrograms(programNumber);
+        const response = await ProgramModel.deletePrograms(programNumber, academicYear);
     
         if (!response) {
           throw new Error('No response from server');
