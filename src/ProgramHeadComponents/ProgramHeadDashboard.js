@@ -1,24 +1,27 @@
 import React, { useState, useEffect, useRef, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUser, faGraduationCap, faBars, faChalkboardTeacher, faAngleDown, faAngleUp, faTable } from '@fortawesome/free-solid-svg-icons';
+import { faUser, faBars, faAngleDown, faAngleUp, faTable, faGraduationCap, faClipboardList } from '@fortawesome/free-solid-svg-icons';
 import '../App.css';
 import { UserContext } from '../Context/UserContext';
 import ProgramHeadGrades from './ProgramHeadGrades';
 import ProgramHeadClassDesig from './ProgramHeadClassDesig';
-import CurriculumPage from './CurriculumPage'; // Import CurriculumPage
+import CurriculumPage from './CurriculumPage'; 
+import ProgramHeadMOG from './ProgramHeadMOG';
+import ProgramHeadCSOG from './ProgramHeadCSOG';
 
 export default function ProgramHeadDashboard() {
   const navigate = useNavigate();
   const { user } = useContext(UserContext);
   const [showDropdown, setShowDropdown] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
-  const [showClassDesignationSubMenu, setShowClassDesignationSubMenu] = useState(false);
-  const [selectedSection, setSelectedSection] = useState('grades');
+  const [selectedSection, setSelectedSection] = useState('csog'); // Default to CSOG
   const [programHeadView, setProgramHeadView] = useState('professor');
   const [selectedProgram, setSelectedProgram] = useState(null);
+  const [showGradesSubMenu, setShowGradesSubMenu] = useState(false);
+  const [showClassDesignationSubMenu, setShowClassDesignationSubMenu] = useState(false);
   const dropdownRef = useRef(null);
-  
+
   // Constants for section names
   const SECTIONS = {
     GRADES: 'grades',
@@ -26,12 +29,26 @@ export default function ProgramHeadDashboard() {
     HRIS: 'hris',
     PROFILE: 'profile',
     CHANGEPASSWORD: 'change-password',
-    CURRICULUM: 'curriculum', // Add curriculum section key
+    CURRICULUM: 'curriculum',
+    MOG: 'mog',
+    CSOG: 'csog',
+  };
+
+  // Toggle Grades submenu visibility
+  const toggleGradeSubMenu = () => {
+    setShowGradesSubMenu((prev) => !prev);
   };
 
   // Toggle Class Designation submenu
   const toggleClassDesignationSubMenu = () => {
     setShowClassDesignationSubMenu((prev) => !prev);
+  };
+
+
+  // When Class Designation section is clicked, open the submenu
+  const handleClassDesignationClick = () => {
+    setSelectedSection(SECTIONS.CLASSDESIGNATION); // Ensure Class Designation is selected
+    setShowClassDesignationSubMenu(true); // Open submenu by default
   };
 
   // Log user data when it changes
@@ -48,13 +65,19 @@ export default function ProgramHeadDashboard() {
   // Toggle dropdown menu visibility
   const toggleDropdown = () => setShowDropdown((prev) => !prev);
 
-  // Toggle sidebar visibility for mobile screens
-  const toggleSidebar = () => setShowSidebar((prev) => !prev);
-
   // Handle section change and close sidebar on selection (for mobile)
   const handleSectionChange = (section) => {
     setSelectedSection(section);
     setShowSidebar(false);
+    setShowGradesSubMenu(false); // Close submenu when section is selected
+    setShowClassDesignationSubMenu(false); // Close Class Designation submenu
+    setShowDropdown(false); // Close dropdown when any section is selected
+  };
+
+  // Highlight CSOG by default when Grades is clicked
+  const handleGradesClick = () => {
+    setSelectedSection(SECTIONS.CSOG); // Set CSOG as default section within Grades
+    setShowGradesSubMenu(true); // Open submenu by default
   };
 
   // Close the dropdown if clicked outside
@@ -72,6 +95,11 @@ export default function ProgramHeadDashboard() {
     };
   }, [showDropdown]);
 
+  // Toggle sidebar visibility (for mobile view)
+  const toggleSidebar = () => {
+    setShowSidebar((prev) => !prev);
+  };
+
   return (
     <div className="dashboard-container d-flex">
       {/* Sidebar */}
@@ -85,52 +113,66 @@ export default function ProgramHeadDashboard() {
         {/* Navigation Menu */}
         <nav className="menu mb-3">
           {/* Grades Section Link */}
-          <Link
-            to="#"
-            className={`menu-item d-flex align-items-center mb-2 ${selectedSection === SECTIONS.GRADES ? 'active' : ''}`}
-            onClick={() => handleSectionChange(SECTIONS.GRADES)}
-          >
-            <FontAwesomeIcon icon={faGraduationCap} className="me-2" />
-            GRADES
-          </Link>
-
-          {/* Class Designation Section with Dropdown Submenu */}
           <div className="menu-item-wrapper">
-            <div
-              className={`menu-item d-flex align-items-center mb-2 ${selectedSection === SECTIONS.CLASSDESIGNATION ? 'active' : ''}`}
-              onClick={() => {
-                setSelectedSection(SECTIONS.CLASSDESIGNATION);
-                toggleClassDesignationSubMenu();
-              }}
-            >
-              <FontAwesomeIcon icon={faChalkboardTeacher} className="me-2" />
-              CLASS SCHEDULING
-              <FontAwesomeIcon icon={showClassDesignationSubMenu ? faAngleUp : faAngleDown} className="ms-auto" />
-            </div>
+    {/* Grades Section Link */}
+    <div
+      className={`menu-item d-flex align-items-center mb-2 ${selectedSection === SECTIONS.GRADES || selectedSection === SECTIONS.CSOG || selectedSection === SECTIONS.MOG ? 'active' : ''}`}
+      onClick={handleGradesClick} // Ensure submenu toggles when Grades is clicked
+    >
+      <FontAwesomeIcon icon={faGraduationCap} className="me-2" />
+      GRADES
+      <FontAwesomeIcon icon={showGradesSubMenu ? faAngleUp : faAngleDown} className="ms-auto" />
+    </div>
+    {showGradesSubMenu && (
+      <div className="submenu">
+        <Link
+          to="#"
+          className={`submenu-item d-flex align-items-center mb-2 ${selectedSection === SECTIONS.CSOG ? 'active' : ''}`}
+          onClick={() => handleSectionChange(SECTIONS.CSOG)} // Navigate to CSOG
+        >
+          <FontAwesomeIcon icon={faTable} className="me-2" />
+          CSOG
+        </Link>
+        <Link
+          to="#"
+          className={`submenu-item d-flex align-items-center mb-2 ${selectedSection === SECTIONS.MOG ? 'active' : ''}`}
+          onClick={() => handleSectionChange(SECTIONS.MOG)} // Navigate to MOG
+        >
+          <FontAwesomeIcon icon={faClipboardList} className="me-2" />
+          MOG
+        </Link>
+      </div>
+    )}
 
-            {showClassDesignationSubMenu && (
-              <div className="submenu">
-                <Link 
-                  to="#"
-                  className="submenu-item d-flex align-items-center mb-2"
-                  onClick={() => handleSectionChange(SECTIONS.CURRICULUM)} // Change section on click
-                >
-                  <FontAwesomeIcon icon={faTable} className="me-2" />
-                  CURRICULUM
-                </Link>
-              </div>
-            )}
-          </div>
+    {/* Class Designation Section Link */}
+    <div
+      className={`menu-item d-flex align-items-center mb-2 ${selectedSection === SECTIONS.CLASSDESIGNATION ? 'active' : ''}`}
+      onClick={handleClassDesignationClick} // Ensure submenu toggles when Class Designation is clicked
+    >
+      <FontAwesomeIcon icon={faTable} className="me-2" />
+      CLASS SCHEDULING
+      <FontAwesomeIcon icon={showClassDesignationSubMenu ? faAngleUp : faAngleDown} className="ms-auto" />
+    </div>
+    {showClassDesignationSubMenu && (
+      <div className="submenu">
+        <Link
+          to="#"
+          className="submenu-item d-flex align-items-center mb-2"
+          onClick={() => handleSectionChange(SECTIONS.CURRICULUM)} // Navigate to Curriculum
+        >
+          <FontAwesomeIcon icon={faTable} className="me-2" />
+          CURRICULUM
+        </Link>
+      </div>
+    )}
+  </div>
 
-          {/* HRIS Section Link */}
-          <Link
-            to="#"
-            className={`menu-item d-flex align-items-center mb-2 ${selectedSection === SECTIONS.HRIS ? 'active' : ''}`}
-            onClick={() => handleSectionChange(SECTIONS.HRIS)}
-          >
-            <FontAwesomeIcon icon={faChalkboardTeacher} className="me-2" />
-            HRIS
-          </Link>
+  <div
+      className={`menu-item d-flex align-items-center mb-2 ${selectedSection === SECTIONS.HRIS ? 'active' : ''}`} 
+    >
+      <FontAwesomeIcon icon={faUser} className="me-2" />
+      HRIS  
+    </div>
         </nav>
       </div>
 
@@ -159,10 +201,10 @@ export default function ProgramHeadDashboard() {
             />
             {showDropdown && (
               <div className="dropdown-menu position-absolute end-0 mt-2 show">
-                <button className="dropdown-item" onClick={() => handleSectionChange(SECTIONS.PROFILE)}>
+                <button className="dropdown-item" onClick={() => { handleSectionChange(SECTIONS.PROFILE); setShowDropdown(false); }}>
                   Profile
                 </button>
-                <button className="dropdown-item" onClick={() => handleSectionChange(SECTIONS.CHANGEPASSWORD)}>
+                <button className="dropdown-item" onClick={() => { handleSectionChange(SECTIONS.CHANGEPASSWORD); setShowDropdown(false); }}>
                   Change Password
                 </button>
                 <button className="dropdown-item" onClick={handleLogout}>
@@ -175,9 +217,15 @@ export default function ProgramHeadDashboard() {
 
         {/* Main Content Section based on selected section */}
         <div className="content-section m-3">
-          {/* Grades Section */}
-          {selectedSection === SECTIONS.GRADES && (
-            <ProgramHeadGrades 
+          {/* MOG Section */}
+          {selectedSection === SECTIONS.MOG && <ProgramHeadMOG />}
+
+          {/* CSOG Section */}
+          {selectedSection === SECTIONS.CSOG && <ProgramHeadCSOG />}
+
+          {/* Class Designation Section */}
+          {selectedSection === SECTIONS.CLASSDESIGNATION && (
+            <ProgramHeadClassDesig
               programHeadView={programHeadView}
               setProgramHeadView={setProgramHeadView}
               setSelectedProgram={setSelectedProgram}
@@ -185,44 +233,31 @@ export default function ProgramHeadDashboard() {
             />
           )}
 
-          {/* Class Designation Section */}
-          {selectedSection === SECTIONS.CLASSDESIGNATION && (
-            <ProgramHeadClassDesig
-              programHeadView={programHeadView} 
-              setProgramHeadView={setProgramHeadView}
-            />
-          )}
-
-          {/* HRIS Section */}
-          {selectedSection === SECTIONS.HRIS && <h2>HRIS Section</h2>}
-
-          {/* Profile Section */}
-          {selectedSection === SECTIONS.PROFILE && (
-            <section className="card border-success p-3">
-              <h2 className="custom-color-green-font custom-font">Profile</h2>
-              <input type="text" placeholder="First Name" className="form-control custom-color-green-font mb-2" required />
-              <input type="text" placeholder="Last Name" className="form-control custom-color-green-font mb-2" required />
-              <input type="email" placeholder="Email" className="form-control custom-color-green-font mb-2" required />
-              <button className="btn custom-color-font bg-custom-color-green p-2">
-                Save
-              </button>
-            </section>
-          )}
-
-          {/* Change Password Section */}
-          {selectedSection === SECTIONS.CHANGEPASSWORD && (
-            <section className="card border-success p-3">
-              <h2 className="custom-color-green-font custom-font">Change Password</h2>
-              <input type="password" placeholder="Current Password" className="form-control custom-color-green-font mb-2" required />
-              <input type="password" placeholder="New Password" className="form-control custom-color-green-font mb-2" required />
-              <button className="btn custom-color-font bg-custom-color-green p-2">
-                Change Password
-              </button>
-            </section>
-          )}
-
           {/* Curriculum Section */}
           {selectedSection === SECTIONS.CURRICULUM && <CurriculumPage />}
+
+          {selectedSection === 'profile' && (
+          <section className="card border-success p-3">
+            <h2 className="custom-color-green-font custom-font">Profile</h2>
+            <div className="custom-font custom-color-green-font fs-6 mb-2">Student Number: 2020-00202-PQ-O</div>
+            <input type="text" placeholder="First Name" className="form-control custom-color-green-font mb-2" required />
+            <input type="text" placeholder="Last Name" className="form-control custom-color-green-font mb-2" required />
+            <input type="email" placeholder="Email" className="form-control custom-color-green-font mb-2" required />
+            <button className="btn custom-color-font bg-custom-color-green p-2" onClick={() => alert('Profile information saved!')}>
+              Save
+            </button>
+          </section>
+        )}
+
+        {selectedSection === 'change-password' && (
+          <section className="card border-success p-3">
+            <h2 className="custom-color-green-font custom-font">Change Password</h2>
+            <input type="password" placeholder="New Password" className="form-control custom-color-green-font mb-2" required />
+            <button className="btn custom-color-font bg-custom-color-green p-2" onClick={() => alert('Password changed successfully!')}>
+              Save
+            </button>
+          </section>
+        )}
         </div>
       </div>
     </div>
