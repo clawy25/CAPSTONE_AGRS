@@ -15,7 +15,6 @@ const CurriculumPage = () => {
   const [showTable, setShowTable] = useState(false);
 
   const [academicYears, setAcademicYears] = useState([]);
-  const [yearLevels, setYearLevels] = useState([]);
   const [courses, setCourses] = useState([]); // State to hold course data for the selected academic year, year level, and semester
   const [showModal, setShowModal] = useState(false); // State to toggle Add/Edit modal
   const [currentCourse, setCurrentCourse] = useState(null); // Track the course being edited
@@ -41,16 +40,46 @@ const CurriculumPage = () => {
           if (!existingAcadYear) {
             // If not found, create a new entry
 
-            const listYrlevels = [];
+            const yearLevels = [];
             const numYrs = row.programNumOfYear;
+            const summerlevels = [];
+
+
+              userProgram.forEach(row => {
+                summerlevels.push(row.programYrLvlSummer);  
+              });
             
             for (let i = 1; i <= numYrs; i++){
-              listYrlevels.push(i)
-            } //Output should be [1,2,3,4] based on row.programNumOfYear
 
+              const semesters = [];
+              let isSummer = false;
+              
+              //For loop [0, 1, 2] to iterate per value summerLevelValue
+              for (let j = 0; j < summerlevels.length; j++) {
+                if (summerlevels[j] === i) {
+                  isSummer = true;
+                  
+                  break;
+                }
+              }
 
+              if(isSummer){
+                for (let x = 1; x <= 3; x++) {
+                  semesters.push(x);
+                }
+              } else{
+                for (let x = 1; x <= 2; x++) {
+                  semesters.push(x);
+                }
+              }
 
-            const summerlevels = [];
+              yearLevels.push({
+                yearLevel: i,
+                semesters: semesters,
+              });
+            }
+            /*
+            cnost summerlevels = [];
             userProgram.forEach(row => {
               summerlevels.push(row.programYrLvlSummer);
             });
@@ -73,13 +102,10 @@ const CurriculumPage = () => {
                   })
                 }
               }
-            }
-
-
+            }*/
             const entry = {
               academicYear: row.academicYear,
-              yearLevels: listYrlevels,
-              semesters: semesters // Initialize the set with the academic year
+              yearLevels: yearLevels,
             };
             data.push(entry);  // Push the new entry into the data array
           }
@@ -146,12 +172,14 @@ const CurriculumPage = () => {
   };
 
   const handleYearLevelChange = (e) => {
-    setSelectedYearLevel(e.target.value);
+    const selectedYear = e.target.value;
+    setSelectedYearLevel(selectedYear);
     setSelectedSemester(''); // Reset Semester when Year Level changes
   };
 
   const handleSemesterChange = (e) => {
-    setSelectedSemester(e.target.value);
+    const level = (e.target.value);
+    setSelectedSemester(level);
   };
 
   // Handle course form submission
@@ -218,6 +246,10 @@ const CurriculumPage = () => {
     }));
   };
 
+  
+  const selectedYearData = program?.filter(p => p.academicYear === selectedAcademicYear)
+                                 ?.flatMap(p => p.yearLevels)
+                                 ?.find(p => p.yearLevel === Number(selectedYearLevel));
   return (
     <div>
       <h2 className="custom-font custom-color-green-font">Curriculum</h2>
@@ -228,68 +260,59 @@ const CurriculumPage = () => {
             <Form.Control name ="acad" as="select" value={selectedAcademicYear} onChange={handleAcademicYearChange}>
             <option value="">Select Acad Year</option>
             {program
-    .sort((a, b) => {
-      let yearA = parseInt(a.academicYear.split('-')[0]);
-      let yearB = parseInt(b.academicYear.split('-')[0]);
-      return yearB - yearA; // Sorting in descending order
-    })
-    .map((program) => (
-      <option key={program.academicYear} value={program.academicYear}>
-        {program.academicYear}
-      </option>
-    ))
-  }
+              .sort((a, b) => {
+                let yearA = parseInt(a.academicYear.split('-')[0]);
+                let yearB = parseInt(b.academicYear.split('-')[0]);
+                return yearB - yearA; // Sorting in descending order
+              })
+              .map((program) => (
+                <option key={program.academicYear} value={program.academicYear}>
+                  {program.academicYear}
+                </option>
+              ))
+            }
             </Form.Control>
           </Form.Group>
         </Col>
         <Col>
           <Form.Group controlId="selectedYearLevel">
             <Form.Label>Year Level</Form.Label>
-            <Form.Control 
-            name="year" 
-            as="select" 
-            value={selectedYearLevel} 
+            <Form.Control
+            name="year"
+            as="select"
+            value={selectedYearLevel}
             onChange={handleYearLevelChange}
-            disabled={!selectedAcademicYear} // Disable if no Academic Year is selected
-            >
+            disabled={!selectedAcademicYear}>
               <option value="">Select Year Level</option>
-            {program
-              .filter(p => p.academicYear === selectedAcademicYear) // Filter by selected academic year
-              .flatMap(p => p.yearLevels) // Get year levels for selected academic year
-              .map(level => (
-                <option key={level} value={level}>
-                  Year {level}
-                </option>
+              {program
+                ?.filter(p => p.academicYear === selectedAcademicYear) // Filter by selected academic year
+                ?.flatMap(p => p.yearLevels) // Get year levels for selected academic year
+                ?.map(level => (
+                  <option key={level.yearLevel} value={level.yearLevel}>
+                    Year {level.yearLevel}
+                  </option>
               ))}
-          </Form.Control>
+            </Form.Control>
+
           </Form.Group>
         </Col>
         <Col>
-          <Form.Group controlId="semester">
-            <Form.Label>Semester</Form.Label>
-            <Form.Control 
-            name="sem" 
-            as="select" 
-            value={selectedSemester} 
-            onChange={handleSemesterChange}
-            disabled={!selectedYearLevel || !selectedAcademicYear} // Disable if no Year Level is selected
-            >
-              <option value="">Select Semester</option>
-              {program
-  .filter(p => p.academicYear === selectedAcademicYear) // Filter by selected academic year
-  .flatMap(p => // Flatten semesters after filtering by year level
-    p.semesters
-      .filter(semester => semester.yearLevel === parseInt(selectedYearLevel)) // Filter semesters by selected year level
-      .map(semester => (
-        <option key={semester.semester} value={semester.semester}>
-          Year {semester.yearLevel} - Semester {semester.semester}
-        </option>
-      ))
-  )
-}
-
+        <Form.Group controlId="semester">
+          <Form.Label>Semester</Form.Label>
+          <Form.Control 
+          name="sem" 
+          as="select" 
+          value={selectedSemester} 
+          onChange={handleSemesterChange} 
+          disabled={!selectedYearLevel || !selectedAcademicYear}>
+            <option value="">Select Semester</option>
+              {selectedYearData?.semesters?.map((sem, index) => (
+                <option key={index} value={sem}>
+                  Semester {sem}
+                </option>
+              ))}
           </Form.Control>
-          </Form.Group>
+        </Form.Group>
         </Col>
         <Col className="d-flex align-items-end">
           <Button className="w-100 btn-success" onClick={handleView}>View</Button>
