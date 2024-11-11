@@ -23,8 +23,9 @@ export default function RegistrarProgramHead({ onBack }) {
     try {
       const personnelData = await PersonnelModel.fetchAllPersonnel(currentAcadYear);
       const headProgramHeads = personnelData.filter((personnel) => personnel.personnelType === 'Head');
+      console.log(headProgramHeads);
       setProgramHeads(headProgramHeads);
-      console.log(programHeads);
+      
       
     } catch (error) {
       console.error('Error fetching program heads:', error);
@@ -255,15 +256,23 @@ export default function RegistrarProgramHead({ onBack }) {
               <Form.Control type="text" name="lastname" value={newProgramHead.lastname} onChange={handleInputChange} />
             </Form.Group>
             <Form.Group>
-              <Form.Label>Program Number</Form.Label>
+              <Form.Label>Programs</Form.Label>
               <Form.Control as="select" name="programNumber" value={newProgramHead.programNumber} onChange={handleInputChange}>
-                <option value="">Select Program</option>
-                {programNumbers.map((program) => (
-                  <option key={program.programNumber} value={program.programNumber}>
-                    {program.programName}
-                  </option>
-                ))}
-              </Form.Control>
+  <option value="">Select Program</option>
+  {programNumbers
+    .reduce((uniquePrograms, program) => {
+      if (!uniquePrograms.some(p => p.programName === program.programName)) {
+        uniquePrograms.push(program);
+      }
+      return uniquePrograms;
+    }, [])
+    .map((program) => (
+      <option key={program.programNumber} value={program.programNumber}>
+        {program.programName}
+      </option>
+    ))}
+</Form.Control>
+
             </Form.Group>
             <Form.Group>
               <Form.Label>Personnel Type</Form.Label>
@@ -311,14 +320,22 @@ export default function RegistrarProgramHead({ onBack }) {
               <Form.Control type="text" name="lastname" value={editProgramHead.lastname} onChange={handleEditInputChange} />
             </Form.Group>
             <Form.Group>
-              <Form.Label>Program Number</Form.Label>
+              <Form.Label>Programs</Form.Label>
               <Form.Control as="select" name="programNumber" value={editProgramHead.programNumber} onChange={handleEditInputChange}>
-                {programNumbers.map((program) => (
-                  <option key={program.programNumber} value={program.programNumber}>
-                    {program.programName}
-                  </option>
-                ))}
-              </Form.Control>
+  {programNumbers
+    .reduce((uniquePrograms, program) => {
+      if (!uniquePrograms.some(p => p.programName === program.programName)) {
+        uniquePrograms.push(program);
+      }
+      return uniquePrograms;
+    }, [])
+    .map((program) => (
+      <option key={program.programNumber} value={program.programNumber}>
+        {program.programName}
+      </option>
+    ))}
+</Form.Control>
+
             </Form.Group>
             <Form.Group>
               <Form.Label>Personnel Type</Form.Label>

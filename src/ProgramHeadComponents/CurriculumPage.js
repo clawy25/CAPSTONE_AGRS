@@ -18,7 +18,7 @@ const CurriculumPage = () => {
   const [courses, setCourses] = useState([]); // State to hold course data for the selected academic year, year level, and semester
   const [showModal, setShowModal] = useState(false); // State to toggle Add/Edit modal
   const [currentCourse, setCurrentCourse] = useState(null); // Track the course being edited
-  const [coursesCache, setCoursesCache] = useState({}); // Cache for storing courses based on academic year, year level, and semester
+
   
   const fetchAcademicYearsAndPrograms = async () => {
     try {
@@ -127,38 +127,31 @@ const CurriculumPage = () => {
 
   // Fetch the courses based on selected academic year, year level, and semester
   const fetchCourses = async () => {
-    const cacheKey = `${selectedAcademicYear}-${selectedYearLevel}-${selectedSemester}`;
-    
-    // Check if the courses for the current combination are already in the cache
-    if (coursesCache[cacheKey]) {
-      setCourses(coursesCache[cacheKey]); // If courses are cached, use them
-    } else {
-      try {
-        const fetchedCourses = await CourseModel.fetchCoursesByYearLevel(
-          selectedAcademicYear,
-          selectedYearLevel,
-          selectedSemester
-        );
-        setCourses(fetchedCourses); // Update the courses state with fetched data
-        setCoursesCache((prevCache) => ({
-          ...prevCache,
-          [cacheKey]: fetchedCourses, // Cache the fetched courses
-        }));
-      } catch (error) {
-        console.error("Error fetching courses:", error);
+    try {
+      //Insert Fetch function for getting courses based on 3 input variables
+      const courseData = await CourseModel.getCoursesbyProgram(
+        selectedAcademicYear,
+        selectedYearLevel,
+        selectedSemester,
+        user.programNumber);
+
+      if(courseData){
+          setCourses(courseData); // Update the courses state with fetched data
       }
+    } catch (error) {
+      console.error("Error fetching courses:", error);
     }
   };
 
   // Trigger fetchCourses whenever academicYear, selectedYearLevel, or semester changes
   useEffect(() => {
     if (selectedAcademicYear && selectedYearLevel && selectedSemester) {
-      setCourses([]); // Clear current courses data
-      fetchCourses(); // Fetch new courses or get from cache
+      setCourses([]);
+      fetchCourses();
     }
   }, [selectedAcademicYear, selectedYearLevel, selectedSemester]);
 
-  const handleView = () => {
+  const handleView = async() => {
     if (selectedAcademicYear && selectedYearLevel && selectedSemester) {
       setShowTable(true);
     }
@@ -169,56 +162,80 @@ const CurriculumPage = () => {
     setSelectedAcademicYear(selectedYear);
     setSelectedYearLevel('');  // Reset Year Level when Academic Year changes
     setSelectedSemester('');
+    setShowTable(false);
   };
 
   const handleYearLevelChange = (e) => {
     const selectedYear = e.target.value;
     setSelectedYearLevel(selectedYear);
     setSelectedSemester(''); // Reset Semester when Year Level changes
+    setShowTable(false);
   };
 
   const handleSemesterChange = (e) => {
     const level = (e.target.value);
     setSelectedSemester(level);
+    setShowTable(false);
   };
 
+  const getNextCourseId = async () => {
+    try {
+        // Fetch all existing courses
+        const allExistingCourses = await CourseModel.fetchAllCourses();
+
+        // Find the highest id
+        const highestId = allExistingCourses.length > 0 
+            ? Math.max(...allExistingCourses.map(course => course.id)) 
+            : 0;
+
+        // Increment by 1 to get the next available id
+        return highestId + 1;
+    } catch (error) {
+        console.error("Error fetching courses:", error);
+        return 1; // Default id if fetching fails
+    }
+  };
+
+
   // Handle course form submission
-  const handleCourseSubmit = (e) => {
+  const handleCourseSubmit = async (e) => {
     e.preventDefault();
+    
+    console.log(courses);
   
     const form = e.target;
     const updatedCourse = {
+      id: currentCourse?.id || await getNextCourseId(),
       courseCode: form.courseCode.value,
-      title: form.title.value,
-      lectureUnits: form.lectureUnits.value,
-      labUnits: form.labUnits.value,
-      prerequisite: form.prerequisite.value,
+      courseDescriptiveTitle: form.title.value,
+      courseLecture: parseInt(form.lectureUnits.value) || 0,
+      courseLaboratory: parseInt(form.labUnits.value)|| 0,
+      coursePreRequisite: form.prerequisite.value || 'None',
+      programNumber: user.programNumber, 
+      courseYearLevel: parseInt(selectedYearLevel), 
+      courseSemester: parseInt(selectedSemester), 
+      isBridgingCourse: Boolean(form.bridging.checked) || false, //Update Needed
+      academicYear: selectedAcademicYear
     };
-  
-    const cacheKey = `${selectedAcademicYear}-${selectedYearLevel}-${selectedSemester}`;
     
     if (currentCourse) {
-      // Editing an existing course
-      const updatedCourses = courses.map(course =>
-        course.courseCode === currentCourse.courseCode ? updatedCourse : course
-      );
-      
-      setCourses(updatedCourses); // Update the courses in state
-      setCoursesCache((prevCache) => ({
-        ...prevCache,
-        [cacheKey]: updatedCourses, // Update the cache with edited course
-      }));
-    } else {
-      // Adding a new course
-      const newCourses = [...courses, updatedCourse];
-      
-      setCourses(newCourses); // Update the courses in state
-      setCoursesCache((prevCache) => ({
-        ...prevCache,
-        [cacheKey]: newCourses, // Update the cache with new course added
-      }));
+
+      try {
+        await CourseModel.updateCourse(updatedCourse);
+
+
+    } catch (error) {
+        console.error("Error updating course:", error);
     }
-  
+    } else {
+      try{
+        await CourseModel.createAndInsertCourse(updatedCourse);
+      }
+      catch (error){
+        console.error("Error creating course:", error);
+      }
+    }
+    fetchCourses(); //Update the Courses
     setShowModal(false); // Close the modal
     setCurrentCourse(null); // Reset currentCourse to null after edit/add
   };
@@ -233,17 +250,10 @@ const CurriculumPage = () => {
     setShowModal(true); // Show modal for adding a new course
   };
 
-  const handleDeleteCourse = (courseCode) => {
-    // Delete the course with the given courseCode
-    const updatedCourses = courses.filter(course => course.courseCode !== courseCode);
-    setCourses(updatedCourses);
-
-    // Update the cache with the modified courses list
-    const cacheKey = `${selectedAcademicYear}-${selectedYearLevel}-${selectedSemester}`;
-    setCoursesCache((prevCache) => ({
-      ...prevCache,
-      [cacheKey]: updatedCourses,
-    }));
+  const handleDeleteCourse = (course) => {
+    
+    CourseModel.deleteCourse(course);
+    fetchCourses();
   };
 
   
@@ -258,7 +268,7 @@ const CurriculumPage = () => {
           <Form.Group controlId="academicYear">
             <Form.Label>Academic Year</Form.Label>
             <Form.Control name ="acad" as="select" value={selectedAcademicYear} onChange={handleAcademicYearChange}>
-            <option value="">Select Acad Year</option>
+            <option value="">Select Academic Year</option>
             {program
               .sort((a, b) => {
                 let yearA = parseInt(a.academicYear.split('-')[0]);
@@ -293,7 +303,6 @@ const CurriculumPage = () => {
                   </option>
               ))}
             </Form.Control>
-
           </Form.Group>
         </Col>
         <Col>
@@ -329,6 +338,7 @@ const CurriculumPage = () => {
                 <th>Lecture Units</th>
                 <th>Laboratory Units</th>
                 <th>Pre-requisite</th>
+                <th>Bridging Course?</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -336,15 +346,16 @@ const CurriculumPage = () => {
               {courses.map((course, index) => (
                 <tr key={index}>
                   <td>{course.courseCode}</td>
-                  <td>{course.title}</td>
-                  <td>{course.lectureUnits}</td>
-                  <td>{course.labUnits}</td>
-                  <td>{course.prerequisite}</td>
+                  <td>{course.courseDescriptiveTitle}</td>
+                  <td>{course.courseLecture}</td>
+                  <td>{course.courseLaboratory}</td>
+                  <td>{course.coursePreRequisite}</td>
+                  <td>{course.isBridgingCourse? 'Yes' : 'No'}</td>
                   <td>
                     <Button variant="success" className="me-2" onClick={() => handleEditCourse(course)}>
                       Edit
                     </Button>
-                    <Button variant="danger" onClick={() => handleDeleteCourse(course.courseCode)}>
+                    <Button variant="danger" onClick={() => handleDeleteCourse(course)}>
                       Delete
                     </Button>
                   </td>
@@ -382,7 +393,7 @@ const CurriculumPage = () => {
               <Form.Label>Descriptive Title</Form.Label>
               <Form.Control
                 type="text"
-                defaultValue={currentCourse ? currentCourse.title : ''}
+                defaultValue={currentCourse ? currentCourse.courseDescriptiveTitle : ''}
                 required
               />
             </Form.Group>
@@ -390,7 +401,7 @@ const CurriculumPage = () => {
               <Form.Label>Lecture Units</Form.Label>
               <Form.Control
                 type="number"
-                defaultValue={currentCourse ? currentCourse.lectureUnits : ''}
+                defaultValue={currentCourse ? currentCourse.courseLecture : ''}
                 required
               />
             </Form.Group>
@@ -398,7 +409,7 @@ const CurriculumPage = () => {
               <Form.Label>Laboratory Units</Form.Label>
               <Form.Control
                 type="number"
-                defaultValue={currentCourse ? currentCourse.labUnits : ''}
+                defaultValue={currentCourse ? currentCourse.courseLaboratory : ''}
                 required
               />
             </Form.Group>
@@ -406,9 +417,18 @@ const CurriculumPage = () => {
               <Form.Label>Pre-requisite</Form.Label>
               <Form.Control
                 type="text"
-                defaultValue={currentCourse ? currentCourse.prerequisite : ''}
-                required
+                defaultValue={currentCourse ? currentCourse.coursePreRequisite : ''}
+                placeholder="If none, leave this blank"
               />
+            </Form.Group>
+
+            <Form.Group controlId="bridging">
+              <Form.Label>Bridging Course</Form.Label>
+                <Form.Check
+                  type="checkbox"
+                  label="Bridging Course"
+                  defaultChecked={currentCourse ? currentCourse.isBridgingCourse : false}
+                />
             </Form.Group>
             <Button type="submit" variant="primary" className="mt-3 w-100">
               {currentCourse ? 'Save Changes' : 'Add Course'}

@@ -18,7 +18,7 @@ export default function ProgramHeadEditCourses({ onBack }) {
     courseLecture: '', 
     courseLaboratory: '', 
     coursePreRequisite: '', 
-    courseUnits: '' 
+    
   });
 
   const [editCourse, setEditCourse] = useState({ 
@@ -28,7 +28,7 @@ export default function ProgramHeadEditCourses({ onBack }) {
     courseLecture: '', 
     courseLaboratory: '', 
     coursePreRequisite: '', 
-    courseUnits: '' 
+    
   });
 
   const [courseToDelete, setCourseToDelete] = useState(null); 
@@ -36,7 +36,7 @@ export default function ProgramHeadEditCourses({ onBack }) {
   useEffect(() => {
     const fetchCourses = async () => {
       try {
-        const fetchedCourses = await CourseModel.getCoursesbyProgram(user.programNumber, sessionStorage.getItem('currentAcadYear'));
+        //const fetchedCourses = await CourseModel.getCoursesbyProgram(user.programNumber, sessionStorage.getItem('currentAcadYear'));
         setYearData({ 'First Year': fetchedCourses });
       } catch (error) {
         console.error('Error fetching courses:', error);
@@ -75,7 +75,7 @@ export default function ProgramHeadEditCourses({ onBack }) {
 
   const handleAddCourse = async () => {
     // Check if required fields are filled
-    if (!newCourse.courseCode || !newCourse.courseDescriptiveTitle || !newCourse.courseUnits) {
+    if (!newCourse.courseCode || !newCourse.courseDescriptiveTitle) {
       console.error('Course Code, Descriptive Title, and Units are required');
       return;
     }
@@ -87,7 +87,6 @@ export default function ProgramHeadEditCourses({ onBack }) {
         newCourse.courseLecture,
         newCourse.courseLaboratory,
         newCourse.coursePreRequisite,
-        newCourse.courseUnits,
         user.programNumber
       );
 
@@ -243,7 +242,7 @@ export default function ProgramHeadEditCourses({ onBack }) {
                 placeholder="Enter Pre-requisite"
               />
             </Form.Group>
-            <Form.Group className="mb-3">
+            {/*<Form.Group className="mb-3">
               <Form.Label>Units</Form.Label>
               <Form.Control
                 type="text"
@@ -252,7 +251,7 @@ export default function ProgramHeadEditCourses({ onBack }) {
                 onChange={handleInputChange}
                 placeholder="Enter Units"
               />
-            </Form.Group>
+            </Form.Group>*/}
           </Form>
         </Modal.Body>
         <Modal.Footer>
@@ -317,7 +316,7 @@ export default function ProgramHeadEditCourses({ onBack }) {
                 onChange={handleEditInputChange}
               />
             </Form.Group>
-            <Form.Group className="mb-3">
+            {/*<Form.Group className="mb-3">
               <Form.Label>Units</Form.Label>
               <Form.Control
                 type="text"
@@ -325,7 +324,7 @@ export default function ProgramHeadEditCourses({ onBack }) {
                 value={editCourse.courseUnits}
                 onChange={handleEditInputChange}
               />
-            </Form.Group>
+            </Form.Group>*/}
           </Form>
         </Modal.Body>
         <Modal.Footer>

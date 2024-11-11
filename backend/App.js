@@ -255,7 +255,7 @@ app.post('/personnel/byProgram', async (req, res) => {
     }
 });
  // All personnels by Current Academic Year
-app.post('/personnel', async (req, res) => {
+ app.post('/personnel', async (req, res) => {
     const { currentAcadYear } = req.body;
     try {
         const { data: personnelData, error: personnelError } = await supabase
@@ -263,39 +263,41 @@ app.post('/personnel', async (req, res) => {
             .select('*')
             .eq('academicYear', currentAcadYear);
 
-
         if (personnelError || !personnelData) {
-            return res.status(500).json({ error: personnelError.message });
+            return res.status(500).json({ error: personnelError ? personnelError.message : 'No personnel found' });
         }
 
         // Prepare an array to hold personnel data with program names
         const personnelWithPrograms = await Promise.all(personnelData.map(async (personnel) => {
-            // Fetch program data based on the student's program number
+            // Fetch program data based on the programNumber
             const { data: programData, error: programError } = await supabase
                 .from('program')
                 .select('*')
-                .eq('programNumber', personnel.programNumber) // Match with the programNumber
-                .single(); // Expect a single result
-  
-            if (programError || !programData) {
+                .eq('programNumber', personnel.programNumber); // Match with the programNumber
+
+            if (programError || !programData || programData.length === 0) {
                 return {
                     ...personnel,
                     programName: null, // If program is not found, set to null
                 };
             }
-  
+
+            // Select the first program name from the list (if multiple programs exist for the same programNumber)
+            const programName = programData[0].programName;
+
             return {
                 ...personnel,
-                programName: programData.programName, // Add program name
+                programName: programName, // Add program name from the first matching record
             };
         }));
   
-        res.json(personnelWithPrograms); // Return the array of personnels with program names
+        res.json(personnelWithPrograms); // Return the array of personnel with program names
     } catch (error) {
         console.error('Error fetching personnel details:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
+
 
 
 // Insert new students
@@ -492,7 +494,7 @@ app.delete('/program/:programNumber', async (req, res) => {
 });
 
 
-// Insert new students
+
 app.post('/program/upload', async (req, res) => {
     try {
         const newProgramData = req.body.data;//This is in array format
@@ -518,15 +520,36 @@ app.post('/program/upload', async (req, res) => {
     }
   });
 
+
+app.get('/courses', async (req, res) => {
+    try {
+        // Fetch data from the program table using correct column names
+        const { data: courseData, error: courseError } = await supabase
+            .from('course') // Ensure this is your actual table name
+            .select('*'); // Use the correct column names
+  
+        if (courseError) {
+            return res.status(500).json({ error: courseError.message || 'Failed to fetch course data' });
+        }
+  
+        res.json(courseData); // Send the fetched data as JSON response
+    } catch (error) {
+        console.error('Error fetching course data:', error); // Log the error
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 // Get all course by Program + Current Academic Year
 app.post('/course/byProgram', async (req, res) => {
-    const { programNumber, currentAcadYear } = req.body;
+    const { academicYear, yearLevel, semester, programNumber } = req.body;
     try {
         const { data, error } = await supabase
             .from('course')
             .select('*')
             .eq('programNumber', programNumber)
-            .eq('academicYear', currentAcadYear);
+            .eq('courseSemester', semester)
+            .eq('courseYearLevel', yearLevel)
+            .eq('academicYear', academicYear);
 
         if (error) {
             return res.status(500).json({ error: error.message });
@@ -561,7 +584,6 @@ app.get('/course/:id', async (req, res) => {
     }
 });
 
-
 // Add new course
 app.post('/course/upload', async (req, res) => {
     try {
@@ -590,36 +612,41 @@ app.post('/course/upload', async (req, res) => {
 
   
 // Update course by ID
-app.put('/course/:id', async (req, res) => {
-    const { id } = req.params;
-    const { courseDescriptiveTitle, courseLecture, courseLaboratory, coursePreRequisite, courseUnits } = req.body;
+app.put('/course/update', async (req, res) => {
+    const courseData = req.body.data;
+
+    // Log courseData to confirm its structure
+    console.log('Received courseData:', courseData);
 
     try {
         const { data, error } = await supabase
             .from('course')
-            .update({ courseDescriptiveTitle, courseLecture, courseLaboratory, coursePreRequisite, courseUnits })
-            .eq('id', id);
+            .update(courseData)
+            .eq('id', courseData.id); // Ensure courseCode is accessible
 
         if (error) {
-            return res.status(500).json({ error: 'Failed to update course' });
+            console.error('Supabase update error:', error); // Log Supabase error details
+            return res.status(500).json({ error: 'Failed to update course', details: error });
         }
 
         res.json({ message: 'Course updated successfully', data });
     } catch (error) {
         console.error('Error updating course:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(500).json({ error: 'Internal server error', details: error.message });
     }
 });
 
+
 // Delete course by ID
-app.delete('/course/:id', async (req, res) => {
-    const { id } = req.params;
+app.delete('/course/delete', async (req, res) => {
+    const courseData = req.body.data;
 
     try {
         const { data, error } = await supabase
             .from('course')
             .delete("*")
-            .eq('id', id); // Change "*" to use the default delete behavior
+            .eq('courseCode', courseData.courseCode)
+            .eq('id', courseData.id); // Change "*" to use the default delete behavior
 
         if (error) {
             return res.status(500).json({ error: 'Failed to delete course' });

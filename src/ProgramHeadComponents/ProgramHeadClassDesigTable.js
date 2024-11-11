@@ -93,8 +93,7 @@ export default function ProgramHeadClassDesigTable() {
       updatedRows[index].courseCode = selectedCourse.courseCode;
       updatedRows[index].courseDescriptiveTitle = selectedCourse.courseDescriptiveTitle;
       updatedRows[index].courseLecture = selectedCourse.courseLecture;
-      updatedRows[index].courseLaboratory = selectedCourse.courseLaboratory;
-      updatedRows[index].units = selectedCourse.courseUnits; // Ensure units are updated
+      updatedRows[index].courseLaboratory = selectedCourse.courseLaboratory; // Ensure units are updated
     }
     setData(prevData => ({
       ...prevData,
@@ -206,7 +205,6 @@ export default function ProgramHeadClassDesigTable() {
       scheduleDay: row.scheduleDay,
       startTime: row.startTime,
       endTime: row.endTime,
-      courseUnits: row.units,
     }));
   
     // Log the data to check its structure
