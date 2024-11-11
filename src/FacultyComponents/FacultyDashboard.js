@@ -7,6 +7,9 @@ import '../StudentComponents/Dashboard.css';
 import ClassDetails from './ClassDetails';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { UserContext } from '../Context/UserContext';
+import { Row, Col, Form } from 'react-bootstrap';
+import { Button } from 'react-bootstrap'; // Import Button component from react-bootstrap or your UI library
+
 
 export default function FacultyDashboard () {
   const navigate = useNavigate();
@@ -16,6 +19,12 @@ export default function FacultyDashboard () {
   const [selectedSection, setSelectedSection] = useState('classes'); // Default section
   const [selectedClass, setSelectedClass] = useState(null); // To track selected class
   const dropdownRef = useRef(null);
+  const [program, setProgram] = useState('');
+  const [yearLevel, setYearLevel] = useState('');
+  const [semester, setSemester] = useState('');
+  const [subject, setSubject] = useState('');
+  const [students, setStudents] = useState([]);
+
 
   const SECTIONS = {
     CLASSES: 'classes',
@@ -79,6 +88,44 @@ export default function FacultyDashboard () {
       document.removeEventListener('click', handleOutsideClick);
     };
   }, [showDropdown]);
+
+
+  
+  // Dummy data for dropdown options
+  const programs = [
+    { id: 1, programName: 'BSIT' },
+    { id: 2, programName: 'BSCS' },
+  ];
+
+  const yearLevels = [
+    { id: 1, yearName: '1st Year' },
+    { id: 2, yearName: '2nd Year' },
+  ];
+
+  const sections = ['A', 'B', 'C'];
+
+  const subjects = [
+    { id: 1, subjectName: 'Mathematics' },
+    { id: 2, subjectName: 'Physics' },
+    { id: 3, subjectName: 'Chemistry' },
+  ];
+
+  // Dummy student data for each subject
+  const subjectStudents = {
+    'Mathematics': [
+      { studentNumber: '12345', studentName: 'John Doe', contactNumber: '09123456789', pccEmail: 'johndoe@example.com', address: '123 Main St' },
+      { studentNumber: '12346', studentName: 'Jane Smith', contactNumber: '09123456788', pccEmail: 'janesmith@example.com', address: '456 Elm St' },
+    ],
+    'Physics': [
+      { studentNumber: '22345', studentName: 'Alice Johnson', contactNumber: '09123456700', pccEmail: 'alicej@example.com', address: '789 Oak St' },
+      { studentNumber: '22346', studentName: 'Bob Brown', contactNumber: '09123456701', pccEmail: 'bobb@example.com', address: '101 Pine St' },
+    ],
+    'Chemistry': [
+      { studentNumber: '32345', studentName: 'Charlie Green', contactNumber: '09123456702', pccEmail: 'charlieg@example.com', address: '456 Maple St' },
+      { studentNumber: '32346', studentName: 'David White', contactNumber: '09123456703', pccEmail: 'davidw@example.com', address: '101 Birch St' },
+    ],
+  };
+  
 
   return (
     <div className="dashboard-container d-flex">
@@ -148,26 +195,135 @@ export default function FacultyDashboard () {
         </header>
 
         {selectedSection === SECTIONS.CLASSES && (
-          <section className="mt-3 ms-0 ">
-            <h2 className="custom-font custom-color-green-font">Class Records for {selectedClass}</h2>
-            {selectedClass ? (
-              <div className=" ms-0  ">
-                <ClassDetails />
-              </div>
-            ) : (
-              <div className="class-box-container">
-                <div className="class-box" onClick={() => handleClassClick('BSIT1-1')}>BSIT 1-1</div>
-                <div className="class-box" onClick={() => handleClassClick('BSIT1-2')}>BSIT 1-2</div>
-                <div className="class-box" onClick={() => handleClassClick('BSIT2-1')}>BSIT 2-1</div>
-                <div className="class-box" onClick={() => handleClassClick('BSIT2-2')}>BSIT 2-2</div>
-                <div className="class-box" onClick={() => handleClassClick('BSIT3-1')}>BSIT 3-1</div>
-                <div className="class-box" onClick={() => handleClassClick('BSIT3-2')}>BSIT 3-2</div>
-                <div className="class-box" onClick={() => handleClassClick('BSIT4-1')}>BSIT 4-1</div>
-                <div className="class-box" onClick={() => handleClassClick('BSIT4-2')}>BSIT 4-2</div>
-              </div>
-            )}
-          </section>
-        )}
+  <section className="mt-3 ms-0">
+    <h2 className="custom-font custom-color-green-font">Class Records for {selectedClass}</h2>
+    {selectedClass ? (
+      <div className="ms-0">
+        <ClassDetails />
+      </div>
+    ) : (
+      <div>
+        <Row className="mb-4 bg-white rounded p-3 m-1">
+        <Col>
+          <Form.Group controlId="subject">
+            <Form.Label>Subject</Form.Label>
+            <Form.Control as="select" value={subject} onChange={(e) => setSubject(e.target.value)}>
+              {subjects.map((subj) => (
+                <option key={subj.id} value={subj.subjectName}>
+                  {subj.subjectName}
+                </option>
+              ))}
+            </Form.Control>
+          </Form.Group>
+        </Col>
+
+
+          <Col>
+            <Form.Group controlId="program">
+              <Form.Label>Program</Form.Label>
+              <Form.Control as="select" value={program} onChange={(e) => setProgram(e.target.value)}>
+                {programs.map((prog) => (
+                  <option key={prog.id} value={prog.programName}>
+                    {prog.programName}
+                  </option>
+                ))}
+              </Form.Control>
+            </Form.Group>
+          </Col>
+          <Col>
+            <Form.Group controlId="yearLevel">
+              <Form.Label>Year Level</Form.Label>
+              <Form.Control as="select" value={yearLevel} onChange={(e) => setYearLevel(e.target.value)}>
+                {yearLevels.map((level) => (
+                  <option key={level.id} value={level.yearName}>
+                    {level.yearName}
+                  </option>
+                ))}
+              </Form.Control>
+            </Form.Group>
+          </Col>
+          <Col>
+            <Form.Group controlId="semester">
+              <Form.Label>Semester</Form.Label>
+              <Form.Control as="select" value={semester} onChange={(e) => setSemester(e.target.value)}>
+                <option value="First">First</option>
+                <option value="Second">Second</option>
+              </Form.Control>
+            </Form.Group>
+          </Col>
+          <Col>
+            <Form.Group controlId="section">
+              <Form.Label>Section</Form.Label>
+              <Form.Control as="select" value={selectedSection} onChange={(e) => setSelectedSection(e.target.value)}>
+                {sections.map((section, index) => (
+                  <option key={index} value={section}>
+                    Section {section}
+                  </option>
+                ))}
+              </Form.Control>
+            </Form.Group>
+          </Col>
+
+          <Col>
+              <Button variant="primary" onClick={() => handleClassClick('BSIT1-1')}>
+                View Grade Sheet
+              </Button>
+          </Col>
+
+        </Row>
+
+        
+        
+
+        <div className="table-container mt-4">
+        <h4 className="subject-table-title">
+          Subject {subject ? `[${subject}]` : ""}
+        </h4>
+
+ 
+        <table className="table table-bordered">
+          <thead>
+            <tr>
+              <th>Student Number</th>
+              <th>Student Name</th>
+              <th>Contact Number</th>
+              <th>PCC Email</th>
+              <th>Address</th>
+            </tr>
+          </thead>
+          <tbody>
+
+            {students.map((student, index) => (
+              <tr key={index}>
+                <td>{student.studentNumber}</td>
+                <td>{student.studentName}</td>
+                <td>{student.contactNumber}</td>
+                <td>{student.pccEmail}</td>
+                <td>{student.address}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div> 
+
+
+        {/*
+        <div className="class-box-container">
+          <div className="class-box" onClick={() => handleClassClick('BSIT1-1')}>BSIT 1-1</div>
+          <div className="class-box" onClick={() => handleClassClick('BSIT1-2')}>BSIT 1-2</div>
+          <div className="class-box" onClick={() => handleClassClick('BSIT2-1')}>BSIT 2-1</div>
+          <div className="class-box" onClick={() => handleClassClick('BSIT2-2')}>BSIT 2-2</div>
+          <div className="class-box" onClick={() => handleClassClick('BSIT3-1')}>BSIT 3-1</div>
+          <div className="class-box" onClick={() => handleClassClick('BSIT3-2')}>BSIT 3-2</div>
+          <div className="class-box" onClick={() => handleClassClick('BSIT4-1')}>BSIT 4-1</div>
+          <div className="class-box" onClick={() => handleClassClick('BSIT4-2')}>BSIT 4-2</div>
+        </div> */}
+
+      </div>
+    )}
+  </section>
+)}
+
 
         {selectedSection === SECTIONS.SCHEDULE && (
           <section className="m-3 ms-0">
