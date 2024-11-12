@@ -33,7 +33,7 @@ export default class TimelineModel {
     }
     
     // New method to create and insert timeline data
-    static async createAndInsertTimeline(academicYear, studentNumber, yearLevel, semester, startEnroll, endEnroll) {
+    static async createAndInsertTimeline(academicYear, studentNumber, yearLevel, semester, startEnroll, endEnroll, isRepeating, isLeaving, admissionYear) {
         const timelineData = {
             academicYear,
             studentNumber,
@@ -41,6 +41,9 @@ export default class TimelineModel {
             semester,
             startEnroll,
             endEnroll,
+            isRepeating,
+            isLeaving,
+            admissionYear
         };
 
         try {

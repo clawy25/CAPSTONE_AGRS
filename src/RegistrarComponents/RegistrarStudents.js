@@ -14,18 +14,41 @@ export default function RegistrarStudents() {
     const [showFilterDropdown, setShowFilterDropdown] = useState(false);
     const [students, setStudents] = useState([]);
     const [programs, setPrograms] = useState([]);
-    const [currentAcademicYear, setcurrentAcademicYear] = useState([]);
+    const [currentAcademicYear, setcurrentAcademicYear] = useState(null);
 
     const fetchCurrentAcadYear = async () => {
         try {
-          const years = await AcademicYearModel.fetchExistingAcademicYears();
-          years.filter((currentAcadYear) => currentAcadYear.isCurrent === false);
-          setcurrentAcademicYear(years);
+            const years = await AcademicYearModel.fetchExistingAcademicYears();
+            console.log(years);
+    
+            const currentYear = years.find((year) => year.isCurrent === true); 
+            console.log("Current year found:", currentYear);
+    
+            setcurrentAcademicYear(currentYear); // Update state with current year
         } catch (error) {
-            console.error('Error fetching current academic Year:', error);
+            console.error("Error fetching current academic Year:", error);
         }
-      };
-
+    };
+    
+    // Fetch programs when currentAcademicYear is updated
+    useEffect(() => {
+        const fetchPrograms = async () => {
+        if (currentAcademicYear) {
+            try {
+                const existingPrograms = await ProgramModel.fetchAllPrograms();
+                const filteredPrograms = existingPrograms.filter(
+                    (program) => program.academicYear === currentAcademicYear.academicYear
+                );
+                console.log(filteredPrograms);
+                setPrograms(filteredPrograms);
+            } catch (error) {
+                console.error("Error fetching programs:", error);
+            }
+        }
+    };
+    fetchPrograms();
+}, [currentAcademicYear]); // Run this effect when currentAcademicYear changes
+    
     // Fetch existing students from StudentModel
     const fetchExistingStudents = async () => {
         try {
@@ -36,28 +59,17 @@ export default function RegistrarStudents() {
         }
     };
 
-    const fetchExistingPrograms = async () => {
-        try {
-            const existingPrograms = await ProgramModel.fetchAllPrograms();
-            existingPrograms.filter((programs) => programs.academicYear !== currentAcademicYear.academicYear);
-            setPrograms(existingPrograms);
-        } catch (error) {
-            console.error('Error fetching existing programs:', error);
-        }
-    };
-
     // Fetch existing students and programs onload
     useEffect(() => {
         fetchCurrentAcadYear();
         fetchExistingStudents();
-        fetchExistingPrograms();
     }, []);
+
 
     // Insert the list of newStudents into the database
     const insertStudents = async (newStudents) => {
         try {
-            const response = await StudentModel.insertStudent(newStudents); // Pass the entire array for bulk insert
-            console.log('Inserted students:', response);
+            await StudentModel.insertStudent(newStudents);
         } catch (error) {
             console.error('Error inserting students in bulk:', error);
         }
@@ -130,13 +142,11 @@ export default function RegistrarStudents() {
 
                     //SETTING THE PROGRAM NUMBERS; ADDED CURRENT ACADEMIC YEAR VALIDATION
                     let studentProgramNumber;
-                    let studentadmissionAcadYear = admissionYear + '-' + (parseInt(admissionYear) + 1);
 
-                    programs.forEach(program => {
-                        if (studentProgramName === program.programName && studentadmissionAcadYear === currentAcademicYear.academicYear) {
-                            studentProgramNumber = program.programNumber;
-                        }
-                    });
+                    const program = programs.find((p) => p.programName = studentProgramName);
+                    if (program) {
+                        studentProgramNumber = program.programNumber;
+                    }                    
                     
 
                     // Ensure unique student number
@@ -169,7 +179,7 @@ export default function RegistrarStudents() {
                     
                     // Insert timeline data if yearLevel is 4 or below
                     if (studentYrLevel <= 4) {
-                        await TimelineModel.createAndInsertTimeline(academicYear, studentNumber, studentYrLevel, semester, new Date(), null);
+                        await TimelineModel.createAndInsertTimeline(academicYear, studentNumber, studentYrLevel, semester, new Date(), null, false, false, admissionYearInt);
                     }
 
                     // Add the newly generated student number to the existing set
@@ -188,14 +198,15 @@ export default function RegistrarStudents() {
 
     //AUTOMATE GENERATION OF PCC EMAIL
     const generatePCCemail = (FirstName, LastName, admissionYear) => {
-        const PCCemail = `${LastName.toLowerCase()}_${FirstName.toLowerCase()}${admissionYear}@paranaquecitycollege.edu.ph`;
+        const PCCemail = `${LastName.toLowerCase().replace(/\s+/g, "")}_${FirstName.toLowerCase().replace(/\s+/g, "")}${admissionYear}@paranaquecitycollege.edu.ph`;
         return PCCemail;
     };
     
     const generatePassword = (FirstName, LastName, admissionYear) => {
-        const password = `${FirstName}${admissionYear}${LastName}`;
+        const password = `${FirstName.replace(/\s+/g, "")}${admissionYear}${LastName.replace(/\s+/g, "")}`;
         return password;
     };
+    
     
     // Modify the generateNextStudentNumber function to accept a year parameter
     const generateNextStudentNumber = (existingNumbers, year) => {

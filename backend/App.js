@@ -34,13 +34,22 @@ app.get('/protected-route', authenticateToken, (req, res) => {
   res.json({ message: 'This is a protected route', user: req.user });
 });
 
-const generateToken = (personnel) => {
+const generatepersonnelToken = (personnel) => {
   return jwt.sign(
       { personnelNumber: personnel.personnelNumber, type: personnel.personnelType },
       process.env.JWT_SECRET,
       { expiresIn: '1h' }
   );
 };
+
+const generatestudentToken = (student) => {
+    return jwt.sign(
+        { studentNumber: student.studentNumber, type: student.studentType },
+        process.env.JWT_SECRET,
+        { expiresIn: '1h' }
+    );
+  };
+  
 
 // Login as Personnel
 app.post('/personnel/login', async (req, res) => {
@@ -63,7 +72,7 @@ app.post('/personnel/login', async (req, res) => {
             return res.status(401).json({ error: 'Invalid password' }); // Invalid password response
         }
         // If password is correct, generate a token
-        const token = generateToken(personnelData); // Replace this with your token generation logic
+        const token = generatepersonnelToken(personnelData); // Replace this with your token generation logic
         
         // Set the token in a secure cookie
         res.cookie('token', token, {
@@ -103,48 +112,42 @@ app.post('/personnel/login', async (req, res) => {
 });
 
 // Login as Student
-app.get('/student/:studentNumber', async (req, res) => {
-    const { studentNumber } = req.params; // Get studentNumber from the URL parameter
-
+app.post('/student/login', async (req, res) => {
+    const { studentNumber, password } = req.body; // Get studentNumber from the URL parameter
     try {
-      // Fetch student data
+
+        console.log(studentNumber);
+        console.log(password);
       const { data: studentData, error: studentError } = await supabase
         .from('student') // Ensure this is your actual table name
         .select('*')
         .eq('studentNumber', studentNumber) // Match the personnelNumber
         .single(); // Expect a single result
-  
+
+        console.log(studentData);
       if (studentError || !studentData) {
         return res.status(404).json({ error: 'Student not found' });
       }
-
-      // Fetch program data based on the faculty's programHeadNumber
-      const { data: programData, error: programError } = await supabase
-        .from('program') // Ensure this is your actual table name
-        .select('*')
-        .eq('programNumber', studentData.studentProgramNumber) // Match with the faculty's personnelNumber
-        .single(); // Expect a single result
-  
-      if (programError || !programData) {
-        return res.status(404).json({ error: 'Program not found' });
+       // Compare the provided password with the hashed password from the database
+      const isMatch = await bcrypt.compare(password, studentData.studentPassword);
+      console.log('Password Match Result:', isMatch);
+    
+      if (!isMatch) {
+        return res.status(401).json({ error: 'Invalid password' }); // Invalid password response
       }
-  
-      // Combine faculty and program data
-      const responseData = {
-        ...studentData,
-        studentProgramName: programData.programName, // Add program name
-        // You can add any other fields from the programData as needed
-      };
+      // If password is correct, generate a token
+      const token = generatestudentToken(studentData); // Replace this with your token generation logic
 
-      const token = generateToken(responseData);
-
+      // Set the token in a secure cookie
       res.cookie('token', token, {
-        httpOnly: true, // Prevents JavaScript access
-        secure: true,   // Sends the cookie only over HTTPS (set to false for local development)
-        sameSite: 'Strict', // Helps prevent CSRF attacks
+          httpOnly: true, // Prevent JavaScript access
+          secure: process.env.NODE_ENV === 'production', // Send over HTTPS in production
+          sameSite: 'Strict', // Helps prevent CSRF attacks
       });
 
-      res.json(responseData); // Send the combined data as a response
+      console.log(token);
+
+      res.json(studentData); // Send the combined data as a response
     } catch (error) {
       console.error('Error fetching personnel data:', error);
       res.status(500).json({ error: 'Internal server error' });
@@ -310,10 +313,18 @@ app.post('/student/upload', async (req, res) => {
           return res.status(400).json({ message: 'Invalid data format or no students to insert' });
       }
 
+      const studentWithHashedPasswords = await Promise.all(studentsData.map(async (person) => {
+        const hashedPassword = await bcrypt.hash(person.studentPassword, 10);
+        return {
+            ...person,
+            studentPassword: hashedPassword
+        };
+    }));
+
       // Perform bulk insertion using Supabase
       const { data, error } = await supabase
           .from('student') // Replace with your table name
-          .insert(studentsData);
+          .insert(studentWithHashedPasswords);
 
       if (error) {
           throw error;

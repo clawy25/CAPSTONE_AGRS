@@ -8,8 +8,8 @@ import { UserContext } from '../Context/UserContext';
 
 export default function StudentPage() {
   const navigate = useNavigate();
-  const [studentId, setStudentId] = useState('2015-000001');
-  const [password, setPassword] = useState('Emma2015Welch');
+  const [studentId, setStudentId] = useState('2021-000001');
+  const [password, setPassword] = useState('ClintJayven2021Pepito');
   const { setUser } = useContext(UserContext);
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -48,12 +48,22 @@ export default function StudentPage() {
     //Insert API here for validating credentials to database
     try {
       // Fetch the personnel data using the account number
-      const user = await StudentModel.fetchStudentData(studentId);
+      const user = await StudentModel.fetchStudentData(studentId, password);
   
       // If the fetched data matches the input credentials (you can implement further validation here)
-      if (user && user.studentPassword === password) {
-        setUser(user);//Transfers the fetched data to the UserContext.js; store the current user's credentials
-        navigate('/dashboard');
+      if (user) {
+        const credentials = {
+          studentNumber: user.studentNumber,
+          personnelType: user.studentType,
+          personnelNameFirst: user.studentNameFirst,
+          personnelNameMiddle: user.studentNameMiddle,
+          personnelNameLast: user.studentNameLast,
+          programNumber: user.studentProgramNumber
+        };
+      
+      setUser(credentials);
+      
+      navigate('/dashboard');
       console.log('Login successful:', user);
       
       

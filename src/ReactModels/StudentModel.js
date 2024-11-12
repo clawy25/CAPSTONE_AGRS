@@ -34,10 +34,16 @@ export default class StudentModel {
   }
 
   // Function to fetch student data (Read only)
-  static async fetchStudentData(studentNumber) {
+  static async fetchStudentData(studentNumber, password) {
       try {
           // Example API call to your backend (Node.js)
-          const response = await fetch(`http://localhost:5000/student/${studentNumber}`);
+          const response = await fetch(`http://localhost:5000/student/login`,{
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ studentNumber, password }), // Send credentials
+          });
           if (!response.ok) {
               throw new Error('Error fetching student data');
           }
@@ -45,24 +51,24 @@ export default class StudentModel {
           
           // Return data
           return new StudentModel(
-              data.id,
+              null,
               data.studentNumber,
-              data.studentPassword,
+              null,
               data.studentType,
               data.studentNameFirst,
               data.studentNameMiddle,
               data.studentNameLast,
-              data.studentSex,
-              data.studentEmail,
-              data.studentBirthDate,
-              data.studentPccEmail,
-              data.studentAdmissionYr,
-              data.studentYrLevel,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
               data.studentProgramNumber,
-              data.studentProgramName,
-              data.studentContact,
-              data.studentAddress,
-              data.isABMgraduate
+              null,
+              null,
+              null,
+              null
           );
       } catch (error) {
           console.error('Error fetching student data:', error);
