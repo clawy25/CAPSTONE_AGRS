@@ -103,6 +103,8 @@ export default class StudentModel {
               student.studentYrLevel,
               student.studentProgramNumber,
               student.studentProgramName,
+              student.studentContact,
+              student.studentAddress,
               student.isABMgraduate
           ));
       } catch (error) {

@@ -5,10 +5,18 @@ import { faUser, faSignOutAlt, faBars, faChalkboardTeacher, faCalendar } from '@
 import FacultySchedulePage from './FacultySchedulePage';
 import '../StudentComponents/Dashboard.css';
 import ClassDetails from './ClassDetails';
+import AcademicYearModel from '../ReactModels/AcademicYearModel';
+import YearLevelModel from '../ReactModels/YearLevelModel';
+import ProgramModel from '../ReactModels/ProgramModel';
+import CourseModel from '../ReactModels/CourseModel';
+import StudentModel from '../ReactModels/StudentModel';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { UserContext } from '../Context/UserContext';
 import { Row, Col, Form } from 'react-bootstrap';
 import { Button } from 'react-bootstrap'; // Import Button component from react-bootstrap or your UI library
+import { Button } from 'react-bootstrap';
+
+
 
 
 export default function FacultyDashboard () {
@@ -41,6 +49,25 @@ export default function FacultyDashboard () {
     }
   }, [user, navigate]);
 
+    // Fetch existing students from StudentModel
+    const fetchExistingStudents = async () => {
+      try {
+          const existingStudents = await StudentModel.fetchExistingStudents();
+          
+          // Modify student.id to start from 0, 1, 2, etc.
+          const studentsWithModifiedIds = existingStudents.map((student, index) => ({
+              ...student, // Keep the existing student data
+              id: index   // Overwrite the id with the new index
+          }));
+  
+          setStudents(studentsWithModifiedIds);
+      } catch (error) {
+          console.error('Error fetching existing students:', error);
+      }
+    };
+
+      // Fetch existing students onload
+  useEffect(() => {fetchExistingStudents();}, []);
 
 
   const handleLogout = () => {
@@ -90,48 +117,30 @@ export default function FacultyDashboard () {
   }, [showDropdown]);
 
 
-  
-  // Dummy data for dropdown options
-  const programs = [
-    { id: 1, programName: 'BSIT' },
-    { id: 2, programName: 'BSCS' },
-  ];
 
-  const yearLevels = [
-    { id: 1, yearName: '1st Year' },
-    { id: 2, yearName: '2nd Year' },
-  ];
 
-  const sections = ['A', 'B', 'C'];
 
-  const subjects = [
-    { id: 1, subjectName: 'Mathematics' },
-    { id: 2, subjectName: 'Physics' },
-    { id: 3, subjectName: 'Chemistry' },
-  ];
 
-  // Dummy student data for each subject
-  const subjectStudents = {
-    'Mathematics': [
-      { studentNumber: '12345', studentName: 'John Doe', contactNumber: '09123456789', pccEmail: 'johndoe@example.com', address: '123 Main St' },
-      { studentNumber: '12346', studentName: 'Jane Smith', contactNumber: '09123456788', pccEmail: 'janesmith@example.com', address: '456 Elm St' },
-    ],
-    'Physics': [
-      { studentNumber: '22345', studentName: 'Alice Johnson', contactNumber: '09123456700', pccEmail: 'alicej@example.com', address: '789 Oak St' },
-      { studentNumber: '22346', studentName: 'Bob Brown', contactNumber: '09123456701', pccEmail: 'bobb@example.com', address: '101 Pine St' },
-    ],
-    'Chemistry': [
-      { studentNumber: '32345', studentName: 'Charlie Green', contactNumber: '09123456702', pccEmail: 'charlieg@example.com', address: '456 Maple St' },
-      { studentNumber: '32346', studentName: 'David White', contactNumber: '09123456703', pccEmail: 'davidw@example.com', address: '101 Birch St' },
-    ],
-  };
-  
+  function printTableContent() {
+    const printContent = document.getElementById('printableContent').innerHTML;
+    const originalContent = document.body.innerHTML;
 
+    document.body.innerHTML = printContent;
+    window.print();
+    document.body.innerHTML = originalContent;
+}
+
+
+
+{/* SIDE BAR NAV */}
   return (
+    
     <div className="dashboard-container d-flex">
       <div className={`sidebar bg-custom-color-green ${showSidebar ? 'd-block' : 'd-none d-md-block'}`}>
         <img src="pcc.png" alt="Logo" className="college-logo align-items-center ms-5 mb-3" />
-        <div className="welcome-message mb-3 text-center">Hello, {user ? user.personnelNameFirst : 'Guest'}!</div>
+        <div className="welcome-message mb-3 text-center">
+  Hello, {user?.personnelNameFirst || 'Guest'}!
+</div>
         <nav className="menu mb-3">
           <Link
             to=""
@@ -160,6 +169,13 @@ export default function FacultyDashboard () {
         </nav>
       </div>
 
+
+
+
+
+
+
+{/* HEADER BAR */}
       <div className="main-content flex-grow-1">
         <header className="header d-flex justify-content-between align-items-center p-3 border-bottom rounded">
           <h1 className="m-0 custom-color-green-font custom-font d-none d-md-block">
@@ -194,6 +210,14 @@ export default function FacultyDashboard () {
           </div>
         </header>
 
+
+
+
+
+
+
+
+{/* FIRST ROW: DROPDOWNS BAR */}
         {selectedSection === SECTIONS.CLASSES && (
   <section className="mt-3 ms-0">
     <h2 className="custom-font custom-color-green-font">Class Records for {selectedClass}</h2>
@@ -273,12 +297,18 @@ export default function FacultyDashboard () {
         </Row>
 
         
-        
 
         <div className="table-container mt-4">
         <h4 className="subject-table-title">
           Subject {subject ? `[${subject}]` : ""}
         </h4>
+        <button 
+          className="btn btn-success"
+          onClick={() => printTableContent("printableContent")}
+        >
+          Print Class List
+        </button>
+      </div>
 
  
         <table className="table table-bordered">

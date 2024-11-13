@@ -109,6 +109,7 @@ const ClassDetails = () => {
         console.error('Error fetching existing students:', error);
     }
   };
+  
   // Fetch existing students onload
   useEffect(() => {fetchExistingStudents();}, []);
 
