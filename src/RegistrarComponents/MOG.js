@@ -1,17 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Form, Row, Col, Button, Table, Modal } from 'react-bootstrap';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCheckCircle } from '@fortawesome/free-solid-svg-icons';
+import * as XLSX from 'xlsx';
 import ProgramModel from '../ReactModels/ProgramModel'; // Ensure this path is correct
 
-// ProgramFilter Component
 function ProgramFilter({ onView }) {
   const [programs, setPrograms] = useState([]);
   const [programName, setProgramName] = useState("");
   const [programCode, setProgramCode] = useState("");
   const [batchYear, setBatchYear] = useState("");
 
-  // Fetch all programs when the component mounts
   useEffect(() => {
     const fetchPrograms = async () => {
       try {
@@ -28,26 +25,85 @@ function ProgramFilter({ onView }) {
     const selectedProgramName = e.target.value;
     setProgramName(selectedProgramName);
 
-    // Find the program object that matches the selected program name
     const selectedProgram = programs.find((program) => program.programName === selectedProgramName);
-
-    // Set the corresponding program code based on the selected program name
-    if (selectedProgram) {
-      setProgramCode(selectedProgram.programNumber);
-    } else {
-      setProgramCode("");
-    }
+    setProgramCode(selectedProgram ? selectedProgram.programNumber : "");
   };
 
-  const handleViewClick = () => {
+  const handleView = () => {
     onView(programName, programCode, batchYear);
   };
+
+const downloadExcel = () => {
+  const table = document.querySelector('.table-success');
+  const workbook = XLSX.utils.table_to_book(table, { raw: true });
+
+  // Access the first sheet of the workbook
+  const ws = workbook.Sheets[workbook.SheetNames[0]];
+
+  // Get the range of the table
+  const range = XLSX.utils.decode_range(ws['!ref']);
+
+  // Find the index of the "Transcript of Records" column (assuming it's the last column)
+  const lastColumnIndex = range.e.c; // Get the last column index
+  const columnToRemove = lastColumnIndex; // Column to remove (update this if "Transcript of Records" is in a different column)
+
+  // Remove the "Transcript of Records" column by deleting the corresponding cells
+  for (let row = range.s.r; row <= range.e.r; row++) {
+    const cellAddress = { r: row, c: columnToRemove };
+    const cellRef = XLSX.utils.encode_cell(cellAddress);
+    delete ws[cellRef]; // Delete the cell in the "Transcript of Records" column
+  }
+
+  // Apply styles to all cells (center text and add borders)
+  for (let row = range.s.r; row <= range.e.r; row++) {
+    for (let col = range.s.c; col <= range.e.c; col++) {
+      const cellAddress = { r: row, c: col };
+      const cellRef = XLSX.utils.encode_cell(cellAddress);
+      const cell = ws[cellRef];
+
+      if (cell) {
+        // Initialize style object if it doesn't exist
+        if (!cell.s) cell.s = {};
+
+        // Apply alignment (center horizontally and vertically)
+        cell.s.alignment = {
+          horizontal: 'center',
+          vertical: 'center',
+          wrapText: true, // Optional: wrap text if it's too long
+        };
+
+        // Apply border to all cells
+        cell.s.border = {
+          top: { style: 'thin', color: { rgb: '000000' } },
+          left: { style: 'thin', color: { rgb: '000000' } },
+          bottom: { style: 'thin', color: { rgb: '000000' } },
+          right: { style: 'thin', color: { rgb: '000000' } },
+        };
+
+        // Apply background color for header cells (if it's the header row)
+        if (row === range.s.r) { // Header row
+          cell.s.fill = {
+            fgColor: { rgb: '28a745' } // Green color for header
+          };
+        }
+      }
+    }
+  }
+
+  // Write the workbook to an Excel file
+  XLSX.writeFile(workbook, `${programName || "Masterlist"}_Grades.xlsx`);
+};
+
+  
+  
+  
+  
+  
+  
 
   return (
     <Form className="p-3 bg-white border border-success rounded">
       <Row className="align-items-center">
-        
-        {/* Program Name Dropdown */}
         <Col md={3}>
           <Form.Group controlId="programName">
             <Form.Label className="custom-color-green-font custom-font">Program Name</Form.Label>
@@ -65,8 +121,7 @@ function ProgramFilter({ onView }) {
             </Form.Select>
           </Form.Group>
         </Col>
-  
-        {/* Program Code Display */}
+
         <Col md={3}>
           <Form.Group controlId="programCode">
             <Form.Label className="custom-color-green-font custom-font">Program Code</Form.Label>
@@ -79,8 +134,7 @@ function ProgramFilter({ onView }) {
             />
           </Form.Group>
         </Col>
-  
-        {/* Batch Year Dropdown */}
+
         <Col md={3}>
           <Form.Group controlId="batchYear">
             <Form.Label className="custom-color-green-font custom-font">Batch Year</Form.Label>
@@ -94,29 +148,25 @@ function ProgramFilter({ onView }) {
               <option>2022</option>
               <option>2023</option>
               <option>2024</option>
-              {/* Add more batch years as needed */}
             </Form.Select>
           </Form.Group>
         </Col>
-  
-        {/* View Button */}
+
         <Col md={3}>
           <Form.Group controlId="viewButton">
             <Form.Label className="custom-color-green-font custom-font">Action</Form.Label>
-            <Button 
-              variant="success" 
-              className="w-100" 
-              onClick={handleViewClick}
-            >
-              View <FontAwesomeIcon icon={faCheckCircle} />
-            </Button>
+            <div className="d-flex">
+              <Button className="w-25 btn-success me-2" onClick={handleView}>View</Button>
+              <Button className="w-75 btn-success" onClick={downloadExcel}>Download Excel</Button>
+            </div>
           </Form.Group>
         </Col>
-  
       </Row>
     </Form>
   );
 }
+
+
 
 // MasterlistOfGradesTable Component
 function MasterlistOfGradesTable() {
@@ -160,8 +210,31 @@ function MasterlistOfGradesTable() {
     { sNumber: '2023001', name: 'Alice Johnson' },
     { sNumber: '2023002', name: 'Bob Smith' },
     { sNumber: '2023003', name: 'Charlie Brown' },
-    // Add more students as needed
+    { sNumber: '2023004', name: 'David Wilson' },
+    { sNumber: '2023005', name: 'Eve Davis' },
+    { sNumber: '2023006', name: 'Frank Miller' },
+    { sNumber: '2023007', name: 'Grace Lee' },
+    { sNumber: '2023008', name: 'Hannah Clark' },
+    { sNumber: '2023009', name: 'Ivy Harris' },
+    { sNumber: '2023010', name: 'Jack Turner' },
+    { sNumber: '2023011', name: 'Katherine Taylor' },
+    { sNumber: '2023012', name: 'Liam Martinez' },
+    { sNumber: '2023013', name: 'Mia Anderson' },
+    { sNumber: '2023014', name: 'Noah Thomas' },
+    { sNumber: '2023015', name: 'Olivia Jackson' },
+    { sNumber: '2023016', name: 'Paul Robinson' },
+    { sNumber: '2023017', name: 'Quinn White' },
+    { sNumber: '2023018', name: 'Rachel Lewis' },
+    { sNumber: '2023019', name: 'Samuel Walker' },
+    { sNumber: '2023020', name: 'Tina Hall' },
+    { sNumber: '2023021', name: 'Ursula Young' },
+    { sNumber: '2023022', name: 'Victor Scott' },
+    { sNumber: '2023023', name: 'Wendy Green' },
+    { sNumber: '2023024', name: 'Xander King' },
+    { sNumber: '2023025', name: 'Yvonne Wright' },
+    { sNumber: '2023026', name: 'Zachary Adams' },
   ];
+  
 
   return (
     <div className='container-fluid'>
