@@ -19,6 +19,8 @@ const Sections = () => {
   
   const [newSection, setNewSection] = useState(null);
   
+  const [currentAcademicYear, setCurrentAcadYear] = useState([]);
+  
   const [programs, setPrograms] = useState([]);
   const [courses, setCourses] = useState([]);
   const [sections, setSections] = useState([]);
@@ -45,6 +47,12 @@ const Sections = () => {
     try {
       // Fetch academic years and programs
       const fetchedAcademicYears = await AcademicYearModel.fetchExistingAcademicYears();
+
+
+      const current = fetchedAcademicYears.filter(acadYears => acadYears.isCurrent === true);
+
+      console.log(current);
+      setCurrentAcadYear(current);
       setAcademicYears(fetchedAcademicYears);
   
       const allPrograms = await ProgramModel.fetchAllPrograms();
@@ -103,7 +111,6 @@ const Sections = () => {
 
   useEffect(() => {
     fetchAcademicYearsAndPrograms();
-    generateNextSectionNumber();
   }, []);
 
   // Supposedly Fetch Schedules
@@ -161,20 +168,20 @@ const Sections = () => {
     }
   };
 
-  // Trigger fetchCourses whenever academicYear, selectedYearLevel, or semester changes
+  // CHANGE FETCHCOURSES TO FETCHSCHEDULES
   useEffect(() => {
-    if (selectedAcademicYear && selectedYearLevel && selectedSemester && selectedSection) {
+    if (selectedAcademicYear && selectedProgram && selectedYearLevel && selectedSemester && selectedSection) {
       setCourses([]);
       fetchCourses();
     }
-  }, [selectedAcademicYear, selectedYearLevel, selectedSemester, selectedSection]);
+  }, [selectedAcademicYear, selectedProgram, selectedYearLevel, selectedSemester, selectedSection]);
 
   useEffect(() => {
-    if (selectedAcademicYear && selectedYearLevel && selectedSemester || functionCalled) {
+    if (selectedAcademicYear && selectedProgram && selectedYearLevel && selectedSemester || functionCalled) {
       setSections([]);
       fetchSections();
     }
-  }, [selectedAcademicYear, selectedYearLevel, selectedSemester, functionCalled]);
+  }, [selectedAcademicYear, selectedProgram, selectedYearLevel, selectedSemester, functionCalled]);
 
   const handleView = () => {
     if (selectedAcademicYear && selectedProgram && selectedYearLevel && selectedSemester && selectedSection) {
@@ -407,8 +414,7 @@ const Sections = () => {
                 <option key={program.academicYear} value={program.academicYear}>
                   {program.academicYear}
                 </option>
-              ))
-            }
+              ))}
             </Form.Control>
           </Form.Group>
         </Col>
@@ -429,7 +435,7 @@ const Sections = () => {
                   <option key={program.programNumber} value={program.programNumber}>
                     {program.programName}
                   </option>
-                ))}
+              ))}
             </Form.Control>
           </Form.Group>
         </Col>
@@ -452,7 +458,7 @@ const Sections = () => {
           <Form.Group controlId="semester">
             <Form.Label>Semester</Form.Label>
             <Form.Control as="select" value={selectedSemester} onChange={handleSemesterChange}
-            disabled={!selectedYearLevel || !selectedAcademicYear || !selectedProgram}>
+              disabled={!selectedYearLevel || !selectedAcademicYear || !selectedProgram}>
               <option value="">Select Semester</option>
               {selectedYearData
                 ?.map((sem, index) => (
@@ -476,14 +482,15 @@ const Sections = () => {
                     <option key={index} value={section.sectionNumber}>
                       {section.sectionNumber}
                     </option>
-              ))}
+                ))}
             </Form.Control>
           </Form.Group>
         </Col>
         <Col className="d-flex flex-column align-items-end">
         
           <Button className="btn-success w-100 mb-2" onClick={handleView}>View</Button>
-          { selectedAcademicYear && selectedProgram && selectedYearLevel && selectedSemester && (
+          { selectedAcademicYear && selectedProgram && selectedYearLevel && selectedSemester && 
+            (selectedAcademicYear === currentAcademicYear[0].academicYear) && (
             <>
               <Button className="btn-success w-100" onClick={addSection}>Add Section</Button>
             </>

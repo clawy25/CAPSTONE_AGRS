@@ -15,9 +15,6 @@ export default class ScheduleModel {
         this.units = units;
         this.yearNumber = yearNumber;
         this.sectionNumber = sectionNumber;
-
-        
-        
     }
 
 
@@ -31,24 +28,7 @@ export default class ScheduleModel {
         const data = await response.json();
 
         // Assuming data is an array of schedules objects
-        return data.map(schedule => new ScheduleModel(
-            schedule.id,
-            schedule.scheduleNumber,
-            schedule.courseCode,
-            schedule.courseDescriptiveTitle,
-            schedule.courseLecture,
-            schedule.courseLaboratory,
-            schedule.units,
-            schedule.personnelNumber,
-            schedule.professorName,
-            schedule.scheduleDay,
-            schedule.startTime,
-            schedule.endTime,
-            schedule.numberOfHours,
-            schedule.yearNumber,
-            schedule.sectionNumber
-            
-        ));
+        return data;
     } catch (error) {
         console.error('Error fetching schedules:', error);
         throw error;
