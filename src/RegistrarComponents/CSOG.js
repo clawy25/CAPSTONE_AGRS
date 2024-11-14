@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react'; 
 import { Table, Form, Button, Row, Col, Modal } from 'react-bootstrap';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faMapMarkerAlt,  faEnvelope, faPhoneAlt} from '@fortawesome/free-solid-svg-icons';
+
 import AcademicYearModel from '../ReactModels/AcademicYearModel';
 import YearLevelModel from '../ReactModels/YearLevelModel';
 import ProgramModel from '../ReactModels/ProgramModel';
@@ -258,6 +261,71 @@ const printTable = () => {
     setShowModal(false);
   };
 
+
+  const handlePrint = () => {
+    const contentElement = document.getElementById('modalContent');
+  
+    if (!contentElement) {
+      console.error("Modal content not found. Ensure the modal is open before printing.");
+      return;
+    }
+  
+    const content = contentElement.innerHTML;
+    const printWindow = window.open('', '_blank');
+    
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Print COG</title>
+          <style>
+            /* General print styles */
+            @media print {
+              @page { size: A4 landscape; margin: 0; }
+              body { 
+                margin: 0; 
+                font-family: Arial, sans-serif; 
+                width: 100%; 
+              }
+              .modalContent { 
+                width: 100%; 
+                padding: 10px; 
+                box-sizing: border-box;
+              }
+              /* Adjustments for fitting content on one page */
+              .modalContent h1 { font-size: 18px; margin: 0; padding: 5px; }
+              .modalContent p, .modalContent td, .modalContent th {
+                font-size: 10px;
+                padding: 4px;
+              }
+              /* Table styling for compact view */
+              .modalContent table {
+                width: 100%;
+                border-collapse: collapse;
+              }
+              .modalContent th, .modalContent td {
+                border: 1px solid black;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="modalContent">${content}</div>
+          <script>
+            window.onload = function() {
+              window.print();
+              window.close();
+            };
+          </script>
+        </body>
+      </html>
+    `);
+    
+    printWindow.document.close();
+};
+
+  
+
+
   return (
     <div>
       <Row className="mb-4 bg-white rounded p-3 m-1">
@@ -365,35 +433,97 @@ const printTable = () => {
         </div>
       )}
 
-      {/* Modal for COG */}
-      <Modal show={showModal} onHide={closeModal} size="lg" centered>
+       {/* Modal for COG */}
+       <Modal show={showModal} onHide={closeModal} className="modal-xxl" centered>
         <Modal.Header closeButton>
           <Modal.Title className='custom-color-green-font'>Certificate of Grades</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <Table bordered className="text-center">
-            <thead className='table-success'>
+        <div id="modalContent">
+        <div className="d-flex justify-content-center">
+       
+          <table style={{ width: '100%', maxWidth: '800px', textAlign: 'center' }}>
+            <tbody>
               <tr>
-                <th colSpan="2" className='custom-color-green-font'>STUDENT NAME:</th>
-                <th colSpan="3" className='custom-color-green-font'>STUDENT ID NO.:</th>
+                <td style={{ width: '80px'}}>
+                  <img src="/pcc.png" alt="Logo" className="img-fluid" style={{ width: '70px' }} />
+                </td>
+                <td style={{ textAlign: 'left' }}>
+                  <p className="fw-bold text-uppercase mb-0" style={{ fontSize: '0.8rem', lineHeight: '1.2' }}>
+                    Parañaque City <br />
+                    <span style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>College</span>
+                  </p>
+                </td>
+                <td style={{ textAlign: 'left'}}>
+                  <p className="mb-0" style={{ fontSize: '0.7rem', display: 'flex', alignItems: 'center' }}>
+                    <faMapMarkerAlt className="me-2" /> 
+                    Coastal Rd., cor. Victor Medina Street, San Dionisio, Parañaque City, Philippines
+                  </p>
+                  <p className="mb-0" style={{ fontSize: '0.7rem', display: 'flex', alignItems: 'center' }}>
+                    <faEnvelope className="me-2" /> 
+                    info@parañaquecitycollege.edu.ph
+                  </p>
+                  <p className="mb-0" style={{ fontSize: '0.7rem', display: 'flex', alignItems: 'center' }}>
+                    <faPhoneAlt className="me-2" /> 
+                    (02) 85343321
+                  </p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <hr/>
+        <Table className="border-white">
+          <thead>
+            <tr>
+              <th colSpan="4" className="fs-5 text-center">OFFICE OF THE COLLEGE REGISTRAR</th>
+            </tr>
+            <tr>
+              <th colSpan="4" className="fs-4 text-center">CERTIFICATE OF GRADES</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td className="fs-6 fw-bold">STUDENT NAME:</td>
+              <td className="fs-6">(NAME OF THE STUDENT)</td>
+              <td className="fs-6 fw-bold">ACADEMIC YEAR:</td>
+              <td className="fs-6">(STUDENT ACADEMIC YEAR)</td>
+            </tr>
+            <tr>
+              <td className="fs-6 fw-bold">STUDENT ID NO.:</td>
+              <td className="fs-6">(STUDENT NUMBER)</td>
+              <td className="fs-6 fw-bold">SEMESTER:</td>
+              <td className="fs-6">(FIRST SEMESTER?)</td>
+            </tr>
+            <tr>
+              <td className="fs-6 fw-bold">PROGRAM CODE & DESCRIPTION:</td>
+              <td className="fs-6">(BSHM)</td>
+              <td className="fs-6 fw-bold">YEAR LEVEL:</td>
+              <td className="fs-6">(FIRST SEMESTER)</td>
+            </tr>
+          </tbody>
+        </Table>
+
+          
+          <Table bordered className="text-center border-black">
+            <thead>
+              <tr>
+                <th colSpan="7" className='fs-6'>FIRST SEMESTER</th>
               </tr>
               <tr>
-                <th colSpan="2" className='custom-color-green-font'>PROGRAM CODE & DESCRIPTION:</th>
-                <th className='custom-color-green-font'>ACADEMIC YEAR:</th>
-                <th className='custom-color-green-font'>SEMESTER:</th>
-                <th className='custom-color-green-font'>YEAR LEVEL:</th>
-              </tr>
-              <tr>
-                <th className='custom-color-green-font'>CODE</th>
-                <th className='custom-color-green-font'>COURSE DESCRIPTION</th>
-                <th className='custom-color-green-font'>UNITS</th>
-                <th className='custom-color-green-font'>GRADE</th>
-                <th className='custom-color-green-font'>REMARKS</th>
+                <th className='fs-6'>CODE</th>
+                <th className='fs-6'>COURSE DESCRIPTION</th>
+                <th colSpan="2" className='fs-6'>UNITS <br/>LEC LAB</th>
+                <th className='fs-6'>TOTAL UNITS</th>
+                <th className='fs-6'>GRADES</th>
+                <th className='fs-6'>REMARKS</th>
               </tr>
             </thead>
             <tbody>
-              {Array.from({ length: 10 }).map((_, index) => (
+              {Array.from({ length: 8 }).map((_, index) => (
                 <tr key={index}>
+                  <td>-</td>
+                  <td>-</td>
                   <td>-</td>
                   <td>-</td>
                   <td>-</td>
@@ -401,13 +531,82 @@ const printTable = () => {
                   <td>-</td>
                 </tr>
               ))}
+              <tr>
+                <th>TOTAL</th>
+                <td>-</td>
+                <td>-</td>
+                <td>-</td>
+                <td>-</td>
+                <td>-</td>
+                <td>-</td>
+              </tr>
+              <tr>
+                <th colspan="2">GENERAL WEIGHTED AVERAGE (GWA) = </th>
+                <td colSpan={5}></td>
+              </tr>
             </tbody>
           </Table>
+
+          <Table className="border-white">
+            <thead>
+              <tr>
+                <th colSpan="5">GRADING SYSTEM</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style={{ fontSize: '0.7rem' }} className="fst-italic">1.00 = 99-100 Excellent</td>
+                <td style={{ fontSize: '0.7rem' }} className="fst-italic">1.75 = 90-92 Good</td>
+                <td style={{ fontSize: '0.7rem' }} className="fst-italic">2.50 = 81-83 Satisfactory</td>
+                <td style={{ fontSize: '0.7rem' }} className="fst-italic">INC = Incomplete</td>
+                <td style={{ fontSize: '0.7rem' }} className="fst-italic">NC = No Credit</td>
+              </tr>
+              <tr>
+                <td style={{ fontSize: '0.7rem' }} className="fst-italic">1.25 = 96-98 Superior</td>
+                <td style={{ fontSize: '0.7rem' }} className="fst-italic">2.00 = 87-89 Meritorious</td>
+                <td style={{ fontSize: '0.7rem' }} className="fst-italic">2.75 = 78-80 Fairly Satisfactory</td>
+                <td style={{ fontSize: '0.7rem' }} className="fst-italic">5.00 = Below 50 Failed</td>
+                <td style={{ fontSize: '0.7rem' }} className="fst-italic">OD = Officially Dropped / FA = Failure due to Excessive Absences</td>
+              </tr>
+              <tr>
+                <td style={{ fontSize: '0.7rem' }} className="fst-italic">1.50 = 93-95 Very Good</td>
+                <td style={{ fontSize: '0.7rem' }} className="fst-italic">2.25 = 84-86 Very Satisfactory</td>
+                <td style={{ fontSize: '0.7rem' }} className="fst-italic">3.00 = 75-77 Passing</td>
+                <td style={{ fontSize: '0.7rem' }} className="fst-italic">UD = Unofficially Dropped</td>
+                <td></td>
+              </tr>
+            </tbody>
+          </Table>
+          <Table className="text-center border-white">
+            <tbody>
+              <tr>
+                <td colSpan="2">
+                  <p className="fs-6 fw-normal mt-1">
+                    I certify to the veracity of the above records of ____________________
+                  </p>
+                </td>
+              </tr>
+              <tr>
+                <td className="text-start" style={{ width: '50%' }}>
+                  <p style={{ fontSize: '0.7rem' }}>Prepared by:</p>
+                  <p style={{ fontSize: '0.7rem' }}>(Name)</p>
+                </td>
+                <td className="text-end" style={{ width: '50%' }}>
+                  <p className="fs-6 fw-normal text-center">____________________________</p>
+                  <p className="fs-6 fw-normal text-center">College Registrar</p>
+                </td>
+              </tr>
+            </tbody>
+          </Table>
+
+
+         </div>
         </Modal.Body>
         <Modal.Footer>
           <Button variant="success" onClick={closeModal}>Close</Button>
-          <Button variant="success" >Download COG</Button>
+          <Button variant="success" onClick={handlePrint}>Download COG</Button>
         </Modal.Footer>
+
       </Modal>
     </div>
   );
