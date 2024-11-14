@@ -27,11 +27,6 @@
   color: #004d00 !important;
 }
 
-.custom-border-yellow{
-  border-color: #F7FE28;
-  border-width: 2px;
-}
-
 /* Custom button styles */
 .custom-button {
   padding: 10px;
@@ -134,71 +129,6 @@ tbody {
   font-weight: 600;
 }
 
-.modal-xxl .modal-dialog {
-  max-width: 90%;
-  width: 90%;
-}
-
-.modal-xxl .modal-content {
-  font-size: 12px;
-}
-.custom-modal-dialog .modal-dialog {
-  max-width: 90% !important; /* Set the desired width */
-  width: 100% !important; /* Ensure it takes the full width */
-}
-
-
-
-@media print {
-  body * {
-    visibility: hidden; /* Hide everything except the modal content */
-  }
-
-  #modalContent, #modalContent * {
-    visibility: visible; /* Make modal content visible */
-  }
-
-  #modalContent {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%; /* Take full width of the page */
-    height: 100%; /* Take full height of the page */
-    transform: scale(0.7);
-    transform-origin: top left; /* Align from top left */
-    padding: 0; /* Remove any padding to maximize space */
-  }
-
-  @page {
-    size: auto; /* Auto-adjust page size to content */
-    margin: 0; /* Remove default margins for full coverage */
-  }
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-  /* Ensure the table fits horizontally */
-  table {
-    width: 100%;
-    table-layout: fixed;
-  }
-
-  /* Set the print layout for content */
-  .modal-header, .modal-footer, .btn {
-    display: none;
-  }
-
- 
 
 
 /*LOGIN PAGE PHONE VIEW*/

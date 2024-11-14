@@ -1,72 +1,53 @@
-import { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Table, Form, Button, Modal, Card } from 'react-bootstrap';
-import ProgramModel from '../ReactModels/ProgramModel';
-import CourseModel from '../ReactModels/CourseModel';
-import SectionModel from '../ReactModels/SectionModel';
 
 const ScheduleTable = () => {
-  const [courses, setCourses] = useState([]);
-  const [sections, setSections] = useState([]); // Store sections
-  const [selectedSection, setSelectedSection] = useState(''); // Store selected section
-
-  useEffect(() => {
-    const fetchCourses = async () => {
-      try {
-        // You can replace this with the appropriate method if you need to filter by program
-        const data = await CourseModel.fetchAllCourses(); 
-
-        // If you need to use getCoursesbyProgram, uncomment the next line and provide the necessary parameters
-        // const data = await CourseModel.getCoursesbyProgram(academicYear, yearLevel, semester, programNumber);
-
-        // Format the data to match your table's structure
-        const formattedCourses = data.map(course => ({
-          id: course.courseCode, // Assuming courseCode is the unique identifier
-          description: course.courseDescriptiveTitle,
-          lectureHours: course.courseLecture,
-          labHours: course.courseLaboratory,
-          creditedUnits: course.creditedUnits, // Ensure this field exists or is calculated
-          schedule: '', // If you have a schedule field, use it here
-          checked: false, // Default value for checkbox
-        }));
-
-        setCourses(formattedCourses);
-      } catch (error) {
-        console.error('Error fetching courses:', error.message);
-      }
-    };
-
-    const fetchSections = async () => {
-      try {
-        const data = await SectionModel.fetchAllSections(); // Assuming you have a method to fetch sections
-        setSections(data);
-      } catch (error) {
-        console.error('Error fetching sections:', error.message);
-      }
-    };
-
-    fetchCourses();
-    fetchSections();
-  }, []);
+  const [subjects, setSubjects] = useState([
+    {
+      id: 'CS101',
+      description: 'Introduction to Computer Science',
+      lectureHours: 3,
+      labHours: 1,
+      creditedUnits: 4,
+      schedule: '',
+      checked: false
+    },
+    {
+      id: 'MATH201',
+      description: 'Calculus I',
+      lectureHours: 4,
+      labHours: 0,
+      creditedUnits: 4,
+      schedule: '',
+      checked: false
+    },
+    // Add more subjects as needed
+  ]);
 
   const [showModal, setShowModal] = useState(false);
   const [checkedCount, setCheckedCount] = useState(0);
   const [userSelectedCount, setUserSelectedCount] = useState(null);
   const [isEnrolled, setIsEnrolled] = useState(false);
 
-  const handleSectionChange = (event) => {
-    setSelectedSection(event.target.value);
-  };
-
   const handleCheckboxChange = (subjectId) => {
-    setCourses((prevSubjects) =>
+    setSubjects((prevSubjects) =>
       prevSubjects.map((subject) =>
         subject.id === subjectId ? { ...subject, checked: !subject.checked } : subject
       )
     );
   };
 
+  const handleScheduleChange = (subjectId, event) => {
+    const selectedSchedule = event.target.value;
+    setSubjects((prevSubjects) =>
+      prevSubjects.map((subject) =>
+        subject.id === subjectId ? { ...subject, schedule: selectedSchedule } : subject
+      )
+    );
+  };
+
   const handleSaveAndAssess = () => {
-    const checkedBoxesCount = courses.filter(subject => subject.checked).length;
+    const checkedBoxesCount = subjects.filter(subject => subject.checked).length;
     setCheckedCount(checkedBoxesCount);
     setShowModal(true);
   };
@@ -86,99 +67,75 @@ const ScheduleTable = () => {
     <section className='container-fluid ms-0'>
       {!isEnrolled && (
         <div>
-          <div 
-            className="class-info-row mb-3 p-2 border border-success rounded"
-            style={{
-              fontSize: '14px', 
-              backgroundColor: '#e9f5ea',
-              display: 'flex', 
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              width: '100%'
-            }}
-          >
-            <span className="text-muted" style={{ flex: 1 }}>
-              <strong>Select a section to review a schedule that is favorable to you.</strong>
-            </span>
-            <Form.Select
-              aria-label="Select Section"
-              value={selectedSection}
-              onChange={handleSectionChange}
-              className="form-select-sm"
-              style={{ width: '200px' }}
-            >
-              <option value="">Select a section</option>
-              {sections.map((section, index) => (
-                <option key={index} value={section.id}>
-                  {section.name}
-                </option>
-              ))}
-            </Form.Select>
-          </div>
+          <Button className='btn bg-custom-color-green mb-2' onClick={handleSaveAndAssess}>
+            Save & Assess
+          </Button>
 
-      
-        {/* Courses Table */}
-        <div className="card card-success border-success rounded mb-4">
-          <span className="card-header bg-custom-color-green text-white custom-font fs-5 ms-0">
-            Check all the courses and schedule to enroll:
-          </span>
-      
-          <div className="table-responsive">
-            <Table hover className="mt-2">
-              <thead>
-                <tr>
-                  <th className="text-success custom-font">#</th>
-                  <th className="text-success custom-font">Subject Code</th>
-                  <th className="text-success custom-font">Select</th>
-                  <th className="text-success custom-font">Subject Description</th>
-                  <th className="text-success custom-font">Lecture Units</th>
-                  <th className="text-success custom-font">Lab Units</th>
-                  <th className="text-success custom-font">Schedule</th>
-                  <th className="text-success custom-font">Professor</th>
-                </tr>
-              </thead>
-              <tbody>
-                {courses.map((course, index) => (
-                  <tr key={course.id}>
-                    <td className="custom-font">{index + 1}</td>
-                    <td className="custom-font">{course.id}</td> {/* Subject Code */}
-                    <td className="custom-font">
-                      <Form.Check
-                        type="checkbox"
-                        checked={course.checked}
-                        onChange={() => handleCheckboxChange(course.id)}
-                        className="m-0"
-                      />
-                    </td>
-                    <td className="custom-font">{course.description}</td>
-                    <td className="custom-font">{course.lectureHours}</td> {/* Lecture Units */}
-                    <td className="custom-font">{course.labHours}</td> {/* Lab Units */}
-                    <td className="custom-font">{course.schedule || 'N/A'}</td> {/* Schedule */}
-                    <td className="custom-font">{course.professor || 'N/A'}</td> {/* Professor */}
+          <div className='card card-success border-success rounded'>
+            <span className='card-header bg-custom-color-green text-white custom-font fs-5 ms-0'>
+              Check all the subjects and schedule to enroll:
+            </span>
+
+            <div className="table-responsive"> {/* Enable horizontal scrolling */}
+              <Table hover className="mt-2">
+                <thead>
+                  <tr>
+                    <th className="text-success custom-font">#</th>
+                    <th className="text-success custom-font">Subject ID</th>
+                    <th className="text-success custom-font">Select</th>
+                    <th className="text-success custom-font">Subject Description</th>
+                    <th className="text-success custom-font">Lecture Hrs</th>
+                    <th className="text-success custom-font">Lab Hrs</th>
+                    <th className="text-success custom-font">Credited Units</th>
+                    <th className="text-success custom-font">Schedule</th>
                   </tr>
-                ))}
-              </tbody>
-            </Table>
-          </div>
+                </thead>
+                <tbody>
+                  {subjects.map((subject, index) => (
+                    <tr key={subject.id}>
+                      <td className="custom-font">{index + 1}</td>
+                      <td className="custom-font">{subject.id}</td>
+                      <td className="custom-font">
+                        <Form.Check 
+                          type="checkbox" 
+                          checked={subject.checked} 
+                          onChange={() => handleCheckboxChange(subject.id)} 
+                          className="m-0" 
+                        />
+                      </td>
+                      <td className="custom-font">{subject.description}</td>
+                      <td className="custom-font">{subject.lectureHours}</td>
+                      <td className="custom-font">{subject.labHours}</td>
+                      <td className="custom-font">{subject.creditedUnits}</td>
+                      <td className="custom-font">
+                        <Form.Select
+                          aria-label="Select Schedule"
+                          value={subject.schedule}
+                          onChange={(event) => handleScheduleChange(subject.id, event)}
+                          className="form-select-sm"
+                        >
+                          <option value="">Select a schedule</option>
+                          <option value="Mon 8-10 AM">Mon 8-10 AM</option>
+                          <option value="Tue 2-4 PM">Tue 2-4 PM</option>
+                          <option value="Wed 10-12 PM">Wed 10-12 PM</option>
+                        </Form.Select>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </Table>
+            </div>
           </div>
         </div>
       )}
 
-      <Button 
-        className='btn bg-custom-color-green' 
-        onClick={handleSaveAndAssess} 
-        style={{ marginTop: '20px' }}
-      >
-        Save & Assess
-      </Button>
-
-      {/* Modal for confirming the selected number of courses */}
+      {/* Modal for selecting number of checked boxes */}
       <Modal show={showModal} onHide={handleCloseModal}>
         <Modal.Header closeButton>
           <Modal.Title>Confirm Number of Checked Boxes</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <p>You have checked {checkedCount} courses. Please confirm the count by selecting a number:</p>
+          <p>You have checked {checkedCount} subjects. Please confirm the count by selecting a number:</p>
           <div className="d-flex flex-wrap gap-2">
             {[...Array(10).keys()].map(i => (
               <Button
@@ -201,11 +158,11 @@ const ScheduleTable = () => {
         </Modal.Footer>
       </Modal>
 
-      {/* Enrollment confirmation */}
+      {/* Display the Enrollment Card after confirmation */}
       {isEnrolled && (
         <Card className="mt-4">
           <Card.Header className="bg-custom-color-green text-white">
-            <strong>You are qualified for Free Higher Education Act.</strong>
+            <strong>You are qualified to Free Higher Education Act.</strong>
           </Card.Header>
           <Card.Body className="text-center">
             <h5 className="text-success fs-3 custom-font">
@@ -213,7 +170,7 @@ const ScheduleTable = () => {
             </h5>
             <p>(S.Y. 2425 - First Semester)</p>
             <Button className='bg-custom-color-green'>
-              Certificate of Registration
+              Certificate of Registrations
             </Button>
           </Card.Body>
         </Card>
