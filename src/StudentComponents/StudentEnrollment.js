@@ -1,6 +1,8 @@
+
 import React, { useState } from 'react';
 import StudentEnrollmentSchedule from './StudentEnrollmentSchedule';
 import '../App.css';
+import './StudentEnrollment.css';  // Import the CSS file
 
 export default function StudentEnrollment() {
   const [isEnrolled, setIsEnrolled] = useState(false); // State to track enrollment status
@@ -22,11 +24,15 @@ export default function StudentEnrollment() {
                 Online Enrollment is not open yet.
               </p>
             </div>
-            
           </div>
-          <button className='bg-custom-color-green' onClick={handleEnrollClick}>
-              Enroll
-            </button>
+
+          {/* Enroll button with class */}
+          <button
+            className="enroll-button"  // Use the class for the button
+            onClick={handleEnrollClick}
+          >
+            Enroll
+          </button>
         </div>
       ) : (
         // Once enrolled, display the StudentEnrollmentSchedule component
