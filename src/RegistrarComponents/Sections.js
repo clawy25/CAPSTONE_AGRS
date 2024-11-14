@@ -24,6 +24,8 @@ const Sections = () => {
   const [sections, setSections] = useState([]);
   const [sectionStatus, setSectionStatus] = useState('Pending');
 
+  const [functionCalled, setFunctionCalled] = useState(false); // Trigger state
+
   const [showTable, setShowTable] = useState(false);
   const [showModal, setShowModal] = useState(false);
 
@@ -104,7 +106,7 @@ const Sections = () => {
     generateNextSectionNumber();
   }, []);
 
-  // Fetch the courses based on selected academic year, year level, and semester
+  // Supposedly Fetch Schedules
   const fetchCourses = async () => {
     try {
       const program = programs.find(
@@ -163,11 +165,16 @@ const Sections = () => {
   useEffect(() => {
     if (selectedAcademicYear && selectedYearLevel && selectedSemester && selectedSection) {
       setCourses([]);
-      setSections([]);
       fetchCourses();
+    }
+  }, [selectedAcademicYear, selectedYearLevel, selectedSemester, selectedSection]);
+
+  useEffect(() => {
+    if (selectedAcademicYear && selectedYearLevel && selectedSemester || functionCalled) {
+      setSections([]);
       fetchSections();
     }
-  }, [selectedAcademicYear, selectedYearLevel, selectedSemester]);
+  }, [selectedAcademicYear, selectedYearLevel, selectedSemester, functionCalled]);
 
   const handleView = () => {
     if (selectedAcademicYear && selectedProgram && selectedYearLevel && selectedSemester && selectedSection) {
@@ -247,7 +254,7 @@ const Sections = () => {
   const handleProgramChange = (e) => {
     const selectedProgram = e.target.value;
     setSelectedProgram(selectedProgram);
-    setSelectedYearLevel('');  // Reset Year Level when Academic Year changes
+    setSelectedYearLevel('');
     setSelectedSemester('');
     setSelectedSection('');
     setShowTable(false);
@@ -256,7 +263,7 @@ const Sections = () => {
   const handleYearLevelChange = (e) => {
     const selectedYear = e.target.value;
     setSelectedYearLevel(selectedYear);
-    setSelectedSemester(''); // Reset Semester when Year Level changes
+    setSelectedSemester('');
     setSelectedSection('');
     setShowTable(false);
   };
@@ -278,7 +285,7 @@ const Sections = () => {
     let nextSection;
 
     console.log(sections);
-    if (sections.length === 0 && !newSection) {
+    if (sections.length === 0) {
         // Start with "A" if there are no sections
         nextSection = `${generateNextSectionNumber()}A`;
     } else {
@@ -310,8 +317,6 @@ const Sections = () => {
     );
 
     const selectedProgramNumber = program ? program.programNumber : null;
-    
-    //setSections((prevSections) => [...prevSections, newSection]);
 
     const section = {
       sectionNumber: String(newSection),
@@ -323,9 +328,11 @@ const Sections = () => {
 
     SectionModel.createAndInsertSection(section);
 
+    
+    setSections((prevSections) => [...prevSections, section]);
     setSelectedSection('');
-    fetchSections();
     setShowModal(false);
+    setFunctionCalled(true);
     setSectionStatus('Pending'); // Reset status to Pending
   };
 
