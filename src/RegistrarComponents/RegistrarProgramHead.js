@@ -258,21 +258,20 @@ export default function RegistrarProgramHead({ onBack }) {
             <Form.Group>
               <Form.Label>Programs</Form.Label>
               <Form.Control as="select" name="programNumber" value={newProgramHead.programNumber} onChange={handleInputChange}>
-  <option value="">Select Program</option>
-  {programNumbers
-    .reduce((uniquePrograms, program) => {
-      if (!uniquePrograms.some(p => p.programName === program.programName)) {
-        uniquePrograms.push(program);
-      }
-      return uniquePrograms;
-    }, [])
-    .map((program) => (
-      <option key={program.programNumber} value={program.programNumber}>
-        {program.programName}
-      </option>
-    ))}
-</Form.Control>
-
+                <option value="">Select Program</option>
+                {programNumbers
+                  .reduce((uniquePrograms, program) => {
+                    if (!uniquePrograms.some(p => p.programName === program.programName)) {
+                      uniquePrograms.push(program);
+                    }
+                    return uniquePrograms;
+                    }, [])
+                  .map((program) => (
+                    <option key={program.programNumber} value={program.programNumber}>
+                      {program.programName}
+                    </option>
+                ))}
+              </Form.Control>
             </Form.Group>
             <Form.Group>
               <Form.Label>Personnel Type</Form.Label>

@@ -1,14 +1,24 @@
 export default class SectionModel {
-    constructor(id, sectionNumber, sectionName) {
+    constructor(id, sectionNumber, programNumber,
+                yearLevel, sectionSemester, academicYear) {
         this.id = id;
         this.sectionNumber = sectionNumber;
-        this.sectionName = sectionName;
+        this.programNumber = programNumber;
+        this.yearLevel = yearLevel;
+        this.sectionSemester = sectionSemester;
+        this.academicYear = academicYear;
     }
 
-    // Function to fetch all sections
-    static async fetchExistingSections() {
+    // Function to fetch all sections filtered by ff:
+    static async fetchExistingSections(academicYear, yearLevel, semester, programNumber) {
         try {
-            const response = await fetch('http://localhost:5000/section');
+            const response = await fetch('http://localhost:5000/section', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ academicYear, yearLevel, semester, programNumber }), // Send credentials
+              });
             if (!response.ok) {
                 throw new Error('Error fetching sections');
             }
@@ -16,11 +26,7 @@ export default class SectionModel {
 
             console.log('Fetched Sections Data:', data); // Debugging log
 
-            return data.map(section => new SectionModel(
-                section.id,
-                section.sectionNumber,
-                section.sectionName
-            ));
+            return data;
         } catch (error) {
             console.error('Error fetching sections:', error);
             throw error;
@@ -28,12 +34,7 @@ export default class SectionModel {
     }
 
     // New method to create and insert a section
-    static async createAndInsertSection(sectionNumber, sectionName) {
-        const sectionData = {
-            sectionNumber,
-            sectionName
-        };
-
+    static async createAndInsertSection(sectionData) {
         try {
             const response = await fetch(`http://localhost:5000/section/upload`, {
                 method: 'POST',

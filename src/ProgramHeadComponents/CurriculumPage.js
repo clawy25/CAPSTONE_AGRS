@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { Table, Form, Button, Row, Col, Modal } from 'react-bootstrap';
 import AcademicYearModel from '../ReactModels/AcademicYearModel';
-import YearLevelModel from '../ReactModels/YearLevelModel';
 import CourseModel from '../ReactModels/CourseModel';
 import ProgramModel from '../ReactModels/ProgramModel';
 import { UserContext } from '../Context/UserContext'; // Assuming CourseModel handles fetching courses based on academic year, year level, and semester.
@@ -14,7 +13,7 @@ const CurriculumPage = () => {
   const [selectedSemester, setSelectedSemester] = useState('');
   const [showTable, setShowTable] = useState(false);
 
-  const [academicYears, setAcademicYears] = useState([]);
+  //const [academicYears, setAcademicYears] = useState([]);
   const [courses, setCourses] = useState([]); // State to hold course data for the selected academic year, year level, and semester
   const [showModal, setShowModal] = useState(false); // State to toggle Add/Edit modal
   const [currentCourse, setCurrentCourse] = useState(null); // Track the course being edited
@@ -23,8 +22,8 @@ const CurriculumPage = () => {
   const fetchAcademicYearsAndPrograms = async () => {
     try {
       // Fetch academic years and programs
-      const fetchedAcademicYears = await AcademicYearModel.fetchExistingAcademicYears();
-      setAcademicYears(fetchedAcademicYears);
+      //const fetchedAcademicYears = await AcademicYearModel.fetchExistingAcademicYears();
+      //setAcademicYears(fetchedAcademicYears);
   
       const programs = await ProgramModel.fetchAllPrograms();
       const userProgram = programs.filter(program => program.programNumber === user.programNumber);
@@ -118,11 +117,6 @@ const CurriculumPage = () => {
       console.error("Error fetching data:", error);
     }
   };
-  
-  
-  useEffect(() => {
-    fetchAcademicYearsAndPrograms();
-  }, []);
 
 
   // Fetch the courses based on selected academic year, year level, and semester
@@ -142,6 +136,11 @@ const CurriculumPage = () => {
       console.error("Error fetching courses:", error);
     }
   };
+
+  
+  useEffect(() => {
+    fetchAcademicYearsAndPrograms();
+  }, []);
 
   // Trigger fetchCourses whenever academicYear, selectedYearLevel, or semester changes
   useEffect(() => {
@@ -222,8 +221,7 @@ const CurriculumPage = () => {
 
       try {
         await CourseModel.updateCourse(updatedCourse);
-
-
+        
     } catch (error) {
         console.error("Error updating course:", error);
     }
@@ -254,6 +252,19 @@ const CurriculumPage = () => {
     
     CourseModel.deleteCourse(course);
     fetchCourses();
+  };
+
+  const getSemesterText = (sem) => {
+    switch (sem) {
+      case 1:
+        return "First";
+      case 2:
+        return "Second";
+      case 3:
+        return "Summer";
+      default:
+        return `${sem} Semester`;
+    }
   };
 
   
@@ -317,7 +328,7 @@ const CurriculumPage = () => {
             <option value="">Select Semester</option>
               {selectedYearData?.semesters?.map((sem, index) => (
                 <option key={index} value={sem}>
-                  Semester {sem}
+                  {getSemesterText(sem)}
                 </option>
               ))}
           </Form.Control>
@@ -421,7 +432,7 @@ const CurriculumPage = () => {
                 placeholder="If none, leave this blank"
               />
             </Form.Group>
-
+            
             <Form.Group controlId="bridging">
               <Form.Label>Bridging Course</Form.Label>
                 <Form.Check

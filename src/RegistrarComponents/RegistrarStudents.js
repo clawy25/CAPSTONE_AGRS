@@ -143,7 +143,7 @@ export default function RegistrarStudents() {
                     //SETTING THE PROGRAM NUMBERS; ADDED CURRENT ACADEMIC YEAR VALIDATION
                     let studentProgramNumber;
 
-                    const program = programs.find((p) => p.programName = studentProgramName);
+                    const program = programs.find((p) => p.programName === studentProgramName);
                     if (program) {
                         studentProgramNumber = program.programNumber;
                     }                    

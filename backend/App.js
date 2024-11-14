@@ -693,12 +693,18 @@ app.get('/yearLevel', async (req, res) => {
 });
 
 
-// All sections
-app.get('/section', async (req, res) => {
+// Get filtered sections
+app.post('/section', async (req, res) => {
     try {
+        const { academicYear, yearLevel, semester, programNumber } = req.body;
+
         const { data: sectionData, error: sectionError } = await supabase
             .from('section')
-            .select('*');
+            .select('*')
+            .eq('academicYear', academicYear)
+            .eq('yearLevel', yearLevel)
+            .eq('sectionSemester', semester)
+            .eq('programNumber', programNumber);
 
         if (sectionError || !sectionData) {
             return res.status(500).json({ error: sectionError.message || 'Failed to fetch section data' });
