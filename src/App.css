@@ -175,11 +175,20 @@ tbody {
   
   /* Add additional styling as needed */
 }
+.hide-scrollbar {
+  overflow-y: auto; /* Ensures vertical scrolling */
+  scrollbar-width: auto; /* Hides scrollbar in Firefox */
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none; /* Hides scrollbar in Chrome, Safari, Edge */
+}
 
 
-/*LOGIN PAGE PHONE VIEW*/
-
-@media (max-width: 767.98px) {
+  @media (max-width: 768px) {
+    .hide-scrollbar {
+      max-height: 100vh; /* Adjust for smaller screens */
+    }
     .PCClogo {
       display: none;
     }
@@ -202,5 +211,11 @@ tbody {
       z-index: 99;
       position: fixed;
     }
-
-  };
+  }
+  
+  @media (min-width: 769px) {
+    .hide-scrollbar {
+      max-height: 100vh; /* Adjust for larger screens */
+    }
+  }
+  
