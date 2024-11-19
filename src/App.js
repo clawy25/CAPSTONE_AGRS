@@ -17,6 +17,7 @@ import RegistrarStudents from './RegistrarComponents/RegistrarStudents';
 import RegistrarPage from './RegistrarComponents/RegistrarPage';
 import ProgramHeadDashboard from './ProgramHeadComponents/ProgramHeadDashboard';
 import ProgramHeadPage from './ProgramHeadComponents/ProgramHeadPage';
+import StudentEnrollmentSchedule from './StudentComponents/StudentEnrollmentSchedule';
 import ErrorPage from './ErrorPage';
 
 const App = () => {
@@ -41,6 +42,7 @@ const App = () => {
         <Route path="/registrar-dashboard/*" element={<RegistrarDashboard />} /> 
         <Route path="/programHead-dashboard" element={<ProgramHeadDashboard />} /> 
         <Route path="*" element={<ErrorPage />} />
+        <Route path="/studentEnrollmentSchedule" element={<StudentEnrollmentSchedule/>} />
       </Routes>
     </UserProvider>
   );

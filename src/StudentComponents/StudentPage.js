@@ -54,10 +54,10 @@ export default function StudentPage() {
       if (user) {
         const credentials = {
           studentNumber: user.studentNumber,
-          personnelType: user.studentType,
-          personnelNameFirst: user.studentNameFirst,
-          personnelNameMiddle: user.studentNameMiddle,
-          personnelNameLast: user.studentNameLast,
+          studentType: user.studentType,
+          studentNameFirst: user.studentNameFirst,
+          studentNameMiddle: user.studentNameMiddle,
+          studentNameLast: user.studentNameLast,
           programNumber: user.studentProgramNumber
         };
       

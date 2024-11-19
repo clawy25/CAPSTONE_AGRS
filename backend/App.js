@@ -758,34 +758,10 @@ app.get('/schedule', async (req, res) => {
 
         res.json(data);
     } catch (error) {
-        console.error('Error fetching schedules:', error);
-        res.status(500).json({ error: 'Internal server error' });
-    }
-});
-
-
-// Get schedule by ID
-app.get('/schedule/:id', async (req, res) => {
-    const { id } = req.params;
-
-    try {
-        const { data, error } = await supabase
-            .from('schedule')
-            .select('*')
-            .eq('id', id)
-            .single();
-
-        if (error || !data) {
-            return res.status(404).json({ error: 'Schedule not found' });
-        }
-
-        res.json(data);
-    } catch (error) {
         console.error('Error fetching schedule:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
-
 
 // Add new schedule (multiple schedules at once)
 app.post('/schedule/upload', async (req, res) => {
@@ -814,60 +790,6 @@ app.post('/schedule/upload', async (req, res) => {
     }
 });
 
-
-// Update schedule by ID
-app.put('/schedule/:id', async (req, res) => {
-    const { id } = req.params;
-    const { scheduleNumber, courseCode, courseDescriptiveTitle, courseLecture, courseLaboratory, personnelNumber, professorName, scheduleDay, startTime, endTime, numberOfHours, units, yearNumber, sectionNumber } = req.body;
-
-    try {
-        const { data, error } = await supabase
-            .from('schedule')
-            .update({
-                scheduleNumber,
-                courseCode,
-                courseDescriptiveTitle,
-                courseLecture,
-                courseLaboratory,
-                personnelNumber,
-                professorName,
-                scheduleDay,
-                startTime,
-                endTime,
-                numberOfHours,
-                units,
-                yearNumber,
-                sectionNumber
-            })
-            .eq('id', id);
-
-        if (error) {
-            return res.status(500).json({ error: 'Failed to update schedule' });
-        }
-
-        res.json({ message: 'Schedule updated successfully', data });
-    } catch (error) {
-        console.error('Error updating schedule:', error);
-        res.status(500).json({ error: 'Internal server error' });
-    }
-});
-
-app.delete('/schedule/:id', async (req, res) => {
-    const scheduleId = req.params.id;
-  
-    try {
-      const deletedSchedule = await ScheduleModel.deleteById(scheduleId);
-      
-      if (deletedSchedule) {
-        return res.json({ success: true, message: 'Schedule deleted' });
-      } else {
-        return res.status(404).json({ success: false, message: 'Schedule not found' });
-      }
-    } catch (error) {
-      console.error('Error deleting schedule:', error);
-      return res.status(500).json({ success: false, message: 'Failed to delete schedule' });
-    }
-  });
 
 
 

@@ -1,10 +1,13 @@
 
-import { useEffect, useState } from 'react';
+
+import { useEffect, useState, useContext } from 'react';
 import { Table, Form, Button, Modal, Card } from 'react-bootstrap';
 import StudentModel from '../ReactModels/StudentModel';
 import ProgramModel from '../ReactModels/ProgramModel';
 import CourseModel from '../ReactModels/CourseModel';
 import SectionModel from '../ReactModels/SectionModel';
+import { UserContext } from '../Context/UserContext';
+
 
 const ScheduleTable = () => {
 
@@ -13,7 +16,7 @@ const ScheduleTable = () => {
     sessionStorage.setItem('studentNumber', studentNumber);
   };
   
-
+  const { user } = useContext(UserContext);
   const [studentNameFirst, setStudentNameFirst] = useState("");
   const [studentNameMiddle, setStudentNameMiddle] = useState("");
   const [studentNameLast, setStudentNameLast] = useState("");
@@ -162,7 +165,8 @@ const ScheduleTable = () => {
     width: '100%',
   }}
 >
-  <span><strong>Student Name:</strong> {`${studentNameLast} ${studentNameFirst} ${studentNameMiddle}`}</span>
+  <span><strong>Student Name:</strong> {user ? user.personnelNameFirst : 'Unknown'}
+  {/*{`${studentNameLast} ${studentNameFirst} ${studentNameMiddle}`}*/} </span>
   <span><strong>Program:</strong> {program}</span>
   <span><strong>Year Level:</strong> {yearLevel}</span>
   <span><strong>Semester:</strong> {semester}</span>

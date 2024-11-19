@@ -1,5 +1,7 @@
 export default class ScheduleModel {
-    constructor(id, scheduleNumber, courseCode, courseDescriptiveTitle, courseLecture, courseLaboratory, personnelNumber, professorName, scheduleDay, startTime, endTime, numberOfHours, units, yearNumber, sectionNumber) {
+    constructor(id, scheduleNumber, courseCode, courseDescriptiveTitle, courseLecture,
+                courseLaboratory, personnelNumber, scheduleDay, startTime, endTime, 
+                numberOfHours, yearLevel, semester, sectionNumber) {
         this.id = id;
         this.scheduleNumber = scheduleNumber;
         this.courseCode = courseCode;
@@ -7,13 +9,12 @@ export default class ScheduleModel {
         this.courseLecture = courseLecture;
         this.courseLaboratory = courseLaboratory;
         this.personnelNumber = personnelNumber;
-        this.professorName = professorName;
         this.scheduleDay = scheduleDay;
         this.startTime = startTime;
         this.endTime = endTime;
         this.numberOfHours = numberOfHours;
-        this.units = units;
-        this.yearNumber = yearNumber;
+        this.yearLevel = yearLevel;
+        this.semester = semester;
         this.sectionNumber = sectionNumber;
     }
 
@@ -33,12 +34,11 @@ export default class ScheduleModel {
         console.error('Error fetching schedules:', error);
         throw error;
     }
-}
+  }
 
-
-static async deleteSchedule(id) {
+  static async deleteSchedule() {
     try {
-      const response = await fetch(`http://localhost:5000/schedule/${id}`, {
+      const response = await fetch(`http://localhost:5000/schedule/delete`, {
         method: 'DELETE',
       });
   
@@ -56,14 +56,8 @@ static async deleteSchedule(id) {
       throw error;
     }
   }
-  
-  
-
-
-   
-
     // Create and insert multiple schedules
-    static async createAndInsertSchedules(scheduleData) {
+  static async createAndInsertSchedules(scheduleData) {
         try {
             const response = await fetch(`http://localhost:5000/schedule/upload`, {
                 method: 'POST',
@@ -81,5 +75,5 @@ static async deleteSchedule(id) {
             console.error('Error inserting schedule data:', error);
             throw error;
         }
-    }
+  }
 }
