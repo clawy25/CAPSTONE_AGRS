@@ -14,7 +14,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="container-fluid">
+    <div className="container-fluid hide-scrollbar">
       <div className="row d-flex flex-column flex-md-row">
         <div className="col-12 col-md-6 d-flex justify-content-center align-items-center flex-column order-2 order-md-1">
           <img

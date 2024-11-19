@@ -1,86 +1,174 @@
 import React, { useState, useEffect } from 'react';
-import RegistrarYearSectionTab from './RegistrarBatchYear';
-import ProgramModel from '../ReactModels/ProgramModel'; // Import the ProgramModel
+import { Table, Form, Button, Row, Col } from 'react-bootstrap';
+import ProgramModel from '../ReactModels/ProgramModel'; 
+import AcademicYearModel from '../ReactModels/AcademicYearModel';
+import YearLevelModel from '../ReactModels/YearLevelModel';
 import '../App.css';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowLeft } from '@fortawesome/free-solid-svg-icons'; // Import the back icon
 
 export default function RegistrarProfessor() {
-  // State to manage the active view
-  const [activeView, setActiveView] = useState('professor'); // Start with professor view
-  const [selectedProgram, setSelectedProgram] = useState('');
-  const [programs, setPrograms] = useState([]); // State to hold programs
-  const [loading, setLoading] = useState(true); // State to manage loading state
-  const [error, setError] = useState(null); // State to manage errors
+  const [activeView, setActiveView] = useState('professor');
+  const [academicYear, setAcademicYear] = useState('');
+  const [yearLevel, setYearLevel] = useState('');
+  const [semester, setSemester] = useState('First');
+  const [program, setProgram] = useState('');
+  const [programs, setPrograms] = useState([]);
+  const [academicYears, setAcademicYears] = useState([]);
+  const [yearLevels, setYearLevels] = useState([]);
+  const [options, setOptions] = useState([]); // Added options state for courses
 
-  // Fetch programs on component mount
+  // Fetch data on component mount
   useEffect(() => {
-    const fetchPrograms = async () => {
+    const fetchData = async () => {
       try {
-        const programData = await ProgramModel.fetchAllPrograms();
-        console.log('Program data:', programData); // Log the fetched data
-        setPrograms(programData);
-        setLoading(false); // Set loading to false after data is fetched
+        const fetchedAcademicYears = await AcademicYearModel.fetchExistingAcademicYears();
+        setAcademicYears(fetchedAcademicYears);
+        if (fetchedAcademicYears.length > 0) {
+          setAcademicYear(fetchedAcademicYears[0].academicYear);
+        }
+
+        const fetchedYearLevels = await YearLevelModel.fetchExistingYearLevels();
+        setYearLevels(fetchedYearLevels);
+        if (fetchedYearLevels.length > 0) {
+          setYearLevel(fetchedYearLevels[0].yearName);
+        }
+
+        const fetchedPrograms = await ProgramModel.fetchAllPrograms();
+        setPrograms(fetchedPrograms);
+        if (fetchedPrograms.length > 0) {
+          setProgram(fetchedPrograms[0].programName);
+        }
+
+        // Initialize dummy data for options (courses with statuses)
+        setOptions([
+          { id: 1, name: 'Course 1', faculty: 'Faculty A', deadline: '2024-12-15', status: 'Pending', color: 'warning', submittedOn: null },
+          { id: 2, name: 'Course 2', faculty: 'Faculty B', deadline: '2024-12-20', status: 'Completed', color: 'success', submittedOn: '2024-12-10' },
+          { id: 3, name: 'Course 3', faculty: 'Faculty C', deadline: '2024-12-25', status: 'Overdue', color: 'danger', submittedOn: null },
+        ]);
       } catch (error) {
-        console.error('Error fetching programs:', error);
-        setError('Failed to fetch programs');
-        setLoading(false); // Stop loading even if there's an error
+        console.error("Error fetching data:", error);
       }
     };
 
-    fetchPrograms();
+    fetchData();
   }, []);
 
-  // Function to switch to the year/section tab
-  const goToYearSectionTab = (program) => {
-    setSelectedProgram(program);
-    setActiveView('yearSectionTab');
-  };
-
-  // Function to go back to the professor view
-  const goBackToProfessorView = () => {
-    setActiveView('professor');
+  // Update status of a specific course
+  const setStatus = (id, newStatus, color) => {
+    setOptions((prevOptions) =>
+      prevOptions.map((option) =>
+        option.id === id ? { ...option, status: newStatus, color } : option
+      )
+    );
   };
 
   return (
     <section className="container-fluid ms-0">
-      {loading && <p>Loading programs...</p>} {/* Loading state */}
-      {error && <p className="text-danger">{error}</p>} {/* Error state */}
-      {!loading && !error && activeView === 'professor' && (
-        // Professor buttons section
-        <div className="row g-4">
-          <h2 className="custom-font custom-color-green-font">Programs</h2>
-          {programs.length === 0 ? (
-            <p>No programs available.</p> // Display message if no programs
-          ) : (
-            programs.map((program) => (
-              <div key={program.id} className="col-6 col-md-3 mb-3">
-                <button
-                  className="btn btn-bg-custom-color-green custom-color-font fs-5 rounded custom-font d-flex align-items-center justify-content-center"
-                  style={{ height: '200px', width: '100%' }}
-                  onClick={() => goToYearSectionTab(program.programName)} // Switch to Year Section Tab with program
-                >
-                  <span className="ms-2">{program.programName}</span>
-                </button>
-              </div>
-            ))
-          )}
-        </div>
-      )}
-      {activeView === 'yearSectionTab' && (
-        <div>
-          {/* Flex container for back button and title */}
-          <div className="d-flex align-items-center mb-4">
-            <button className="btn btn-link" onClick={goBackToProfessorView}>
-              <FontAwesomeIcon icon={faArrowLeft} className="me-2 custom-color-green-font" /> {/* Font Awesome back icon */}
-            </button>
-            <h2 className="mb-0 custom-color-green-font">{selectedProgram}</h2>
-          </div>
+      {/* Filters */}
+      <Row className="mb-4 bg-white rounded p-3">
+        <Col>
+          <Form.Group controlId="academicYear">
+            <Form.Label>Academic Year</Form.Label>
+            <Form.Control as="select" value={academicYear} onChange={(e) => setAcademicYear(e.target.value)}>
+              {academicYears.map((year) => (
+                <option key={year.id} value={year.academicYear}>
+                  {year.academicYear}
+                </option>
+              ))}
+            </Form.Control>
+          </Form.Group>
+        </Col>
+        <Col>
+          <Form.Group controlId="yearLevel">
+            <Form.Label>Year Level</Form.Label>
+            <Form.Control as="select" value={yearLevel} onChange={(e) => setYearLevel(e.target.value)}>
+              {yearLevels.map((level) => (
+                <option key={level.id} value={level.yearName}>
+                  {level.yearName}
+                </option>
+              ))}
+            </Form.Control>
+          </Form.Group>
+        </Col>
+        <Col>
+          <Form.Group controlId="semester">
+            <Form.Label>Semester</Form.Label>
+            <Form.Control as="select" value={semester} onChange={(e) => setSemester(e.target.value)}>
+              <option value="First">First</option>
+              <option value="Second">Second</option>
+            </Form.Control>
+          </Form.Group>
+        </Col>
+        <Col>
+          <Form.Group controlId="program">
+            <Form.Label>Program</Form.Label>
+            <Form.Control as="select" value={program} onChange={(e) => setProgram(e.target.value)}>
+              {programs.map((prog) => (
+                <option key={prog.id} value={prog.programName}>
+                  {prog.programName}
+                </option>
+              ))}
+            </Form.Control>
+          </Form.Group>
+        </Col>
+        <Col>
+          <Form.Group controlId="program">
+            <Form.Label>Section</Form.Label>
+            <Form.Control as="select" value={program} onChange={(e) => setProgram(e.target.value)}>
+              {programs.map((prog) => (
+                <option key={prog.id} value={prog.programName}>
+                  {prog.programName}
+                </option>
+              ))}
+            </Form.Control>
+          </Form.Group>
+        </Col>
+      </Row>
 
-          {/* Year and Section Tab Component, pass the selected program */}
-          <RegistrarYearSectionTab selectedProgram={selectedProgram} />
+      {/* Table */}
+      <div className="card mb-4 bg-white rounded p-3">
+        <div className="card-header bg-white">
+          <h3>Grade Submission Status</h3>
         </div>
-      )}
+        <div className="card-body">
+          <Table bordered className="table">
+            <thead className="table-success">
+              <tr>
+                <th className='align-middle text-center custom-color-green-font custom-font'>Course</th>
+                <th className='align-middle text-center custom-color-green-font custom-font'>Faculty</th>
+                <th className='align-middle text-center custom-color-green-font custom-font'>Deadline</th>
+                <th className='align-middle text-center custom-color-green-font custom-font'>Status</th>
+                <th className='align-middle text-center custom-color-green-font custom-font'>Submitted On</th>
+              </tr>
+            </thead>
+            <tbody>
+              {options.map((option) => (
+                <tr key={option.id}>
+                  <td>{option.name}</td>
+                  <td>{option.faculty}</td>
+                  <td>{option.deadline}</td>
+                  <td>
+                    <Form.Control
+                      as="select"
+                      value={option.status}
+                      className={`text-${option.color} fw-semibold`}
+                      onChange={(e) => {
+                        const status = e.target.value;
+                        const color = status === 'Pending' ? 'warning' : status === 'Completed' ? 'success' : 'danger';
+                        setStatus(option.id, status, color);
+                      }}
+                    >
+                      <option value="Pending">Pending</option>
+                      <option value="Completed">Completed</option>
+                      <option value="Overdue">Overdue</option>
+                    </Form.Control>
+                  </td>
+                  <td>{option.submittedOn || 'Not Submitted'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+        </div>
+      </div>
     </section>
   );
 }

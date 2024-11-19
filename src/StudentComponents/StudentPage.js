@@ -84,7 +84,7 @@ export default function StudentPage() {
   };
 
   return (
-    <div className="container-fluid">
+    <div className="container-fluid hide-scrollbar">
       <div className="row no-gutters">
         <div className="col-12 col-md-6 p-0 position-relative d-none d-md-block">
           <img

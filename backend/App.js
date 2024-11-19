@@ -7,7 +7,7 @@ const jwt = require('jsonwebtoken');
 const app = express();
 const port = process.env.SUPA_PORT; // Use the PORT from .env
 app.use(cors({
-    origin: 'http://localhost:3000', // Adjust this for your frontend URL
+    origin: 'http://localhost:3001', // Adjust this for your frontend URL
 }));
 app.use(express.json());
 
