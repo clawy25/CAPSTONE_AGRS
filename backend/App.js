@@ -462,6 +462,26 @@ app.post('/timeline/upload', async (req, res) => {
   }
 });
 
+// Get single program
+app.post('/program/single', async (req, res) => {
+    const { programNumber } = req.body;
+    try {
+        const { data, error } = await supabase
+            .from('program')
+            .select('*')
+            .eq('programNumber', programNumber);
+
+        if (error) {
+            return res.status(500).json({ error: error.message });
+        }
+
+        res.json(data);
+    } catch (error) {
+        console.error('Error fetching program:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 //Fetch all programs
 app.get('/program', async (req, res) => {
   try {
@@ -503,8 +523,6 @@ app.delete('/program/:programNumber', async (req, res) => {
         res.status(500).json({ error: 'Internal server error' });
     }
 });
-
-
 
 app.post('/program/upload', async (req, res) => {
     try {
@@ -745,12 +763,14 @@ app.post('/section/upload', async (req, res) => {
   });
 
   
-// Get all schedules
-app.get('/schedule', async (req, res) => {
+// Get schedules
+app.post('/schedule', async (req, res) => {
+    const { section } = req.body;
     try {
         const { data, error } = await supabase
             .from('schedule')
-            .select('*');
+            .select('*')
+            .eq('sectionNumber', section);
 
         if (error) {
             return res.status(500).json({ error: error.message });
@@ -758,7 +778,7 @@ app.get('/schedule', async (req, res) => {
 
         res.json(data);
     } catch (error) {
-        console.error('Error fetching schedule:', error);
+        console.error('Error fetching schedules:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
@@ -790,6 +810,36 @@ app.post('/schedule/upload', async (req, res) => {
     }
 });
 
+app.put('/schedule/update', async (req, res) => {
+    const { updatedSchedules } = req.body;
+  
+    try {
+      // Create a batch of updates by matching 'id' for each schedule
+      const updatePromises = updatedSchedules.map(schedule => {
+        return supabase
+          .from('schedule')
+          .update(schedule)  // Update using the id which is guaranteed to be unique
+          .eq('id', schedule.id); // Ensure we're updating the specific row with this id
+      });
+  
+      // Await all updates
+      const results = await Promise.all(updatePromises);
+  
+      // Check if any of the updates failed
+      const errors = results.filter(result => result.error);
+      if (errors.length > 0) {
+        console.error('Error updating schedules:', errors);
+        return res.status(500).json({ error: 'Failed to update schedule data' });
+      }
+  
+      // Return the updated data
+      res.json(results);
+    } catch (error) {
+      console.error('Error updating schedule data:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+  
 
 
 

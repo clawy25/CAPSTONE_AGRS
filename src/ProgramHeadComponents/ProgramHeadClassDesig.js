@@ -1,13 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { Table, Form, Button, Row, Col, Modal } from 'react-bootstrap';
+import React, { useState, useEffect, useContext } from 'react';
+import { Table, Form, Button, Row, Col, Modal, FormControl } from 'react-bootstrap';
 import AcademicYearModel from '../ReactModels/AcademicYearModel';
 import YearLevelModel from '../ReactModels/YearLevelModel';
 import ProgramModel from '../ReactModels/ProgramModel';
 import CourseModel from '../ReactModels/CourseModel';
 import SectionModel from '../ReactModels/SectionModel';
 import ScheduleModel from '../ReactModels/ScheduleModel';
+import PersonnelModel from '../ReactModels/PersonnelModel';
+import { UserContext } from '../Context/UserContext';
 
 const ProgramHeadClassDesig = () => {
+  const { user } = useContext(UserContext);
   const [selectedAcademicYear, setSelectedAcademicYear] = useState('');
   const [selectedProgram, setSelectedProgram] = useState('');
   const [selectedYearLevel, setSelectedYearLevel] = useState('');
@@ -23,12 +26,7 @@ const ProgramHeadClassDesig = () => {
 
   const [schedules, setSchedules] = useState([]);
   const [showTable, setShowTable] = useState(false);
-  const [professors, setProfessors] = useState([
-    'Prof. John Doe',
-    'Prof. Jane Smith',
-    'Prof. Michael Johnson',
-    // Add more professors here
-  ]);
+  const [professors, setProfessors] = useState([]);
   const [selectedProfessor, setSelectedProfessor] = useState('Prof. John Doe');
 
   const [subjects, setSubjects] = useState([
@@ -61,20 +59,20 @@ const ProgramHeadClassDesig = () => {
       const current = fetchedAcademicYears.filter(acadYears => acadYears.isCurrent === true);
       setCurrentAcadYear(current);
   
-      const allPrograms = await ProgramModel.fetchAllPrograms();
+      const fetchedProgram = await ProgramModel.fetchProgramData(user.programNumber);
 
-      setPrograms(allPrograms);
+      setPrograms(fetchedProgram);
   
-      if (allPrograms.length > 0) {
+      if (fetchedProgram.length > 0) {
         const data = [];
       
-        allPrograms.forEach(row => {
+        fetchedProgram.forEach(row => {
           // Check if there is already an entry for the current academicYear
           let existingAcadYear = data.find(item => item.academicYear === row.academicYear);
       
           if (!existingAcadYear) {
             // Filter programs for the current academicYear
-            const programsForYear = allPrograms.filter(item => item.academicYear === row.academicYear);
+            const programsForYear = fetchedProgram.filter(item => item.academicYear === row.academicYear);
             
             // Collect unique programs for the academicYear
             const programs = [];
@@ -116,14 +114,22 @@ const ProgramHeadClassDesig = () => {
   };
 
   const fetchSchedules = async () => {
-    try{
-      const allSchedules = await ScheduleModel.fetchExistingschedule();
-
+    try {
+      const allSchedules = await ScheduleModel.fetchExistingschedule(selectedSection);
       console.log(allSchedules);
-
       setSchedules(allSchedules);
     } catch (error){
       console.error("Error fetching schedules:", error);
+    }
+  };
+
+  const fetchPersonnelList = async () =>{
+    try {
+      const personnelData = await PersonnelModel.getProfessorsbyProgram(user.programNumber, selectedAcademicYear);
+      console.log(personnelData);
+      setProfessors(personnelData);
+    } catch (error) {
+      console.error('Error fetching personnel list:', error);
     }
   };
 
@@ -144,7 +150,6 @@ const ProgramHeadClassDesig = () => {
           selectedSemester,
           selectedProgramNumber);
 
-          console.log(courseData);
           
         if(courseData){
           setCourses(courseData); // Update the courses state with fetched data
@@ -181,38 +186,94 @@ const ProgramHeadClassDesig = () => {
     }
   };
 
+  const createSchedules = async () => {
+    try {
+      await fetchCourses();
+      
+      console.log(courses);
+      console.log(selectedSection);
+
+      const newSchedules = courses.map((course) => ({
+        scheduleNumber: `${course.courseCode}-${selectedSection}`, 
+        sectionNumber: selectedSection,
+        courseCode: course.courseCode,
+        yearLevel: course.courseYearLevel,
+        semester: course.courseSemester,
+        academicYear: course.academicYear,
+      }));
+      
+      await ScheduleModel.createAndInsertSchedules(newSchedules);
+
+      fetchSchedules();
+    } catch (error){
+      console.error("Error creating schedules:", error);
+    }
+  };
+
+  const updateSchedules = async () => {
+    try {
+      // Log the schedules before removal of ids
+      console.log('Original schedules:', schedules);
+  
+      // Call the update function with the modified schedules
+      await ScheduleModel.updateSchedules(schedules);
+  
+      // Fetch schedules after update
+      await fetchSchedules();
+    } catch (error) {
+      console.error('Error creating schedules:', error);
+    }
+  };
+  
+
   useEffect(() => {
     fetchAcademicYearsAndPrograms();
-  }, []);
+  }, [user.programNumber]);
+  
 
   useEffect(() => {
     if (selectedAcademicYear && selectedProgram && selectedYearLevel && selectedSemester) {
       setSections([]);
+      setProfessors([]);
       fetchSections();
+      fetchPersonnelList();
     }
   }, [selectedAcademicYear, selectedProgram, selectedYearLevel, selectedSemester]);
   
   useEffect(() => {
     if (selectedAcademicYear && selectedProgram && selectedYearLevel && selectedSemester && selectedSection) {
-      setCourses([]);
-      fetchCourses();
       setSchedules([]);
+      setCourses([]);
       fetchSchedules();
+      fetchCourses();
       setShowTable(true);
     }
   }, [selectedAcademicYear, selectedProgram, selectedYearLevel, selectedSemester, selectedSection]);
 
   const handleScheduleChange = (index, field, value) => {
-    const updatedSubjects = [...subjects];
-    updatedSubjects[index].schedule[field] = value;
-    setSubjects(updatedSubjects);
+    // Update the schedules array
+    setSchedules((prevSchedules) =>
+      prevSchedules.map((schedule, i) =>
+        i === index ? { ...schedule, [field]: value } : schedule
+      )
+    );
   };
 
-  const handleProfessorChange = (index, value) => {
-    const updatedSubjects = [...subjects];
-    updatedSubjects[index].professor = value;
-    setSubjects(updatedSubjects);
+
+  const handleProfessorChange = (index, newPersonnelNumber) => {
+    // Update the schedules array
+    setSchedules((prevSchedules) =>
+      prevSchedules.map((schedule, i) =>
+        i === index ? { ...schedule, personnelNumber: newPersonnelNumber } : schedule
+      )
+    );
   };
+
+  useEffect(() => {
+    console.log('Updated schedules:', schedules);
+  }, [schedules]); // This will log whenever schedules is updated
+  
+  
 
   const handleAcademicYearChange = (e) => {
     const selectedYear = e.target.value;
@@ -391,58 +452,71 @@ const ProgramHeadClassDesig = () => {
               </tr>
             </thead>
             <tbody>
-              {courses.map((course, index) => (
-                <tr key={index}>
-                  <td>{course.courseCode}</td>
-                  <td>{course.courseDescriptiveTitle}</td>
-                  <td>{course.courseLecture}</td>
-                  <td>{course.courseLaboratory}</td>
-                  <td>
-                    {/* Schedule Inputs aligned in a single line */}
-                    <div className="d-flex justify-content-start align-items-center">
-                      {/*<Form.Control
-                        as="select"
-                        value={subject.schedule.day}
-                        onChange={(e) => handleScheduleChange(index, 'day', e.target.value)}
-                        className="mr-2"
-                      >
-                        <option value="Mon">Mon</option>
-                        <option value="Tue">Tue</option>
-                        <option value="Wed">Wed</option>
-                        <option value="Thu">Thu</option>
-                        <option value="Fri">Fri</option>
-                        <option value="Sat">Sat</option>
-                      </Form.Control>*/}
-                      {/*<Form.Control
-                        type="time"
-                        value={subject.schedule.startTime}
-                        onChange={(e) => handleScheduleChange(index, 'startTime', e.target.value)}
-                        className="mr-2"
-                      />*/}
-                      {/*<Form.Control
-                        type="time"
-                        value={subject.schedule.endTime}
-                        onChange={(e) => handleScheduleChange(index, 'endTime', e.target.value)}
-                        className="mr-2"
-                      />*/}
-                    </div>
-                  </td>
-                  <td>
-                    {/* Professor Selection */}
-                    {/*<Form.Control
-                      as="select"
-                      value={subject.professor}
-                      onChange={(e) => handleProfessorChange(index, e.target.value)}
-                    >
-                      {professors.map((prof, idx) => (
-                        <option key={idx} value={prof}>
-                          {prof}
-                        </option>
-                      ))}
-                    </Form.Control>*/}
-                  </td>
-                </tr>
-              ))}
+            { schedules.length === 0 && (
+            <>
+              <Button className="btn-success w-100" onClick={createSchedules}>Generate List</Button>
+            </>
+            )}
+              {schedules.map((schedule, index) => {
+                // Find the matching course based on courseCode
+                const courseDetails = courses?.find(course => course.courseCode === schedule.courseCode);
+                // If courseDetails exist, render the row
+                return (
+    <tr key={index}>
+      <td>{schedule.courseCode}</td>
+      <td>{courseDetails?.courseDescriptiveTitle || 'N/A'}</td>
+      <td>{courseDetails?.courseLecture || 'N/A'}</td>
+      <td>{courseDetails?.courseLaboratory || 'N/A'}</td>
+      <td>
+        {/* Schedule Inputs aligned in a single line */}
+        <div className="d-flex justify-content-start align-items-center">
+          {/* Example schedule inputs */}
+          <Form.Control
+            as="select"
+            value={schedule.scheduleDay}
+            onChange={(e) => handleScheduleChange(index, 'scheduleDay', e.target.value)}
+            className="mr-2">
+              <option value="">N/A</option>
+              <option value="Monday">Mon</option>
+              <option value="Tuesday">Tue</option>
+              <option value="Wednesday">Wed</option>
+              <option value="Thursday">Thu</option>
+              <option value="Friday">Fri</option>
+              <option value="Saturday">Sat</option>
+          </Form.Control>
+          <Form.Control
+            type="time"
+            value={schedule.startTime || ''}
+            onChange={(e) => handleScheduleChange(index, 'startTime', e.target.value)}
+            className="mr-2"/>
+          <Form.Control
+            type="time"
+            value={schedule.endTime || ''}
+            onChange={(e) => handleScheduleChange(index, 'endTime', e.target.value)}
+            className="mr-2"/>
+        </div>
+      </td>
+      <td>
+        {/* Professor Selection */}
+        <select
+          value={schedule.personnelNumber || ''} // Ensure this reflects the correct professor for each schedule
+          onChange={(e) => handleProfessorChange(index, e.target.value)}>
+          <option value="">Select Professor</option>
+          {professors.map((prof) => (
+            <option key={prof.id} value={prof.personnelNumber}>
+              {`${prof.personnelNameFirst} ${prof.personnelNameLast}`}
+            </option>
+          ))}
+        </select>
+      </td>
+    </tr>
+                );
+              })}
+            { schedules.length > 0 && (
+            <>
+              <Button className="btn-success w-100" onClick={updateSchedules}>Save Schedule</Button>
+            </>
+            )}
             </tbody>
           </Table>
         </Col>

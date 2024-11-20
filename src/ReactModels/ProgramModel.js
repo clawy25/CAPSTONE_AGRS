@@ -12,21 +12,27 @@ export default class ProgramModel {
     // Function to fetch program data by programNumber UNUSED???
     static async fetchProgramData(programNumber) {
         try {
-            const response = await fetch(`http://localhost:5000/program/${programNumber}`);
+            const response = await fetch(`http://localhost:5000/program/single`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ programNumber }), // Send credentials
+              });
             if (!response.ok) {
                 throw new Error('Error fetching program data');
             }
             const data = await response.json();
 
             // Return a new ProgramModel instance with the fetched data
-            return new ProgramModel(
-                data.id,
-                data.programName,
-                data.programNumber,
-                data.programNumOfYear,
-                data.programYrLvlSummer,
-                data.academicYear
-            );
+            return data.map(program => new ProgramModel(
+                program.id,
+                program.programName,
+                program.programNumber,
+                program.noOfYears,
+                program.yearLevelwithSummer,
+                program.academicYear
+            ));
         } catch (error) {
             console.error('Error fetching program data:', error);
             throw error;

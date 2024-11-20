@@ -1,28 +1,31 @@
 export default class ScheduleModel {
-    constructor(id, scheduleNumber, courseCode, courseDescriptiveTitle, courseLecture,
-                courseLaboratory, personnelNumber, scheduleDay, startTime, endTime, 
-                numberOfHours, yearLevel, semester, sectionNumber) {
+    constructor(id, scheduleNumber, scheduleDay, startTime, endTime,
+                sectionNumber, personnelNumber, courseCode,
+                yearLevel, semester, academicYear) {
         this.id = id;
         this.scheduleNumber = scheduleNumber;
-        this.courseCode = courseCode;
-        this.courseDescriptiveTitle = courseDescriptiveTitle;
-        this.courseLecture = courseLecture;
-        this.courseLaboratory = courseLaboratory;
-        this.personnelNumber = personnelNumber;
         this.scheduleDay = scheduleDay;
         this.startTime = startTime;
         this.endTime = endTime;
-        this.numberOfHours = numberOfHours;
+        this.sectionNumber = sectionNumber;
+        this.personnelNumber = personnelNumber;
+        this.courseCode = courseCode;
         this.yearLevel = yearLevel;
         this.semester = semester;
-        this.sectionNumber = sectionNumber;
+        this.academicYear = academicYear;
     }
 
 
     // Function to fetch all subjects
-  static async fetchExistingschedule() {
+  static async fetchExistingschedule(section) {
     try {
-        const response = await fetch('http://localhost:5000/schedule');
+        const response = await fetch('http://localhost:5000/schedule', {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ section }), // Send credentials
+        });
         if (!response.ok) {
             throw new Error('Error fetching schedules');
         }
@@ -36,7 +39,7 @@ export default class ScheduleModel {
     }
   }
 
-  static async deleteSchedule() {
+  static async deleteSchedule() {//UNUSED
     try {
       const response = await fetch(`http://localhost:5000/schedule/delete`, {
         method: 'DELETE',
@@ -75,5 +78,27 @@ export default class ScheduleModel {
             console.error('Error inserting schedule data:', error);
             throw error;
         }
+  }
+
+  static async updateSchedules(updatedSchedules) {
+    try {
+      const response = await fetch(`http://localhost:5000/schedule/update`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ updatedSchedules }),
+      });
+  
+      if (!response.ok) {
+        throw new Error('Error updating schedule data');
+      }
+  
+      const data = await response.json();
+      return data; // Return updated schedules data
+    } catch (error) {
+      console.error('Error updating schedules:', error);
+      throw error;
+    }
   }
 }
