@@ -8,10 +8,36 @@ import 'react-datepicker/dist/react-datepicker.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { faBars } from '@fortawesome/free-solid-svg-icons'; // Import menu icon
+import { Dropdown } from 'react-bootstrap'; // Import Bootstrap for dropdown
+import { Modal, Button } from 'react-bootstrap';
+
 
 const ClassDetails = () => {
 
   const [students, setStudents] = useState([]);
+  const [showModal, setShowModal] = useState(false);
+  const [modalMessage, setModalMessage] = useState('');
+
+  const handleModalShow = (action) => {
+    setModalMessage(`Grades ${action} successfully!`);
+    setShowModal(true);
+  };
+
+  const handleModalClose = () => {
+    setShowModal(false);
+  };
+
+  const handleSubmit = () => {
+    // Your submit logic here
+    handleModalShow('submitted');
+  };
+
+  const handlePost = () => {
+    // Your post logic here
+    handleModalShow('posted');
+  };
+  
 
   {/* SEARCH BAR DECLARATION */}
   const [selectedPeriod, setSelectedPeriod] = useState('midterm');
@@ -902,13 +928,6 @@ const getSemestralNumericalEquivalentAndRemarks = (studentId, grade, hasBlankSco
   return { numEq: "-", remarks: "-" };
 };
 
-  
-  
-
-  
-
-
-  
     
   {/* MIDTERMS TAB */}
   const renderTableContent = () => {
@@ -916,13 +935,13 @@ const getSemestralNumericalEquivalentAndRemarks = (studentId, grade, hasBlankSco
       case 'midterm':
         return (
           <div style={{ overflowX: 'auto', maxHeight: '500px' }}>
-          <table className="details-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <table className="details-table" >
             <thead>
               <tr>
-                <th colSpan="2">Student Info</th>
-                <th colSpan={midtermAttendanceColumns.length + 7}>Attendance (P-Present; L-Late; E-Excuse; A-Absent)</th>
+              <th colSpan="2" style={{ position: 'sticky', left: 0, background: '#f4f4f4', zIndex: 3 }}>Student Info</th>
+                <th colSpan={midtermAttendanceColumns.length + 7} >Attendance (P-Present; L-Late; E-Excuse; A-Absent)</th>
                 <th colSpan={midtermAssignmentColumns.length + 3} rowSpan={3} style={{ padding: '60px' }} >Assignments</th>
-                <th colSpan={midtermQuizColumns.length + 3} rowSpan={2}>Quizzes/Seatwork</th> {/* New column header */}
+                <th colSpan={midtermQuizColumns.length + 3} rowSpan={2}>Quizzes/Seatwork</th> 
                 <th colSpan={midtermRecitationColumns.length + 3} rowSpan={3}>Recitation/Participation</th>
                 <th colSpan="1" rowSpan="3">CS Grade</th>
                 <th colSpan={midtermPBAColumns.length + 3} rowSpan={2}>Performance Based Assessment</th>
@@ -933,10 +952,12 @@ const getSemestralNumericalEquivalentAndRemarks = (studentId, grade, hasBlankSco
               </tr>
               
               <tr>
-                <th rowSpan="3">Student No</th>
-                <th rowSpan="3">Name</th>
-
-
+              <th rowSpan={3} style={{ position: 'sticky',left: 0,top: 0,backgroundColor: '#f4f4f4',padding: '10px',zIndex: 4, borderRight: '2px solid #ccc', boxShadow: '1px 0 0 rgba(0, 0, 0, 0.1)', }}>
+                Student No
+              </th>
+              <th rowSpan={3}style={{position: 'sticky',left: 82, top: 0,backgroundColor: '#f4f4f4',padding: '10px',zIndex: 4,borderLeft: '2px solid #ccc', boxShadow: '-1px 0 0 rgba(0, 0, 0, 0.1)',}}>
+                Name
+              </th>
 
                 {midtermAttendanceColumns.map((column, index) => (
                 <th key={index} rowSpan="3">
@@ -1062,7 +1083,7 @@ const getSemestralNumericalEquivalentAndRemarks = (studentId, grade, hasBlankSco
               type="number"
               value={midtermAssignmentPercentage}
               onChange={(e) => setmidtermAssignmentPercentage(e.target.value)}
-              style={{ width: '30px' }}
+              style={{ width: '60px' }}
             />%
           </th>
                 {/* Recitation Columns */}
@@ -1085,7 +1106,7 @@ const getSemestralNumericalEquivalentAndRemarks = (studentId, grade, hasBlankSco
                 type="number"
                 value={midtermRecitationPercentage}
                 onChange={(e) => setmidtermRecitationPercentage(e.target.value)}
-                style={{ width: '30px' }}
+                style={{ width: '60px' }}
               />
                 %</th>
                 <th>{calculateTotalMidtermCSPercentage()}%</th>
@@ -1109,7 +1130,7 @@ const getSemestralNumericalEquivalentAndRemarks = (studentId, grade, hasBlankSco
                     type="number"
                     value={midtermPBAGradePercentage}
                     onChange={(e) => setmidtermPBAGradePercentage(parseFloat(e.target.value) || 0)}
-                    style={{ width: '50px' }}
+                    style={{ width: '60px' }}
                     min="0"
                     max="100"
                   />
@@ -1120,7 +1141,7 @@ const getSemestralNumericalEquivalentAndRemarks = (studentId, grade, hasBlankSco
                       type="number"
                       value={midtermTotalItems}
                       onChange={(e) => setmidtermTotalItems(e.target.value)}
-                      style={{ width: '70px' }}
+                      style={{ width: '60px' }}
                       placeholder="Items"
                     />
                           </th>
@@ -1129,7 +1150,7 @@ const getSemestralNumericalEquivalentAndRemarks = (studentId, grade, hasBlankSco
                       type="number"
                       value={midtermExamPercentage}
                       onChange={(e) => setMidtermExamPercentage(e.target.value)}
-                      style={{ width: '30px' }}
+                      style={{ width: '60px' }}
                       placeholder="%"
                     />
                     %</th>
@@ -1158,12 +1179,13 @@ const getSemestralNumericalEquivalentAndRemarks = (studentId, grade, hasBlankSco
                 
                 return (
                   <tr key={student.id}>
-                    <td>{student.studentNumber || 'Guest'}</td>
-                    <td>{student.studentNameLast || ''}, {student.studentNameFirst || ''} {student.studentNameMiddle || ''}</td>
-
-                    
-                    
-      
+                    <td style={{ position: 'sticky',left: 0, backgroundColor: 'white',padding: '10px',zIndex: 3,borderRight: '2px solid #ccc',boxShadow: '1px 0 0 rgba(0, 0, 0, 0.1)',}}>
+                      {student.studentNumber || 'Guest'}
+                    </td>
+                    <td style={{position: 'sticky',left: 82,backgroundColor: 'white',padding: '10px',zIndex: 3,borderLeft: '2px solid #ccc',boxShadow: '-1px 0 0 rgba(0, 0, 0, 0.1)',}}
+                    >
+                      {student.studentNameLast || ''}, {student.studentNameFirst || ''}{' '}{student.studentNameMiddle || ''}
+                    </td>
 
                     {midtermAttendanceColumns.map((_, dateIndex) => (
                     <td key={dateIndex}>
@@ -1304,7 +1326,7 @@ const getSemestralNumericalEquivalentAndRemarks = (studentId, grade, hasBlankSco
             <table className="details-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr>
-                  <th colSpan="2">Student Info</th>
+                <th colSpan="2" style={{ position: 'sticky', left: 0, background: '#f4f4f4', zIndex: 3 }}>Student Info</th>
                   <th colSpan={finalsAttendanceColumns.length + 7}>Attendance (P-Present; L-Late; E-Excuse; A-Absent)</th>
                   <th colSpan={finalsAssignmentColumns.length + 3} rowSpan={3} style={{ padding: '60px' }} >Assignments</th>
                   <th colSpan={finalsQuizColumns.length + 3} rowSpan={2}>Quizzes/Seatwork</th> {/* New column header */}
@@ -1318,11 +1340,13 @@ const getSemestralNumericalEquivalentAndRemarks = (studentId, grade, hasBlankSco
                 </tr>
                 
                 <tr>
-                  <th rowSpan="3">Student No</th>
-                  <th rowSpan="3">Name</th>
-  
-  
-  
+                <th rowSpan={3} style={{ position: 'sticky',left: 0,top: 0,backgroundColor: '#f4f4f4',padding: '10px',zIndex: 4, borderRight: '2px solid #ccc', boxShadow: '1px 0 0 rgba(0, 0, 0, 0.1)', }}>
+                Student No
+              </th>
+              <th rowSpan={3}style={{position: 'sticky',left: 82, top: 0,backgroundColor: '#f4f4f4',padding: '10px',zIndex: 4,borderLeft: '2px solid #ccc', boxShadow: '-1px 0 0 rgba(0, 0, 0, 0.1)',}}>
+                Name
+              </th>
+
                   {finalsAttendanceColumns.map((column, index) => (
                   <th key={index} rowSpan="3">
                     <DatePicker
@@ -1447,7 +1471,7 @@ const getSemestralNumericalEquivalentAndRemarks = (studentId, grade, hasBlankSco
                 type="number"
                 value={finalsAssignmentPercentage}
                 onChange={(e) => setfinalsAssignmentPercentage(e.target.value)}
-                style={{ width: '30px' }}
+                style={{ width: '60px' }}
               />%
             </th>
                   {/* Recitation Columns */}
@@ -1470,7 +1494,7 @@ const getSemestralNumericalEquivalentAndRemarks = (studentId, grade, hasBlankSco
                   type="number"
                   value={finalsRecitationPercentage}
                   onChange={(e) => setfinalsRecitationPercentage(e.target.value)}
-                  style={{ width: '30px' }}
+                  style={{ width: '60px' }}
                 />
                   %</th>
                   <th>{calculateTotalFinalsCSPercentage()}%</th>
@@ -1494,7 +1518,7 @@ const getSemestralNumericalEquivalentAndRemarks = (studentId, grade, hasBlankSco
                       type="number"
                       value={finalsPBAGradePercentage}
                       onChange={(e) => setfinalsPBAGradePercentage(parseFloat(e.target.value) || 0)}
-                      style={{ width: '50px' }}
+                      style={{ width: '60px' }}
                       min="0"
                       max="100"
                     />
@@ -1514,7 +1538,7 @@ const getSemestralNumericalEquivalentAndRemarks = (studentId, grade, hasBlankSco
                         type="number"
                         value={finalsExamPercentage}
                         onChange={(e) => setfinalsExamPercentage(e.target.value)}
-                        style={{ width: '30px' }}
+                        style={{ width: '60px' }}
                         placeholder="%"
                       />
                       %</th>
@@ -1543,13 +1567,14 @@ const getSemestralNumericalEquivalentAndRemarks = (studentId, grade, hasBlankSco
                   
                   return (
                     <tr key={student.id}>
-                      <td>{student.studentNumber || 'Guest'}</td>
-                      <td>{student.studentNameLast || ''}, {student.studentNameFirst || ''} {student.studentNameMiddle || ''}</td>
-  
-                      
-                      
-        
-  
+                    <td style={{ position: 'sticky',left: 0, backgroundColor: 'white',padding: '10px',zIndex: 3,borderRight: '2px solid #ccc',boxShadow: '1px 0 0 rgba(0, 0, 0, 0.1)',}}>
+                      {student.studentNumber || 'Guest'}
+                    </td>
+                    <td style={{position: 'sticky',left: 82,backgroundColor: 'white',padding: '10px',zIndex: 3,borderLeft: '2px solid #ccc',boxShadow: '-1px 0 0 rgba(0, 0, 0, 0.1)',}}
+                    >
+                      {student.studentNameLast || ''}, {student.studentNameFirst || ''}{' '}{student.studentNameMiddle || ''}
+                    </td>
+
                       {finalsAttendanceColumns.map((_, dateIndex) => (
                       <td key={dateIndex}>
                         <select
@@ -1807,12 +1832,15 @@ const getSemestralNumericalEquivalentAndRemarks = (studentId, grade, hasBlankSco
           return <p>Please select a period.</p>;
       }
     };
-  return (
-   
-     
-        
-        <div className="class-details">
-          <div className="buttons-container">
+
+    return (
+      <div className="class-details">
+        <div
+          className="buttons-container"
+          style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+        >
+          {/* Left Section: Period Buttons */}
+          <div style={{ display: 'flex', gap: '10px' }}>
             <button
               className={`period-button ${selectedPeriod === 'midterm' ? 'active' : ''}`}
               onClick={() => handlePeriodChange('midterm')}
@@ -1838,6 +1866,34 @@ const getSemestralNumericalEquivalentAndRemarks = (studentId, grade, hasBlankSco
               Grade Sheet
             </button>
           </div>
+    
+          {/* Right Section: Menu Dropdown */}
+          <div>
+            <Dropdown className="custom-dropdown">
+              <Dropdown.Toggle
+                variant="link"
+                id="dropdown-basic"
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#004d00', // Set the menu icon color to green
+                }}
+              >
+                <FontAwesomeIcon icon={faBars} size="lg" />
+              </Dropdown.Toggle>
+    
+              <Dropdown.Menu>
+                <Dropdown.Item onClick={() => console.log('Import clicked')}>IMPORT</Dropdown.Item>
+                <Dropdown.Item onClick={() => console.log('Export clicked')}>EXPORT</Dropdown.Item>
+                <Dropdown.Item onClick={() => console.log('Print clicked')}>PRINT</Dropdown.Item>
+              </Dropdown.Menu>
+            </Dropdown>
+          </div>
+        </div>
+    
+
+    
+    
 
           <div className="search-container">
             <input
@@ -1850,54 +1906,55 @@ const getSemestralNumericalEquivalentAndRemarks = (studentId, grade, hasBlankSco
             <FontAwesomeIcon icon={faSearch} className="search-icon" />
           </div>
 
-          <div className="table-container">
-            {renderTableContent()}
-          </div>
-          {/* PANSAMANTALA LANG TONG CSS DITO AH */}
-                {/* Button Container */}
+
+      <div className="table-container">
+        {renderTableContent()}
+      </div>
+
+      {/* Button Container */}
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '10px' }}>
         <button
-          className="export-button"
-          style={{
-            backgroundColor: '#004d00',
-            color: 'white',
-            border: 'none',
-            padding: '10px 20px',
-            cursor: 'pointer'
-          }}
-        >
-          IMPORT
-        </button>
-        <button
-          className="print-button"
+          className="submit-button"
           style={{
             backgroundColor: '#004d00',
             color: 'white',
             border: 'none',
             padding: '10px 20px',
             cursor: 'pointer',
-            marginLeft: '10px'
           }}
+          onClick={handleSubmit} // Attach handler for Submit
         >
-          EXPORT
+          SUBMIT
         </button>
+        <button
+          className="post-button"
+          style={{
+            backgroundColor: '#508D4E',
+            color: 'white',
+            border: 'none',
+            padding: '10px 20px',
+            cursor: 'pointer',
+            marginLeft: '10px',
+          }}
+          onClick={handlePost} // Attach handler for Post
+        >
+          POST
+        </button>
+      </div>
 
-        <button
-          className="print-button"
-          style={{
-            backgroundColor: '#004d00',
-            color: 'white',
-            border: 'none',
-            padding: '10px 20px',
-            cursor: 'pointer',
-            marginLeft: '10px'
-          }}
-        >
-          PRINT
-        </button>
-      </div>
-      </div>
-      
+      {/* Confirmation Modal */}
+      <Modal show={showModal} onHide={handleModalClose}>
+        <Modal.Header closeButton>
+          <Modal.Title>Confirmation</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>{modalMessage}</Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleModalClose}>
+            Close
+          </Button>
+        </Modal.Footer>
+      </Modal>
+    </div>
   );
 };
 
