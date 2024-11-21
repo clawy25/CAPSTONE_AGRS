@@ -27,28 +27,6 @@ const ProgramHeadClassDesig = () => {
   const [schedules, setSchedules] = useState([]);
   const [showTable, setShowTable] = useState(false);
   const [professors, setProfessors] = useState([]);
-  const [selectedProfessor, setSelectedProfessor] = useState('Prof. John Doe');
-
-  const [subjects, setSubjects] = useState([
-    {
-      subjectCode: 'CS101',
-      subjectDescription: 'Introduction to Computer Science',
-      lectureUnits: 3,
-      labUnits: 1,
-      schedule: { day: 'Mon', startTime: '8:00 AM', endTime: '10:00 AM' },
-      professor: 'Prof. John Doe',
-    },
-    {
-      subjectCode: 'CS102',
-      subjectDescription: 'Data Structures and Algorithms',
-      lectureUnits: 3,
-      labUnits: 2,
-      schedule: { day: 'Tue', startTime: '9:00 AM', endTime: '12:00 PM' },
-      professor: 'Prof. Jane Smith',
-    },
-    // Add more subjects as needed
-  ]);
-
 
   const fetchAcademicYearsAndPrograms = async () => {
     try {
