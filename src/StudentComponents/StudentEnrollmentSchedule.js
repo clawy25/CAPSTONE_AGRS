@@ -1,25 +1,17 @@
-
-
 import { useEffect, useState, useContext } from 'react';
 import { Table, Form, Button, Modal, Card } from 'react-bootstrap';
 import StudentModel from '../ReactModels/StudentModel';
 import ProgramModel from '../ReactModels/ProgramModel';
 import CourseModel from '../ReactModels/CourseModel';
 import SectionModel from '../ReactModels/SectionModel';
+import AcademicYearModel from '../ReactModels/AcademicYearModel';
 import { UserContext } from '../Context/UserContext';
 
 
 const ScheduleTable = () => {
-
-  const handleLogin = (studentNumber) => {
-    // Store in localStorage/sessionStorage or use a global state
-    sessionStorage.setItem('studentNumber', studentNumber);
-  };
   
   const { user } = useContext(UserContext);
-  const [studentNameFirst, setStudentNameFirst] = useState("");
-  const [studentNameMiddle, setStudentNameMiddle] = useState("");
-  const [studentNameLast, setStudentNameLast] = useState("");
+  const [studentInfo, setStudentInfo] = useState([]);
   const [yearLevel, setYearLevel] = useState("Freshman");  // Placeholder value for year level
   const [semester, setSemester] = useState("First Semester");  // Placeholder value for semester  
   const [program, setProgram] = useState("");
@@ -27,26 +19,42 @@ const ScheduleTable = () => {
   const [sections, setSections] = useState([]);
   const [selectedSection, setSelectedSection] = useState('');
 
+  const [currentAcademicYear, setCurrentAcadYear] = useState([]);
+
   
+
+  const fetchAcademicYearsAndPrograms = async () => {
+    try {
+      // Fetch academic years and programs
+      const fetchedAcademicYears = await AcademicYearModel.fetchExistingAcademicYears();
+      const current = fetchedAcademicYears.filter(acadYears => acadYears.isCurrent === true);
+      setCurrentAcadYear(current);
   
+      const allPrograms = await ProgramModel.fetchProgramData(user.programNumber);
+      const currentProgram = allPrograms.filter((program) => program.academicYear === currentAcademicYear[0].academicYear);
+
+      console.log(currentProgram);
+
+      setProgram(currentProgram);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  };
   
   useEffect(() => {
-    const storedStudentNumber = sessionStorage.getItem('studentNumber');
-    if (storedStudentNumber) {
-      fetchStudentInfo(storedStudentNumber); // Correctly call the function here
-    }
-  
-    // Fetch courses and sections as well
-    fetchCourses();
-    fetchSections();
-  }, []); // Add empty dependency array for one-time effect
+    fetchAcademicYearsAndPrograms();
+    fetchStudentInfo(user.studentNumber);
+    //fetchCourses();
+    //fetchSections();
+  }, []);
   
   const fetchStudentInfo = async (studentNumber) => {
     try {
-      const studentData = await StudentModel.fetchStudentData(studentNumber);
-      setStudentNameFirst(studentData.studentNameFirst);
-      setStudentNameMiddle(studentData.studentNameMiddle);
-      setStudentNameLast(studentData.studentNameLast);
+      const studentData = await StudentModel.fetchExistingStudents();
+
+      const student = studentData.filter((student) => student.studentNumber === studentNumber);
+      setStudentInfo(student);
+
     } catch (error) {
       console.error('Error fetching student data:', error.message);
     }
@@ -165,9 +173,8 @@ const ScheduleTable = () => {
     width: '100%',
   }}
 >
-  <span><strong>Student Name:</strong> {user ? user.personnelNameFirst : 'Unknown'}
-  {/*{`${studentNameLast} ${studentNameFirst} ${studentNameMiddle}`}*/} </span>
-  <span><strong>Program:</strong> {program}</span>
+  <span><strong>Student Name:</strong> {studentInfo? studentInfo[0]?.studentNameLast : ''}, {studentInfo? studentInfo[0]?.studentNameFirst : ''} {studentInfo? studentInfo[0]?.studentNameMiddle : ''}</span>
+  <span><strong>Program:</strong> {program? program[0]?.programName : ''}</span>
   <span><strong>Year Level:</strong> {yearLevel}</span>
   <span><strong>Semester:</strong> {semester}</span>
 </div>

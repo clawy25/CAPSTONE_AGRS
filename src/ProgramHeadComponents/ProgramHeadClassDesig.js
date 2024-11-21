@@ -190,8 +190,12 @@ const ProgramHeadClassDesig = () => {
 
   const updateSchedules = async () => {
     try {
-      // Log the schedules before removal of ids
-      console.log('Original schedules:', schedules);
+      // Validate schedules before proceeding
+      const hasOverlaps = validateSchedules(schedules);
+      if (hasOverlaps) {
+        alert('Failed to update: There is an overlapping schedule for at least one professor.');
+        return;
+      }
   
       // Call the update function with the modified schedules
       await ScheduleModel.updateSchedules(schedules);
@@ -199,11 +203,52 @@ const ProgramHeadClassDesig = () => {
       // Fetch schedules after update
       await fetchSchedules();
     } catch (error) {
-      console.error('Error creating schedules:', error);
+      console.error("Error updating schedules:", error);
     }
   };
-  
 
+  function validateSchedules(schedules) {
+    // Filter out schedules without assigned personnel
+    const validSchedules = schedules.filter((schedule) => schedule.personnelNumber);
+  
+    // Group schedules by personnelNumber
+    const schedulesByPersonnel = validSchedules.reduce((acc, schedule) => {
+      acc[schedule.personnelNumber] = acc[schedule.personnelNumber] || [];
+      acc[schedule.personnelNumber].push(schedule);
+      return acc;
+    }, {});
+  
+    // Check for overlaps in each group
+    for (const [personnelNumber, schedules] of Object.entries(schedulesByPersonnel)) {
+      for (let i = 0; i < schedules.length; i++) {
+        for (let j = i + 1; j < schedules.length; j++) {
+          const schedule1 = schedules[i];
+          const schedule2 = schedules[j];
+  
+          // Ensure they are on the same day
+          if (schedule1.scheduleDay === schedule2.scheduleDay) {
+            const start1 = new Date(`1970-01-01T${schedule1.startTime}`);
+            const end1 = new Date(`1970-01-01T${schedule1.endTime}`);
+            const start2 = new Date(`1970-01-01T${schedule2.startTime}`);
+            const end2 = new Date(`1970-01-01T${schedule2.endTime}`);
+  
+            // Check for overlap
+            if ((start1 < end2 && end1 > start2) || (start2 < end1 && end2 > start1)) {
+              console.error(
+                `Overlap detected for personnel ${personnelNumber}:`,
+                schedule1,
+                schedule2
+              );
+              return true; // Overlap found
+            }
+          }
+        }
+      }
+    }
+  
+    return false; // No overlaps found
+  }
+  
   useEffect(() => {
     fetchAcademicYearsAndPrograms();
   }, [user.programNumber]);
@@ -440,54 +485,54 @@ const ProgramHeadClassDesig = () => {
                 const courseDetails = courses?.find(course => course.courseCode === schedule.courseCode);
                 // If courseDetails exist, render the row
                 return (
-    <tr key={index}>
-      <td>{schedule.courseCode}</td>
-      <td>{courseDetails?.courseDescriptiveTitle || 'N/A'}</td>
-      <td>{courseDetails?.courseLecture || 'N/A'}</td>
-      <td>{courseDetails?.courseLaboratory || 'N/A'}</td>
-      <td>
-        {/* Schedule Inputs aligned in a single line */}
-        <div className="d-flex justify-content-start align-items-center">
-          {/* Example schedule inputs */}
-          <Form.Control
-            as="select"
-            value={schedule.scheduleDay}
-            onChange={(e) => handleScheduleChange(index, 'scheduleDay', e.target.value)}
-            className="mr-2">
-              <option value="">N/A</option>
-              <option value="Monday">Mon</option>
-              <option value="Tuesday">Tue</option>
-              <option value="Wednesday">Wed</option>
-              <option value="Thursday">Thu</option>
-              <option value="Friday">Fri</option>
-              <option value="Saturday">Sat</option>
-          </Form.Control>
-          <Form.Control
-            type="time"
-            value={schedule.startTime || ''}
-            onChange={(e) => handleScheduleChange(index, 'startTime', e.target.value)}
-            className="mr-2"/>
-          <Form.Control
-            type="time"
-            value={schedule.endTime || ''}
-            onChange={(e) => handleScheduleChange(index, 'endTime', e.target.value)}
-            className="mr-2"/>
-        </div>
-      </td>
-      <td>
-        {/* Professor Selection */}
-        <select
-          value={schedule.personnelNumber || ''} // Ensure this reflects the correct professor for each schedule
-          onChange={(e) => handleProfessorChange(index, e.target.value)}>
-          <option value="">Select Professor</option>
-          {professors.map((prof) => (
-            <option key={prof.id} value={prof.personnelNumber}>
-              {`${prof.personnelNameFirst} ${prof.personnelNameLast}`}
-            </option>
-          ))}
-        </select>
-      </td>
-    </tr>
+                  <tr key={index}>
+                    <td>{schedule.courseCode}</td>
+                    <td>{courseDetails?.courseDescriptiveTitle || 'N/A'}</td>
+                    <td>{courseDetails?.courseLecture || 'N/A'}</td>
+                    <td>{courseDetails?.courseLaboratory || 'N/A'}</td>
+                    <td>
+                      <div className="d-flex justify-content-start align-items-center">
+                      <Form.Control
+                        as="select"
+                        value={schedule.scheduleDay}
+                        onChange={(e) => handleScheduleChange(index, 'scheduleDay', e.target.value)}
+                        className="mr-2">
+                          <option value="">N/A</option>
+                          <option value="Monday">Mon</option>
+                          <option value="Tuesday">Tue</option>
+                          <option value="Wednesday">Wed</option>
+                          <option value="Thursday">Thu</option>
+                          <option value="Friday">Fri</option>
+                          <option value="Saturday">Sat</option>
+                      </Form.Control>
+                      <Form.Control
+                        type="time"
+                        value={schedule.startTime || ''}
+                        onChange={(e) => handleScheduleChange(index, 'startTime', e.target.value)}
+                        className="mr-2"/>
+                      <Form.Control
+                        type="time"
+                        value={schedule.endTime || ''}
+                        onChange={(e) => handleScheduleChange(index, 'endTime', e.target.value)}
+                        className="mr-2"/>
+                      </div>
+                    </td>
+                    <td>
+                    {/* Professor Selection */}
+                      <Form.Control
+                        as="select"
+                        value={schedule.personnelNumber || ''} // Ensure this reflects the correct professor for each schedule
+                        onChange={(e) => handleProfessorChange(index, e.target.value)}
+                        className="mr-2">
+                          <option value="">Select Professor</option>
+                          {professors.map((prof) => (
+                            <option key={prof.id} value={prof.personnelNumber}>
+                              {`${prof.personnelNameFirst} ${prof.personnelNameLast}`}
+                            </option>
+                          ))}
+                      </Form.Control>
+                    </td>
+                  </tr>
                 );
               })}
             { schedules.length > 0 && (
