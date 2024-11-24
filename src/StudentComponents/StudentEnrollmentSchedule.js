@@ -5,6 +5,7 @@ import ProgramModel from '../ReactModels/ProgramModel';
 import CourseModel from '../ReactModels/CourseModel';
 import SectionModel from '../ReactModels/SectionModel';
 import AcademicYearModel from '../ReactModels/AcademicYearModel';
+import TimelineModel from '../ReactModels/TimelineModel';
 import { UserContext } from '../Context/UserContext';
 
 
@@ -27,13 +28,13 @@ const ScheduleTable = () => {
     try {
       // Fetch academic years and programs
       const fetchedAcademicYears = await AcademicYearModel.fetchExistingAcademicYears();
-      const current = fetchedAcademicYears.filter(acadYears => acadYears.isCurrent === true);
+      const current = fetchedAcademicYears?.filter(acadYears => acadYears.isCurrent === true);
       setCurrentAcadYear(current);
   
       const allPrograms = await ProgramModel.fetchProgramData(user.programNumber);
-      const currentProgram = allPrograms.filter((program) => program.academicYear === currentAcademicYear[0].academicYear);
 
-      console.log(currentProgram);
+      const currentProgram = allPrograms?.filter((program) => program.academicYear === currentAcademicYear[0].academicYear);
+
 
       setProgram(currentProgram);
     } catch (error) {
@@ -43,10 +44,15 @@ const ScheduleTable = () => {
   
   useEffect(() => {
     fetchAcademicYearsAndPrograms();
-    fetchStudentInfo(user.studentNumber);
     //fetchCourses();
     //fetchSections();
   }, []);
+
+  useEffect(() => {
+    fetchStudentInfo(user.studentNumber);
+    //fetchCourses();
+    //fetchSections();
+  }, [currentAcademicYear]);
   
   const fetchStudentInfo = async (studentNumber) => {
     try {
@@ -54,6 +60,14 @@ const ScheduleTable = () => {
 
       const student = studentData.filter((student) => student.studentNumber === studentNumber);
       setStudentInfo(student);
+
+      const studentCred = await TimelineModel.fetchTimelineData(currentAcademicYear[0].academicYear, studentNumber);
+
+      console.log(studentCred);
+
+      setStudentInfo(...studentInfo, studentCred);
+
+      console.log(studentInfo);
 
     } catch (error) {
       console.error('Error fetching student data:', error.message);

@@ -196,12 +196,16 @@ app.get('/student', async (req, res) => {
 });
   
   // Get all timeline entries
-app.get('/timeline', async (req, res) => {
+app.post('/timeline', async (req, res) => {
+
+    const { academicYear, studentNumber } = req.body;
     try {
         // Fetch all timeline data
         const { data: timelineData, error: timelineError } = await supabase
             .from('timeline') // Ensure this is your actual table name
-            .select('*');
+            .select('*')
+            .eq('academicYear', academicYear)
+            .eq('studentNumber', studentNumber);
   
         if (timelineError || !timelineData) {
             return res.status(500).json({ error: timelineError.message || 'Failed to fetch timeline data' });
@@ -211,6 +215,32 @@ app.get('/timeline', async (req, res) => {
     } catch (error) {
         console.error('Error fetching timeline:', error); // Log the error
         res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+//Insert new timeline
+app.post('/timeline/upload', async (req, res) => {
+    try {
+        const timelineData = req.body.data; // This is an object
+  
+        // Validate timelineData
+        if (!timelineData || typeof timelineData !== 'object') {
+            return res.status(400).json({ message: 'Invalid data format or no timeline to insert' });
+        }
+  
+        // Perform insertion using Supabase
+        const { data, error } = await supabase
+            .from('timeline')
+            .insert([timelineData]); // Wrap in an array for Supabase
+  
+        if (error) {
+            throw error;
+        }
+  
+        res.status(200).json(data);
+    } catch (error) {
+        console.error('Error inserting timeline:', error);
+        res.status(500).json({ message: `Error inserting timeline: ${error.message || 'Unknown error'}` });
     }
 });
   
@@ -436,31 +466,7 @@ app.post('/personnel/upload', async (req, res) => {
     }
 });
 
-//Insert new timeline
-app.post('/timeline/upload', async (req, res) => {
-  try {
-      const timelineData = req.body.data; // This is an object
 
-      // Validate timelineData
-      if (!timelineData || typeof timelineData !== 'object') {
-          return res.status(400).json({ message: 'Invalid data format or no timeline to insert' });
-      }
-
-      // Perform insertion using Supabase
-      const { data, error } = await supabase
-          .from('timeline')
-          .insert([timelineData]); // Wrap in an array for Supabase
-
-      if (error) {
-          throw error;
-      }
-
-      res.status(200).json(data);
-  } catch (error) {
-      console.error('Error inserting timeline:', error);
-      res.status(500).json({ message: `Error inserting timeline: ${error.message || 'Unknown error'}` });
-  }
-});
 
 // Get single program
 app.post('/program/single', async (req, res) => {
@@ -762,9 +768,28 @@ app.post('/section/upload', async (req, res) => {
     }
   });
 
-  
-// Get schedules
+// Get schedules by Academic Year
 app.post('/schedule', async (req, res) => {
+    const { academicYear } = req.body;
+    try {
+        const { data, error } = await supabase
+            .from('schedule')
+            .select('*')
+            .eq('academicYear', academicYear);
+
+        if (error) {
+            return res.status(500).json({ error: error.message });
+        }
+
+        res.json(data);
+    } catch (error) {
+        console.error('Error fetching schedules:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Get schedules by Section
+app.post('/schedule/section', async (req, res) => {
     const { section } = req.body;
     try {
         const { data, error } = await supabase

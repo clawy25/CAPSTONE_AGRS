@@ -1,5 +1,6 @@
 export default class TimelineModel {
-    constructor(id, academicYear, studentNumber, yearLevel, semester, startEnroll, endEnroll) {
+    constructor(id, academicYear, studentNumber, yearLevel, semester, startEnroll, 
+                endEnroll, isRepeating, isLeaving, admissionYear) {
         this.id = id;
         this.academicYear = academicYear;
         this.studentNumber = studentNumber;
@@ -7,25 +8,27 @@ export default class TimelineModel {
         this.semester = semester;
         this.startEnroll = startEnroll;
         this.endEnroll = endEnroll;
+        this.isRepeating = isRepeating;
+        this.isLeaving = isLeaving;
+        this.admissionYear = admissionYear;
     }
 
     // Function to fetch timeline data (Read only)
-    static async fetchTimelineData(academicYear) {
+    static async fetchTimelineData(academicYear, studentNumber) {
         try {
-            const response = await fetch(`http://localhost:5000/timeline/${academicYear}`);
+            const response = await fetch(`http://localhost:5000/timeline`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ academicYear, studentNumber }), // Send credentials
+              });
             if (!response.ok) {
                 throw new Error('Error fetching timeline data');
             }
             const data = await response.json();
-            return new TimelineModel(
-                data.id,
-                data.academicYear,
-                data.studentNumber,
-                data.yearLevel,
-                data.semester,
-                data.startEnroll,
-                data.endEnroll
-            );
+            return data;
+
         } catch (error) {
             console.error('Error fetching timeline data:', error);
             throw error;

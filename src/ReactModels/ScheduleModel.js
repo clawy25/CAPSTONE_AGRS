@@ -16,15 +16,37 @@ export default class ScheduleModel {
     }
 
 
-    // Function to fetch all subjects
+    
   static async fetchExistingschedule(section) {
+    try {
+        const response = await fetch('http://localhost:5000/schedule/section', {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ section }), // Send credentials
+        });
+        if (!response.ok) {
+            throw new Error('Error fetching schedules');
+        }
+        const data = await response.json();
+
+        // Assuming data is an array of schedules objects
+        return data;
+    } catch (error) {
+        console.error('Error fetching schedules:', error);
+        throw error;
+    }
+  }
+
+  static async fetchAllSchedules(academicYear) {
     try {
         const response = await fetch('http://localhost:5000/schedule', {
           method: 'POST',
           headers: {
               'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ section }), // Send credentials
+          body: JSON.stringify({ academicYear }), // Send credentials
         });
         if (!response.ok) {
             throw new Error('Error fetching schedules');

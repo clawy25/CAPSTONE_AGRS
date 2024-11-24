@@ -191,7 +191,7 @@ const ProgramHeadClassDesig = () => {
   const updateSchedules = async () => {
     try {
       // Validate schedules before proceeding
-      const hasOverlaps = validateSchedules(schedules);
+      const hasOverlaps = await validateSchedules(schedules);
       if (hasOverlaps) {
         alert('Failed to update: There is an overlapping schedule for at least one professor.');
         return;
@@ -207,16 +207,31 @@ const ProgramHeadClassDesig = () => {
     }
   };
 
-  function validateSchedules(schedules) {
+  async function validateSchedules (schedules) {
     // Filter out schedules without assigned personnel
-    const validSchedules = schedules.filter((schedule) => schedule.personnelNumber);
-  
+    const allSchedules = await ScheduleModel.fetchAllSchedules(selectedAcademicYear);
+
+    console.log(allSchedules);
+
+     // Filter out schedules belonging to the current section
+    const otherSectionSchedules = allSchedules.filter((schedule) => schedule.sectionNumber !== selectedSection);
+     // Combine the schedules being validated with other section schedules
+     const combinedSchedules = [...schedules, ...otherSectionSchedules];
+
+     console.log(combinedSchedules);
+ 
+     // Filter out schedules without assigned personnel
+     const validSchedules = combinedSchedules.filter((schedule) => schedule.personnelNumber);
+
+     console.log(validSchedules);
     // Group schedules by personnelNumber
     const schedulesByPersonnel = validSchedules.reduce((acc, schedule) => {
       acc[schedule.personnelNumber] = acc[schedule.personnelNumber] || [];
       acc[schedule.personnelNumber].push(schedule);
       return acc;
     }, {});
+
+    console.log(schedulesByPersonnel);
   
     // Check for overlaps in each group
     for (const [personnelNumber, schedules] of Object.entries(schedulesByPersonnel)) {
