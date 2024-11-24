@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSearch, faPlus, faMinus } from '@fortawesome/free-solid-svg-icons'; // Import minus icon
+import { faSearch, faPlus, faMinus, faMapMarkerAlt,  faEnvelope, faPhoneAlt } from '@fortawesome/free-solid-svg-icons'; // Import minus icon
 import '../StudentComponents/Dashboard.css';
 import DatePicker from 'react-datepicker';
 import StudentModel from '../ReactModels/StudentModel';
@@ -11,6 +11,8 @@ import 'react-toastify/dist/ReactToastify.css';
 import { faBars } from '@fortawesome/free-solid-svg-icons'; // Import menu icon
 import { Dropdown } from 'react-bootstrap'; // Import Bootstrap for dropdown
 import { Modal, Button } from 'react-bootstrap';
+import * as XLSX from 'xlsx';
+
 
 
 const ClassDetails = () => {
@@ -37,6 +39,179 @@ const ClassDetails = () => {
     // Your post logic here
     handleModalShow('posted');
   };
+
+  // Import function
+const handleImport = () => {
+  // Logic for importing files
+  console.log('Import action triggered');
+  // Example: Show a file upload dialog
+  const fileInput = document.createElement('input');
+  fileInput.type = 'file';
+  fileInput.accept = '.csv, .xlsx'; // Adjust formats as needed
+  fileInput.onchange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      console.log('File selected:', file.name);
+      // Add your file processing logic here
+    }
+  };
+  fileInput.click();
+};
+
+const handleExport = () => {
+  console.log('Export action triggered');
+  
+  // Find the current table based on `selectedPeriod`
+  const table = document.querySelector('.details-table'); // Ensure this matches your table's class
+
+  if (table) {
+    // Convert the table to a worksheet
+    const worksheet = XLSX.utils.table_to_sheet(table);
+
+    // Create a workbook and add the worksheet
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Data');
+
+    // Export the workbook to Excel
+    XLSX.writeFile(workbook, `${selectedPeriod}_data.xlsx`);
+  } else {
+    console.error('Table not found');
+  }
+};
+
+const handlePrint = () => {
+  console.log('Print action triggered');
+
+  // Find the current table based on `selectedPeriod`
+  const table = document.querySelector('.details-table'); // Ensure this matches your table's class
+
+  if (table) {
+    // Clone the table to avoid manipulation of the DOM
+    const clonedTable = table.cloneNode(true);
+
+    // Create a new window for printing
+    const printWindow = window.open('', '_blank');
+
+    // Write the content with styles and header
+    printWindow.document.write('<html><head><title>Print Table</title>');
+    printWindow.document.write(`
+      <style>
+        @media print {
+          @page { size: landscape; margin: 0.5in; }
+          body { font-family: Arial, sans-serif; margin: 20px; }
+          table { width: 100%; table-layout: auto; border-collapse: collapse; }
+          th, td { border: 1px solid black; padding: 8px; text-align: center; }
+          td { background-color: white; }
+          th { background-color: #4CAF50; color: white; }
+          thead { display: table-header-group; }
+          tbody { display: table-row-group; }
+          tr { page-break-inside: avoid; }
+          .header-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+          }
+          .logo {
+            height: 80px;
+            margin-right: 20px;
+          }
+          .text {
+            text-align: left;
+          }
+          .city, .college {
+            color: green;
+          }
+          .college {
+            font-size: 29px;
+            font-weight: bold;
+          }
+          .vertical-line {
+            border-left: 2px solid green;
+            height: 80px;
+            margin-left: 20px;
+            margin-right: 20px;
+          }
+          .additional-text {
+            margin-left: 20px;
+          }
+          .additional-line {
+            color: green;
+          }
+          .separator {
+            border: 0;
+            border-top: 2px solid green;
+            width: 80%;
+            margin: 20px auto;
+          }
+          .centered-text {
+            text-align: center;
+          }
+        }
+      </style>
+    `);
+    printWindow.document.write('</head><body>');
+
+    // Add the header content
+    printWindow.document.write(`
+    <div class="header-container">
+      <img src="/pcc.png" alt="PCC Logo" class="logo">
+      <div class="text">
+        <div class="city">PARANAQUE CITY</div>
+        <div class="college">COLLEGE</div>
+      </div>
+      <div class="vertical-line"></div> <!-- Vertical Line -->
+      <div class="additional-text">
+        <!-- Address with single icon -->
+        <div class="additional-line address-container">
+          <span class="icon"><i class="fas fa-map-marker-alt"></i></span> <!-- Font Awesome location icon -->
+          <div class="address-text">
+            <div>Coastal Rd., cor. Victor Medina Street,</div>
+            <div>San Dionisio, Paranaque City, Philippines</div>
+          </div>
+        </div>
+        <!-- Email with mail icon -->
+        <div class="additional-line">
+          <span class="icon"><i class="fas fa-envelope"></i></span>info@paranaquecitycollege.edu.ph <!-- Font Awesome mail icon -->
+        </div>
+        <!-- Phone with phone icon -->
+        <div class="additional-line">
+          <span class="icon"><i class="fas fa-phone-alt"></i></span>(02)85343321 <!-- Font Awesome phone icon -->
+        </div>
+      </div>
+      <img src="/pcc.png" alt="PCC Logo" class="second-logo"> <!-- Second PCC logo with added margin -->
+    </div>
+    <hr class="separator"> <!-- Horizontal Line -->
+    
+      <div class="centered-text">
+        <h2>ACADEMIC AFFAIRS</h2>
+        <h3>Institue</h3>
+        <h3>${selectedPeriod === 'summary' ? 'SUMMARY OF GRADES' : 'GRADE SHEET'}</h3>
+      </div>
+    `);
+
+    // Add the table content
+    printWindow.document.write(clonedTable.outerHTML);
+
+    // Close the document to ensure styles are applied
+    printWindow.document.write('</body></html>');
+    printWindow.document.close();
+    printWindow.focus();
+
+    // Trigger the print dialog
+    printWindow.print();
+
+    // Close the print window after printing
+    printWindow.close();
+  } else {
+    console.error('Table not found');
+  }
+};
+
+
+
+
+
   
 
   {/* SEARCH BAR DECLARATION */}
@@ -952,12 +1127,37 @@ const getSemestralNumericalEquivalentAndRemarks = (studentId, grade, hasBlankSco
               </tr>
               
               <tr>
-              <th rowSpan={3} style={{ position: 'sticky',left: 0,top: 0,backgroundColor: '#f4f4f4',padding: '10px',zIndex: 4, borderRight: '2px solid #ccc', boxShadow: '1px 0 0 rgba(0, 0, 0, 0.1)', }}>
-                Student No
-              </th>
-              <th rowSpan={3}style={{position: 'sticky',left: 82, top: 0,backgroundColor: '#f4f4f4',padding: '10px',zIndex: 4,borderLeft: '2px solid #ccc', boxShadow: '-1px 0 0 rgba(0, 0, 0, 0.1)',}}>
-                Name
-              </th>
+              <th
+  rowSpan={3}
+  style={{
+    position: 'sticky',
+    left: 0,
+    top: 0,
+    backgroundColor: '#f4f4f4',
+    padding: '10px',
+    zIndex: 4,
+    boxShadow: '1px 0 0 rgba(0, 0, 0, 0.1)', // Optional shadow
+  }}
+  className="sticky-student-no"
+>
+  Student No
+</th>
+
+<th
+  rowSpan={3}
+  style={{
+    position: 'sticky',
+    left: 80, // Matches width of the first column
+    top: 0,
+    backgroundColor: '#f4f4f4',
+    padding: '10px',
+    zIndex: 4,
+  }}
+  className="sticky-name"
+>
+  Name
+</th>
+
 
                 {midtermAttendanceColumns.map((column, index) => (
                 <th key={index} rowSpan="3">
@@ -1179,13 +1379,33 @@ const getSemestralNumericalEquivalentAndRemarks = (studentId, grade, hasBlankSco
                 
                 return (
                   <tr key={student.id}>
-                    <td style={{ position: 'sticky',left: 0, backgroundColor: 'white',padding: '10px',zIndex: 3,borderRight: '2px solid #ccc',boxShadow: '1px 0 0 rgba(0, 0, 0, 0.1)',}}>
-                      {student.studentNumber || 'Guest'}
-                    </td>
-                    <td style={{position: 'sticky',left: 82,backgroundColor: 'white',padding: '10px',zIndex: 3,borderLeft: '2px solid #ccc',boxShadow: '-1px 0 0 rgba(0, 0, 0, 0.1)',}}
-                    >
-                      {student.studentNameLast || ''}, {student.studentNameFirst || ''}{' '}{student.studentNameMiddle || ''}
-                    </td>
+                    <td
+  style={{
+    position: 'sticky',
+    left: 0,
+    backgroundColor: 'white',
+    padding: '10px',
+    zIndex: 3,
+    boxShadow: '1px 0 0 rgba(0, 0, 0, 0.1)',
+  }}
+  className="sticky-student-no"
+>
+  {student.studentNumber || 'Guest'}
+</td>
+
+<td
+  style={{
+    position: 'sticky',
+    left: 80, // Matches width of the first column
+    backgroundColor: 'white',
+    padding: '10px',
+    zIndex: 3,
+  }}
+  className="sticky-name"
+>
+  {student.studentNameLast || ''}, {student.studentNameFirst || ''} {student.studentNameMiddle || ''}
+</td>
+
 
                     {midtermAttendanceColumns.map((_, dateIndex) => (
                     <td key={dateIndex}>
@@ -1340,12 +1560,37 @@ const getSemestralNumericalEquivalentAndRemarks = (studentId, grade, hasBlankSco
                 </tr>
                 
                 <tr>
-                <th rowSpan={3} style={{ position: 'sticky',left: 0,top: 0,backgroundColor: '#f4f4f4',padding: '10px',zIndex: 4, borderRight: '2px solid #ccc', boxShadow: '1px 0 0 rgba(0, 0, 0, 0.1)', }}>
-                Student No
-              </th>
-              <th rowSpan={3}style={{position: 'sticky',left: 82, top: 0,backgroundColor: '#f4f4f4',padding: '10px',zIndex: 4,borderLeft: '2px solid #ccc', boxShadow: '-1px 0 0 rgba(0, 0, 0, 0.1)',}}>
-                Name
-              </th>
+                <th
+  rowSpan={3}
+  style={{
+    position: 'sticky',
+    left: 0,
+    top: 0,
+    backgroundColor: '#f4f4f4',
+    padding: '10px',
+    zIndex: 4,
+    boxShadow: '1px 0 0 rgba(0, 0, 0, 0.1)', // Optional shadow
+  }}
+  className="sticky-student-no"
+>
+  Student No
+</th>
+
+<th
+  rowSpan={3}
+  style={{
+    position: 'sticky',
+    left: 80, // Matches width of the first column
+    top: 0,
+    backgroundColor: '#f4f4f4',
+    padding: '10px',
+    zIndex: 4,
+  }}
+  className="sticky-name"
+>
+  Name
+</th>
+
 
                   {finalsAttendanceColumns.map((column, index) => (
                   <th key={index} rowSpan="3">
@@ -1567,13 +1812,32 @@ const getSemestralNumericalEquivalentAndRemarks = (studentId, grade, hasBlankSco
                   
                   return (
                     <tr key={student.id}>
-                    <td style={{ position: 'sticky',left: 0, backgroundColor: 'white',padding: '10px',zIndex: 3,borderRight: '2px solid #ccc',boxShadow: '1px 0 0 rgba(0, 0, 0, 0.1)',}}>
-                      {student.studentNumber || 'Guest'}
-                    </td>
-                    <td style={{position: 'sticky',left: 82,backgroundColor: 'white',padding: '10px',zIndex: 3,borderLeft: '2px solid #ccc',boxShadow: '-1px 0 0 rgba(0, 0, 0, 0.1)',}}
-                    >
-                      {student.studentNameLast || ''}, {student.studentNameFirst || ''}{' '}{student.studentNameMiddle || ''}
-                    </td>
+                                        <td
+  style={{
+    position: 'sticky',
+    left: 0,
+    backgroundColor: 'white',
+    padding: '10px',
+    zIndex: 3,
+    boxShadow: '1px 0 0 rgba(0, 0, 0, 0.1)',
+  }}
+  className="sticky-student-no"
+>
+  {student.studentNumber || 'Guest'}
+</td>
+
+<td
+  style={{
+    position: 'sticky',
+    left: 80, // Matches width of the first column
+    backgroundColor: 'white',
+    padding: '10px',
+    zIndex: 3,
+  }}
+  className="sticky-name"
+>
+  {student.studentNameLast || ''}, {student.studentNameFirst || ''} {student.studentNameMiddle || ''}
+</td>
 
                       {finalsAttendanceColumns.map((_, dateIndex) => (
                       <td key={dateIndex}>
@@ -1869,25 +2133,36 @@ const getSemestralNumericalEquivalentAndRemarks = (studentId, grade, hasBlankSco
     
           {/* Right Section: Menu Dropdown */}
           <div>
-            <Dropdown className="custom-dropdown">
-              <Dropdown.Toggle
-                variant="link"
-                id="dropdown-basic"
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: '#004d00', // Set the menu icon color to green
-                }}
-              >
-                <FontAwesomeIcon icon={faBars} size="lg" />
-              </Dropdown.Toggle>
-    
-              <Dropdown.Menu>
-                <Dropdown.Item onClick={() => console.log('Import clicked')}>IMPORT</Dropdown.Item>
-                <Dropdown.Item onClick={() => console.log('Export clicked')}>EXPORT</Dropdown.Item>
-                <Dropdown.Item onClick={() => console.log('Print clicked')}>PRINT</Dropdown.Item>
-              </Dropdown.Menu>
-            </Dropdown>
+          <Dropdown className="custom-dropdown">
+  <Dropdown.Toggle
+    variant="link"
+    id="dropdown-basic"
+    style={{
+      background: 'none',
+      border: 'none',
+      color: '#004d00',
+    }}
+  >
+    <FontAwesomeIcon icon={faBars} size="lg" />
+  </Dropdown.Toggle>
+
+  <Dropdown.Menu>
+    {selectedPeriod === 'midterm' || selectedPeriod === 'finals' ? (
+      <>
+        <Dropdown.Item onClick={handleImport}>IMPORT</Dropdown.Item>
+        <Dropdown.Item onClick={handleExport}>EXPORT</Dropdown.Item>
+      </>
+    ) : selectedPeriod === 'summary' || selectedPeriod === 'gradeSheet' ? (
+      <>
+        <Dropdown.Item onClick={handleExport}>EXPORT</Dropdown.Item>
+        <Dropdown.Item onClick={handlePrint}>PRINT</Dropdown.Item>
+      </>
+    ) : null}
+  </Dropdown.Menu>
+</Dropdown>
+
+
+
           </div>
         </div>
     

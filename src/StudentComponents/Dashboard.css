@@ -1404,6 +1404,26 @@ background-color: #f0f0f0;
   color: #ffffff !important; /* White text for contrast */
 }
 
+.sticky-student-no {
+  position: sticky;
+}
+
+.sticky-student-no::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0; /* Places the border on the right edge */
+  height: 100%;
+  width: 2px; /* Adjust thickness as needed */
+  background-color: #ccc; /* Matches border color */
+  z-index: 5; /* Ensure it appears above other content */
+}
+
+.sticky-name {
+  position: sticky;
+  border-left: 2px solid #ccc; /* Maintains border with the previous column */
+}
+
 
 
 
