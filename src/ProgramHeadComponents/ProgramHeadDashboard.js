@@ -181,7 +181,7 @@ export default function ProgramHeadDashboard() {
         {/* Header Section */}
         <header className="header d-flex justify-content-between align-items-center p-3 border-bottom rounded">
           <h1 className="m-0 custom-color-green-font custom-font d-none d-md-block">
-            PARAÑAQUE CITY COLLEGE
+            PROGRAM HEAD
           </h1>
 
           <button className="btn btn-link custom-color-green-font d-md-none" onClick={toggleSidebar} aria-label="Toggle Sidebar">

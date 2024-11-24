@@ -4,8 +4,10 @@ import StudentModel from '../ReactModels/StudentModel';
 import ProgramModel from '../ReactModels/ProgramModel';
 import CourseModel from '../ReactModels/CourseModel';
 import SectionModel from '../ReactModels/SectionModel';
-import AcademicYearModel from '../ReactModels/AcademicYearModel';
 import TimelineModel from '../ReactModels/TimelineModel';
+import PersonnelModel from '../ReactModels/PersonnelModel';
+import AcademicYearModel from '../ReactModels/AcademicYearModel';
+import ScheduleModel from '../ReactModels/ScheduleModel';
 import { UserContext } from '../Context/UserContext';
 
 
@@ -13,8 +15,8 @@ const ScheduleTable = () => {
   
   const { user } = useContext(UserContext);
   const [studentInfo, setStudentInfo] = useState([]);
-  const [yearLevel, setYearLevel] = useState("Freshman");  // Placeholder value for year level
-  const [semester, setSemester] = useState("First Semester");  // Placeholder value for semester  
+  const [yearLevel, setYearLevel] = useState("");  // Placeholder value for year level
+  const [semester, setSemester] = useState("");  // Placeholder value for semester  
   const [program, setProgram] = useState("");
   const [courses, setCourses] = useState([]);
   const [sections, setSections] = useState([]);
@@ -28,78 +30,184 @@ const ScheduleTable = () => {
     try {
       // Fetch academic years and programs
       const fetchedAcademicYears = await AcademicYearModel.fetchExistingAcademicYears();
-      const current = fetchedAcademicYears?.filter(acadYears => acadYears.isCurrent === true);
+      const current = fetchedAcademicYears.filter(acadYears => acadYears.isCurrent === true);
       setCurrentAcadYear(current);
   
-      const allPrograms = await ProgramModel.fetchProgramData(user.programNumber);
-
-      const currentProgram = allPrograms?.filter((program) => program.academicYear === currentAcademicYear[0].academicYear);
-
-
-      setProgram(currentProgram);
+      if (current.length > 0) {
+        const currentYear = current[0].academicYear;
+        const allPrograms = await ProgramModel.fetchProgramData(user.programNumber);
+        const currentProgram = allPrograms.filter((program) => program.academicYear === currentYear);
+  
+        console.log(currentProgram);
+        setProgram(currentProgram);
+      } else {
+        console.error('No current academic year found');
+      }
     } catch (error) {
       console.error("Error fetching data:", error);
     }
   };
+
+  const fetchSemester = async () => {
+    try {
+      const academicYear = currentAcademicYear[0]?.academicYear;
+      const studentNumber = user.studentNumber;
+  
+      // Ensure that academicYear and studentNumber are available
+      if (!academicYear || !studentNumber) {
+        setSemester('Missing data');
+        console.error('Missing academicYear or studentNumber');
+        return;
+      }
+  
+      const timelineData = await TimelineModel.fetchTimelineData(academicYear, studentNumber);
+  
+      if (timelineData && timelineData.length > 0) {
+        const latestTimeline = timelineData[0]; 
+        setSemester(latestTimeline.semester || 'Unknown');
+      } else {
+        setSemester('No data available');
+      }
+    } catch (error) {
+      console.error('Error fetching semester:', error);
+      setSemester('Error fetching semester');
+    }
+  };
+  
+  
+const fetchSections = async () => {
+  try {
+    const fetchedSections = await SectionModel.fetchExistingSections(
+      currentAcademicYear[0]?.academicYear,
+      yearLevel,
+      semester,
+      program[0]?.programNumber
+    );
+    setSections(fetchedSections); // Update the sections state with the fetched data
+  } catch (error) {
+    console.error('Error fetching sections:', error);
+  }
+};
+
+useEffect(() => {
+  if (currentAcademicYear.length > 0 && user.studentNumber) {
+    fetchSemester();  // Call fetchSemester only when academic year and student number are available
+  }
+}, [currentAcademicYear, user.studentNumber]);
+
+
+
   
   useEffect(() => {
     fetchAcademicYearsAndPrograms();
+    fetchStudentInfo(user.studentNumber);
     //fetchCourses();
     //fetchSections();
   }, []);
 
   useEffect(() => {
-    fetchStudentInfo(user.studentNumber);
-    //fetchCourses();
-    //fetchSections();
-  }, [currentAcademicYear]);
+    if (yearLevel && semester && currentAcademicYear.length > 0 && program.length > 0) {
+      fetchSections();
+    }
+  }, [yearLevel, semester, currentAcademicYear, program]);
+  
   
   const fetchStudentInfo = async (studentNumber) => {
-    try {
-      const studentData = await StudentModel.fetchExistingStudents();
+  try {
+    const studentData = await StudentModel.fetchExistingStudents();
+    console.log("Fetched student data:", studentData);
 
-      const student = studentData.filter((student) => student.studentNumber === studentNumber);
+    const student = studentData.filter((student) => student.studentNumber === studentNumber);
+
+    if (student.length > 0) {
       setStudentInfo(student);
-
-      const studentCred = await TimelineModel.fetchTimelineData(currentAcademicYear[0].academicYear, studentNumber);
-
-      console.log(studentCred);
-
-      setStudentInfo(...studentInfo, studentCred);
-
-      console.log(studentInfo);
-
-    } catch (error) {
-      console.error('Error fetching student data:', error.message);
+      setYearLevel(student[0]?.studentYrLevel || "Unknown");  // Use studentYrLevel for year level
     }
-  };
-  
-  const fetchCourses = async () => {
-    try {
-      const data = await CourseModel.fetchAllCourses();
-      const formattedCourses = data.map(course => ({
+
+  } catch (error) {
+    console.error('Error fetching student data:', error.message);
+  }
+};
+
+// Function to fetch courses and their schedules, displaying them with time and personnel
+const fetchCoursesAndSchedules = async (academicYear, yearLevel, semester, programNumber, selectedSection) => {
+  try {
+    // Fetch courses for the specific criteria
+    const fetchedCourses = await CourseModel.getCoursesbyProgram(
+      academicYear,
+      yearLevel,
+      semester,
+      programNumber
+    );
+    console.log('Fetched Courses:', fetchedCourses);
+
+    // Fetch and filter schedules by section
+    const filteredSchedules = await ScheduleModel.fetchAllSchedules(academicYear, selectedSection);
+    console.log('Filtered Schedules:', filteredSchedules);
+
+    // Link schedules to courses by courseCode
+    const formattedCourses = await Promise.all(fetchedCourses.map(async (course) => {
+      const courseSchedules = filteredSchedules.filter(
+        schedule => schedule.courseCode === course.courseCode
+      );
+
+      const courseWithSchedules = {
         id: course.courseCode,
-        description: course.courseDescriptiveTitle,
-        lectureHours: course.courseLecture,
-        labHours: course.courseLaboratory,
-        creditedUnits: course.creditedUnits,
-        schedule: '',
-        checked: false,
-      }));
-      setCourses(formattedCourses);
-    } catch (error) {
-      console.error('Error fetching courses:', error.message);
-    }
-  };
+        description: course.courseDescriptiveTitle || 'N/A',
+        lectureHours: course.courseLecture || 0,
+        labHours: course.courseLaboratory || 0,
+        creditedUnits: course.creditedUnits || 0,
+        schedules: await Promise.all(courseSchedules.map(async (schedule) => {
+          return {
+            scheduleDay: schedule.scheduleDay || 'N/A',
+            startTime: schedule.startTime || 'N/A',
+            endTime: schedule.endTime || 'N/A',
+            professorPersonnelNumber: schedule.personnelNumber || 'N/A',  // Directly use the personnelNumber
+          };
+        })),
+        checked: false, // Default for UI interaction
+      };
+      
+
+      return courseWithSchedules;
+    }));
+
+    // Log and set the combined data
+    console.log('Formatted Courses:', formattedCourses);
+    setCourses(formattedCourses);
+  } catch (error) {
+    console.error('Error fetching courses and schedules:', error.message);
+  }
+};
+
+
+
+
+// useEffect hook to trigger fetchCoursesAndSchedules call
+useEffect(() => {
+  if (
+    yearLevel &&
+    semester &&
+    program.length > 0 &&
+    currentAcademicYear.length > 0 &&
+    selectedSection // Ensure that section is selected
+  ) {
+    fetchCoursesAndSchedules(
+      currentAcademicYear[0]?.academicYear,
+      yearLevel,
+      semester,
+      program[0]?.programNumber,
+      selectedSection // Pass selectedSection to the function
+    );
+  }
+}, [yearLevel, semester, program, currentAcademicYear, selectedSection]);
+
+
+
+
+
   
-  const fetchSections = async () => {
-    try {
-      const data = await SectionModel.fetchAllSections();
-      setSections(data);
-    } catch (error) {
-      console.error('Error fetching sections:', error.message);
-    }
-  };
+ 
   
   const [showModal, setShowModal] = useState(false);
   const [checkedCount, setCheckedCount] = useState(0);
@@ -169,12 +277,16 @@ const ScheduleTable = () => {
                 style={{ width: '200px' }}
               >
                 <option value="">Select a section</option>
-                {sections.map((section, index) => (
-                  <option key={index} value={section.id}>
-                    {section.name}
+                {sections.map((section) => (
+                  <option key={section.id} value={section.id}>
+                    {section.sectionNumber}
                   </option>
                 ))}
               </Form.Select>
+
+
+
+
             </div>
           </div>
 
@@ -187,11 +299,14 @@ const ScheduleTable = () => {
     width: '100%',
   }}
 >
-  <span><strong>Student Name:</strong> {studentInfo? studentInfo[0]?.studentNameLast : ''}, {studentInfo? studentInfo[0]?.studentNameFirst : ''} {studentInfo? studentInfo[0]?.studentNameMiddle : ''}</span>
-  <span><strong>Program:</strong> {program? program[0]?.programName : ''}</span>
-  <span><strong>Year Level:</strong> {yearLevel}</span>
-  <span><strong>Semester:</strong> {semester}</span>
+  <span><strong>Student Name:</strong> {studentInfo.length > 0 ? `${studentInfo[0]?.studentNameLast}, ${studentInfo[0]?.studentNameFirst} ${studentInfo[0]?.studentNameMiddle}` : ''}</span>
+  <span><strong>Program:</strong> {program.length > 0 ? program[0]?.programName : ''}</span>
+  <span><strong>Year Level:</strong> {yearLevel || 'Loading...'}</span> {/* Display 'Loading...' if yearLevel is empty */}
+  <span><strong>Semester:</strong> {semester || 'Loading...'}</span> {/* Display 'Loading...' if semester is empty */}
 </div>
+
+
+
 
 
     {/* Courses Table */}
@@ -201,41 +316,73 @@ const ScheduleTable = () => {
       </span>
       
       <div className="table-responsive">
-        <Table hover className="mt-2">
-          <thead>
-            <tr>
-              <th className="text-success custom-font">#</th>
-              <th className="text-success custom-font">Subject Code</th>
-              <th className="text-success custom-font">Select</th>
-              <th className="text-success custom-font">Subject Description</th>
-              <th className="text-success custom-font">Lecture Units</th>
-              <th className="text-success custom-font">Lab Units</th>
-              <th className="text-success custom-font">Schedule</th>
-              <th className="text-success custom-font">Professor</th>
-            </tr>
-          </thead>
-          <tbody>
-            {courses.map((course, index) => (
-              <tr key={course.id}>
-                <td className="custom-font">{index + 1}</td>
-                <td className="custom-font">{course.id}</td> {/* Subject Code */}
-                <td className="custom-font">
-                  <Form.Check
-                    type="checkbox"
-                    checked={course.checked}
-                    onChange={() => handleCheckboxChange(course.id)}
-                    className="m-0"
-                  />
-                </td>
-                <td className="custom-font">{course.description}</td>
-                <td className="custom-font">{course.lectureHours}</td> {/* Lecture Units */}
-                <td className="custom-font">{course.labHours}</td> {/* Lab Units */}
-                <td className="custom-font">{course.schedule || 'N/A'}</td> {/* Schedule */}
-                <td className="custom-font">{course.professor || 'N/A'}</td> {/* Professor */}
-              </tr>
-            ))}
-          </tbody>
-        </Table>
+      <Table hover className="mt-2">
+  <thead>
+    <tr className='text-center'>
+      <th className="text-success custom-font">#</th>
+      <th className="text-success custom-font">Subject Code</th>
+      <th className="text-success custom-font">Select</th>
+      <th className="text-success custom-font">Subject Description</th>
+      <th className="text-success custom-font">Lecture Units</th>
+      <th className="text-success custom-font">Lab Units</th>
+      <th className="text-success custom-font">Schedule</th>
+      <th className="text-success custom-font">Professor</th>
+    </tr>
+  </thead>
+  <tbody>
+    {courses.length > 0 ? (
+      courses.map((course, index) => {
+        return (
+          <tr key={course.id}>
+            <td>{index + 1}</td>
+            <td>{course.id}</td>
+            <td>
+              <Form.Check
+                type="checkbox"
+                checked={course.checked}
+                onChange={() => handleCheckboxChange(course.id)}
+              />
+            </td>
+            <td>{course.description}</td>
+            <td>{course.lectureHours}</td>
+            <td>{course.labHours}</td>
+            <td>
+              {course.schedules.length > 0 ? (
+                <ul className=' list-unstyled'>
+                  {course.schedules.map((schedule, idx) => (
+                    <li key={idx}>
+                      <strong>{schedule.scheduleDay}</strong>: {schedule.startTime} - {schedule.endTime}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                'No schedule available'
+              )}
+            </td>
+            <td>
+              {course.schedules.length > 0 ? (
+                course.schedules.map((schedule, idx) => (
+                  <div key={idx}>
+                    {schedule.personnelNumber ? schedule.personnelNumber : 'No personnel assigned'}
+                  </div>
+                ))
+              ) : (
+                'No professor assigned'
+              )}
+            </td>
+
+      
+          </tr>
+        );
+      })
+    ) : (
+      <tr>
+        <td colSpan="8">No courses available</td>
+      </tr>
+    )}
+  </tbody>
+</Table>
+
       </div>
     </div>
   </div>

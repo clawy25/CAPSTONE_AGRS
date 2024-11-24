@@ -21,6 +21,49 @@ export default class PersonnelModel {
     this.academicYear = academicYear;
   }
 
+
+  // Add this function to fetch a professor by personnel number
+  static async getProfessorByPersonnelNumber(personnelNumber) {
+    try {
+      const response = await fetch(`http://localhost:5000/personnel/${personnelNumber}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+  
+      if (!response.ok) {
+        throw new Error(`Error fetching professor data for personnelNumber: ${personnelNumber}`);
+      }
+  
+      const professor = await response.json();
+  
+      if (!professor || !professor.personnelNameFirst || !professor.personnelNameLast) {
+        // Handle case where professor data is missing or incomplete
+        console.warn(`No valid professor data found for personnelNumber: ${personnelNumber}`);
+        return {
+          firstName: 'No professor assigned',
+          lastName: '',
+        };
+      }
+  
+      // Return the professor's name if data is valid
+      return {
+        firstName: professor.personnelNameFirst,
+        lastName: professor.personnelNameLast,
+      };
+    } catch (error) {
+      console.error('Error fetching professor:', error.message);
+      // Return default values in case of an error or missing data
+      return {
+        firstName: 'No professor assigned',
+        lastName: '',
+      };
+    }
+  }
+  
+  
+
   // Fetch specific personnel's credentials
   static async LoginPersonnelData(personnelNumber, password) {
     try {

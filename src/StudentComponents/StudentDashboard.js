@@ -109,7 +109,7 @@ export default function StudentDashboard() {
       <div className="main-content flex-grow-1">
         <header className="header d-flex justify-content-between align-items-center p-3 border-bottom rounded">
           <h1 className="m-0 custom-color-green-font custom-font d-none d-md-block">
-            PARAÑAQUE CITY COLLEGE
+            STUDENT
           </h1>
           <button className="btn btn-link custom-color-green-font d-md-none" onClick={toggleSidebar} aria-label="Toggle Sidebar">
             <FontAwesomeIcon icon={faBars} size="lg" />
