@@ -18,11 +18,20 @@ const ScheduleTable = () => {
   const [yearLevel, setYearLevel] = useState("");  // Placeholder value for year level
   const [semester, setSemester] = useState("");  // Placeholder value for semester  
   const [program, setProgram] = useState("");
+  const [schedules, setSchedules] = useState([]);
   const [courses, setCourses] = useState([]);
+  const [professors, setProfessors] = useState([]);
   const [sections, setSections] = useState([]);
+  
   const [selectedSection, setSelectedSection] = useState('');
 
   const [currentAcademicYear, setCurrentAcadYear] = useState([]);
+
+  
+  const [showModal, setShowModal] = useState(false);
+  const [checkedCount, setCheckedCount] = useState(0);
+  const [userSelectedCount, setUserSelectedCount] = useState(null);
+  const [isEnrolled, setIsEnrolled] = useState(false);
 
   
 
@@ -48,13 +57,30 @@ const ScheduleTable = () => {
     }
   };
 
-  const fetchSemester = async () => {
+  const fetchStudentInfo = async (studentNumber) => {
+    try {
+      const studentData = await StudentModel.fetchExistingStudents();
+      console.log("Fetched student data:", studentData);
+  
+      const student = studentData.filter((student) => student.studentNumber === studentNumber);
+  
+      if (student.length > 0) {
+        setStudentInfo(student);
+      }
+  
+    } catch (error) {
+      console.error('Error fetching student data:', error.message);
+    }
+  };
+
+  const fetchYearLevelandSemester = async () => {
     try {
       const academicYear = currentAcademicYear[0]?.academicYear;
       const studentNumber = user.studentNumber;
   
       // Ensure that academicYear and studentNumber are available
       if (!academicYear || !studentNumber) {
+        setYearLevel('Missing data');
         setSemester('Missing data');
         console.error('Missing academicYear or studentNumber');
         return;
@@ -63,9 +89,11 @@ const ScheduleTable = () => {
       const timelineData = await TimelineModel.fetchTimelineData(academicYear, studentNumber);
   
       if (timelineData && timelineData.length > 0) {
-        const latestTimeline = timelineData[0]; 
+        const latestTimeline = timelineData[0];
+        setYearLevel(latestTimeline.yearLevel || 'Unknown');
         setSemester(latestTimeline.semester || 'Unknown');
       } else {
+        setYearLevel('No data available');
         setSemester('No data available');
       }
     } catch (error) {
@@ -73,65 +101,38 @@ const ScheduleTable = () => {
       setSemester('Error fetching semester');
     }
   };
-  
-  
-const fetchSections = async () => {
-  try {
-    const fetchedSections = await SectionModel.fetchExistingSections(
-      currentAcademicYear[0]?.academicYear,
-      yearLevel,
-      semester,
-      program[0]?.programNumber
-    );
-    setSections(fetchedSections); // Update the sections state with the fetched data
-  } catch (error) {
-    console.error('Error fetching sections:', error);
-  }
-};
 
-useEffect(() => {
-  if (currentAcademicYear.length > 0 && user.studentNumber) {
-    fetchSemester();  // Call fetchSemester only when academic year and student number are available
-  }
-}, [currentAcademicYear, user.studentNumber]);
-
-
-
-  
-  useEffect(() => {
-    fetchAcademicYearsAndPrograms();
-    fetchStudentInfo(user.studentNumber);
-    //fetchCourses();
-    //fetchSections();
-  }, []);
-
-  useEffect(() => {
-    if (yearLevel && semester && currentAcademicYear.length > 0 && program.length > 0) {
-      fetchSections();
+  const fetchSections = async () => {
+    try {
+      const fetchedSections = await SectionModel.fetchExistingSections(
+        currentAcademicYear[0]?.academicYear,
+        yearLevel,
+        semester,
+        program[0]?.programNumber
+      );
+      setSections(fetchedSections); // Update the sections state with the fetched data
+    } catch (error) {
+      console.error('Error fetching sections:', error);
     }
-  }, [yearLevel, semester, currentAcademicYear, program]);
-  
-  
-  const fetchStudentInfo = async (studentNumber) => {
-  try {
-    const studentData = await StudentModel.fetchExistingStudents();
-    console.log("Fetched student data:", studentData);
+  };
 
-    const student = studentData.filter((student) => student.studentNumber === studentNumber);
-
-    if (student.length > 0) {
-      setStudentInfo(student);
-      setYearLevel(student[0]?.studentYrLevel || "Unknown");  // Use studentYrLevel for year level
+  const fetchPersonnelList = async () =>{
+    try {
+      const personnelData = await PersonnelModel.getProfessorsbyProgram(user.programNumber, currentAcademicYear[0].academicYear);
+      console.log(personnelData);
+      setProfessors(personnelData);
+    } catch (error) {
+      console.error('Error fetching personnel list:', error);
     }
+  };
 
-  } catch (error) {
-    console.error('Error fetching student data:', error.message);
-  }
-};
-
-// Function to fetch courses and their schedules, displaying them with time and personnel
-const fetchCoursesAndSchedules = async (academicYear, yearLevel, semester, programNumber, selectedSection) => {
+  // Function to fetch courses and their schedules, displaying them with time and personnel
+  const fetchCoursesAndSchedules = async (academicYear, yearLevel, semester, programNumber, selectedSection) => {
   try {
+    const allSchedules = await ScheduleModel.fetchExistingschedule(selectedSection);
+    console.log(allSchedules);
+    setSchedules(allSchedules);
+    
     // Fetch courses for the specific criteria
     const fetchedCourses = await CourseModel.getCoursesbyProgram(
       academicYear,
@@ -139,59 +140,46 @@ const fetchCoursesAndSchedules = async (academicYear, yearLevel, semester, progr
       semester,
       programNumber
     );
-    console.log('Fetched Courses:', fetchedCourses);
-
-    // Fetch and filter schedules by section
-    const filteredSchedules = await ScheduleModel.fetchAllSchedules(academicYear, selectedSection);
-    console.log('Filtered Schedules:', filteredSchedules);
-
-    // Link schedules to courses by courseCode
-    const formattedCourses = await Promise.all(fetchedCourses.map(async (course) => {
-      const courseSchedules = filteredSchedules.filter(
-        schedule => schedule.courseCode === course.courseCode
-      );
-
-      const courseWithSchedules = {
-        id: course.courseCode,
-        description: course.courseDescriptiveTitle || 'N/A',
-        lectureHours: course.courseLecture || 0,
-        labHours: course.courseLaboratory || 0,
-        creditedUnits: course.creditedUnits || 0,
-        schedules: await Promise.all(courseSchedules.map(async (schedule) => {
-          return {
-            scheduleDay: schedule.scheduleDay || 'N/A',
-            startTime: schedule.startTime || 'N/A',
-            endTime: schedule.endTime || 'N/A',
-            professorPersonnelNumber: schedule.personnelNumber || 'N/A',  // Directly use the personnelNumber
-          };
-        })),
-        checked: false, // Default for UI interaction
-      };
-      
-
-      return courseWithSchedules;
-    }));
-
-    // Log and set the combined data
-    console.log('Formatted Courses:', formattedCourses);
-    setCourses(formattedCourses);
+    
+    if (fetchedCourses){
+      setCourses(fetchedCourses);
+    }
   } catch (error) {
     console.error('Error fetching courses and schedules:', error.message);
   }
-};
+  };
+
+  useEffect(() => {
+    fetchAcademicYearsAndPrograms();
+    fetchStudentInfo(user.studentNumber);
+    //fetchCourses();
+    //fetchSections();
+  }, []);
+  
+  useEffect(() => {
+    if (currentAcademicYear.length > 0 && user.studentNumber) {
+      fetchYearLevelandSemester();
+    }
+  }, [currentAcademicYear, user.studentNumber]);
+
+  
+
+  useEffect(() => {
+    if (yearLevel && semester && currentAcademicYear.length > 0 && program.length > 0) {
+      fetchSections();
+    }
+  }, [yearLevel, semester, currentAcademicYear, program]);
 
 
 
 
 // useEffect hook to trigger fetchCoursesAndSchedules call
 useEffect(() => {
-  if (
-    yearLevel &&
-    semester &&
-    program.length > 0 &&
-    currentAcademicYear.length > 0 &&
-    selectedSection // Ensure that section is selected
-  ) {
+  if (yearLevel && semester && program.length > 0 && currentAcademicYear.length > 0 && selectedSection) {
+    console.log (currentAcademicYear[0]?.academicYear, yearLevel, semester, program[0]?.programNumber, selectedSection);
+    setCourses([]);
+    setSchedules([]);
+    setProfessors([]);
     fetchCoursesAndSchedules(
       currentAcademicYear[0]?.academicYear,
       yearLevel,
@@ -199,25 +187,16 @@ useEffect(() => {
       program[0]?.programNumber,
       selectedSection // Pass selectedSection to the function
     );
+    fetchPersonnelList();
   }
 }, [yearLevel, semester, program, currentAcademicYear, selectedSection]);
 
 
-
-
-
-  
- 
-  
-  const [showModal, setShowModal] = useState(false);
-  const [checkedCount, setCheckedCount] = useState(0);
-  const [userSelectedCount, setUserSelectedCount] = useState(null);
-  const [isEnrolled, setIsEnrolled] = useState(false);
-
   
 
-  const handleSectionChange = (event) => {
-    setSelectedSection(event.target.value);
+  const handleSectionChange = (e) => {
+    const selectedSection = e.target.value;
+    setSelectedSection(selectedSection);
   };
 
   const handleCheckboxChange = (subjectId) => {
@@ -244,6 +223,19 @@ useEffect(() => {
       setIsEnrolled(true);
     }
   };
+
+  function formatTime(timeString) {
+    // Split the HH:MM:SS format into its components
+    const [hours, minutes] = timeString.split(':');
+  
+    // Convert hours from 24-hour to 12-hour format
+    const hour = (hours % 12) || 12; // 0 or 24 becomes 12 (midnight)
+    const ampm = hours >= 12 ? 'pm' : 'am'; // Determine am/pm based on hours
+  
+    // Return formatted time
+    return `${hour}:${minutes} ${ampm}`;
+  }
+  
 
   return (
     <section className='container-fluid ms-0'>
@@ -278,7 +270,7 @@ useEffect(() => {
               >
                 <option value="">Select a section</option>
                 {sections.map((section) => (
-                  <option key={section.id} value={section.id}>
+                  <option key={section.id} value={section.sectionNumber}>
                     {section.sectionNumber}
                   </option>
                 ))}
@@ -330,48 +322,45 @@ useEffect(() => {
     </tr>
   </thead>
   <tbody>
-    {courses.length > 0 ? (
-      courses.map((course, index) => {
+    {schedules.length > 0 ? (
+      schedules.map((schedule, index) => {
+          const courseDetails = courses?.find(course => course.courseCode === schedule.courseCode);
+                
         return (
-          <tr key={course.id}>
+          <tr key={index}>
             <td>{index + 1}</td>
-            <td>{course.id}</td>
+            <td>{courseDetails?.courseCode}</td>
             <td>
               <Form.Check
                 type="checkbox"
-                checked={course.checked}
-                onChange={() => handleCheckboxChange(course.id)}
+                checked={courseDetails?.checked}
+                onChange={() => handleCheckboxChange(courseDetails?.id)}
               />
             </td>
-            <td>{course.description}</td>
-            <td>{course.lectureHours}</td>
-            <td>{course.labHours}</td>
+            <td>{courseDetails?.courseDescriptiveTitle || 'N/A'}</td>
+            <td>{courseDetails?.courseLecture || 'N/A'}</td>
+            <td>{courseDetails?.courseLaboratory || 'N/A'}</td>
             <td>
-              {course.schedules.length > 0 ? (
-                <ul className=' list-unstyled'>
-                  {course.schedules.map((schedule, idx) => (
-                    <li key={idx}>
-                      <strong>{schedule.scheduleDay}</strong>: {schedule.startTime} - {schedule.endTime}
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                'No schedule available'
-              )}
+              <ul className=' list-unstyled'>
+                  <li>
+                      <strong>{schedule.scheduleDay}</strong>: {formatTime(schedule.startTime)} - {formatTime(schedule.endTime)}
+                  </li>
+              </ul>
             </td>
             <td>
-              {course.schedules.length > 0 ? (
-                course.schedules.map((schedule, idx) => (
-                  <div key={idx}>
-                    {schedule.personnelNumber ? schedule.personnelNumber : 'No personnel assigned'}
-                  </div>
-                ))
-              ) : (
-                'No professor assigned'
-              )}
+        <Form.Control
+          as="input"
+          type="text"
+          value={
+            schedule.personnelNumber
+            ? `${professors.find((prof) => prof.personnelNumber === schedule.personnelNumber)?.personnelNameFirst || ''} ${
+                professors.find((prof) => prof.personnelNumber === schedule.personnelNumber)?.personnelNameLast || ''}` : 'No Professor'}
+          readOnly
+          className="mr-2"
+        />
             </td>
 
-      
+
           </tr>
         );
       })
