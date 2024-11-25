@@ -191,9 +191,18 @@ const ProgramHeadClassDesig = () => {
   const updateSchedules = async () => {
     try {
       // Validate schedules before proceeding
-      const hasOverlaps = await validateSchedules(schedules);
-      if (hasOverlaps) {
-        alert('Failed to update: There is an overlapping schedule for at least one professor.');
+      const overlappingSchedules = await validateSchedules(schedules);
+      if (overlappingSchedules.length > 0) {
+        const overlappingInfo = overlappingSchedules
+          .map(
+            (schedule) =>
+              `Section: ${schedule.sectionNumber}, Course Code: ${schedule.courseCode}, Day: ${schedule.scheduleDay}, Time: ${schedule.startTime} - ${schedule.endTime}, Personnel: ${schedule.personnelNumber}`
+          )
+          .join("\n");
+  
+        alert(
+          `Failed to update: The following overlapping schedules were detected:\n${overlappingInfo}`
+        );
         return;
       }
   
@@ -206,63 +215,122 @@ const ProgramHeadClassDesig = () => {
       console.error("Error updating schedules:", error);
     }
   };
-
-  async function validateSchedules (schedules) {
-    // Filter out schedules without assigned personnel
+  
+  async function validateSchedules(schedules) {
+    // Fetch all schedules for the selected academic year
     const allSchedules = await ScheduleModel.fetchAllSchedules(selectedAcademicYear);
-
-    console.log(allSchedules);
-
-     // Filter out schedules belonging to the current section
-    const otherSectionSchedules = allSchedules.filter((schedule) => schedule.sectionNumber !== selectedSection);
-     // Combine the schedules being validated with other section schedules
-     const combinedSchedules = [...schedules, ...otherSectionSchedules];
-
-     console.log(combinedSchedules);
- 
-     // Filter out schedules without assigned personnel
-     const validSchedules = combinedSchedules.filter((schedule) => schedule.personnelNumber);
-
-     console.log(validSchedules);
-    // Group schedules by personnelNumber
-    const schedulesByPersonnel = validSchedules.reduce((acc, schedule) => {
-      acc[schedule.personnelNumber] = acc[schedule.personnelNumber] || [];
-      acc[schedule.personnelNumber].push(schedule);
+  
+    // Exclude schedules from the current section
+    const otherSectionSchedules = allSchedules.filter(
+      (schedule) => schedule.sectionNumber !== selectedSection
+    );
+  
+    // Combine the schedules being validated with other section schedules
+    const combinedSchedules = [...schedules, ...otherSectionSchedules];
+  
+    // Filter out schedules with null startTime or endTime
+    const validSchedules = combinedSchedules.filter(
+      (schedule) => schedule.startTime && schedule.endTime && schedule.scheduleDay
+    );
+  
+    // Group schedules by sectionNumber and scheduleDay
+    const groupedBySectionAndDay = validSchedules.reduce((acc, schedule) => {
+      const key = `${schedule.sectionNumber}-${schedule.scheduleDay}`;
+      acc[key] = acc[key] || [];
+      acc[key].push(schedule);
       return acc;
     }, {});
-
-    console.log(schedulesByPersonnel);
   
-    // Check for overlaps in each group
-    for (const [personnelNumber, schedules] of Object.entries(schedulesByPersonnel)) {
+    // Group schedules by personnelNumber and scheduleDay
+    const groupedByPersonnelAndDay = validSchedules.reduce((acc, schedule) => {
+      if (schedule.personnelNumber) {
+        const key = `${schedule.personnelNumber}-${schedule.scheduleDay}`;
+        acc[key] = acc[key] || [];
+        acc[key].push(schedule);
+      }
+      return acc;
+    }, {});
+  
+    const overlappingSchedules = [];
+  
+    // Check for invalid start and end times
+    for (const schedule of validSchedules) {
+      if (!isValidTimeRange(schedule)) {
+        console.error(`Invalid time range for schedule:`, schedule);
+        overlappingSchedules.push(schedule);
+      }
+    }
+  
+    // Check for overlaps in section-day grouping
+    for (const [key, schedules] of Object.entries(groupedBySectionAndDay)) {
       for (let i = 0; i < schedules.length; i++) {
         for (let j = i + 1; j < schedules.length; j++) {
           const schedule1 = schedules[i];
           const schedule2 = schedules[j];
   
-          // Ensure they are on the same day
-          if (schedule1.scheduleDay === schedule2.scheduleDay) {
-            const start1 = new Date(`1970-01-01T${schedule1.startTime}`);
-            const end1 = new Date(`1970-01-01T${schedule1.endTime}`);
-            const start2 = new Date(`1970-01-01T${schedule2.startTime}`);
-            const end2 = new Date(`1970-01-01T${schedule2.endTime}`);
+          // Check if they overlap in time
+          if (isTimeOverlap(schedule1, schedule2)) {
+            console.error(
+              `Overlap detected in section ${schedule1.sectionNumber} on ${schedule1.scheduleDay}:`,
+              schedule1,
+              schedule2
+            );
   
-            // Check for overlap
-            if ((start1 < end2 && end1 > start2) || (start2 < end1 && end2 > start1)) {
-              console.error(
-                `Overlap detected for personnel ${personnelNumber}:`,
-                schedule1,
-                schedule2
-              );
-              return true; // Overlap found
-            }
+            if (!overlappingSchedules.includes(schedule1)) overlappingSchedules.push(schedule1);
+            if (!overlappingSchedules.includes(schedule2)) overlappingSchedules.push(schedule2);
           }
         }
       }
     }
   
-    return false; // No overlaps found
+    // Check for overlaps in personnel-day grouping
+    for (const [key, schedules] of Object.entries(groupedByPersonnelAndDay)) {
+      for (let i = 0; i < schedules.length; i++) {
+        for (let j = i + 1; j < schedules.length; j++) {
+          const schedule1 = schedules[i];
+          const schedule2 = schedules[j];
+  
+          // Check if they overlap in time
+          if (isTimeOverlap(schedule1, schedule2)) {
+            console.error(
+              `Overlap detected for personnel ${schedule1.personnelNumber} on ${schedule1.scheduleDay}:`,
+              schedule1,
+              schedule2
+            );
+  
+            if (!overlappingSchedules.includes(schedule1)) overlappingSchedules.push(schedule1);
+            if (!overlappingSchedules.includes(schedule2)) overlappingSchedules.push(schedule2);
+          }
+        }
+      }
+    }
+  
+    return overlappingSchedules; // Return all overlapping schedules
   }
+  
+  // Helper function to check time overlap
+  function isTimeOverlap(schedule1, schedule2) {
+    const start1 = new Date(`1970-01-01T${schedule1.startTime}`);
+    const end1 = new Date(`1970-01-01T${schedule1.endTime}`);
+    const start2 = new Date(`1970-01-01T${schedule2.startTime}`);
+    const end2 = new Date(`1970-01-01T${schedule2.endTime}`);
+  
+    return start1 < end2 && end1 > start2;
+  }
+  
+  // Helper function to check if the time range is valid
+  function isValidTimeRange(schedule) {
+    const start = new Date(`1970-01-01T${schedule.startTime}`);
+    const end = new Date(`1970-01-01T${schedule.endTime}`);
+  
+    return start < end; // Ensures end time is after start time
+  }
+  
+  
+  
+  
+  
+  
   
   useEffect(() => {
     fetchAcademicYearsAndPrograms();
