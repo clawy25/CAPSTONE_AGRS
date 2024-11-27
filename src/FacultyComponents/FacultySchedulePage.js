@@ -1,118 +1,262 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import '../StudentComponents/Dashboard.css';
+import React, { useState, useEffect, useContext } from 'react';
+import { Table, Form, Button, Row, Col, Alert } from 'react-bootstrap';
+import { UserContext } from '../Context/UserContext';
+import ScheduleModel from '../ReactModels/ScheduleModel';
+import CourseModel from '../ReactModels/CourseModel';
+import AcademicYearModel from '../ReactModels/AcademicYearModel';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
-export default function FacultySchedulePage(){
-  
-  const [showDropdown, setShowDropdown] = useState(false);
-  const dropdownRef = useRef(null);
+// Helper function to format time to 12-hour format
+const formatTimeTo12Hour = (timeStr) => {
+  const date = new Date(`1970-01-01T${timeStr}:00`);
+  let hours = date.getHours();
+  let minutes = date.getMinutes();
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12;
+  hours = hours ? hours : 12; // the hour '0' should be '12'
+  minutes = minutes < 10 ? '0' + minutes : minutes;
+  return `${hours}:${minutes} ${ampm}`;
+};
 
-  
+export default function FacultySchedulePage() {
+  const { user } = useContext(UserContext); // Access user context
+  const [semester, setSemester] = useState('');  // Store semester as a string initially
+  const [academicYear, setAcademicYear] = useState([]);
+  const [schedule, setSchedule] = useState([]);
+  const [filteredSchedules, setFilteredSchedules] = useState([]);
+  const [courses, setCourses] = useState([]);
+  const [selectedAcademicYear, setSelectedAcademicYear] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+
+  const program = user?.programNumber || null; // Safely access programNumber from user
+
   useEffect(() => {
-    const handleOutsideClick = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setShowDropdown(false);
+    console.log('User Data:', user);
+  }, [user]);
+
+  // Fetch Academic Years
+  useEffect(() => {
+    if (!user) {
+      console.error('User context is not available.');
+      setErrorMessage('User context is not available.');
+      return;
+    }
+
+    if (!program) {
+      setErrorMessage('You do not have an assigned program. Please contact the administrator.');
+      return;
+    }
+
+    const fetchAcademicYears = async () => {
+      try {
+        const data = await AcademicYearModel.fetchExistingAcademicYears();
+        if (data.length === 0) {
+          setErrorMessage('No academic years found.');
+        } else {
+          setAcademicYear(data);
+        }
+      } catch (error) {
+        console.error('Error fetching academic years:', error);
+        setErrorMessage('Failed to load academic years.');
       }
     };
 
-    if (showDropdown) {
-      document.addEventListener('click', handleOutsideClick);
-    } else {
-      document.removeEventListener('click', handleOutsideClick);
-    }
+    fetchAcademicYears();
+  }, [user, program]);
 
-    return () => {
-      document.removeEventListener('click', handleOutsideClick);
+  // Fetch all Courses
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        const data = await CourseModel.fetchAllCourses(); // Fetch all courses
+        if (data && data.length > 0) {
+          setCourses(data);
+          setErrorMessage(''); // Clear any previous errors
+        } else {
+          setErrorMessage('No courses available.');
+        }
+      } catch (error) {
+        console.error('Error fetching courses:', error);
+        setErrorMessage('Error fetching courses. Please try again later.');
+      }
     };
-  }, [showDropdown]);
 
-  return (
-      
-          <section className="m-3">
-            <div className='card card-success border-success rounded'>
-              <table className="table">
-                <thead className='table-success'>
-                  <tr>
-                    <th className='text-success custom-font'>Subject</th>
-                    <th className='text-success custom-font'>Class</th>
-                    <th className='text-success custom-font'>Time</th>
-                    <th className='text-success custom-font'>Hours</th>
-                  </tr>
-                </thead>
-                <tbody>
-                <tr>
-                  <td className='custom-font'>Introduction to Information Technology</td>
-                  <td className='custom-font'>BSIT 3-1</td>
-                  <td className='custom-font'>08:00 AM - 09:30 AM (Mon, Wed)</td>
-                  <td className='custom-font'>1.5</td>
-                </tr>
-                <tr>
-                  <td className='custom-font'>Computer Programming</td>
-                  <td className='custom-font'>BSIT 3-1</td>
-                  <td className='custom-font'>09:40 AM - 11:10 AM (Mon, Wed)</td>
-                  <td className='custom-font'>1.5</td>
-                </tr>
-                <tr>
-                  <td className='custom-font'>Discrete Mathematics</td>
-                  <td className='custom-font'>BSIT 3-1</td>
-                  <td className='custom-font'>02:00 PM - 03:00 PM (Mon, Wed)</td>
-                  <td className='custom-font'>1.5</td>
-                </tr>
-                <tr>
-                  <td className='custom-font'>Data Structures and Algorithm</td>
-                  <td className='custom-font'>BSIT 3-1</td>
-                  <td className='custom-font'>08:00 AM - 09:30 AM (Tue, Thu)</td>
-                  <td className='custom-font'>1.5</td>
-                </tr>
-                <tr>
-                  <td className='custom-font'>Web Development</td>
-                  <td className='custom-font'>BSIT 3-1</td>
-                  <td className='custom-font'>01:00 PM - 02:30 PM (Tue)</td>
-                  <td className='custom-font'>1.5</td>
-                </tr>
-                <tr>
-                  <td className='custom-font'>Object Oriented Programming</td>
-                  <td className='custom-font'>BSIT 3-1</td>
-                  <td className='custom-font'>08:00 AM - 11:00 AM (Fri)</td>
-                  <td className='custom-font'>3</td>
-                </tr>
-                <tr>
-                  <td className='custom-font'>Human Computer Interaction</td>
-                  <td className='custom-font'>BSIT 3-1</td>
-                  <td className='custom-font'>07:00 AM - 09:30 AM (Sat)</td>
-                  <td className='custom-font'>2</td>
-                </tr>
-                <tr>
-                  <td className='custom-font'>Network Administration</td>
-                  <td className='custom-font'>BSIT 3-1</td>
-                  <td className='custom-font'>01:00 PM - 02:30 PM (Wed, Fri)</td>
-                  <td className='custom-font'>1.5</td>
-                </tr>
-                <tr>
-                  <td className='custom-font'>People and the Earth's Ecosystem</td>
-                  <td className='custom-font'>BSIT 3-1</td>
-                  <td className='custom-font'>11:20 AM - 12:50 PM (Mon, Thu)</td>
-                  <td className='custom-font'>1.5</td>
-                </tr>
-                <tr>
-                  <td className='custom-font'>Database Administration</td>
-                  <td className='custom-font'>BSIT 3-1</td>
-                  <td className='custom-font'>02:40 PM - 04:10 PM (Tue, Thu)</td>
-                  <td className='custom-font'>1.5</td>
-                </tr>
-                <tr>
-                  <td className='custom-font'>Multimedia</td>
-                  <td className='custom-font'>BSIT 3-1</td>
-                  <td className='custom-font'>08:00 AM - 11:00 AM (Fri)</td>
-                  <td className='custom-font'>3</td>
-                </tr>
+    fetchCourses();
+  }, []);
 
-                </tbody>
-              </table>
-            </div>
-          </section>
-       
-  );
+  // Handle Class Schedule fetch
+  const handleClassSchedule = async () => {
+    if (program) {
+      try {
+        console.log('Fetching schedules with:', {
+          academicYear: selectedAcademicYear,
+          program: program,
+          semester: semester,
+          personnelNumber: user?.personnelNumber,
+        });
+
+        const fetchedSchedules = await ScheduleModel.fetchAllSchedules(selectedAcademicYear); // Fetch all schedules by academic year
+        console.log('Fetched Schedules:', fetchedSchedules); // Log the fetched schedules
+
+        if (fetchedSchedules && fetchedSchedules.length > 0) {
+          setSchedule(fetchedSchedules);
+          setErrorMessage(''); // Clear any error messages
+        } else {
+          setErrorMessage('No schedules available for the selected academic year.');
+        }
+      } catch (error) {
+        console.error('Error fetching schedules:', error);
+        setErrorMessage('Failed to fetch schedules.');
+      }
+    } else {
+      console.error('User has no assigned program.');
+      setErrorMessage('You do not have an assigned program. Please contact the administrator.');
+    }
+  };
+
+  // Filter schedules based on selected academic year, semester, and personnelNumber
+  useEffect(() => {
+    console.log('Filtering schedules with:', {
+      selectedAcademicYear,
+      semester,
+      personnelNumber: user?.personnelNumber,
+    });
+
+    const filtered = schedule.filter((sched) => {
+      const matches =
+        (selectedAcademicYear ? sched.academicYear === selectedAcademicYear : true) &&
+        (semester ? sched.semester === parseInt(semester) : true) &&  // Convert semester to integer for comparison
+        (sched.personnelNumber === user?.personnelNumber);
+
+      console.log('Checking Schedule:', sched, 'Matches:', matches); // Debugging filtered schedules
+      return matches;
+    });
+
+    console.log('Filtered Schedules:', filtered);
+    setFilteredSchedules(filtered);
+  }, [schedule, selectedAcademicYear, semester, user]);
+
+  // Function to get course details by courseCode
+  const getCourseDetails = (courseCode) => {
+    const course = courses.find((course) => course.courseCode === courseCode);
+    return course || {}; // Return course details if found, otherwise return an empty object
+  };
+
+  // Helper function to format time to 12-hour format with AM/PM
+// Helper function to format time to 12-hour format with AM/PM
+const formatTimeTo12Hour = (timeStr) => {
+  if (!timeStr) return ''; // Handle empty or invalid time input
+
+  // Ensure the time is properly formatted by adding missing zeroes or handling edge cases
+  const timeParts = timeStr.split(':'); // Split time into hours and minutes
+  let hours = parseInt(timeParts[0], 10); // Get the hours
+  let minutes = timeParts[1] ? parseInt(timeParts[1], 10) : 0; // Get minutes or default to 0
+
+  if (isNaN(hours) || isNaN(minutes)) {
+    return ''; // Return empty string if time is invalid
+  }
+
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+
+  // Convert to 12-hour format
+  hours = hours % 12; // Convert hours to 12-hour format
+  hours = hours ? hours : 12; // If hours is 0 (midnight), set it to 12
+  minutes = minutes < 10 ? '0' + minutes : minutes; // Add leading zero to minutes if necessary
+
+  return `${hours}:${minutes} ${ampm}`; // Return formatted time
 };
 
+
+
+
+  return (
+    <section className="m-3">
+      {errorMessage && <Alert variant="danger">{errorMessage}</Alert>}
+
+      <Row className="p-3 bg-white border border-success rounded mb-4 m-1">
+        <Col>
+          <Form.Group controlId="academicYear">
+            <Form.Label className="custom-color-green-font custom-font">Academic Year</Form.Label>
+            <Form.Control
+              as="select"
+              value={selectedAcademicYear}
+              onChange={(e) => setSelectedAcademicYear(e.target.value)}
+            >
+              <option value="">Select an Academic Year</option>
+              {academicYear
+                .sort((a, b) => {
+                  const yearA = parseInt(a.academicYear.split('-')[0]);
+                  const yearB = parseInt(b.academicYear.split('-')[0]);
+                  return yearB - yearA;
+                })
+                .map((year) => (
+                  <option key={year.academicYear} value={year.academicYear}>
+                    {year.academicYear}
+                  </option>
+                ))}
+            </Form.Control>
+          </Form.Group>
+        </Col>
+
+        <Col>
+          <Form.Group controlId="semester">
+            <Form.Label className="custom-color-green-font custom-font">Semester</Form.Label>
+            <Form.Control as="select" value={semester} onChange={(e) => setSemester(e.target.value)}>
+              <option value="">Select a Semester</option>
+              <option value="1">First</option>
+              <option value="2">Second</option>
+              <option value="3">Summer</option>
+            </Form.Control>
+          </Form.Group>
+        </Col>
+
+        <Col className="d-flex align-items-end">
+          <Button variant="success" className="w-100" onClick={handleClassSchedule}>
+            Schedule List
+          </Button>
+        </Col>
+      </Row>
+
+      <div className="card card-success border-success rounded">
+        <Table className="table">
+          <thead className="table-success">
+            <tr>
+              <th className="text-success custom-font">Course Code</th>
+              <th className="text-success custom-font">Course Description</th>
+              <th className="text-success custom-font">Lec</th>
+              <th className="text-success custom-font">Lab</th>
+              <th className="text-success custom-font">Unit</th>
+              <th className="text-success custom-font">Class</th>
+              <th className="text-success custom-font">Schedule</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredSchedules.length > 0 ? (
+              filteredSchedules.map((sched) => {
+                const courseDetails = getCourseDetails(sched.courseCode);
+                const totalUnits = (parseFloat(courseDetails.courseLecture) || 0) + (parseFloat(courseDetails.courseLaboratory) || 0);
+                return (
+                  <tr key={sched.id}>
+                    <td className="custom-font">{sched.courseCode}</td>
+                    <td className="custom-font">{courseDetails.courseDescriptiveTitle || "N/A"}</td>
+                    <td className="custom-font">{courseDetails.courseLecture || "N/A"}</td>
+                    <td className="custom-font">{courseDetails.courseLaboratory || "N/A"}</td>
+                    <td className="custom-font">{totalUnits || "N/A"}</td>
+                    <td className="custom-font">{sched.sectionNumber || "N/A"}</td>
+                    <td className="custom-font">
+                      {sched.scheduleDay}, {formatTimeTo12Hour(sched.startTime)} - {formatTimeTo12Hour(sched.endTime)}
+                    </td>
+                  </tr>
+                );
+              })
+            ) : (
+              <tr>
+                <td colSpan="7" className="text-center custom-font">No schedules found</td>
+              </tr>
+            )}
+          </tbody>
+        </Table>
+      </div>
+    </section>
+  );
+}

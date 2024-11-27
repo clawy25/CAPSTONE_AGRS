@@ -280,14 +280,6 @@ export default function ProgramHeadClassDesigTable() {
     }));
   };
 
-
-  
-  
-
-  
-  
-
-
   const renderTable = (year, section) => {
     const sectionData = data[year]?.[section] || [];
     return (

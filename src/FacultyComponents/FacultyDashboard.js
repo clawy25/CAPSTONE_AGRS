@@ -1,5 +1,3 @@
-
-
 import React, { useState, useRef, useEffect, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -34,6 +32,11 @@ export default function FacultyDashboard () {
   const [course, setCourse] = useState('');
   const [section, setSection] = useState('');
   const [students, setStudents] = useState([]);
+  const [courses, setCourses] = useState([]);
+  const [selectedCourse, setSelectedCourse] = useState('');
+  const [programs, setPrograms] = useState([]);
+    const [yearLevels, setYearLevels] = useState([]);
+
 
 
   const SECTIONS = {
@@ -121,9 +124,6 @@ export default function FacultyDashboard () {
 
   
   
-// PROGRAM RELATED CONSTANTS
-const [programs, setPrograms] = useState([]);
-
 // Fetch programs from ProgramModel
 useEffect(() => {
   const fetchPrograms = async () => {
@@ -137,10 +137,6 @@ useEffect(() => {
 
   fetchPrograms();
 }, []);
-
-
-  // YEAR LEVEL RELATED CONSTANTS
-  const [yearLevels, setYearLevels] = useState([]);
 
   // Fetch year levels from YearLevelModel
   useEffect(() => {
@@ -162,9 +158,7 @@ useEffect(() => {
 
 
   //COURSE RELATED CONSTANTS
-  const [courses, setCourses] = useState([]);
-
-  const [selectedCourse, setSelectedCourse] = useState('');
+  
 
     // Fetch courses from CourseModel
     useEffect(() => {
@@ -187,12 +181,7 @@ useEffect(() => {
     const handleClassListClick = () => {
       setShowTable(!showTable); // Toggle the table visibility
     };
-    
 
-
-
-
-  
   const printTableContent = (elementId) => {
     const printContent = document.getElementById(elementId);
     const newWindow = window.open('', '', 'width=800,height=600');
@@ -205,10 +194,6 @@ useEffect(() => {
     newWindow.print();
   };
   
-
-
-
-
   return (
     <div className="dashboard-container d-flex">
       <div className={`sidebar bg-custom-color-green ${showSidebar ? 'd-block' : 'd-none d-md-block'}`}>
@@ -276,10 +261,6 @@ useEffect(() => {
           </div>
         </header>
 
-
-
-
-
 {/* FIRST ROW: DROPDOWNS BAR */}
         {selectedSection === SECTIONS.CLASSES && (
   <section className="mt-3 ms-0">
@@ -289,7 +270,7 @@ useEffect(() => {
     ) : (
 
       <div>
-        <Row className="p-3 bg-white border border-success rounded mb-4 m-1">
+      <Row className="p-3 bg-white border border-success rounded mb-4 m-1">
 
         <Col>
         <Form.Group controlId="course">
@@ -396,7 +377,7 @@ useEffect(() => {
           </Button>
         </Col>
 
-        </Row>
+      </Row>
 
         
         

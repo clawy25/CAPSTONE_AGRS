@@ -25,8 +25,7 @@ const App = () => {
     <UserProvider> {/* Wrap the whole app inside UserProvider */}
       <Routes>
         {/* Redirect root URL to /login */}
-        <Route path="/" element={<Navigate to="/login" />} />
-        
+        <Route path="/" element={<Navigate to="/login" />} /> 
         <Route path="/login" element={<LoginPage />} />
         <Route path="/login2" element={<LoginPage2 />} />
         <Route path="/student" element={<StudentPage />} /> 
