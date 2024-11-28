@@ -6,17 +6,6 @@ import CourseModel from '../ReactModels/CourseModel';
 import AcademicYearModel from '../ReactModels/AcademicYearModel';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
-// Helper function to format time to 12-hour format
-const formatTimeTo12Hour = (timeStr) => {
-  const date = new Date(`1970-01-01T${timeStr}:00`);
-  let hours = date.getHours();
-  let minutes = date.getMinutes();
-  const ampm = hours >= 12 ? 'PM' : 'AM';
-  hours = hours % 12;
-  hours = hours ? hours : 12; // the hour '0' should be '12'
-  minutes = minutes < 10 ? '0' + minutes : minutes;
-  return `${hours}:${minutes} ${ampm}`;
-};
 
 export default function FacultySchedulePage() {
   const { user } = useContext(UserContext); // Access user context
@@ -143,7 +132,6 @@ export default function FacultySchedulePage() {
   };
 
   // Helper function to format time to 12-hour format with AM/PM
-// Helper function to format time to 12-hour format with AM/PM
 const formatTimeTo12Hour = (timeStr) => {
   if (!timeStr) return ''; // Handle empty or invalid time input
 
@@ -165,9 +153,6 @@ const formatTimeTo12Hour = (timeStr) => {
 
   return `${hours}:${minutes} ${ampm}`; // Return formatted time
 };
-
-
-
 
   return (
     <section className="m-3">

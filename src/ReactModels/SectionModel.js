@@ -9,6 +9,34 @@ export default class SectionModel {
         this.academicYear = academicYear;
     }
 
+
+     // Function to fetch all sections (without filtering)
+     static async fetchAllSections() {
+        try {
+            // Send a POST request to the server to fetch all sections
+            const response = await fetch('http://localhost:5000/section', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({}) // Empty body, since no filters are applied
+            });
+
+            // Check if the response was successful
+            if (!response.ok) {
+                throw new Error('Error fetching sections');
+            }
+
+            const data = await response.json(); // Parse the JSON response
+            console.log('Fetched Sections Data:', data); // Debugging log
+
+            return data; // Return the array of all sections
+        } catch (error) {
+            console.error('Error fetching sections:', error);
+            throw error; // Propagate the error if something goes wrong
+        }
+    }
+
     // Function to fetch all sections filtered by ff:
     static async fetchExistingSections(academicYear, yearLevel, semester, programNumber) {
         try {

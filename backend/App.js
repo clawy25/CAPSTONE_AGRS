@@ -716,6 +716,30 @@ app.get('/yearLevel', async (req, res) => {
     }
 });
 
+app.post('/section', async (req, res) => {
+    try {
+        // Log the request body for debugging purposes (optional)
+        console.log('Request Body:', req.body); // This can be empty since no filters are used
+
+        // Fetch all section data from the Supabase table
+        const { data: sectionData, error: sectionError } = await supabase
+            .from('section')
+            .select('*'); // Fetch all sections without any filtering
+
+        // Handle any errors while fetching data
+        if (sectionError || !sectionData) {
+            return res.status(500).json({ error: sectionError.message || 'Failed to fetch section data' });
+        }
+
+        // Return the array of sections
+        res.json(sectionData);
+    } catch (error) {
+        console.error('Error fetching section:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+
 
 // Get filtered sections
 app.post('/section', async (req, res) => {

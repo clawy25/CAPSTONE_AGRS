@@ -10,6 +10,8 @@ import YearLevelModel from '../ReactModels/YearLevelModel';
 import ProgramModel from '../ReactModels/ProgramModel';
 import CourseModel from '../ReactModels/CourseModel';
 import SectionModel from '../ReactModels/SectionModel';
+import ScheduleModel from '../ReactModels/ScheduleModel';
+import PersonnelModel from '../ReactModels/PersonnelModel'
 import StudentModel from '../ReactModels/StudentModel';
 import './PrintStyles.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -35,9 +37,13 @@ export default function FacultyDashboard () {
   const [courses, setCourses] = useState([]);
   const [selectedCourse, setSelectedCourse] = useState('');
   const [programs, setPrograms] = useState([]);
-    const [yearLevels, setYearLevels] = useState([]);
-
-
+  const [yearLevels, setYearLevels] = useState([]);
+  const [selectedAcademicYear, setSelectedAcademicYear] = useState('');
+  const [academicYear, setAcademicYear] = useState([]);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [selectedProgram, setSelectedProgram] = useState('');
+  const [programName, setProgramName] = useState('');
+  const [sections, setSections] = useState([]); 
 
   const SECTIONS = {
     CLASSES: 'classes',
@@ -46,13 +52,18 @@ export default function FacultyDashboard () {
     PROFILE: 'profile',
     CHANGE_PASSWORD: 'change-password',
   };
-  
-  
   useEffect(() => {
     if (!user) {
-      navigate('/login'); // Redirect to login if user is not found
+      navigate('/login'); // Redirect to login if user is not logged in
+    } else {
+      // Set the user's programNumber as the default selected option
+      setSelectedProgram(user.programNumber);
     }
   }, [user, navigate]);
+
+  const handleProgramChange = (e) => {
+    setSelectedProgram(e.target.value); // Allow program change if needed
+  };
 
       // Fetch existing students from StudentModel
       const fetchExistingStudents = async () => {
@@ -74,6 +85,61 @@ export default function FacultyDashboard () {
         // Fetch existing students onload
     useEffect(() => {fetchExistingStudents();}, []);
 
+      // Fetch Academic Years
+      useEffect(() => {
+        if (!user) {
+          console.error('User context is not available.');
+          setErrorMessage('User context is not available.');
+          return;
+        }
+      
+        const fetchAcademicYears = async () => {
+          try {
+            const data = await AcademicYearModel.fetchExistingAcademicYears();
+            console.log('Fetched academic years:', data); // Debugging log
+            if (data.length === 0) {
+              setErrorMessage('No academic years found.');
+            } else {
+              setAcademicYear(data); // Set fetched data
+            }
+          } catch (error) {
+            console.error('Error fetching academic years:', error);
+            setErrorMessage('Failed to load academic years.');
+          }
+        };
+      
+        fetchAcademicYears();
+      }, [user]);
+      
+      
+      useEffect(() => {
+        // Fetch the schedule when the component mounts
+        const fetchScheduleForUser = async () => {
+          if (!user) {
+            setErrorMessage('User not logged in');
+            return;
+          }
+    
+          try {
+            // Fetch the schedules based on personnelNumber (user's personnelNumber)
+            const schedules = await ScheduleModel.fetchSchedulesByPersonnelNumber(user.personnelNumber);
+            
+            // Find the section associated with this user
+            const userSchedule = schedules.find(schedule => schedule.personnelNumber === user.personnelNumber);
+    
+            if (userSchedule) {
+              setSection(userSchedule.sectionNumber); // Set the section based on the fetched data
+            } else {
+              setErrorMessage('No section found for this user');
+            }
+          } catch (error) {
+            console.error('Error fetching schedule:', error);
+            setErrorMessage('Failed to fetch schedule.');
+          }
+        };
+    
+        fetchScheduleForUser();
+      }, [user]); 
 
   const handleLogout = () => {
     navigate('/login');
@@ -122,21 +188,7 @@ export default function FacultyDashboard () {
   }, [showDropdown]);
 
 
-  
-  
 // Fetch programs from ProgramModel
-useEffect(() => {
-  const fetchPrograms = async () => {
-    try {
-      const fetchedPrograms = await ProgramModel.fetchAllPrograms(); 
-      setPrograms(fetchedPrograms);
-    } catch (error) {
-      console.error('Error fetching programs:', error);
-    }
-  };
-
-  fetchPrograms();
-}, []);
 
   // Fetch year levels from YearLevelModel
   useEffect(() => {
@@ -152,12 +204,82 @@ useEffect(() => {
     fetchYearLevels();
   }, []);
 
+  // Fetch programs from ProgramModel
+  useEffect(() => {
+    const fetchPrograms = async () => {
+      try {
+        const fetchedPrograms = await ProgramModel.fetchAllPrograms();
+        console.log('Fetched Programs:', fetchedPrograms); // Log the fetched programs
+        setPrograms(fetchedPrograms);
+        
+        // Find the programName that corresponds to user.programNumber
+        const program = fetchedPrograms.find(program => program.programNumber === user?.programNumber);
+        if (program) {
+          setProgramName(program.programName);
+        } else {
+          setProgramName('Program Not Found');
+        }
+      } catch (error) {
+        console.error('Error fetching programs:', error);
+      }
+    };
+    
+    fetchPrograms();
+  }, [user?.programNumber]);
+  
 
- // SECTION RELATED CONSTANTS
-  const sections = ['A', 'B', 'C'];
+  useEffect(() => {
+    if (user) {
+      const fetchUserProgram = async () => {
+        try {
+          const userProgram = await PersonnelModel.fetchProgramByPersonnelNumber(user.personnelNumber);
+          console.log('User Program:', userProgram); // Log the fetched user program
+          setProgram(userProgram.programName); // Set program based on user’s data
+        } catch (error) {
+          console.error('Error fetching user program:', error);
+        }
+      };
+  
+      fetchUserProgram();
+    }
+  }, [user]);
 
+  useEffect(() => {
+    const fetchSections = async () => {
+      try {
+        if (!user || !user.personnelNumber) {
+          setErrorMessage('User or personnelNumber not available');
+          return;
+        }
+  
+        // Extract necessary data from user and schedule
+        const { academicYear, yearLevel, semester, programNumber } = user; // Assuming these fields exist
+  
+        // Fetch the sections using the updated fetchExistingSections function
+        const sectionsData = await SectionModel.fetchExistingSections(
+          academicYear,
+          yearLevel,
+          semester,
+          programNumber
+        );
+  
+        console.log('Fetched Sections Data:', sectionsData); // Log the fetched sections data for debugging
+  
+        // Set the sections data to the state
+        setSections(sectionsData); 
+  
+      } catch (error) {
+        console.error('Error fetching sections:', error);
+        setErrorMessage('Failed to fetch sections.');
+      }
+    };
+  
+    fetchSections();
+  }, [user]);
 
-  //COURSE RELATED CONSTANTS
+  const handleSectionChange = (e) => {
+    setSelectedSection(e.target.value); // Set selected section when the user changes it
+  };
   
 
     // Fetch courses from CourseModel
@@ -165,16 +287,24 @@ useEffect(() => {
       const fetchCourses = async () => {
         try {
           const fetchedCourses = await CourseModel.fetchAllCourses();
-          setCourses(fetchedCourses);
+          const fetchedPersonnelNumber = await ScheduleModel.fetchAllSchedules()
+          
+          // Filter courses based on the selected program (user.programNumber)
+          const filteredCourses = fetchedCourses.filter(course => 
+            course.programNumber === user?.programNumber 
+          );
+          const filteredCoursesSchedule = fetchedPersonnelNumber.filter(schedule => 
+            schedule.personnelNumber === user?.personnelNumber 
+          );
+          
+          setCourses(filteredCourses, filteredCoursesSchedule);  // Set the filtered courses to the state
         } catch (error) {
           console.error('Error fetching courses:', error);
         }
       };
     
       fetchCourses();
-    }, []);
-
-    //CLASS LIST RELATED CONSTANTS
+    }, [user?.programNumber, user?.personnelNumber ]);  // Re-fetch courses when the user's programNumber changes
 
     const [showTable, setShowTable] = useState(false);
 
@@ -230,7 +360,7 @@ useEffect(() => {
       <div className="main-content flex-grow-1">
         <header className="header d-flex justify-content-between align-items-center p-3 border-bottom rounded">
           <h1 className="m-0 custom-color-green-font custom-font d-none d-md-block">
-            PARAÑAQUE CITY COLLEGE
+            FACULTY
           </h1>
           <button className="btn btn-link text-dark d-md-none" onClick={toggleSidebar} aria-label="Toggle Sidebar">
             <FontAwesomeIcon icon={faBars} size="lg" />
@@ -272,45 +402,30 @@ useEffect(() => {
       <div>
       <Row className="p-3 bg-white border border-success rounded mb-4 m-1">
 
-        <Col>
-        <Form.Group controlId="course">
-          <Form.Label className="custom-color-green-font custom-font">Course</Form.Label>
-          <Form.Control
-            as="select"
-            value={selectedCourse}
-            onChange={(e) => setSelectedCourse(e.target.value)}
-          >
-            <option value="">Select a course</option>
-            {courses.map((course) => (
-              <option key={course.id} value={course.courseDescriptiveTitle}>
-                {course.courseDescriptiveTitle}
-              </option>
-            ))}
-          </Form.Control>
-        </Form.Group>
-      </Col>
-
-
-
       <Col>
-        <Form.Group controlId="program">
-          <Form.Label className="custom-color-green-font custom-font">Program</Form.Label>
-          <Form.Control
-            as="select"
-            value={program}
-            onChange={(e) => setProgram(e.target.value)} // This will set the selected program
-          >
-            <option value="">Select a program</option> {/* Placeholder */}
-            {programs.map((prog) => (
-              <option key={prog.id} value={prog.programName}>
-                {prog.programName}
-              </option>
-            ))}
-          </Form.Control>
-        </Form.Group>
-      </Col>
+  <Form.Group controlId="academicYear">
+    <Form.Label className="custom-color-green-font custom-font">Academic Year</Form.Label>
+    <Form.Control
+      as="select"
+      value={selectedAcademicYear}
+      onChange={(e) => setSelectedAcademicYear(e.target.value)}
+    >
+      <option value="">Select an Academic Year</option>
+      {academicYear
+        .sort((a, b) => {
+          const yearA = parseInt(a.academicYear.split('-')[0]);
+          const yearB = parseInt(b.academicYear.split('-')[0]);
+          return yearB - yearA;  // Sort in descending order
+        })
+        .map((year) => (
+          <option key={year.academicYear} value={year.academicYear}>
+            {year.academicYear}
+          </option>
+        ))}
+    </Form.Control>
+  </Form.Group>
+</Col>
 
-          
       <Col>
         <Form.Group controlId="yearLevel">
           <Form.Label className="custom-color-green-font custom-font">Year Level</Form.Label>
@@ -330,34 +445,82 @@ useEffect(() => {
       </Col>
 
       <Col>
-        <Form.Group controlId="section">
-          <Form.Label className="custom-color-green-font custom-font">Section</Form.Label>
-          <Form.Control
-            as="select"
-            value={selectedSection}
-            onChange={(e) => setSelectedSection(e.target.value)}
-          >
-            <option value="">Select a section</option>
-            {sections.map((section, index) => (
-              <option key={index} value={section}>
-                Section {section}
-              </option>
-            ))}
-          </Form.Control>
-        </Form.Group>
-      </Col>
+      <Form.Group controlId="program">
+        <Form.Label>Program</Form.Label>
+        <Form.Control
+          as="select"
+          value={selectedProgram || ''}
+          onChange={handleProgramChange}
+          disabled // Disable dropdown since programNumber comes from user context
+        >
+          <option value={user?.programNumber || ''}>
+            {programName || 'Program Not Assigned'}
+          </option>
+        </Form.Control>
+      </Form.Group>
+    </Col>
 
-
-          <Col>
+      <Col>
             <Form.Group controlId="semester">
               <Form.Label className="custom-color-green-font custom-font">Semester</Form.Label>
               <Form.Control as="select" value={semester} onChange={(e) => setSemester(e.target.value)}>
-                <option value="First">First</option>
-                <option value="Second">Second</option>
+                <option value="First">1</option>
+                <option value="Second">2</option>
+                <option value="Second">3</option>
               </Form.Control>
             </Form.Group>
           </Col>
 
+          <Col>
+       
+          <Form.Group controlId="selectSection">
+  <Form.Label>Select Section</Form.Label>
+  <Form.Control 
+    as="select"
+    value={selectedSection}
+    onChange={handleSectionChange}
+  >
+    <option value="">Select a Section</option>
+    {sections.length > 0 ? (
+      sections.map((section, index) => {
+        // Use sectionNumber as the key, and ensure uniqueness by appending index
+        const sectionKey = `${section.sectionNumber || 'no-section'}-${index}`;
+
+        return (
+          <option 
+            key={sectionKey} 
+            value={section.sectionNumber}
+          >
+            {section.sectionNumber} {/* Displaying just sectionNumber */}
+          </option>
+        );
+      })
+    ) : (
+      <option value="">No sections available</option>
+    )}
+  </Form.Control>
+</Form.Group>
+</Col>
+
+
+<Col>
+  <Form.Group controlId="course">
+    <Form.Label className="custom-color-green-font custom-font">Course</Form.Label>
+    <Form.Control
+      as="select"
+      value={selectedCourse}
+      onChange={(e) => setSelectedCourse(e.target.value)}
+      className="custom-dropdown"  // Apply custom class here
+    >
+      <option value="">Select a course</option>
+      {courses.map((course) => (
+        <option key={course.id} value={course.courseDescriptiveTitle}>
+          {course.courseDescriptiveTitle}
+        </option>
+      ))}
+    </Form.Control>
+  </Form.Group>
+</Col>
 
       {/* Button to show/hide the table */}
       <Col className="d-flex align-items-end">
@@ -378,9 +541,6 @@ useEffect(() => {
         </Col>
 
       </Row>
-
-        
-        
 
       {/* SECOND ROW: TABLE */}
       {showTable && (
@@ -473,7 +633,6 @@ useEffect(() => {
     )}
   </section>
 )}
-
 
         {selectedSection === SECTIONS.SCHEDULE && (
           <section className="m-3 ms-0">
