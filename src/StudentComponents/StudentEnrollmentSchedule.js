@@ -8,6 +8,7 @@ import TimelineModel from '../ReactModels/TimelineModel';
 import PersonnelModel from '../ReactModels/PersonnelModel';
 import AcademicYearModel from '../ReactModels/AcademicYearModel';
 import ScheduleModel from '../ReactModels/ScheduleModel';
+import EnrollmentModel from '../ReactModels/EnrollmentModel';
 import { UserContext } from '../Context/UserContext';
 
 
@@ -104,12 +105,10 @@ const ScheduleTable = () => {
 
   const fetchSections = async () => {
     try {
-      const fetchedSections = await SectionModel.fetchExistingSections(
-        currentAcademicYear[0]?.academicYear,
-        yearLevel,
-        semester,
-        program[0]?.programNumber
-      );
+      console.log(currentAcademicYear[0]?.academicYear,yearLevel,semester,program[0]?.programNumber);
+      const fetchedSections = await SectionModel.fetchExistingSections(currentAcademicYear[0]?.academicYear, yearLevel, semester, program[0]?.programNumber);
+
+      console.log(fetchedSections);
       setSections(fetchedSections); // Update the sections state with the fetched data
     } catch (error) {
       console.error('Error fetching sections:', error);
@@ -196,6 +195,7 @@ useEffect(() => {
 
   const handleSectionChange = (e) => {
     const selectedSection = e.target.value;
+    setSchedules([]);
     setSelectedSection(selectedSection);
   };
 
@@ -207,9 +207,23 @@ useEffect(() => {
     );
   };
 
-  const handleSaveAndAssess = () => {
-    const checkedBoxesCount = courses.filter(subject => subject.checked).length;
-    setCheckedCount(checkedBoxesCount);
+  const handleSaveAndAssess = async () => {
+    const invalidSchedules = schedules.filter(schedule => 
+      !schedule.courseCode || 
+      !schedule.scheduleDay || 
+      !schedule.startTime || 
+      !schedule.endTime || 
+      !schedule.personnelNumber
+    );
+    
+    if (invalidSchedules.length > 0) {
+      alert(`Cannot proceed due to incomplete schedules:\n\n${invalidSchedules.map((schedule) => `${schedule.courseCode}`).join('\n')}`);
+      return;
+    }
+
+    //const checking = await EnrollmentModel.fetchEnrollmentData(user.studentNumber);
+
+    //console.log(checking);
     setShowModal(true);
   };
 
@@ -219,22 +233,55 @@ useEffect(() => {
 
   const handleCloseModal = () => {
     setShowModal(false);
-    if (userSelectedCount === checkedCount) {
-      setIsEnrolled(true);
-    }
   };
 
-  function formatTime(timeString) {
+  const handleEnroll = async () =>{
+    try{
+      const enrollment = [];
+
+      if (schedules && schedules.length > 0){
+        schedules.forEach(row => {
+          enrollment.push({
+            studentNumber: user.studentNumber,
+            scheduleNumber: row.scheduleNumber,
+            courseCode: row.courseCode,
+            status: 'Ongoing'
+          });
+        })
+      }
+      console.log(enrollment);
+
+      await EnrollmentModel.createAndInsertEnrollment(enrollment);
+      setIsEnrolled(true);
+    }
+    catch (error) {
+      console.error('Error fetching sections:', error);
+    }
+    setShowModal(false);
+  };
+
+  function formatTime(day, startTime, endTime) {
+    if (!day && !startTime && !endTime) {
+      return "No schedule"; // If all fields are null or empty, return "No schedule"
+    }
+  
+    if (!startTime && !endTime) {
+      return `${day}, No timeframe`; // If only startTime and endTime are empty
+    }
     // Split the HH:MM:SS format into its components
-    const [hours, minutes] = timeString.split(':');
+    const [startHrs, minutes] = startTime.split(':');
+    const [endHrs, endMin] = endTime.split(':');
   
-    // Convert hours from 24-hour to 12-hour format
-    const hour = (hours % 12) || 12; // 0 or 24 becomes 12 (midnight)
-    const ampm = hours >= 12 ? 'pm' : 'am'; // Determine am/pm based on hours
+    const startHr = (startHrs % 12) || 12; // 0 or 24 becomes 12 (midnight)
+    const startampm = startHrs >= 12 ? 'pm' : 'am'; // Determine am/pm based on hours
   
-    // Return formatted time
-    return `${hour}:${minutes} ${ampm}`;
+    const endHr = (endHrs % 12) || 12; // 0 or 24 becomes 12 (midnight)
+    const endampm = endHrs >= 12 ? 'pm' : 'am'; // Determine am/pm based on hours
+  
+    // Return formatted time with day
+    return `${day || 'No day'}, ${startHr}:${minutes} ${startampm} - ${endHr}:${endMin} ${endampm}`;
   }
+  
   
 
   return (
@@ -309,69 +356,54 @@ useEffect(() => {
       
       <div className="table-responsive">
       <Table hover className="mt-2">
-  <thead>
-    <tr className='text-center'>
-      <th className="text-success custom-font">#</th>
-      <th className="text-success custom-font">Subject Code</th>
-      <th className="text-success custom-font">Select</th>
-      <th className="text-success custom-font">Subject Description</th>
-      <th className="text-success custom-font">Lecture Units</th>
-      <th className="text-success custom-font">Lab Units</th>
-      <th className="text-success custom-font">Schedule</th>
-      <th className="text-success custom-font">Professor</th>
-    </tr>
-  </thead>
-  <tbody>
-    {schedules.length > 0 ? (
-      schedules.map((schedule, index) => {
-          const courseDetails = courses?.find(course => course.courseCode === schedule.courseCode);
-                
-        return (
-          <tr key={index}>
-            <td>{index + 1}</td>
-            <td>{courseDetails?.courseCode}</td>
-            <td>
-              <Form.Check
-                type="checkbox"
-                checked={courseDetails?.checked}
-                onChange={() => handleCheckboxChange(courseDetails?.id)}
-              />
-            </td>
-            <td>{courseDetails?.courseDescriptiveTitle || 'N/A'}</td>
-            <td>{courseDetails?.courseLecture || 'N/A'}</td>
-            <td>{courseDetails?.courseLaboratory || 'N/A'}</td>
-            <td>
-              <ul className=' list-unstyled'>
-                  <li>
-                      <strong>{schedule.scheduleDay}</strong>: {formatTime(schedule.startTime)} - {formatTime(schedule.endTime)}
-                  </li>
-              </ul>
-            </td>
-            <td>
-        <Form.Control
-          as="input"
-          type="text"
-          value={
-            schedule.personnelNumber
-            ? `${professors.find((prof) => prof.personnelNumber === schedule.personnelNumber)?.personnelNameFirst || ''} ${
-                professors.find((prof) => prof.personnelNumber === schedule.personnelNumber)?.personnelNameLast || ''}` : 'No Professor'}
-          readOnly
-          className="mr-2"
-        />
-            </td>
-
-
+        <thead>
+          <tr className='text-center'>
+            <th className="text-success custom-font">#</th>
+            <th className="text-success custom-font">Subject Code</th>
+            <th className="text-success custom-font">Subject Description</th>
+            <th className="text-success custom-font">Lecture Units</th>
+            <th className="text-success custom-font">Lab Units</th>
+            <th className="text-success custom-font">Schedule</th>
+            <th className="text-success custom-font">Professor</th>
           </tr>
-        );
-      })
-    ) : (
-      <tr>
-        <td colSpan="8">No courses available</td>
-      </tr>
-    )}
-  </tbody>
-</Table>
-
+        </thead>
+        <tbody>
+          {schedules.length > 0 ? (
+            schedules.map((schedule, index) => {
+              const courseDetails = courses?.find(course => course.courseCode === schedule.courseCode);
+              return (
+                <tr key={index}>
+                  <td>{index + 1}</td>
+                  <td>{courseDetails?.courseCode}</td>
+                  <td>{courseDetails?.courseDescriptiveTitle || 'N/A'}</td>
+                  <td>{courseDetails?.courseLecture || 'N/A'}</td>
+                  <td>{courseDetails?.courseLaboratory || 'N/A'}</td>
+                  <td>
+                    <ul className=' list-unstyled'>
+                      <li>
+                        {formatTime(schedule.scheduleDay, schedule.startTime, schedule.endTime)}
+                      </li>
+                    </ul>
+                  </td>
+                  <td>
+                    <Form.Control
+                      as="input"
+                      type="text"
+                      value={schedule.personnelNumber
+                              ? `${professors.find((prof) => prof.personnelNumber === schedule.personnelNumber)?.personnelNameFirst || ''} ${professors.find((prof) => prof.personnelNumber === schedule.personnelNumber)?.personnelNameLast || ''}` : ''}
+                      readOnly
+                      className="mr-2"/>
+                  </td>
+                </tr>
+              );
+            })
+          ) : (
+            <tr>
+              <td colSpan="8">No courses available</td>
+            </tr>
+          )}
+        </tbody>
+      </Table>
       </div>
     </div>
   </div>
@@ -381,34 +413,67 @@ useEffect(() => {
         className='btn bg-custom-color-green' 
         onClick={handleSaveAndAssess} 
         style={{ marginTop: '20px' }}
+        disabled = {schedules.length === 0}
       >
         Save & Assess
       </Button>
 
       {/* Modal for confirming the selected number of courses */}
-      <Modal show={showModal} onHide={handleCloseModal}>
+      <Modal size="lg"show={showModal} onHide={handleCloseModal}>
         <Modal.Header closeButton>
-          <Modal.Title>Confirm Number of Checked Boxes</Modal.Title>
+          <Modal.Title>Confirmation of Enrollment</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <p>You have checked {checkedCount} courses. Please confirm the count by selecting a number:</p>
+          <i><p>Please confirm the following information below.</p></i>
           <div className="d-flex flex-wrap gap-2">
-            {[...Array(10).keys()].map(i => (
-              <Button
-                key={i + 1}
-                variant={userSelectedCount === i + 1 ? 'success' : 'outline-success'}
-                onClick={() => handleNumberClick(i + 1)}
-              >
-                {i + 1}
-              </Button>
-            ))}
+            <p>You have selected section <strong>{selectedSection}</strong> with the following courses and their schedules:</p>
+
+            <Table hover className="mt-2">
+              <thead>
+                <tr className='text-center'>
+                  <th className="text-success custom-font">#</th>
+                  <th className="text-success custom-font">Course Description</th>
+                  <th className="text-success custom-font">Schedule</th>
+                  <th className="text-success custom-font">Professor</th>
+                </tr>
+              </thead>
+              <tbody>
+                {schedules.length > 0 ? (
+                  schedules.map((schedule, index) => {
+                    const courseDetails = courses?.find(course => course.courseCode === schedule.courseCode);
+                    return (
+                      <tr key={index}>
+                        <td>{index + 1}</td>
+                        <td>{courseDetails?.courseDescriptiveTitle || 'N/A'}</td>
+                        <td>
+                          <ul className=' list-unstyled'>
+                            <li>
+                              {formatTime(schedule.scheduleDay, schedule.startTime, schedule.endTime)}
+                            </li>
+                          </ul>
+                        </td>
+                        <td>{schedule.personnelNumber
+                              ? `${professors.find((prof) => prof.personnelNumber === schedule.personnelNumber)?.personnelNameFirst || ''} ${professors.find((prof) => prof.personnelNumber === schedule.personnelNumber)?.personnelNameLast || ''}` : ''}
+                        </td>
+                      </tr>
+                    );
+                  })
+                  ) : (
+                  <tr>
+                    <td colSpan="8">No courses available</td>
+                  </tr>
+                )}
+              </tbody>
+            </Table>
+
+            <strong><p>WARNING! Once you have confirmed, this will be your schedule for the semester and you CANNOT change it anymore!</p></strong>
           </div>
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={handleCloseModal}>
             Close
           </Button>
-          <Button variant="success" onClick={handleCloseModal} disabled={userSelectedCount !== checkedCount}>
+          <Button variant="success" onClick={handleEnroll}>
             Confirm
           </Button>
         </Modal.Footer>

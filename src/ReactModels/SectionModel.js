@@ -40,7 +40,7 @@ export default class SectionModel {
     // Function to fetch all sections filtered by ff:
     static async fetchExistingSections(academicYear, yearLevel, semester, programNumber) {
         try {
-            const response = await fetch('http://localhost:5000/section', {
+            const response = await fetch('http://localhost:5000/section/filter', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
