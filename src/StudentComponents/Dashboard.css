@@ -398,6 +398,7 @@
   border: 1px solid #ddd;
   padding: 10px;
   text-align: center;
+  font-size: 14px; /* Set the same font size for both headers and data */
 }
 
 .details-table th {
@@ -420,6 +421,7 @@
 .details-table tbody tr:hover {
   background-color: #f1f1f1;
 }
+
 
 /* src/Dashboard.css */
 
@@ -1141,7 +1143,7 @@ background-color: #f0f0f0;
 .details-table th, .details-table td {
   border: 1px solid #ddd;
   padding: 8px;
-  text-align: left;
+  text-align: center;
 }
 
 .details-table th {
@@ -1406,6 +1408,12 @@ background-color: #f0f0f0;
 
 .sticky-student-no {
   position: sticky;
+  left: 0;
+  background-color: #F6F7C4;
+  top: 42px;
+  padding: 10px;
+  z-index: 4;
+  box-shadow: 1px 0 0 rgba(0.1, 0.1, 0, 0.1);
 }
 
 .sticky-student-no::after {
@@ -1417,12 +1425,112 @@ background-color: #f0f0f0;
   width: 2px; /* Adjust thickness as needed */
   background-color: #ccc; /* Matches border color */
   z-index: 5; /* Ensure it appears above other content */
+
 }
 
 .sticky-name {
   position: sticky;
   border-left: 2px solid #ccc; /* Maintains border with the previous column */
+  left: 73px;
+  top: 42px;
+  background-color: #F6F7C4;
+  padding: 10px;
+  z-index: 4;
 }
+
+/* Custom width for the DatePicker */
+.custom-datepicker {
+  width: 100px; /* Adjust the width as needed */
+  padding: 5px; /* Optional: Add some padding to the input for better look */
+  position: relative; /* Required for positioning z-index */
+  z-index: 5;
+}
+
+/* Custom styles to ensure the calendar dropdown appears above the sticky column */
+.react-datepicker__triangle {
+  z-index: 9999; /* Ensure the calendar dropdown appears above */
+}
+
+.react-datepicker__month {
+  z-index: 9999; /* Ensure the month view dropdown is also above */
+}
+
+.react-datepicker {
+  position: absolute !important; /* Ensure the calendar pops up at the correct position */
+  z-index: 9999; /* Increase the z-index to make sure it's above the sticky column */
+}
+
+/* Optional: If the sticky column is causing issues, ensure its z-index is lower than the DatePicker's */
+.sticky-column {
+  z-index: 10; /* Adjust this according to the structure of your layout */
+}
+
+
+.sticky-style {
+  position: sticky;
+  left: 0;
+  top: 0;
+  background-color: #F6F7C4;
+  padding: 10px;
+  z-index: 4;
+  box-shadow: 1px 0 0 rgba(0, 0, 0, 0.1);
+}
+
+.sticky-header {
+  position: sticky;
+  top: 0;
+  background-color: #f4f4f4;
+  padding: 10px;
+  z-index: 1;
+  box-shadow: 1px 0 0 rgba(0, 0, 0, 0.1);
+}
+
+.sticky-top-left {
+  position: sticky;
+  left: 0;
+  top: 42px;
+  background-color: #f4f4f4;
+  padding: 10px;
+  z-index: 1;
+  box-shadow: 1px 0 0 rgba(0, 0, 0, 0.1);
+}
+.sticky-top-left-up {
+  position: sticky;
+  left: 0;
+  top: 42px;
+  background-color: #f4f4f4;
+  padding: 10px;
+  z-index: 3;
+  box-shadow: 1px 0 0 rgba(0, 0, 0, 0.1);
+}
+
+.sticky-top-left-offset {
+  position: sticky;
+  left: 0;
+  top: 105px;
+  background-color: #f4f4f4;
+  padding: 10px;
+  z-index: 1;
+  box-shadow: 1px 0 0 rgba(0, 0, 0, 0.1);
+}
+
+.sticky-top-left-offset-168 {
+  position: sticky;
+  left: 0;
+  top: 168px;
+  background-color: #f4f4f4;
+  padding: 10px;
+  z-index: 1;
+  box-shadow: 1px 0 0 rgba(0, 0, 0, 0.1);
+}
+
+
+
+
+
+
+
+
 
 
 
