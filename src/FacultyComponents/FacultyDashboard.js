@@ -18,7 +18,7 @@ import EnrollmentModel from '../ReactModels/EnrollmentModel'
 import './PrintStyles.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { UserContext } from '../Context/UserContext';
-import { Row, Col, Form } from 'react-bootstrap';
+import { Row, Col, Form, Table } from 'react-bootstrap';
 import { Button } from 'react-bootstrap';
 
 
@@ -56,6 +56,13 @@ export default function FacultyDashboard () {
   const [isEnrolled, setIsEnrolled] = useState(false);
   const [showTable, setShowTable] = useState(false);
 
+  const [finalData, setFinalData] = useState([]);
+  const [isTableVisible, setIsTableVisible] = useState(false);
+  const [classListData, setClassListData] = useState([]); // Store class list data
+
+
+
+
   const SECTIONS = {
     CLASSES: 'classes',
     SCHEDULE: 'schedule',
@@ -88,9 +95,7 @@ export default function FacultyDashboard () {
     setShowSidebar(!showSidebar);
   };
 
-  const handleClassListClick = () => {
-    setShowTable(!showTable); // Toggle the table visibility
-  };
+
 
 
   useEffect(() => {
@@ -123,7 +128,6 @@ export default function FacultyDashboard () {
           const fetchAcademicYears = async () => {
             try {
               const data = await AcademicYearModel.fetchExistingAcademicYears();
-              console.log('Fetched academic years:', data); // Debugging log
               if (data.length === 0) {
                 setErrorMessage('No academic years found.');
               } else {
@@ -143,7 +147,6 @@ export default function FacultyDashboard () {
     const fetchPrograms = async () => {
       try {
         const fetchedPrograms = await ProgramModel.fetchAllPrograms();
-        console.log('Fetched Programs:', fetchedPrograms); // Log the fetched programs
         setPrograms(fetchedPrograms);
         
         // Find the programName that corresponds to user.programNumber
@@ -175,25 +178,134 @@ export default function FacultyDashboard () {
       fetchYearLevels();
     }, []);
 
-      // Fetch existing students from StudentModel
-      const fetchExistingStudents = async () => {
-        try {
-            const existingStudents = await StudentModel.fetchExistingStudents();
-            
-            // Modify student.id to start from 0, 1, 2, etc.
-            const studentsWithModifiedIds = existingStudents.map((student, index) => ({
-                ...student, // Keep the existing student data
-                id: index   // Overwrite the id with the new index
-            }));
+
+    const handleClassListClick = async () => {
+      // Check for missing required fields
+      if (!selectedAcademicYear) {
+        alert("Please select an Academic Year.");
+        return;
+      }
+      if (!selectedProgram) {
+        alert("Please select a Program.");
+        return;
+      }
+      if (!yearLevel) {
+        alert("Please select a Year Level.");
+        return;
+      }
+      if (!semester) {
+        alert("Please select a Semester.");
+        return;
+      }
+      if (!section) {
+        alert("Please select a Section.");
+        return;
+      }
+      if (!selectedCourse) {
+        alert("Please select a Course.");
+        return;
+      }
     
-            setStudents(studentsWithModifiedIds);
+      // Toggle table visibility
+      setIsTableVisible(!isTableVisible);
+    
+      if (!isTableVisible) {
+        try {
+          // Fetch class list data from your models or API
+          const enrollments = await EnrollmentModel.fetchAllEnrollment();
+          const schedules = await ScheduleModel.fetchSchedules();
+          const students = await StudentModel.fetchExistingStudents();
+          const courses = await CourseModel.fetchAllCourses();
+    
+          // Map over enrollments and match data from other models
+          const classList = enrollments.map((enrollment) => {
+            const matchedStudent = students.find(student => student.studentNumber === enrollment.studentNumber);
+            const matchedSchedule = schedules.find(schedule => schedule.scheduleNumber === enrollment.scheduleNumber);
+            const matchedCourse = courses.find(course => course.courseCode === enrollment.courseCode);
+    
+            return {
+              studentNumber: matchedStudent?.studentNumber || "N/A",
+              studentFirstName: matchedStudent?.studentNameFirst || "N/A",
+              studentLastName: matchedStudent?.studentNameLast || "N/A",
+              courseCode: matchedCourse?.courseCode || "N/A",
+              yearLevel: matchedSchedule?.yearLevel || "N/A",
+              sectionNumber: matchedSchedule?.sectionNumber || "N/A",
+            };
+          });
+    
+          // Update state with fetched class list data
+          setClassListData(classList);
         } catch (error) {
-            console.error('Error fetching existing students:', error);
+          console.error("Error fetching class list data:", error);
+          alert("An error occurred while fetching class list data. Please try again.");
         }
-      };
+      }
+    };
+    
+    
   
-        // Fetch existing students onload
-    useEffect(() => {fetchExistingStudents();}, []);
+    const fetchExistingStudents = async () => {
+      
+      // Fetch data from all models
+      const enrollments = await EnrollmentModel.fetchAllEnrollment();
+      const schedules = await ScheduleModel.fetchSchedules();
+      const students = await StudentModel.fetchExistingStudents();
+      const courses = await CourseModel.fetchAllCourses();
+    
+      // Map over enrollments and match data from other models
+      const finalResults = enrollments.map(enrollment => {
+      
+        const matchedStudent = students.find(student => student.studentNumber === enrollment.studentNumber);
+        const matchedSchedule = schedules.find(schedule => schedule.scheduleNumber === enrollment.scheduleNumber);
+        const matchedCourse = courses.find(course => course.courseCode === enrollment.courseCode);
+      
+        return {
+          studentNumber: matchedStudent?.studentNumber || "N/A",
+          studentLastName: matchedStudent?.studentNameLast || "N/A",
+          studentFirstName: matchedStudent?.studentNameFirst || "N/A",
+          studentMiddleName: matchedStudent?.studentNameMiddle || "N/A",
+          contactNumber: matchedStudent?.studentContact || "N/A",
+          pccEmail: matchedStudent?.studentPccEmail || "N/A",
+          studentPccAddress: matchedStudent?.studentAddress || "N/A",
+          scheduleNumber: matchedSchedule?.scheduleNumber || "N/A",
+          academicYear: matchedSchedule?.academicYear || "N/A",
+          yearLevel: matchedSchedule?.yearLevel || "N/A",
+          semester: matchedSchedule?.semester || "N/A",
+          sectionNumber: matchedSchedule?.sectionNumber || "N/A", // Ensure sectionNumber is set correctly
+          courseCode: matchedCourse?.courseCode || "N/A", // Ensure courseCode is set correctly
+          programNumber: matchedCourse?.programNumber || "N/A",
+        };
+      });
+    
+      // Apply filtering logic here
+      const filteredResults = finalResults.filter(student => {
+    
+    
+        // Ensure all values are converted to strings and trimmed for comparison
+        const matchesAcademicYear = selectedAcademicYear ? String(student.academicYear).trim() === String(selectedAcademicYear).trim() : true;
+        const matchesYearLevel = yearLevel ? String(student.yearLevel).trim() === String(yearLevel).trim() : true;
+        const matchesProgram = selectedProgram ? student.programNumber === selectedProgram : true;
+        const matchesSemester = semester ? String(student.semester).trim() === String(semester).trim() : true;
+        const matchesSection = section ? String(student.sectionNumber).trim() === String(section).trim() : true;
+        const matchesCourse = selectedCourse ? String(student.courseCode).trim() === String(selectedCourse).trim() : true;
+    
+        // Only return the student if all conditions match
+        return matchesAcademicYear && matchesYearLevel && matchesProgram && matchesSemester && matchesSection && matchesCourse;
+      });
+    
+      console.table(filteredResults);
+    
+      // Update state with filtered data
+      setFinalData(filteredResults);
+    };
+  
+    // Fetch existing students onload when the table is visible
+    useEffect(() => {
+      if (isTableVisible) {
+        fetchExistingStudents(); // Fetch data only when the table is visible
+      }
+    }, [isTableVisible]); // This will trigger when isTableVisible changes
+
      
       useEffect(() => {
         // Fetch the schedule when the component mounts
@@ -356,14 +468,8 @@ export default function FacultyDashboard () {
           setSemester('Missing data');
           return; // Stop if required data is missing
         }
-      
-        // Log the parameters being passed to fetchTimelineData
-        console.log("Fetching timeline data for:", academicYear, studentNumber);
-      
+         
         const timelineData = await TimelineModel.fetchTimelineData(academicYear, studentNumber);
-      
-        // Log the fetched timeline data
-        console.log("Fetched timeline data:", timelineData);
       
         if (timelineData && timelineData.length > 0) {
           const latestTimeline = timelineData[0];
@@ -387,21 +493,12 @@ export default function FacultyDashboard () {
           console.error("Missing required data: academic year, year level, semester, or program.");
           return;
         }
-    
-        console.log("Fetching sections with the following parameters:");
-        console.log("Academic Year:", selectedAcademicYear);
-        console.log("Year Level:", yearLevel);
-        console.log("Semester:", semester);
-        console.log("Program Number:", program[0]?.programNumber);
-    
         const fetchedSections = await SectionModel.fetchExistingSections(
           selectedAcademicYear,
           yearLevel,
           semester,
           program[0]?.programNumber
         );
-    
-        console.log("Fetched Sections:", fetchedSections);
         setSections(fetchedSections);
       } catch (error) {
         console.error("Error fetching sections:", error);
@@ -443,7 +540,12 @@ export default function FacultyDashboard () {
     newWindow.document.close();
     newWindow.print();
   };
-  
+
+  const getProgramNameByNumber = (programNumber) => {
+    const program = programs.find(p => p.programNumber === programNumber);
+    return program ? program.programName : null; // Return null if no match is found
+  };
+ 
   return (
     <div className="dashboard-container d-flex">
       <div className={`sidebar bg-custom-color-green ${showSidebar ? 'd-block' : 'd-none d-md-block'}`}>
@@ -520,207 +622,227 @@ export default function FacultyDashboard () {
     ) : (
 
       <div>
-      <Row className="p-3 bg-white border border-success rounded mb-4 m-1">
 
-      <Col>
-  <Form.Group controlId="academicYear">
-    <Form.Label className="custom-color-green-font custom-font">Academic Year</Form.Label>
-    <Form.Control
-      as="select"
-      value={selectedAcademicYear}
-      onChange={(e) => setSelectedAcademicYear(e.target.value)}
-    >
-      <option value="">Select an Academic Year</option>
-      {academicYear
-        .sort((a, b) => {
-          const yearA = parseInt(a.academicYear.split('-')[0]);
-          const yearB = parseInt(b.academicYear.split('-')[0]);
-          return yearB - yearA;  // Sort in descending order
-        })
-        .map((year) => (
-          <option key={year.academicYear} value={year.academicYear}>
-            {year.academicYear}
+
+
+<Row className="p-3 bg-white border border-success rounded mb-4 m-1  justify-content-center align-items-center">
+  {/* Filter Controls */}
+  <Col>
+    <Form.Group controlId="academicYear">
+      <Form.Label className="custom-color-green-font custom-font">Academic Year</Form.Label>
+      <Form.Control
+        as="select"
+        value={selectedAcademicYear}
+        onChange={(e) => setSelectedAcademicYear(e.target.value)}
+      >
+        <option value="">Select an Academic Year</option>
+        {academicYear
+          .sort((a, b) => {
+            const yearA = parseInt(a.academicYear.split('-')[0]);
+            const yearB = parseInt(b.academicYear.split('-')[0]);
+            return yearB - yearA; // Sort in descending order
+          })
+          .map((year) => (
+            <option key={year.academicYear} value={year.academicYear}>
+              {year.academicYear}
+            </option>
+          ))}
+      </Form.Control>
+    </Form.Group>
+  </Col>
+
+  <Col>
+    <Form.Group controlId="program">
+      <Form.Label className='custom-color-green-font custom-font'>Program</Form.Label>
+      <Form.Control
+        as="select"
+        value={selectedProgram || ''}
+        onChange={handleProgramChange}
+        disabled // Disable dropdown since programNumber comes from user context
+      >
+        <option value={user?.programNumber || ''}>
+          {programName || 'Program Not Assigned'}
+        </option>
+      </Form.Control>
+    </Form.Group>
+  </Col>
+
+  <Col>
+    <Form.Group controlId="yearLevel">
+      <Form.Label className="custom-color-green-font custom-font">Year Level</Form.Label>
+      <Form.Control
+        as="select"
+        value={yearLevel}
+        onChange={(e) => setYearLevel(e.target.value)}
+      >
+        <option value="">Select a year level</option>
+        {yearLevels.map((level) => (
+          <option key={level.id} value={level.id}>
+            {level.id}
           </option>
         ))}
-    </Form.Control>
-  </Form.Group>
-</Col>
+      </Form.Control>
+    </Form.Group>
+  </Col>
 
-<Col>
-  <Form.Group controlId="yearLevel">
-    <Form.Label className="custom-color-green-font custom-font">Year Level</Form.Label>
-    <Form.Control
-      as="select"
-      value={yearLevel}
-      onChange={(e) => setYearLevel(e.target.value)}
-    >
-      <option value="">Select a year level</option>
-      {yearLevels.map((level) => (
-        <option key={level.id} value={level.id}>
-          {level.id} {/* Display the id here */}
-        </option>
-      ))}
-    </Form.Control>
-  </Form.Group>
-</Col>
+  {/* Semester */}
+  <Col>
+    <Form.Group controlId="semester">
+      <Form.Label className="custom-color-green-font custom-font">Semester</Form.Label>
+      <Form.Control as="select" value={semester} onChange={(e) => setSemester(e.target.value)}>
+        <option value="">Select a semester</option>
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+      </Form.Control>
+    </Form.Group>
+  </Col>
 
-
-      <Col>
-      <Form.Group controlId="program">
-        <Form.Label>Program</Form.Label>
-        <Form.Control
-          as="select"
-          value={selectedProgram || ''}
-          onChange={handleProgramChange}
-          disabled // Disable dropdown since programNumber comes from user context
-        >
-          <option value={user?.programNumber || ''}>
-            {programName || 'Program Not Assigned'}
+  {/* Section */}
+  <Col>
+    <Form.Group controlId="section">
+      <Form.Label className="custom-color-green-font custom-font">Select Section</Form.Label>
+      <Form.Control
+        as="select"
+        value={section}
+        onChange={(e) => setSection(e.target.value)}
+      >
+        <option value="">Select a section</option>
+        {sections.map((section) => (
+          <option key={section.id} value={section.sectionNumber}>
+            {section.sectionNumber}
           </option>
-        </Form.Control>
-      </Form.Group>
-    </Col>
+        ))}
+      </Form.Control>
+    </Form.Group>
+  </Col>
 
-      <Col>
-            <Form.Group controlId="semester">
-              <Form.Label className="custom-color-green-font custom-font">Semester</Form.Label>
-              <Form.Control as="select" value={semester} onChange={(e) => setSemester(e.target.value)}>
-              <option value="">Semester not assigned</option>
-                <option value="1">1</option>
-                <option value="2">2</option>
-                <option value="3">3</option>
-              </Form.Control>
-            </Form.Group>
-          </Col>
+  {/* Course */}
+  <Col>
+    <Form.Group controlId="course">
+      <Form.Label className="custom-color-green-font custom-font">Course</Form.Label>
+      <Form.Control
+        as="select"
+        value={selectedCourse}
+        onChange={(e) => setSelectedCourse(e.target.value)}
+      >
+        <option value="">Select a course</option>
+        {courses.map((course) => (
+          <option key={course.id} value={course.courseCode}>
+            {course.courseCode}
+          </option>
+        ))}
+      </Form.Control>
+    </Form.Group>
+  </Col>
 
-          <Col>
-  <Form.Group controlId="section">
-    <Form.Label className="custom-color-green-font custom-font">Select Section</Form.Label>
-    <Form.Control
-      as="select"
-      value={section}
-      onChange={(e) => setSection(e.target.value)}
+  {/* Button to trigger fetch and filter */}
+  <Col>
+    <Button variant="success" className="w-100 mt-4" onClick={handleClassListClick}>
+      Class List
+    </Button>
+  </Col>
+
+  <Col>
+    <Button variant="success" className="w-100 mt-4" onClick={() => handleClassClick('BSIT1-1')}>
+      Grade Sheet
+    </Button>
+  </Col>
+</Row>
+
+
+  {/* Table and printable content */}
+
+  <div className="table-container mt-4 bg-white rounded">
+  {/* Print Button */}
+  <div
+    className="d-flex flex-column flex-md-row justify-content-between align-items-center"
+    style={{
+      position: 'sticky',
+      top: 0,
+      backgroundColor: 'white',
+      zIndex: 10,
+      padding: '10px',
+    }}
+  >
+    <h4 className="custom-font custom-color-green-font text-center text-md-left">
+      Course: {selectedCourse ? `${selectedCourse}` : "All"}
+    </h4>
+    <button 
+      className="btn btn-success mt-2 mt-md-0"
+      onClick={() => printTableContent("printableContent")}
     >
-      <option value="">Select a section</option>
-      {sections.map((section) => (
-        <option key={section.id} value={section.id}>
-          {section.sectionNumber} {/* Display sectionNumber here */}
-        </option>
-      ))}
-    </Form.Control>
-  </Form.Group>
-</Col>
+      Print Class List
+    </button>
+  </div>
+
+  {/* Table Content */}
+  <div id="printableContent">
+  <div className="class-info-row mb-3 mx-2 p-2 border border-success fs-6 rounded bg-success text-white">
+  <div className="row">
+    <div className="col-12 col-md-2">
+      <strong>Academic Year:</strong> {selectedAcademicYear || "N/A"}
+    </div>
+    <div className="col-12 col-md-2">
+      <strong>Program:</strong> {getProgramNameByNumber(user?.programNumber) || "Program Not Assigned"}
+    </div>
+    <div className="col-12 col-md-2">
+      <strong>Year Level:</strong> {yearLevel || "N/A"}
+    </div>
+    <div className="col-12 col-md-2">
+      <strong>Semester:</strong> {semester || "N/A"}
+    </div>
+    <div className="col-12 col-md-2">
+      <strong>Section:</strong> {section || "N/A"}
+    </div>
+    <div className="col-12 col-md-2">
+      <strong>Course/Subject:</strong> {selectedCourse || "N/A"}
+    </div>
+  </div>
+</div>
 
 
 
-<Col>
-  <Form.Group controlId="course">
-    <Form.Label className="custom-color-green-font custom-font">Course</Form.Label>
-    <Form.Control
-      as="select"
-      value={selectedCourse}
-      onChange={(e) => setSelectedCourse(e.target.value)}
-      className="custom-dropdown"  // Apply custom class here
-    >
-      <option value="">Select a course</option>
-      {courses.map((course) => (
-        <option key={course.id} value={course.courseDescriptiveTitle}>
-          {course.courseDescriptiveTitle}
-        </option>
-      ))}
-    </Form.Control>
-  </Form.Group>
-</Col>
+    {/* Data Table */}
+    <div className="container-fluid">
+    <Table className="table table-responsive table-bordered border-success">
+      <thead className="table-success" style={{ position: 'sticky', top: 0, backgroundColor: '#28a745', zIndex: 5 }}>
+        <tr>
+          <th className="custom-color-green-font">Student Number</th>
+          <th className="custom-color-green-font">Last Name</th>
+          <th className="custom-color-green-font">First Name</th>
+          <th className="custom-color-green-font">Middle Name</th>
+          <th className="custom-color-green-font">Contact Number</th>
+          <th className="custom-color-green-font">PCC Email</th>
+          <th className="custom-color-green-font">Address</th>
+        </tr>
+      </thead>
+      <tbody className="table-light">
+        {finalData.length > 0 ? (
+          finalData.map((student, index) => (
+            <tr key={index}>
+              <td>{student.studentNumber}</td>
+              <td>{student.studentLastName}</td>
+              <td>{student.studentFirstName}</td>
+              <td>{student.studentMiddleName}</td>
+              <td>{student.contactNumber}</td>
+              <td>{student.pccEmail}</td>
+              <td>{student.studentPccAddress}</td>
+            </tr>
+          ))
+        ) : (
+          <tr>
+            <td colSpan="7" className='text-center'>No Data Available</td>
+          </tr>
+        )}
+      </tbody>
+    </Table>
+</div>
 
-      {/* Button to show/hide the table */}
-      <Col className="d-flex align-items-end">
-        <Button 
-          variant="success" 
-          className="w-100" 
-          onClick={handleClassListClick}
-        >
-          Class List
-        </Button>
-      </Col>
+  </div>
+</div>
 
 
-        <Col className="d-flex align-items-end">
-          <Button variant="success" className="w-100" onClick={() => handleClassClick('BSIT1-1')}>
-            Grade Sheet
-          </Button>
-        </Col>
-
-      </Row>
-
-      {/* SECOND ROW: TABLE */}
-      {showTable && (
-      <div className="table-container mt-4">
-          {/* Print Button */}
-          <div 
-              className="d-flex justify-content-between align-items-center" 
-              style={{
-                  position: 'sticky', 
-                  top: 0, 
-                  backgroundColor: 'white', 
-                  zIndex: 10, 
-                  padding: '10px'
-              }}>
-              <h4 className="custom-font custom-color-green-font">
-                  Course: {course ? `${course}` : ""}
-              </h4>
-              <button 
-                  className="btn btn-success"
-                  onClick={() => printTableContent("printableContent")}
-              >
-                  Print Class List
-              </button>
-          </div>
-
-          {/* Printable Content */}
-          <div id="printableContent">
-
-          
-              {/* Table Content */}
-              <div 
-                  id="printableTable" 
-                  className="table-wrapper">
-                  <table className="table table-bordered border-success">
-                      <thead 
-                          className="table-success"
-                          style={{
-                              position: 'sticky',
-                              top: 0,
-                              backgroundColor: '#28a745',
-                              zIndex: 5
-                          }}>
-                          <tr>
-                              <th className="custom-color-green-font">Student Number</th>
-                              <th className="custom-color-green-font">Last Name</th>
-                              <th className="custom-color-green-font">First Name</th>
-                              <th className="custom-color-green-font">Middle Name</th>
-                              <th className="custom-color-green-font">Contact Number</th>
-                              <th className="custom-color-green-font">PCC Email</th>
-                              <th className="custom-color-green-font">Address</th>
-                          </tr>
-                      </thead>
-                      <tbody className="table-light">
-                          {students.map((student, index) => (
-                              <tr key={index}>
-                                  <td>{student.studentNumber}</td>
-                                  <td>{student.studentNameLast}</td>
-                                  <td>{student.studentNameFirst}</td>
-                                  <td>{student.studentNameMiddle}</td>
-                                  <td>{student.studentContact}</td>
-                                  <td>{student.studentPccEmail}</td>
-                                  <td>{student.studentAddress}</td>
-                              </tr>
-                          ))}
-                      </tbody>
-                  </table>
-              </div>
-          </div>
-      </div>
-      )}
   </div>
     )}
   </section>

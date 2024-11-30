@@ -13,8 +13,6 @@ export default class YearLevelModel {
                 throw new Error('Error fetching year levels');
             }
             const data = await response.json();
-            
-            console.log('Year Levels Data:', data); // Add this line for debugging
     
             return data.map(yearLevel => new YearLevelModel(
                 yearLevel.id,

@@ -15,6 +15,22 @@ export default class ScheduleModel {
         this.academicYear = academicYear;
     }
 
+    
+    static async fetchSchedules() {
+      try {
+          const response = await fetch('http://localhost:5000/schedule');
+          if (!response.ok) {
+              throw new Error('Error fetching schedules');
+          }
+          const data = await response.json();
+
+          // Assuming data is an array of schedules objects
+          return data;
+      } catch (error) {
+          console.error('Error fetching schedules:', error);
+          throw error;
+      }
+  }
 
     
   static async fetchExistingschedule(section) {

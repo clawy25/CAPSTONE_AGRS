@@ -113,6 +113,8 @@ export default class StudentModel {
       }
   }
 
+  
+
   //Function to insert students (import from RegistrarStudents.js)
   static async insertStudent(studentsData) {
     try {

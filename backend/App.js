@@ -111,6 +111,7 @@ app.post('/personnel/login', async (req, res) => {
     }
 });
 
+
 // Login as Student
 app.post('/student/login', async (req, res) => {
     const { studentNumber, password } = req.body; // Get studentNumber from the URL parameter
@@ -789,6 +790,26 @@ app.post('/section/upload', async (req, res) => {
         res.status(500).json({ message: `Error inserting timeline: ${error.message || 'Unknown error'}` });
     }
   });
+
+
+  // Get schedules ALL
+  app.get('/schedule', async (req, res) => {
+    try {
+        // Fetch all year level data
+        const { data, error} = await supabase
+            .from('schedule') // Replace with your actual table name
+            .select('*'); // Select all columns
+
+        if (error) {
+            return res.status(500).json({ error: error.message || 'Failed to fetch year level data' });
+        }
+
+        res.json(data); // Return the array of schedule
+    } catch (error) {
+        console.error('Error fetchingschedule:', error); // Log the error
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
 
 // Get schedules by Academic Year
 app.post('/schedule', async (req, res) => {
