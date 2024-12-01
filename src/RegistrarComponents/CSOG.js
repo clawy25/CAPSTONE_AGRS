@@ -298,12 +298,44 @@ const printTable = () => {
                 padding: 4px;
               }
               /* Table styling for compact view */
-              .modalContent table {
+              .modalContent table{
                 width: 100%;
                 border-collapse: collapse;
+
               }
               .modalContent th, .modalContent td {
-                border: 1px solid black;
+                border: none;
+
+              }
+
+              .modalContent .grading-system th, 
+              .modalContent .grading-system td { 
+
+                font-size: 0.5em; 
+                font-style: italic;
+              }
+  
+              .modalContent .table-upper td { 
+
+                font-size: 0.7rem; 
+              }
+
+              .modalContent .table-upper th {
+
+                font-size: 0.9rem; 
+              }
+
+              .modalContent .bottom-part-print .certify-statement , .modalContent .bottom-part-print .college-registrar-center {
+              text-align: center;
+              font-size: 0.7rem;
+              }
+              .modalContent .bottom-part-print .prepared-by{
+              font-size: 0.7rem;
+              }
+
+              .modalContent .grades-table th, .modalContent .grades-table td {
+               border: 1px solid black;
+               font-size: 0.7rem; 
               }
             }
           </style>
@@ -442,7 +474,7 @@ const printTable = () => {
         <div id="modalContent">
         <div className="d-flex justify-content-center">
        
-          <table style={{ width: '100%', maxWidth: '800px', textAlign: 'center' }}>
+          <table className="header-logo" style={{ width: '100%', maxWidth: '800px', textAlign: 'center' }}>
             <tbody>
               <tr>
                 <td style={{ width: '80px'}}>
@@ -473,7 +505,7 @@ const printTable = () => {
           </table>
         </div>
         <hr/>
-        <Table className="border-white">
+        <Table className="border-white table-upper">
           <thead>
             <tr>
               <th colSpan="4" className="fs-5 text-center">OFFICE OF THE COLLEGE REGISTRAR</th>
@@ -505,7 +537,7 @@ const printTable = () => {
         </Table>
 
           
-          <Table bordered className="text-center border-black">
+          <Table bordered className="text-center border-black grades-table">
             <thead>
               <tr>
                 <th colSpan="7" className='fs-6'>FIRST SEMESTER</th>
@@ -547,7 +579,7 @@ const printTable = () => {
             </tbody>
           </Table>
 
-          <Table className="border-white">
+          <Table className="border-white grading-system">
             <thead>
               <tr>
                 <th colSpan="5">GRADING SYSTEM</th>
@@ -577,23 +609,23 @@ const printTable = () => {
               </tr>
             </tbody>
           </Table>
-          <Table className="text-center border-white">
+          <Table className="text-center border-white bottom-part-print">
             <tbody>
               <tr>
                 <td colSpan="2">
-                  <p className="fs-6 fw-normal mt-1">
+                  <p className="fs-6 fw-normal mt-1 certify-statement">
                     I certify to the veracity of the above records of ____________________
                   </p>
                 </td>
               </tr>
               <tr>
-                <td className="text-start" style={{ width: '50%' }}>
-                  <p style={{ fontSize: '0.7rem' }}>Prepared by:</p>
-                  <p style={{ fontSize: '0.7rem' }}>(Name)</p>
+                <td className="text-start " style={{ width: '50%' }}>
+                  <p className="prepared-by" style={{ fontSize: '0.7rem' }}>Prepared by:</p>
+                  <p className="prepared-by" style={{ fontSize: '0.7rem' }}>(Name)</p>
                 </td>
-                <td className="text-end" style={{ width: '50%' }}>
-                  <p className="fs-6 fw-normal text-center">____________________________</p>
-                  <p className="fs-6 fw-normal text-center">College Registrar</p>
+                <td className="text-end college-registar" style={{ width: '50%' }}>
+                  <p className="fs-6 fw-normal text-center college-registrar-center">____________________________</p>
+                  <p className="fs-6 fw-normal text-center college-registrar-center">College Registrar</p>
                 </td>
               </tr>
             </tbody>

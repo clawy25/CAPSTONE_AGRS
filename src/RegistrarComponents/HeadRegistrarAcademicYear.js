@@ -16,7 +16,8 @@ export default function HeadRegistrarAcademicYear() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showProgramAddModal, setShowProgramAddModal] = useState(false);
   const [showProgramEditModal, setShowProgramEditModal] = useState(false);
-
+  const [showAcademicYearConfirmationModal, AcademicYearConfirmationModal] = useState(false);
+  const [showProgramConfirmationModal, ProgramConfirmationModal] = useState(false);
   const [selectedAcademicYear, setSelectedAcademicYear] = useState('');
   const [newAcademicYear, setNewAcademicYear] = useState({
     academicYear: '',
@@ -567,6 +568,88 @@ export default function HeadRegistrarAcademicYear() {
         <Modal.Footer>
           <Button className='border-success bg-white custom-color-green-font' onClick={handleCloseProgramEdit}>Close</Button>
           <Button variant="success" onClick={() => handleEditProgram (editProgram.name, editProgram.years, editProgram.levels, editProgram.programNumber)}>Save Changes</Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/*ADD ACADEMIC YEAR CONFIRMATION */}
+      <Modal show={showAcademicYearConfirmationModal} size='lg'>
+        <Modal.Header closeButton>
+          <Modal.Title className='custom-color-green-font'>Confirmation</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+      
+           <p className='fs-6 fw-semibold text-justify'>Personnel details have been verified. To proceed with adding a new academic year, please provide your password to confirm your authorization for this action.</p>
+       
+          <Form>
+            <Form.Group className="mb-3">
+              <Form.Label>Personnel Number</Form.Label>
+              <Form.Control
+                type="text"
+                placeholder="Personnel Number"
+                disabled
+              />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Personnel Name</Form.Label>
+              <Form.Control
+                type="text"
+                placeholder="Name of the personnel"
+                disabled
+              />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Personnel Password</Form.Label>
+              <Form.Control
+                type="password"
+                 placeholder="Password"
+              />
+            </Form.Group>
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button className='border-success bg-white custom-color-green-font'>Close</Button>
+          <Button variant="success">Confirm</Button>
+        </Modal.Footer>
+      </Modal>
+
+       {/*ADD PROGRAM CONFIRMATION */}
+      <Modal show={showProgramConfirmationModal} size='lg'>
+        <Modal.Header closeButton>
+          <Modal.Title className='custom-color-green-font'>Confirmation</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+      
+           <p className='fs-6 fw-semibold text-justify'>Personnel details have been verified. To proceed with adding a program in the academic year, please provide your password to confirm your authorization for this action.</p>
+       
+          <Form>
+            <Form.Group className="mb-3">
+              <Form.Label>Personnel Number</Form.Label>
+              <Form.Control
+                type="text"
+                placeholder="Personnel Number"
+                disabled
+              />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Personnel Name</Form.Label>
+              <Form.Control
+                type="text"
+                placeholder="Name of the personnel"
+                disabled
+              />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Personnel Password</Form.Label>
+              <Form.Control
+                type="password"
+                 placeholder="Password"
+              />
+            </Form.Group>
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button className='border-success bg-white custom-color-green-font'>Close</Button>
+          <Button variant="success">Confirm</Button>
         </Modal.Footer>
       </Modal>
     </div>

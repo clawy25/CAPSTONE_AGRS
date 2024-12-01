@@ -279,13 +279,15 @@ function MasterlistOfGradesTable() {
               .modalContent table {
                 width: 100%;
                 border-collapse: collapse;
+                margin-bottom:2px;
               }
               .modalContent th, .modalContent td {
-                border: 1px solid black;
+                border: 0.25px solid black;
               }
 
               .modalContent div {
-              border: 1px solid black;
+              border: 0.25px solid black;
+              
               }
             }
           </style>
