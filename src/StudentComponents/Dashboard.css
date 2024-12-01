@@ -1409,7 +1409,6 @@ background-color: #f0f0f0;
 .sticky-student-no {
   position: sticky;
   left: 0;
-  background-color: #F6F7C4;
   top: 42px;
   padding: 10px;
   z-index: 4;
@@ -1523,6 +1522,30 @@ background-color: #f0f0f0;
   z-index: 1;
   box-shadow: 1px 0 0 rgba(0, 0, 0, 0.1);
 }
+
+.row-failed td {
+  background-color: #E78F81 !important;
+  color: black;
+}
+
+.row-passed td {
+  background-color: #E0F5B9 !important;
+  color: black;
+}
+
+.row-inc td {
+  background-color: #FFCF96 !important;
+  color: black;
+}
+
+.row-select {
+  background-color: white; 
+}
+
+
+
+
+
 
 
 

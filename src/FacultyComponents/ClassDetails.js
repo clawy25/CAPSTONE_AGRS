@@ -816,26 +816,47 @@ const handlePrint = () => {
    // Function to calculate total CS Grade based on user-defined percentages
 // Function to calculate total CS Grade based on user-defined percentages
 const calculateTotalMidtermCSGrade = (studentIndex) => {
-  // Retrieve scores and percentages for the specific student
-  const attendanceScore = getMidtermAttendanceTotals(studentIndex).points || 0;
-  const attendanceComponent = attendanceScore > 0 ? (attendanceScore / 100) * midtermAttendancePercentage : 0;
-
+  // Retrieve scores for the components
+  const attendanceScore = getMidtermAttendanceTotals(studentIndex).points || 0; // Raw attendance score
   const assignmentScore = calculateMidtermAssignmentComponentScore(studentIndex, midtermAssignmentPercentage) || 0;
   const quizScore = calculateMidtermQuizComponentScore(studentIndex, midtermQuizPercentage) || 0;
   const recitationScore = calculateMidtermRecitationComponentScore(studentIndex, midtermRecitationPercentage) || 0;
 
-  // Total CS Grade for this student
-  let totalCSGrade = 0;
+  // Retrieve component percentages
+  const attendancePercentage = midtermAttendancePercentage || 0;
+  const assignmentPercentage = midtermAssignmentPercentage || 0;
+  const quizPercentage = midtermQuizPercentage || 0;
+  const recitationPercentage = midtermRecitationPercentage || 0;
 
-  // Add only components that have valid scores
-  if (attendanceComponent > 0) totalCSGrade += attendanceComponent;
-  if (assignmentScore > 0) totalCSGrade += parseFloat(assignmentScore);
-  if (quizScore > 0) totalCSGrade += parseFloat(quizScore);
-  if (recitationScore > 0) totalCSGrade += parseFloat(recitationScore);
+  // If all components are zero, return 0 for CS Grade
+  if (attendanceScore === 0 && assignmentScore === 0 && quizScore === 0 && recitationScore === 0) {
+    return 0; // No computation
+  }
 
-  // Return the total grade rounded to 2 decimal places
-  return totalCSGrade.toFixed(2);
+  // Scale scores based on their percentages
+  const attendanceComponent = attendanceScore > 0 
+    ? (attendanceScore / 100) * attendancePercentage 
+    : 0;
+
+  const assignmentComponent = assignmentScore > 0 
+    ? parseFloat(assignmentScore) 
+    : 0;
+
+  const quizComponent = quizScore > 0 
+    ? parseFloat(quizScore) 
+    : 0;
+
+  const recitationComponent = recitationScore > 0 
+    ? parseFloat(recitationScore) 
+    : 0;
+
+  // Total CS Grade
+  const totalCSGrade = attendanceComponent + assignmentComponent + quizComponent + recitationComponent;
+
+  return totalCSGrade.toFixed(2); // Return grade rounded to 2 decimal places
 };
+
+
 
 
 
@@ -1031,107 +1052,129 @@ const calculateTotalMidtermCSPercentage = () => {
 
   //MIDTERM GRADE
   const calculateMidtermGrade = (studentIndex) => {
-    // 1. Calculate the CS Grade
+    // Check if there is at least one score inputted in any component
+    const hasScores =
+      (midtermAssignmentScores[studentIndex] || []).some(score => score) ||
+      (midtermQuizScores[studentIndex] || []).some(score => score) ||
+      (midtermRecitationScores[studentIndex] || []).some(score => score) ||
+      midtermExamScores[students[studentIndex].id] !== undefined;
+  
+    if (!hasScores) {
+      return "Select"; // If no scores inputted, default to "Select"
+    }
+  
+    // Retrieve CS Grade
     const csGrade = parseFloat(calculateTotalMidtermCSGrade(studentIndex)) || 0;
   
-    // 2. Calculate the PBA Grade (Performance-Based Assessment)
+    // Retrieve PBA Grade
     const pbaScores = midtermPBAGradeScores[studentIndex] || [];
     const { pbaGrade } = calculateTotalsAndPBA(pbaScores, midtermPBAGradePercentage);
-    
-    // 3. Calculate the Midterm Exam score (using the midterm exam percentage)
-    const midtermExamScore = midtermExamScores[students[studentIndex].id] || 0;
-    const midtermExamPercentageScore = calculateMidtermPercentage(midtermExamScore); // Adjust the score into percentage
-    const weightedMidtermExamScore = (midtermExamPercentageScore * midtermExamPercentage) / 100; // Weighted by midterm exam percentage
   
-    // 4. Calculate the total Midterm Grade
-    const totalMidtermGrade = csGrade + parseFloat(pbaGrade) + parseFloat(weightedMidtermExamScore);
-      
-
-      if (totalMidtermGrade > 100) {
-        console.log("Toast Warning Triggered"); // For debugging
-        toast.warning("Grade cannot exceed 100. Kindly check your component percent allotment.");
+    // Retrieve Midterm Exam Score
+    const midtermExamScore = midtermExamScores[students[studentIndex].id];
+  
+    // Check for incomplete components
+    const isMidtermExamIncomplete = midtermExamScore === undefined;
+    if (csGrade === 0 || pbaGrade === 0 || isMidtermExamIncomplete) {
+      return "INC"; // Mark as incomplete
     }
-      
-      const cappedTotal = Math.min(100, totalMidtermGrade); // Cap at 100
-      return cappedTotal.toFixed(2); // Return the capped total formatted to 2 decimal places
-    };
-
+  
+    // Calculate Weighted Midterm Exam Score
+    const midtermExamPercentageScore = calculateMidtermPercentage(midtermExamScore);
+    const weightedMidtermExamScore = (midtermExamPercentageScore * midtermExamPercentage) / 100;
+  
+    // Calculate the Total Midterm Grade
+    const totalMidtermGrade = csGrade + parseFloat(pbaGrade) + parseFloat(weightedMidtermExamScore);
+  
+    // Cap the grade at 100 and return the formatted value
+    return Math.min(100, totalMidtermGrade).toFixed(2);
+  };
+  
+  
   //FINAL GRADE
   const calculateFinalsGrade = (studentIndex) => {
-    // 1. Calculate the CS Grade
+    // Check if there is at least one score inputted in any component
+    const hasScores =
+      (finalsAssignmentScores[studentIndex] || []).some(score => score) ||
+      (finalsQuizScores[studentIndex] || []).some(score => score) ||
+      (finalsRecitationScores[studentIndex] || []).some(score => score) ||
+      finalsExamScores[students[studentIndex].id] !== undefined;
+  
+    if (!hasScores) {
+      return "Select"; // If no scores inputted, default to "Select"
+    }
+  
+    // Retrieve CS Grade
     const csGrade = parseFloat(calculateTotalFinalsCSGrade(studentIndex)) || 0;
   
-    // 2. Calculate the PBA Grade (Performance-Based Assessment)
+    // Retrieve PBA Grade
     const pbaScores = finalsPBAGradeScores[studentIndex] || [];
     const { pbaGrade } = calculateTotalsAndPBA(pbaScores, finalsPBAGradePercentage);
-    
-    // 3. Calculate the Midterm Exam score (using the midterm exam percentage)
-    const finalsExamScore = finalsExamScores[students[studentIndex].id] || 0;
-    const finalsExamPercentageScore = calculateFinalPercentage(finalsExamScore); // Adjust the score into percentage
-    const weightedFinalsExamScore = (finalsExamPercentageScore * finalsExamPercentage) / 100; // Weighted by midterm exam percentage
   
-    // 4. Calculate the total Midterm Grade
+    // Retrieve Midterm Exam Score
+    const finalsExamScore = finalsExamScores[students[studentIndex].id];
+  
+    // Check for incomplete components
+    const isFinalsExamIncomplete = finalsExamScore === undefined;
+    if (csGrade === 0 || pbaGrade === 0 || isFinalsExamIncomplete) {
+      return "INC"; // Mark as incomplete
+    }
+  
+    // Calculate Weighted Midterm Exam Score
+    const finalsExamPercentageScore = calculateFinalPercentage(finalsExamScore);
+    const weightedFinalsExamScore = (finalsExamPercentageScore * finalsExamPercentage) / 100;
+  
+    // Calculate the Total Midterm Grade
     const totalFinalsGrade = csGrade + parseFloat(pbaGrade) + parseFloat(weightedFinalsExamScore);
   
-    if (totalFinalsGrade > 100) {
-      console.log("Toast Warning Triggered"); // For debugging
-      toast.warning("Grade cannot exceed 100. Kindly check your component percent allotment.");
-  }
-    
-    const cappedTotal = Math.min(100, totalFinalsGrade); // Cap at 100
-    return cappedTotal.toFixed(2); // Return the capped total formatted to 2 decimal places
+    // Cap the grade at 100 and return the formatted value
+    return Math.min(100, totalFinalsGrade).toFixed(2);
   };
+  
 
   //NUMERICAL EQUIVALENT AND REMARKS FOR MIDTERM
   const getMidtermNumericalEquivalentAndRemarks = (studentId, grade, studentIndex) => {
-    // If there's a manual selection for the student, return the selected remark
-    if (remarks[studentId]) {
-      return { numEq: "-", remarks: remarks[studentId] };
-    }
-  
-    // If any component has blank scores, return INC for remarks
-    if (MidtermhasBlankScores(studentIndex)) {
+    // If grade is "INC" (incomplete), return as is
+    if (grade === "INC") {
       return { numEq: "-", remarks: "INC" };
     }
   
-    // Otherwise, calculate based on the grade
-    if (grade >= 99 && grade <= 100) return { numEq: (1.00).toFixed(2), remarks: "PASSED" };
-    if (grade >= 96 && grade < 99) return { numEq: (1.25).toFixed(2), remarks: "PASSED" };
-    if (grade >= 93 && grade < 96) return { numEq: (1.50).toFixed(2), remarks: "PASSED" };
-    if (grade >= 90 && grade < 93) return { numEq: (1.75).toFixed(2), remarks: "PASSED" };
-    if (grade >= 87 && grade < 90) return { numEq: (2.00).toFixed(2), remarks: "PASSED" };
-    if (grade >= 84 && grade < 87) return { numEq: (2.25).toFixed(2), remarks: "PASSED" };
-    if (grade >= 81 && grade < 84) return { numEq: (2.50).toFixed(2), remarks: "PASSED" };
-    if (grade >= 78 && grade < 81) return { numEq: (2.75).toFixed(2), remarks: "PASSED" };
-    if (grade >= 75 && grade < 78) return { numEq: (3.00).toFixed(2), remarks: "PASSED" };
-    if (grade < 75) return { numEq: (5.00).toFixed(2), remarks: "FAILED" };
+    // Grading logic
+    if (grade >= 99 && grade <= 100) return { numEq: "1.00", remarks: "PASSED" };
+    if (grade >= 96 && grade < 99) return { numEq: "1.25", remarks: "PASSED" };
+    if (grade >= 93 && grade < 96) return { numEq: "1.50", remarks: "PASSED" };
+    if (grade >= 90 && grade < 93) return { numEq: "1.75", remarks: "PASSED" };
+    if (grade >= 87 && grade < 90) return { numEq: "2.00", remarks: "PASSED" };
+    if (grade >= 84 && grade < 87) return { numEq: "2.25", remarks: "PASSED" };
+    if (grade >= 81 && grade < 84) return { numEq: "2.50", remarks: "PASSED" };
+    if (grade >= 78 && grade < 81) return { numEq: "2.75", remarks: "PASSED" };
+    if (grade >= 75 && grade < 78) return { numEq: "3.00", remarks: "PASSED" };
+    if (grade < 75) return { numEq: "5.00", remarks: "FAILED" };
   
+    // Default case for unexpected input
     return { numEq: "-", remarks: "-" };
   };
+  
   //NUMERICAL EQUIVALENT AND REMARKS FOR FINALS
   const getFinalsNumericalEquivalentAndRemarks = (studentId, grade, studentIndex) => {
-    // If there's a manual selection for the student, return the selected remark
-    if (remarks[studentId]) {
-      return { numEq: "-", remarks: remarks[studentId] };
-    }
-  
-    // If any component has blank scores, return INC for remarks
-    if (FinalshasBlankScores(studentIndex)) {
+    // If grade is "INC" (incomplete), return as is
+    if (grade === "INC") {
       return { numEq: "-", remarks: "INC" };
     }
   
-    // Otherwise, calculate based on the grade
-    if (grade >= 99 && grade <= 100) return { numEq: (1.00).toFixed(2), remarks: "PASSED" };
-    if (grade >= 96 && grade < 99) return { numEq: (1.25).toFixed(2), remarks: "PASSED" };
-    if (grade >= 93 && grade < 96) return { numEq: (1.50).toFixed(2), remarks: "PASSED" };
-    if (grade >= 90 && grade < 93) return { numEq: (1.75).toFixed(2), remarks: "PASSED" };
-    if (grade >= 87 && grade < 90) return { numEq: (2.00).toFixed(2), remarks: "PASSED" };
-    if (grade >= 84 && grade < 87) return { numEq: (2.25).toFixed(2), remarks: "PASSED" };
-    if (grade >= 81 && grade < 84) return { numEq: (2.50).toFixed(2), remarks: "PASSED" };
-    if (grade >= 78 && grade < 81) return { numEq: (2.75).toFixed(2), remarks: "PASSED" };
-    if (grade >= 75 && grade < 78) return { numEq: (3.00).toFixed(2), remarks: "PASSED" };
-    if (grade < 75) return { numEq: (5.00).toFixed(2), remarks: "FAILED" };
+    // Grading logic
+    if (grade >= 99 && grade <= 100) return { numEq: "1.00", remarks: "PASSED" };
+    if (grade >= 96 && grade < 99) return { numEq: "1.25", remarks: "PASSED" };
+    if (grade >= 93 && grade < 96) return { numEq: "1.50", remarks: "PASSED" };
+    if (grade >= 90 && grade < 93) return { numEq: "1.75", remarks: "PASSED" };
+    if (grade >= 87 && grade < 90) return { numEq: "2.00", remarks: "PASSED" };
+    if (grade >= 84 && grade < 87) return { numEq: "2.25", remarks: "PASSED" };
+    if (grade >= 81 && grade < 84) return { numEq: "2.50", remarks: "PASSED" };
+    if (grade >= 78 && grade < 81) return { numEq: "2.75", remarks: "PASSED" };
+    if (grade >= 75 && grade < 78) return { numEq: "3.00", remarks: "PASSED" };
+    if (grade < 75) return { numEq: "5.00", remarks: "FAILED" };
   
+    // Default case for unexpected input
     return { numEq: "-", remarks: "-" };
   };
   
@@ -1227,6 +1270,29 @@ const getSemestralNumericalEquivalentAndRemarks = (studentId, grade, hasBlankSco
   if (grade < 75) return { numEq: "5.00", remarks: "FAILED" };
 
   return { numEq: "-", remarks: "-" };
+};
+
+// Add this function to validate total percentage
+const validateTotalPercentage = () => {
+  const totalPercentage =
+    parseFloat(midtermAttendancePercentage || 0) +
+    parseFloat(midtermAssignmentPercentage || 0) +
+    parseFloat(midtermQuizPercentage || 0) +
+    parseFloat(midtermRecitationPercentage || 0) +
+    parseFloat(midtermPBAGradePercentage || 0) +
+    parseFloat(midtermExamPercentage || 0);
+
+  if (totalPercentage > 100) {
+    toast.error("Total percentage exceeds 100%. Please adjust the inputs.");
+    return false;
+  }
+  return true;
+};
+
+// Call this function wherever relevant
+const handlePercentageChange = (setter, value) => {
+  setter(value);
+  validateTotalPercentage();
 };
 
     
@@ -1480,13 +1546,23 @@ const getSemestralNumericalEquivalentAndRemarks = (studentId, grade, hasBlankSco
                 const midtermAttendancePercentageScore = getMidtermAttendanceScorePercentage(points); 
                 const midtermGrade = calculateMidtermGrade(studentIndex); // Calculate the midterm grade
                 const { numEq, remarks: autoRemarks } = getMidtermNumericalEquivalentAndRemarks(student.id, midtermGrade, studentIndex); // Pass studentIndex to check for blank scores
-              
+
+                    // Determine row background color based on remarks
+                    const getRowClass = (remark) => {
+                      if (remark === "FAILED") return "row-failed";
+                      if (remark === "PASSED") return "row-passed";
+                      if (remark === "INC") return "row-inc";
+                      if (remark === "Select") return "row-select"; // Highlight with a white color
+                      return "";
+                    };
+                    
+                              
               
 
 
                 
                 return (
-                  <tr key={student.id}>
+                  <tr key={student.id} className={getRowClass(autoRemarks)}>
                     <td style={{position: 'sticky',left: 0,backgroundColor: '#F6F7C4',padding: '10px',zIndex: 3,boxShadow: '1px 0 0 rgba(0, 0, 0, 0.1)',}}className="sticky-student-no">{student.studentNumber || 'Guest'}</td>
                     <td style={{position: 'sticky',left: 73,backgroundColor: '#F6F7C4',padding: '10px', zIndex: 3,whiteSpace: 'nowrap', overflow: 'hidden',   textOverflow: 'ellipsis', }}className="sticky-name">
                       {student.studentNameLast || ''}, {student.studentNameFirst || ''} {student.studentNameMiddle || ''}
@@ -2066,13 +2142,20 @@ const getSemestralNumericalEquivalentAndRemarks = (studentId, grade, hasBlankSco
                   const finalsAttendancePercentageScore = getFinalsAttendanceScorePercentage(points); 
                   const midtermGrade = calculateFinalsGrade(studentIndex); // Calculate the midterm grade
                   const { numEq, remarks: autoRemarks } = getFinalsNumericalEquivalentAndRemarks(student.id, midtermGrade, studentIndex); // Pass studentIndex to check for blank scores
-                
-                
-  
-  
-                  
-                  return (
-                    <tr key={student.id}>
+
+
+                    // Determine row background color based on remarks
+                    const getRowClass = (remark) => {
+                      if (remark === "FAILED") return "row-failed";
+                      if (remark === "PASSED") return "row-passed";
+                      if (remark === "INC") return "row-inc";
+                      if (remark === "Select") return "row-select"; // Highlight with a white color
+                      return "";
+                    };
+                              
+
+                return (
+                  <tr key={student.id} className={getRowClass(autoRemarks)}>
                     <td style={{position: 'sticky',left: 0,backgroundColor: '#F6F7C4',padding: '10px',zIndex: 3,boxShadow: '1px 0 0 rgba(0, 0, 0, 0.1)',}}className="sticky-student-no">{student.studentNumber || 'Guest'}</td>
                     <td style={{position: 'sticky',left: 73,backgroundColor: '#F6F7C4',padding: '10px', zIndex: 3,whiteSpace: 'nowrap', overflow: 'hidden',  textOverflow: 'ellipsis', }}className="sticky-name">
                       {student.studentNameLast || ''}, {student.studentNameFirst || ''} {student.studentNameMiddle || ''}
@@ -2166,7 +2249,7 @@ const getSemestralNumericalEquivalentAndRemarks = (studentId, grade, hasBlankSco
                     ))}
 
                     <td></td>
-                    <td>{calculateFinalsAssignmentColumnAverage(student.id)}%</td> {/* Display average directly */}
+                    <td>{calculateFinalsAssignmentColumnAverage(student.id)}%</td> 
                     <td>
                       {(() => {
                         const assignmentScore = calculateFinalsAssignmentComponentScore(student.id, finalsAssignmentPercentage);
@@ -2176,14 +2259,14 @@ const getSemestralNumericalEquivalentAndRemarks = (studentId, grade, hasBlankSco
                       })()}
                     </td>
 
-                    {/*QUIZ COMPONENT: DEFINE midtermQuizScores IN INPUT*/}
+    
                     {finalsQuizColumns.map((_, quizIndex) => (
                       <td key={quizIndex}>
                         <input
                           type="number"
                           style={{ width: '70px' }}
                           placeholder="Score"
-                          value={finalsQuizScores[studentIndex]?.[quizIndex] || ''} // Ensure that the input shows the current score
+                          value={finalsQuizScores[studentIndex]?.[quizIndex] || ''} 
                           onChange={(e) => {
                             const inputScore = parseFloat(e.target.value) || 0;
                             handleFinalsQuizScoreChange(studentIndex, quizIndex, inputScore);
@@ -2195,7 +2278,7 @@ const getSemestralNumericalEquivalentAndRemarks = (studentId, grade, hasBlankSco
 
                     <td></td>
                     <td>
-                      {/* Check if there are no quiz scores for this student */}
+                      
                       {finalsQuizScores[studentIndex]?.every(score => score === 0 || score === undefined) 
                         ? '0.00%'  // If no scores are inputted, show 0%
                         : isNaN(Number(calculateFinalsQuizTotalScore(studentIndex))) || calculateFinalsQuizTotalScore(studentIndex) === null
@@ -2306,14 +2389,14 @@ const getSemestralNumericalEquivalentAndRemarks = (studentId, grade, hasBlankSco
                         const inputScore = e.target.value === '' ? null : parseFloat(e.target.value); // Treat empty input as null
                         handleFinalsPBAScoreChange(studentIndex, pbaIndex, inputScore);
 
-                        // Show the red border in real-time
+                      
                         if (inputScore !== null && (inputScore < 50 || inputScore > 100)) {
                           setfinalsInvalidPBAScores((prevInvalid) => {
                             const updatedInvalid = [...prevInvalid];
                             if (!updatedInvalid[studentIndex]) {
                               updatedInvalid[studentIndex] = {};
                             }
-                            updatedInvalid[studentIndex][pbaIndex] = true; // Mark as invalid
+                            updatedInvalid[studentIndex][pbaIndex] = true; 
                             return updatedInvalid;
                           });
                         }
@@ -2321,7 +2404,7 @@ const getSemestralNumericalEquivalentAndRemarks = (studentId, grade, hasBlankSco
                       onBlur={(e) => {
                         const inputScore = parseFloat(e.target.value);
 
-                        // Trigger toast only when input is invalid and not empty
+                     
                         if (inputScore !== null && (inputScore < 50 || inputScore > 100)) {
                           toast.error(`Score must be between 50 and 100 for PBA ${pbaIndex + 1}`);
                         }
@@ -2419,7 +2502,7 @@ const getSemestralNumericalEquivalentAndRemarks = (studentId, grade, hasBlankSco
                 </thead>
                 <tbody>
                   {students.map((student, studentIndex) => (
-                    <tr key={student.id}>
+                    <tr key={student.id} >
                       <td>{student.studentNumber || 'Guest'}</td>
                       <td>
                         {`${student.studentNameLast || ''}, ${student.studentNameFirst || ''} ${student.studentNameMiddle || ''}`}
@@ -2526,52 +2609,52 @@ const getSemestralNumericalEquivalentAndRemarks = (studentId, grade, hasBlankSco
                       {student.studentNameLast || ''}, {student.studentNameFirst || ''} {student.studentNameMiddle || ''}
                     </td>
 
-{/* Midterm Grade */}
-<td>
-  {isNaN(Number(calculateMidtermGrade(studentIndex))) || calculateMidtermGrade(studentIndex) === null || calculateMidtermGrade(studentIndex) === 0
-    ? ''
-    : `${Number(calculateMidtermGrade(studentIndex)).toFixed(2)}`}
-</td>
+                    {/* Midterm Grade */}
+                    <td>
+                      {isNaN(Number(calculateMidtermGrade(studentIndex))) || calculateMidtermGrade(studentIndex) === null || calculateMidtermGrade(studentIndex) === 0
+                        ? ''
+                        : `${Number(calculateMidtermGrade(studentIndex)).toFixed(2)}`}
+                    </td>
 
-{/* Final Grade */}
-<td>
-  {isNaN(Number(calculateFinalsGrade(studentIndex))) || calculateFinalsGrade(studentIndex) === null || calculateFinalsGrade(studentIndex) === 0
-    ? ''
-    : `${Number(calculateFinalsGrade(studentIndex)).toFixed(2)}`}
-</td>
+                    {/* Final Grade */}
+                    <td>
+                      {isNaN(Number(calculateFinalsGrade(studentIndex))) || calculateFinalsGrade(studentIndex) === null || calculateFinalsGrade(studentIndex) === 0
+                        ? ''
+                        : `${Number(calculateFinalsGrade(studentIndex)).toFixed(2)}`}
+                    </td>
 
-{/* Semestral Grade */}
-<td>
-  {isNaN(Number(calculateSemestralGrade(calculateMidtermGrade(studentIndex), calculateFinalsGrade(studentIndex)))) || 
-  calculateSemestralGrade(calculateMidtermGrade(studentIndex), calculateFinalsGrade(studentIndex)) === null || 
-  calculateSemestralGrade(calculateMidtermGrade(studentIndex), calculateFinalsGrade(studentIndex)) === 0
-    ? ''
-    : `${Number(calculateSemestralGrade(calculateMidtermGrade(studentIndex), calculateFinalsGrade(studentIndex))).toFixed(2)}`}
-</td>
+                    {/* Semestral Grade */}
+                    <td>
+                      {isNaN(Number(calculateSemestralGrade(calculateMidtermGrade(studentIndex), calculateFinalsGrade(studentIndex)))) || 
+                      calculateSemestralGrade(calculateMidtermGrade(studentIndex), calculateFinalsGrade(studentIndex)) === null || 
+                      calculateSemestralGrade(calculateMidtermGrade(studentIndex), calculateFinalsGrade(studentIndex)) === 0
+                        ? ''
+                        : `${Number(calculateSemestralGrade(calculateMidtermGrade(studentIndex), calculateFinalsGrade(studentIndex))).toFixed(2)}`}
+                    </td>
 
-{/* Numerical Grade */}
-<td>
-  {(() => {
-    const { numEq } = getSemestralNumericalEquivalentAndRemarks(
-      student.id,
-      calculateSemestralGrade(calculateMidtermGrade(studentIndex), calculateFinalsGrade(studentIndex)),
-      MidtermhasBlankScores(studentIndex) || FinalshasBlankScores(studentIndex)
-    );
-    return isNaN(Number(numEq)) || numEq === null || numEq === 0 ? '' : numEq;
-  })()}
-</td>
+                    {/* Numerical Grade */}
+                    <td>
+                      {(() => {
+                        const { numEq } = getSemestralNumericalEquivalentAndRemarks(
+                          student.id,
+                          calculateSemestralGrade(calculateMidtermGrade(studentIndex), calculateFinalsGrade(studentIndex)),
+                          MidtermhasBlankScores(studentIndex) || FinalshasBlankScores(studentIndex)
+                        );
+                        return isNaN(Number(numEq)) || numEq === null || numEq === 0 ? '' : numEq;
+                      })()}
+                    </td>
 
-{/* Remarks */}
-<td>
-  {(() => {
-    const { remarks } = getSemestralNumericalEquivalentAndRemarks(
-      student.id,
-      calculateSemestralGrade(calculateMidtermGrade(studentIndex), calculateFinalsGrade(studentIndex)),
-      MidtermhasBlankScores(studentIndex) || FinalshasBlankScores(studentIndex)
-    );
-    return remarks || '';
-  })()}
-</td>
+                    {/* Remarks */}
+                    <td>
+                      {(() => {
+                        const { remarks } = getSemestralNumericalEquivalentAndRemarks(
+                          student.id,
+                          calculateSemestralGrade(calculateMidtermGrade(studentIndex), calculateFinalsGrade(studentIndex)),
+                          MidtermhasBlankScores(studentIndex) || FinalshasBlankScores(studentIndex)
+                        );
+                        return remarks || '';
+                      })()}
+                    </td>
 
                       </tr>
                     ))}
