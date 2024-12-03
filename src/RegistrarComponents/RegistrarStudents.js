@@ -36,11 +36,23 @@ export default function RegistrarStudents() {
         if (currentAcademicYear) {
             try {
                 const existingPrograms = await ProgramModel.fetchAllPrograms();
-                const filteredPrograms = existingPrograms.filter(
-                    (program) => program.academicYear === currentAcademicYear.academicYear
-                );
-                console.log(filteredPrograms);
-                setPrograms(filteredPrograms);
+                const filteredPrograms = existingPrograms.filter((program) => program.academicYear === currentAcademicYear.academicYear);
+
+                const trimmedProgramData = [];
+                const addedPrograms = new Set();
+
+                filteredPrograms.forEach(row => {
+                    if (!addedPrograms.has(row.programNumber)) {
+                        trimmedProgramData.push({
+                            programNumber: row.programNumber,
+                            programName: row.programName
+                        });
+                        addedPrograms.add(row.programNumber); // Mark this program as added
+                    }
+                })
+
+                console.log(trimmedProgramData);
+                setPrograms(trimmedProgramData);
             } catch (error) {
                 console.error("Error fetching programs:", error);
             }
@@ -53,6 +65,7 @@ export default function RegistrarStudents() {
     const fetchExistingStudents = async () => {
         try {
             const existingStudents = await StudentModel.fetchExistingStudents();
+            console.log(existingStudents); 
             setStudents(existingStudents);
         } catch (error) {
             console.error('Error fetching existing students:', error);
@@ -130,15 +143,13 @@ export default function RegistrarStudents() {
                             studentType = 'Graduated';
                         }
 
-                        //AUTO-GENERATE PASSWORD AND PCC EMAIL
-                        studentPassword = generatePassword(studentNameFirst,studentNameLast, admissionYear);
-                        studentPccEmail = generatePCCemail(studentNameFirst, studentNameLast, admissionYearInt);
-
                     } else if (admissionYearInt === currentYear) {
                         studentYrLevel = 1; // First year if admission year is the current year
                         studentNumber = generateNextStudentNumber(existingStudentNumbers, currentYear); // Generate number based on current year
                     }
-
+                    //AUTO-GENERATE PASSWORD AND PCC EMAIL
+                    studentPassword = generatePassword(studentNameFirst,studentNameLast, admissionYear);
+                    studentPccEmail = generatePCCemail(studentNameFirst, studentNameLast, admissionYearInt);
 
                     //SETTING THE PROGRAM NUMBERS; ADDED CURRENT ACADEMIC YEAR VALIDATION
                     let studentProgramNumber;
@@ -385,12 +396,15 @@ export default function RegistrarStudents() {
                                 </thead>
                                 <tbody className='bg-white'>
                                     {filteredStudents.map((student) => {
+
                                         return (
                                             <tr key={student.id}>
                                                 <td className='custom-color-green-font'>{student.studentNumber}</td>
                                                 <td className='custom-color-green-font'>{student.studentNameLast || ''}, {student.studentNameFirst || ''} {student.studentNameMiddle || ''}</td>
                                                 <td className='custom-color-green-font'>{student.studentPccEmail}</td>
-                                                <td className='custom-color-green-font'>{student.studentProgramName}</td>
+                                                <td className='custom-color-green-font'>
+                                                    {programs.find(program => program.programNumber === student.studentProgramNumber)?.programName || 'No Program Assigned'}
+                                                </td>
                                                 <td>
                                                 <select
                                                     className="form-select custom-color-green-font"

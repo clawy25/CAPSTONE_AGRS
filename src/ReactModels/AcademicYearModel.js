@@ -27,24 +27,25 @@ export default class AcademicYearModel {
 
     // Function to insert a new academic year
     static async createAndInsertAcademicYear(academicYearData) {
-        try {
-            const response = await fetch('http://localhost:5000/academicYear/upload', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ data: academicYearData }) // Send the academic year object
-            });
-
-            if (!response.ok) {
-                throw new Error('Error inserting academic year data');
-            }
-            return await response.json();
-        } catch (error) {
-            console.error('Error inserting academic year data:', error);
-            throw error;
-        }
-    }
+      try {
+          const response = await fetch('http://localhost:5000/academicYear/upload', {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ academicYearData }) // Ensure key matches backend expectation
+          });
+  
+          if (!response.ok) {
+              throw new Error('Error inserting academic year data');
+          }
+          return await response.json();
+      } catch (error) {
+          console.error('Error inserting academic year data:', error);
+          throw error;
+      }
+  }
+  
 
     // Function to update an academic year by ID
     static async updateAcademicYear(id, updatedData) {

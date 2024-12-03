@@ -18,7 +18,7 @@ export default class ScheduleModel {
     
     static async fetchSchedules() {
       try {
-          const response = await fetch('http://localhost:5000/schedule');
+          const response = await fetch('http://localhost:5000/schedule/all');
           if (!response.ok) {
               throw new Error('Error fetching schedules');
           }

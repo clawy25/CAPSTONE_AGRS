@@ -83,7 +83,6 @@ export default class PersonnelModel {
   
       // Store the academic year in sessionStorage
       sessionStorage.setItem('currentAcadYear', data.academicYear);
-      console.log(data.academicYear);
   
       // Return a new instance of PersonnelModel with the additional fields
       return new PersonnelModel( // Filtering the sensitive info

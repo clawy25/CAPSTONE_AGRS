@@ -166,30 +166,8 @@ app.get('/student', async (req, res) => {
         if (studentError || !studentData) {
             return res.status(500).json({ error: studentError.message || 'Failed to fetch student data' });
         }
-  
-        // Prepare an array to hold student data with program names
-        const studentsWithPrograms = await Promise.all(studentData.map(async (student) => {
-            // Fetch program data based on the student's program number
-            const { data: programData, error: programError } = await supabase
-                .from('program')
-                .select('*')
-                .eq('programNumber', student.studentProgramNumber) // Match with the programNumber
-                .single(); // Expect a single result
-  
-            if (programError || !programData) {
-                return {
-                    ...student,
-                    studentProgramName: null, // If program is not found, set name to null
-                };
-            }
-  
-            return {
-                ...student,
-                studentProgramName: programData.programName, // Add program name
-            };
-        }));
-  
-        res.json(studentsWithPrograms); // Return the array of students with program names
+
+        res.json(studentData); // Return the array of students with program names
     } catch (error) {
         console.error('Error fetching students:', error); // Log the error
         res.status(500).json({ error: 'Internal server error' });
@@ -793,7 +771,7 @@ app.post('/section/upload', async (req, res) => {
 
 
   // Get schedules ALL
-  app.get('/schedule', async (req, res) => {
+  app.get('/schedule/all', async (req, res) => {
     try {
         // Fetch all year level data
         const { data, error} = await supabase
@@ -996,26 +974,32 @@ app.get('/academicYear', async (req, res) => {
 
 
 
-  //Insert new section
-  app.post('/academicYear/upload', async (req, res) => {
-    const { data } = req.body;
-
+app.post('/academicYear/upload', async (req, res) => {
+    const { academicYearData } = req.body; // Assuming req.body contains academicYearData directly
+  
+    if (!academicYearData) {
+        return res.status(400).json({ error: 'Academic year data is required.' });
+    }
+  
     try {
-        const { data: newYear, error } = await supabase
+        const { data, error } = await supabase
             .from('academicYear')
-            .insert([data])
+            .insert(academicYearData) // Insert the data directly
             .single(); // Ensures we get the inserted record
-
-        if (error || !newYear) {
+  
+        if (error) {
+            console.error('Error creating academic year:', error);
             return res.status(400).json({ error: 'Error creating academic year' });
         }
-
-        res.status(201).json(newYear); // Return the created year
-    } catch (error) {
-        console.error('Error creating academic year:', error);
+  
+        res.status(201).json(data); // Return the created record
+    } catch (err) {
+        console.error('Unexpected error creating academic year:', err);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
+
+  
 
 
   // Update academicYear by ID

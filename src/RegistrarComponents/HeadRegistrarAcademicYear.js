@@ -4,10 +4,22 @@ import AcademicYearModel from '../ReactModels/AcademicYearModel';
 import ProgramModel from '../ReactModels/ProgramModel';
 import '../App.css';
 import { UserContext } from '../Context/UserContext';
+import PersonnelModel from '../ReactModels/PersonnelModel';
 
 export default function HeadRegistrarAcademicYear() {
-  const { user } = useContext(UserContext);
+  
   const [academicYears, setAcademicYears] = useState([]);
+  
+  const [currentAcademicYear, setCurrentAcademicYear] = useState([]);
+  const [newAcademicYear, setNewAcademicYear] = useState({
+    academicYear: '',
+    isCurrent: false,
+  });
+
+  const [verify, setVerify] = useState({
+    personnelNumber: '',
+    password: '',
+  });
   const [program, setPrograms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -16,13 +28,10 @@ export default function HeadRegistrarAcademicYear() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showProgramAddModal, setShowProgramAddModal] = useState(false);
   const [showProgramEditModal, setShowProgramEditModal] = useState(false);
-  const [showAcademicYearConfirmationModal, AcademicYearConfirmationModal] = useState(false);
-  const [showProgramConfirmationModal, ProgramConfirmationModal] = useState(false);
+  const [showAcademicYearConfirmationModal, setAcademicYearConfirmationModal] = useState(false);
+  const [showProgramConfirmationModal, setProgramConfirmationModal] = useState(false);
   const [selectedAcademicYear, setSelectedAcademicYear] = useState('');
-  const [newAcademicYear, setNewAcademicYear] = useState({
-    academicYear: '',
-    isCurrent: false,
-  });
+  
   const [editAcademicYear, setEditAcademicYear] = useState({
     academicYear: '',
     isCurrent: false,
@@ -37,6 +46,9 @@ export default function HeadRegistrarAcademicYear() {
     setLoading(true);
     try {
       const years = await AcademicYearModel.fetchExistingAcademicYears();
+      const isCurrent = years.find(year => year.isCurrent === true);
+
+      setCurrentAcademicYear(isCurrent);
       setAcademicYears(years);
     } catch (err) {
       setError(err.message);
@@ -68,6 +80,15 @@ export default function HeadRegistrarAcademicYear() {
     return startYear.slice(-2) + (parseInt(startYear.slice(-2)) + 1).toString().padStart(2, '0');
   };
 
+  const generateNewAcadYear = (academicYear) => {
+    const yearParts = academicYear.split('-');
+      
+    const startYear = yearParts[0];
+    const endYear = yearParts[1];
+
+    return `${(parseInt(startYear) + 1).toString()}-${(parseInt(endYear) + 1).toString()}`;
+  };
+
   const generateProgramNumber = (academicYear) => {
     const yearPrefix = getYearPrefix(academicYear); // e.g., "2425" for "2024-2025"
 
@@ -86,31 +107,26 @@ export default function HeadRegistrarAcademicYear() {
     // Construct the new program number, ensuring two digits for the sequential part
     return `${yearPrefix}${nextNumber.toString().padStart(2, '0')}`;
   };
-
-
-
   // Handlers for modals
   const handleShowAdd = () => setShowAddModal(true);
-  const handleCloseAdd = () => {
-    setShowAddModal(false);
+  const handleCloseAddAcadYear = () => {
+    setAcademicYearConfirmationModal(false);
+    setVerify({ personnelNumber: '', password: ''});
     setNewAcademicYear({ academicYear: '', isCurrent: false });
   };
-
   const handleShowEdit = (year) => {
     setEditAcademicYear(year);
     setShowEditModal(true);
   };
-
   const handleCloseEdit = () => {
     setShowEditModal(false);
     setEditAcademicYear({ academicYear: '', isCurrent: false });
   };
-
   const handleShowProgramAdd = () => setShowProgramAddModal(true);
-
   const handleCloseProgramAdd = () => {
     fetchPrograms();
     setShowProgramAddModal(false);
+    setVerify({ personnelNumber: '', password: ''});
     setNewProgram({ name: '', years: '', levels: [] });
   };
 
@@ -127,6 +143,7 @@ export default function HeadRegistrarAcademicYear() {
   const handleCloseProgramEdit = () => {
     fetchPrograms();
     setShowProgramEditModal(false);
+    setVerify({ personnelNumber: '', password: ''});
     setEditProgram({ name: '', years: '', levels: [] , programNumber: ''});
   };
 
@@ -135,11 +152,7 @@ export default function HeadRegistrarAcademicYear() {
     const { name, value, type, checked } = e.target;
     const updatedValue = type === 'checkbox' ? checked : value;
 
-    if (showAddModal) {
-      setNewAcademicYear((prevState) => ({ ...prevState, [name]: updatedValue }));
-    } else if (showEditModal) {
-      setEditAcademicYear((prevState) => ({ ...prevState, [name]: updatedValue }));
-    } else if (showProgramAddModal) {
+    if (showProgramAddModal) {
       setNewProgram((prevState) => ({ ...prevState, [name]: updatedValue }));
     } else if (showProgramEditModal) {
       setEditProgram((prevState) => {
@@ -154,6 +167,14 @@ export default function HeadRegistrarAcademicYear() {
         return { ...prevState, [name]: updatedValue };
       });
     }
+  };
+
+  const handleVerify = (e) => {
+    const { name, value } = e.target;
+    setVerify((prevState) => ({
+      ...prevState,
+      [name]: value,
+    }));
   };
 
   // Handle year level checkboxes for program modals
@@ -181,81 +202,41 @@ export default function HeadRegistrarAcademicYear() {
   // Add a new academic year
   const handleAddAcademicYear = async () => {
     try {
-      const createdYear = await AcademicYearModel.createAndInsertAcademicYear(newAcademicYear);
-      setAcademicYears((prevYears) => [...prevYears, createdYear]);
-      handleCloseAdd();
+      const admin = await PersonnelModel.LoginPersonnelData(verify.personnelNumber, verify.password);
+
+      if (admin && admin.personnelType === 'Admin'){
+
+        const updateCurrent = {//Set the current to false as new acad year is inserted
+          id: currentAcademicYear.id,
+          academicYear: currentAcademicYear.academicYear,
+          isCurrent: false
+        };
+        
+        const update = await AcademicYearModel.updateAcademicYear(updateCurrent.id, updateCurrent);
+        
+        if (update) {
+          await AcademicYearModel.createAndInsertAcademicYear(newAcademicYear);
+        }
+
+        fetchAcademicYears();
+        handleCloseAddAcadYear();
+      }
     } catch (error) {
       console.error('Error adding academic year:', error);
     }
   };
 
-  // Edit an existing academic year
-  const handleEditAcademicYear = async () => {
-    try {
-      await AcademicYearModel.updateAcademicYear(editAcademicYear.id, editAcademicYear);
-      await fetchAcademicYears();
-    } catch (error) {
-      console.error('Error updating academic year:', error);
-    }
-    handleCloseEdit();
-  };
-
   // Adding program closes the modal
   const handleAddProgram = async (name, years, summerlevels) => {
-    const programNumber = generateProgramNumber(selectedAcademicYear);
     
-    const lastProgram = program.reduce((max, p) => (p.id > max ? p.id : max), 0);
-    let newId = lastProgram + 1;  // Increment the highest id found
+    const admin = await PersonnelModel.LoginPersonnelData(verify.personnelNumber, verify.password);
 
-    const newProgramsData = (summerlevels.length > 0 ? summerlevels : [null]).map((level) => ({
-      id: newId++,
-      programName: name,
-      programNumber: programNumber,
-      noOfYears: years,
-      yearLevelwithSummer: level,
-      academicYear: selectedAcademicYear
-    }));
-  
-    try {
-
-      const response = await ProgramModel.createAndInsertProgram(newProgramsData);
-  
-      if (!response) {
-        throw new Error('No response from server');
-      }
-  
-    } catch (error) {
-      console.error(error);
-    }
-    handleCloseProgramAdd();
-  };
-  
-
-  // Editing program closes the modal
-  const handleEditProgram = async (name, years, summerlevels, programNumber) => {
-    // Clean up summerlevels to ensure it only has either non-null values or a single null
-    if (summerlevels.some(level => level !== null)) {
-      summerlevels = summerlevels.filter(level => level !== null);
-    } else if (summerlevels.length === 0) {
-      summerlevels = [null];
-    }
-
-    const academicYear = selectedAcademicYear;
+    if (admin && admin.personnelType === 'Admin'){
+      const programNumber = generateProgramNumber(selectedAcademicYear);
     
-    if(programNumber){
-      try {
-        const response = await ProgramModel.deletePrograms(programNumber, academicYear);
-    
-        if (!response) {
-          throw new Error('No response from server');
-        }
-    
-      } catch (error) {
-        console.error(error);
-      }
-
       const lastProgram = program.reduce((max, p) => (p.id > max ? p.id : max), 0);
       let newId = lastProgram + 1;  // Increment the highest id found
+
       const newProgramsData = (summerlevels.length > 0 ? summerlevels : [null]).map((level) => ({
         id: newId++,
         programName: name,
@@ -265,27 +246,79 @@ export default function HeadRegistrarAcademicYear() {
         academicYear: selectedAcademicYear
       }));
 
-      console.log(newProgramsData);
       try {
+
         const response = await ProgramModel.createAndInsertProgram(newProgramsData);
     
         if (!response) {
           throw new Error('No response from server');
         }
+    
       } catch (error) {
         console.error(error);
       }
-    };
+    }
+    handleCloseProgramAdd();
+  };
+  
+
+  // Editing program closes the modal
+  const handleEditProgram = async (name, years, summerlevels, programNumber) => {
+
+    const admin = await PersonnelModel.LoginPersonnelData(verify.personnelNumber, verify.password);
+
+    if (admin && admin.personnelType === 'Admin'){
+      if (summerlevels.some(level => level !== null)) {
+        summerlevels = summerlevels.filter(level => level !== null);
+      } else if (summerlevels.length === 0) {
+        summerlevels = [null];
+      }
+  
+      const academicYear = selectedAcademicYear;
+      
+      if(programNumber){
+        try {
+          const response = await ProgramModel.deletePrograms(programNumber, academicYear);
+      
+          if (!response) {
+            throw new Error('No response from server');
+          }
+      
+        } catch (error) {
+          console.error(error);
+        }
+  
+        const lastProgram = program.reduce((max, p) => (p.id > max ? p.id : max), 0);
+        let newId = lastProgram + 1;  // Increment the highest id found
+        const newProgramsData = (summerlevels.length > 0 ? summerlevels : [null]).map((level) => ({
+          id: newId++,
+          programName: name,
+          programNumber: programNumber,
+          noOfYears: years,
+          yearLevelwithSummer: level,
+          academicYear: selectedAcademicYear
+        }));
+  
+        console.log(newProgramsData);
+        try {
+          const response = await ProgramModel.createAndInsertProgram(newProgramsData);
+      
+          if (!response) {
+            throw new Error('No response from server');
+          }
+        } catch (error) {
+          console.error(error);
+        }
+      };
+    }
     handleCloseProgramEdit();
   };
 
-  const handleSelectChange = (e) => {
+  const handleAcademicYearChange = (e) => {
     const value = e.target.value;
     if (value === 'addNew') {
-      handleShowAdd();
-    } else if (value === 'editSelected') {
-      const selectedYear = academicYears.find(year => year.academicYear === selectedAcademicYear);
-      if (selectedYear) handleShowEdit(selectedYear);
+      setAcademicYearConfirmationModal(true);
+      setNewAcademicYear({ academicYear: generateNewAcadYear(currentAcademicYear.academicYear), isCurrent: true });
     } else {
       setSelectedAcademicYear(value);
     }
@@ -320,7 +353,7 @@ export default function HeadRegistrarAcademicYear() {
     <Table bordered hover className="mt-2">
       <thead className='table-success'>
         <tr>
-          <th className='custom-color-green-font custom-font'>Current Programs</th>
+          <th className='custom-color-green-font custom-font'>Programs</th>
           <th className='custom-color-green-font custom-font'>Number of Years</th>
           <th className='custom-color-green-font custom-font'>Year Levels with Summer</th>
           <th className='custom-color-green-font custom-font'>Actions</th>
@@ -367,7 +400,11 @@ export default function HeadRegistrarAcademicYear() {
             : 'No summer levels available'}
         </td>
         <td>
+        {selectedAcademicYear === academicYears.find(year => year.isCurrent)?.academicYear && (
+          <>
           <Button variant="success" onClick={() => handleShowProgramEdit(program.programName, program.programNumOfYear, program.summerlevels, program.programNumber)}>Edit</Button>
+          </>
+        )}
         </td>
       </tr>
     ))}
@@ -377,21 +414,15 @@ export default function HeadRegistrarAcademicYear() {
   );
 
   return (
-
-    
       <div className='container-fluid bg-white p-4 rounded mt-3'>
-       
     <Row>
       <Col>
       <h3 className="mt-2 custom-color-green-font custom-font" >Programs</h3>
-      
-      
       </Col>
-
-      <Col>
-      <Form.Group className="mb-3">
+      <Col className="">
+      <Form.Group className="align-items-center">
         {/*<Form.Label className='custom-color-green-font custom-font'>Select Academic Year</Form.Label>*/}
-        <Form.Select className='p-2 mt-2' value={selectedAcademicYear} onChange={handleSelectChange}>
+        <Form.Select className='p-2 mt-2' value={selectedAcademicYear} onChange={handleAcademicYearChange}>
           <option value="">Select Academic Year</option>
           {academicYears
           .sort((a, b) => {
@@ -404,12 +435,13 @@ export default function HeadRegistrarAcademicYear() {
               {year.academicYear}
             </option>
           ))}
-          <option value="addNew">Add Academic Year</option>
-          {selectedAcademicYear && (
-            <option value="editSelected">Edit Selected Academic Year</option>
-          )}
         </Form.Select>
       </Form.Group>
+      </Col>
+      <Col>
+      <Button variant="success" className="mt-3" value="addNew" onClick={handleAcademicYearChange}>
+        Proceed to Next Academic Year
+      </Button>
       </Col>
     </Row>
     {renderProgramsTable()}
@@ -422,7 +454,7 @@ export default function HeadRegistrarAcademicYear() {
     )}
 
       {/* Modals for Academic Year */}
-      <Modal show={showAddModal} onHide={handleCloseAdd}>
+      {/*<Modal show={showAddModal} onHide={handleCloseAddAcadYear}>
         <Modal.Header closeButton>
           <Modal.Title>Add Academic Year</Modal.Title>
         </Modal.Header>
@@ -450,12 +482,12 @@ export default function HeadRegistrarAcademicYear() {
           </Form>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={handleCloseAdd}>Close</Button>
+          <Button variant="secondary" onClick={handleCloseAddAcadYear}>Close</Button>
           <Button variant="primary" onClick={handleAddAcademicYear}>Add Academic Year</Button>
         </Modal.Footer>
-      </Modal>
+      </Modal>*/}
 
-      <Modal show={showEditModal} onHide={handleCloseEdit}>
+      {/*<Modal show={showEditModal} onHide={handleCloseEdit}>
         <Modal.Header closeButton>
           <Modal.Title>Edit Academic Year</Modal.Title>
         </Modal.Header>
@@ -486,7 +518,7 @@ export default function HeadRegistrarAcademicYear() {
           <Button variant="secondary" onClick={handleCloseEdit}>Close</Button>
           <Button variant="primary" onClick={handleEditAcademicYear}>Save Changes</Button>
         </Modal.Footer>
-      </Modal>
+      </Modal>*/}
 
       {/* Modals for Program */}
       <Modal show={showProgramAddModal} onHide={handleCloseProgramAdd}>
@@ -494,6 +526,9 @@ export default function HeadRegistrarAcademicYear() {
           <Modal.Title>Add Program</Modal.Title>
         </Modal.Header>
         <Modal.Body>
+        <p className="fs-6 fw-semibold text-justify">
+          Are you sure you want to add a new program?
+        </p>
           <Form>
             <Form.Group className="mb-3">
               <Form.Label>Program Name</Form.Label>
@@ -522,6 +557,28 @@ export default function HeadRegistrarAcademicYear() {
               />
             </Form.Group>
             {renderYearLevelCheckboxes('new', null)}
+
+            <i><p>This action requires verification. To proceed, please provide your details to authorize this action.</p></i>
+            <Form.Group className="mb-3">
+              <Form.Label>Personnel Number</Form.Label>
+              <Form.Control
+                type="text"
+                name="personnelNumber"
+                placeholder="Personnel Number"
+                value={verify.personnelNumber}
+                onChange={handleVerify}
+              />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Personnel Password</Form.Label>
+              <Form.Control
+                type="password"
+                name="password"
+                placeholder="Password"
+                value={verify.password}
+                onChange={handleVerify}
+              />
+            </Form.Group>
           </Form>
         </Modal.Body>
         <Modal.Footer>
@@ -563,6 +620,28 @@ export default function HeadRegistrarAcademicYear() {
               />
             </Form.Group>
             {renderYearLevelCheckboxes('edit', editProgram.levels)}
+
+            <i><p>This action requires verification. To proceed, please provide your details to authorize this action.</p></i>
+            <Form.Group className="mb-3">
+              <Form.Label>Personnel Number</Form.Label>
+              <Form.Control
+                type="text"
+                name="personnelNumber"
+                placeholder="Personnel Number"
+                value={verify.personnelNumber}
+                onChange={handleVerify}
+              />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Personnel Password</Form.Label>
+              <Form.Control
+                type="password"
+                name="password"
+                placeholder="Password"
+                value={verify.password}
+                onChange={handleVerify}
+              />
+            </Form.Group>
           </Form>
         </Modal.Body>
         <Modal.Footer>
@@ -572,48 +651,56 @@ export default function HeadRegistrarAcademicYear() {
       </Modal>
 
       {/*ADD ACADEMIC YEAR CONFIRMATION */}
-      <Modal show={showAcademicYearConfirmationModal} size='lg'>
+      <Modal show={showAcademicYearConfirmationModal} size="lg" onHide={handleCloseAddAcadYear}>
         <Modal.Header closeButton>
-          <Modal.Title className='custom-color-green-font'>Confirmation</Modal.Title>
+          <Modal.Title className="custom-color-green-font">Confirmation</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-      
-           <p className='fs-6 fw-semibold text-justify'>Personnel details have been verified. To proceed with adding a new academic year, please provide your password to confirm your authorization for this action.</p>
-       
-          <Form>
-            <Form.Group className="mb-3">
-              <Form.Label>Personnel Number</Form.Label>
-              <Form.Control
-                type="text"
-                placeholder="Personnel Number"
-                disabled
-              />
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Personnel Name</Form.Label>
-              <Form.Control
-                type="text"
-                placeholder="Name of the personnel"
-                disabled
-              />
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Personnel Password</Form.Label>
-              <Form.Control
-                type="password"
-                 placeholder="Password"
-              />
-            </Form.Group>
-          </Form>
+          <p className="fs-6 fw-semibold text-justify">
+            Are you sure you want to proceed the entire system to a new academic year?
+          </p>
+          <p>
+            The system will proceed from <strong>{currentAcademicYear?.academicYear}</strong> to{' '}
+          <strong>{newAcademicYear?.academicYear}</strong>. WARNING! THIS ACTION IS IRREVERSIBLE!
+          </p>
+          <p>This action requires verification. To proceed, please provide your details to authorize this action.</p>
+
+        <Form>
+          <Form.Group className="mb-3">
+            <Form.Label>Personnel Number</Form.Label>
+            <Form.Control
+              type="text"
+              name="personnelNumber"
+              placeholder="Personnel Number"
+              value={verify.personnelNumber}
+              onChange={handleVerify}
+            />
+          </Form.Group>
+          <Form.Group className="mb-3">
+            <Form.Label>Personnel Password</Form.Label>
+            <Form.Control
+              type="password"
+              name="password"
+              placeholder="Password"
+              value={verify.password}
+              onChange={handleVerify}
+            />
+          </Form.Group>
+        </Form>
         </Modal.Body>
         <Modal.Footer>
-          <Button className='border-success bg-white custom-color-green-font'>Close</Button>
-          <Button variant="success">Confirm</Button>
+          <Button className="border-success bg-white custom-color-green-font" variant="secondary" onClick={handleCloseAddAcadYear}>
+            Close
+          </Button>
+          <Button variant="success" onClick={handleAddAcademicYear}>
+            Confirm
+          </Button>
         </Modal.Footer>
       </Modal>
 
+
        {/*ADD PROGRAM CONFIRMATION */}
-      <Modal show={showProgramConfirmationModal} size='lg'>
+      {/*<Modal show={showProgramConfirmationModal} size='lg'>
         <Modal.Header closeButton>
           <Modal.Title className='custom-color-green-font'>Confirmation</Modal.Title>
         </Modal.Header>
@@ -651,7 +738,7 @@ export default function HeadRegistrarAcademicYear() {
           <Button className='border-success bg-white custom-color-green-font'>Close</Button>
           <Button variant="success">Confirm</Button>
         </Modal.Footer>
-      </Modal>
+      </Modal>*/}
     </div>
 
   );

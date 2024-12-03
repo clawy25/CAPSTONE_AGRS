@@ -67,6 +67,7 @@ const ScheduleTable = () => {
   
       if (student.length > 0) {
         setStudentInfo(student);
+        //fetchEnrollment(studentNumber);
       }
   
     } catch (error) {
@@ -148,11 +149,32 @@ const ScheduleTable = () => {
   }
   };
 
+  const fetchEnrollment = async(studentNumber) => {
+    
+    const userEnrollment = await EnrollmentModel.fetchEnrollmentData(studentNumber);
+    const userSections = new Set();
+    userEnrollment.forEach(row => {
+
+      const parts = row.scheduleNumber.split('-'); 
+      const sectionNumber = parts.slice(-2).join('-');
+
+      userSections.add(sectionNumber);
+    });
+
+    const sectionList = Array.from(userSections);
+    console.log(sectionList);
+
+    const Enrolled = sections.some(item => sectionList.includes(item.sectionNumber));
+
+    console.log(Enrolled);
+    if(Enrolled){
+      setIsEnrolled(true);
+    }
+  };
+
   useEffect(() => {
     fetchAcademicYearsAndPrograms();
     fetchStudentInfo(user.studentNumber);
-    //fetchCourses();
-    //fetchSections();
   }, []);
   
   useEffect(() => {
@@ -161,13 +183,17 @@ const ScheduleTable = () => {
     }
   }, [currentAcademicYear, user.studentNumber]);
 
-  
-
   useEffect(() => {
     if (yearLevel && semester && currentAcademicYear.length > 0 && program.length > 0) {
       fetchSections();
     }
   }, [yearLevel, semester, currentAcademicYear, program]);
+
+  useEffect(()=> {
+    if (sections){
+      fetchEnrollment(user.studentNumber);
+    }
+  }, [sections]);
 
 
 
