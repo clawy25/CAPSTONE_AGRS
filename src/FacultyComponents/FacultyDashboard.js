@@ -179,69 +179,56 @@ export default function FacultyDashboard () {
     }, []);
 
 
-    const handleClassListClick = async () => {
-      // Check for missing required fields
-      if (!selectedAcademicYear) {
-        alert("Please select an Academic Year.");
-        return;
-      }
-      if (!selectedProgram) {
-        alert("Please select a Program.");
-        return;
-      }
-      if (!yearLevel) {
-        alert("Please select a Year Level.");
-        return;
-      }
-      if (!semester) {
-        alert("Please select a Semester.");
-        return;
-      }
-      if (!section) {
-        alert("Please select a Section.");
-        return;
-      }
-      if (!selectedCourse) {
-        alert("Please select a Course.");
-        return;
-      }
-    
-      // Toggle table visibility
-      setIsTableVisible(!isTableVisible);
-    
-      if (!isTableVisible) {
-        try {
-          // Fetch class list data from your models or API
-          const enrollments = await EnrollmentModel.fetchAllEnrollment();
-          const schedules = await ScheduleModel.fetchSchedules();
-          const students = await StudentModel.fetchExistingStudents();
-          const courses = await CourseModel.fetchAllCourses();
-    
-          // Map over enrollments and match data from other models
-          const classList = enrollments.map((enrollment) => {
-            const matchedStudent = students.find(student => student.studentNumber === enrollment.studentNumber);
-            const matchedSchedule = schedules.find(schedule => schedule.scheduleNumber === enrollment.scheduleNumber);
-            const matchedCourse = courses.find(course => course.courseCode === enrollment.courseCode);
-    
-            return {
-              studentNumber: matchedStudent?.studentNumber || "N/A",
-              studentFirstName: matchedStudent?.studentNameFirst || "N/A",
-              studentLastName: matchedStudent?.studentNameLast || "N/A",
-              courseCode: matchedCourse?.courseCode || "N/A",
-              yearLevel: matchedSchedule?.yearLevel || "N/A",
-              sectionNumber: matchedSchedule?.sectionNumber || "N/A",
-            };
-          });
-    
-          // Update state with fetched class list data
-          setClassListData(classList);
-        } catch (error) {
-          console.error("Error fetching class list data:", error);
-          alert("An error occurred while fetching class list data. Please try again.");
-        }
-      }
-    };
-    
+const handleClassListClick = async () => {
+  // Check for missing required fields
+  if (!selectedAcademicYear || !selectedProgram || !yearLevel || !semester || !section || !selectedCourse) {
+    alert("Please fill in all required fields.");
+    return;
+  }
+
+  // Toggle table visibility
+  setIsTableVisible(!isTableVisible);
+
+  if (!isTableVisible) {
+    try {
+      // Fetch class list data from your models or API in parallel
+      const [enrollments, schedules, students, courses] = await Promise.all([
+        EnrollmentModel.fetchAllEnrollment(),
+        ScheduleModel.fetchSchedules(),
+        StudentModel.fetchExistingStudents(),
+        CourseModel.fetchAllCourses()
+      ]);
+
+      // Create Maps for fast lookups
+      const studentMap = new Map(students.map(student => [student.studentNumber, student]));
+      const scheduleMap = new Map(schedules.map(schedule => [schedule.scheduleNumber, schedule]));
+      const courseMap = new Map(courses.map(course => [course.courseCode, course]));
+
+      // Map over enrollments and match data from other models using Maps for faster lookups
+      const classList = enrollments.map((enrollment) => {
+        const matchedStudent = studentMap.get(enrollment.studentNumber) || {};
+        const matchedSchedule = scheduleMap.get(enrollment.scheduleNumber) || {};
+        const matchedCourse = courseMap.get(enrollment.courseCode) || {};
+
+        return {
+          studentNumber: matchedStudent.studentNumber || "N/A",
+          studentFirstName: matchedStudent.studentNameFirst || "N/A",
+          studentLastName: matchedStudent.studentNameLast || "N/A",
+          courseCode: matchedCourse.courseCode || "N/A",
+          yearLevel: matchedSchedule.yearLevel || "N/A",
+          sectionNumber: matchedSchedule.sectionNumber || "N/A",
+        };
+      });
+
+      // Update state with fetched class list data
+      setClassListData(classList);
+    } catch (error) {
+      console.error("Error fetching class list data:", error);
+      alert("An error occurred while fetching class list data. Please try again.");
+    }
+  }
+};
+
     
   
     const fetchExistingStudents = async () => {
