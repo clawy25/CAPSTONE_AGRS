@@ -3,7 +3,9 @@ import { UserContext } from '../Context/UserContext';
 import EnrollmentModel from '../ReactModels/EnrollmentModel';
 import ScheduleModel from '../ReactModels/ScheduleModel';
 import CourseModel from '../ReactModels/CourseModel';
-import PersonnelModel from '../ReactModels/PersonnelModel'; // Import PersonnelModel
+import PersonnelModel from '../ReactModels/PersonnelModel'; 
+import StudentModel from '../ReactModels/StudentModel';
+import AcademicYearModel from '../ReactModels/AcademicYearModel';
 
 import './Schedule.css';
 import '../App.css';
@@ -13,103 +15,125 @@ export default function Schedule() {
   const [studentSchedules, setStudentSchedules] = useState([]); // To store student's schedule data
   const [courses, setCourses] = useState([]); // To store all course data
   const [personnel, setPersonnel] = useState([]); // To store personnel data
+  const [studentName, setStudentName] = useState(""); // To store the student's full name
   const [error, setError] = useState(null); // For error handling
+  const [currentAcadYear, setCurrentAcadYear] = useState(""); // State for current academic year
+
   useEffect(() => {
+    const fetchAcademicYear = async () => {
+      try {
+        const academicYears = await AcademicYearModel.fetchExistingAcademicYears();
+        const currentYear = academicYears.find(year => year.isCurrent); // Find the current academic year
+        if (currentYear) {
+          setCurrentAcadYear(currentYear.academicYear); // Set the current academic year
+        } else {
+          throw new Error("Current academic year not found.");
+        }
+      } catch (error) {
+        setError("Error fetching academic year.");
+        console.error(error);
+      }
+    };
+
     const fetchStudentData = async () => {
       try {
         if (!user || !user.studentNumber) {
           throw new Error("No student information available.");
         }
-  
-        // Log the student number to the console
-        console.log("Logged-in student number:", user.studentNumber);
-  
-        // Fetch enrollments for the logged-in student
+
+        // Fetch the student details based on studentNumber
+        const students = await StudentModel.fetchExistingStudents();
+        const currentStudent = students.find(student => student.studentNumber === user.studentNumber);
+
+        if (currentStudent) {
+          // Set the student's full name
+          const fullName = `${currentStudent.studentNameLast}, ${currentStudent.studentNameFirst} ${currentStudent.studentNameMiddle || ''} ${currentStudent.studentNameLast}`;
+          setStudentName(fullName.trim());
+        } else {
+          throw new Error("Student not found.");
+        }
+
+        // Fetch personnel for the current academic year
+        const personnelData = await PersonnelModel.fetchAllPersonnel(currentAcadYear);
+
+        // Fetch enrollments, schedules, and courses
         const enrollments = await EnrollmentModel.fetchAllEnrollment();
-  
-        // Filter enrollments based on the logged-in student number
+        const schedules = await ScheduleModel.fetchSchedules();
+        const fetchedCourses = await CourseModel.fetchAllCourses();
+
+        // Find the enrollments for the current student
         const studentEnrollments = enrollments.filter(
           (enrollment) => enrollment.studentNumber === user.studentNumber
         );
-  
-        // Fetch all schedules from ScheduleModel
-        const schedules = await ScheduleModel.fetchSchedules();
-  
-        // Fetch all courses from CourseModel
-        const fetchedCourses = await CourseModel.fetchAllCourses();
-        setCourses(fetchedCourses); // Set the course data
-  
-        // Now match the scheduleNumber in enrollments with the schedules and course data
+
+        // Loop through studentEnrollments and match schedules
         const studentSchedules = await Promise.all(
           studentEnrollments.map(async (enrollment) => {
+            // Find matching schedule for the student enrollment
             const matchedSchedule = schedules.find(
               (schedule) => schedule.scheduleNumber === enrollment.scheduleNumber
             );
-  
+
             if (matchedSchedule) {
-              // Log the personnel number from the schedule to check
-              console.log("Personnel Number from Schedule:", matchedSchedule.personnelNumber);
-  
-              // Check if personnelNumber is available
-              if (!matchedSchedule.personnelNumber) {
-                console.log("No personnel number in the schedule:", matchedSchedule);
-                return null; // Skip this entry if personnelNumber is missing
+              // Find the professor (personnel) for the schedule using fetched personnel
+              const fetchedPersonnel = personnelData.find(
+                (person) => person.personnelNumber === matchedSchedule.personnelNumber
+              );
+
+              console.log("Fetched Personnel Data:", fetchedPersonnel);
+
+              // Ensure the data has been correctly fetched
+              if (!fetchedPersonnel || !fetchedPersonnel.firstName || !fetchedPersonnel.lastName) {
+                console.warn(`No valid personnel data found for personnelNumber: ${matchedSchedule.personnelNumber}`);
               }
-  
-              // Match the courseCode to get course details
+
+              // Find the matching course
               const matchedCourse = fetchedCourses.find(
                 (course) => course.courseCode === matchedSchedule.courseCode
               );
-  
-              if (matchedCourse) {
-                // Calculate total units (lecture + lab units)
+
+              // If course and professor data are available, return schedule data
+              if (matchedCourse && fetchedPersonnel) {
                 const totalUnits = matchedCourse.courseLecture + matchedCourse.courseLaboratory;
-  
-                // Fetch the professor (personnel) by personnelNumber
-                console.log(`Fetching professor data for personnelNumber: ${matchedSchedule.personnelNumber}`);
-                const professorData = await PersonnelModel.getProfessorByPersonnelNumber(matchedSchedule.personnelNumber);
-  
-                // Log the fetched professor data
-                console.log("Fetched Professor Data:", professorData);
-  
-                // If personnel data is found, extract the professor's name
-                const professorName = professorData
-                  ? `${professorData.firstName} ${professorData.lastName}`
-                  : "Unknown"; // Handle case where professor is not found
-  
+
+                // Fix the personnel name display to handle undefined or missing fields
+                const professorName = `${fetchedPersonnel.firstName} ${fetchedPersonnel.middleName || ''} ${fetchedPersonnel.lastName}`.trim();
+
                 return {
                   courseCode: matchedCourse.courseCode,
                   courseDesc: matchedCourse.courseDescriptiveTitle,
                   lectureUnits: matchedCourse.courseLecture,
                   labUnits: matchedCourse.courseLaboratory,
-                  totalUnits, // New field for total units
-                  scheduleTime: `${matchedSchedule.scheduleDay} ${formatTimeTo12Hour(matchedSchedule.startTime)} - ${formatTimeTo12Hour(matchedSchedule.endTime)}`, // Apply formatTimeTo12Hour
-                  professor: professorName, // Use the professor's name here
+                  totalUnits,
+                  scheduleTime: `${matchedSchedule.scheduleDay} ${formatTimeTo12Hour(
+                    matchedSchedule.startTime
+                  )} - ${formatTimeTo12Hour(matchedSchedule.endTime)}`,
+                  professorName,  // Full name
                 };
               } else {
-                console.log("No matched course found for courseCode:", matchedSchedule.courseCode);
+                console.warn(
+                  `No match found for courseCode: ${matchedSchedule.courseCode} or personnel data is incomplete`
+                );
               }
-            } else {
-              console.log("No matching schedule for enrollment:", enrollment);
             }
-            return null; // If no matching schedule or course, return null (will filter out later)
+            return null; // Return null if no match is found
           })
         );
-  
-        // Filter out null schedules
-        setStudentSchedules(studentSchedules.filter(schedule => schedule !== null));
-  
+
+        // Filter out null values from studentSchedules
+        const validSchedules = studentSchedules.filter((schedule) => schedule !== null);
+        setStudentSchedules(validSchedules);
+
       } catch (error) {
-        setError(error.message); // Handle any errors
+        setError(error.message);
         console.error("Error fetching student data:", error);
       }
     };
-  
-    fetchStudentData(); // Fetch data when component mounts
-  }, [user]); // Re-run effect when user changes
-  
-  
-  
+
+    fetchAcademicYear(); // Fetch academic year
+    fetchStudentData(); // Fetch student data when component mounts
+
+  }, [user, currentAcadYear]); // Re-run effect when user or currentAcadYear changes
 
   // Render loading state or error if applicable
   if (error) {
@@ -118,46 +142,42 @@ export default function Schedule() {
 
   const formatTimeTo12Hour = (timeStr) => {
     if (!timeStr) return ''; // Handle empty or invalid time input
-  
-    // Ensure the time is properly formatted by adding missing zeroes or handling edge cases
-    const timeParts = timeStr.split(':'); // Split time into hours and minutes
-    let hours = parseInt(timeParts[0], 10); // Get the hours
-    let minutes = timeParts[1] ? parseInt(timeParts[1], 10) : 0; // Get minutes or default to 0
+    const timeParts = timeStr.split(':');
+    let hours = parseInt(timeParts[0], 10);
+    let minutes = timeParts[1] ? parseInt(timeParts[1], 10) : 0;
   
     if (isNaN(hours) || isNaN(minutes)) {
-      return ''; // Return empty string if time is invalid
+      return '';
     }
   
     const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12;
+    hours = hours ? hours : 12;
+    minutes = minutes < 10 ? '0' + minutes : minutes;
   
-    // Convert to 12-hour format
-    hours = hours % 12; // Convert hours to 12-hour format
-    hours = hours ? hours : 12; // If hours is 0 (midnight), set it to 12
-    minutes = minutes < 10 ? '0' + minutes : minutes; // Add leading zero to minutes if necessary
-  
-    return `${hours}:${minutes} ${ampm}`; // Return formatted time
+    return `${hours}:${minutes} ${ampm}`;
   };
 
   return (
-  
-      <div className="card card-success rounded">
-        <div className="card-header bg-white p-3">
-          {user.studentNumber} 
-        </div>
-        <div className='card-body'>
-          <table className="table table-bordered table-responsive">
-            <thead className="table-success text-center">
-              <tr>
-                <th className="text-success custom-font">Course Code</th>
-                <th className="text-success custom-font">Course Desc</th>
-                <th className="text-success custom-font">Lecture Units</th>
-                <th className="text-success custom-font">Lab Units</th>
-                <th className="text-success custom-font">Total Units</th> {/* New column for total units */}
-                <th className="text-success custom-font">Schedule</th>
-                <th className="text-success custom-font">Professor</th>
-              </tr>
-            </thead>
-            <tbody className='bg-white'>
+    <div className="card card-success rounded">
+      <div className='card-header bg-white d-flex'>
+        <p className='custom-color-green-font mt-3 ms-1 fs-6 custom-color-green-font fw-bold'>{studentName}</p>
+        <p className='custom-color-green-font mt-3 ms-1 fs-6 custom-color-green-font fw-bold'>  ({user.studentNumber})</p>
+      </div>
+      <div className='card-body'>
+        <table className="table table-bordered table-responsive">
+          <thead className="table-success text-center">
+            <tr>
+              <th className="text-success custom-font">Course Code</th>
+              <th className="text-success custom-font">Course Desc</th>
+              <th className="text-success custom-font">Lecture Units</th>
+              <th className="text-success custom-font">Lab Units</th>
+              <th className="text-success custom-font">Total Units</th> {/* New column for total units */}
+              <th className="text-success custom-font">Schedule</th>
+              <th className="text-success custom-font">Professor</th>
+            </tr>
+          </thead>
+          <tbody className='bg-white'>
             {studentSchedules.length > 0 ? (
               studentSchedules.map((schedule, index) => (
                 <tr key={index}>
@@ -165,11 +185,9 @@ export default function Schedule() {
                   <td className="custom-font">{schedule.courseDesc}</td>
                   <td className="custom-font">{schedule.lectureUnits}</td>
                   <td className="custom-font">{schedule.labUnits}</td>
-                  <td className="custom-font">{schedule.totalUnits}</td> {/* Display total units */}
-                  <td className="custom-font">
-                    {schedule.scheduleTime} {/* Use the formatted scheduleTime */}
-                  </td>
-                  <td className="custom-font">{schedule.professor}</td> {/* Display professor's name */}
+                  <td className="custom-font">{schedule.totalUnits}</td>
+                  <td className="custom-font">{schedule.scheduleTime}</td>
+                  <td className="custom-font">{schedule.professorName}</td>
                 </tr>
               ))
             ) : (
@@ -177,11 +195,9 @@ export default function Schedule() {
                 <td colSpan="7" className="text-center custom-font">No schedule found for this student.</td>
               </tr>
             )}
-
-            </tbody>
-          </table>
-        </div>  
-      </div>
- 
+          </tbody>
+        </table>
+      </div>  
+    </div>
   );
 }

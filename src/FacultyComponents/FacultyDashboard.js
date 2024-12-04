@@ -55,7 +55,6 @@ export default function FacultyDashboard () {
   const [userSelectedCount, setUserSelectedCount] = useState(null);
   const [isEnrolled, setIsEnrolled] = useState(false);
   const [showTable, setShowTable] = useState(false);
-
   const [finalData, setFinalData] = useState([]);
   const [isTableVisible, setIsTableVisible] = useState(false);
   const [classListData, setClassListData] = useState([]); // Store class list data

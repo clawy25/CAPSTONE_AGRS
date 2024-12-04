@@ -114,12 +114,12 @@ export default function RegistrarDashboard() {
             </div>
           )}
           <Link 
-            to="/registrar-dashboard/professors" 
-            className={`menu-item d-flex align-items-center mb-2 ${location.pathname === '/registrar-dashboard/professors' ? 'active' : ''}`}
+            to="/registrar-dashboard/grades-submission" 
+            className={`menu-item d-flex align-items-center mb-2 ${location.pathname === '/registrar-dashboard/grades-submission' ? 'active' : ''}`}
             onClick={() => setShowGradesSubMenu(false)}
           >
             <FontAwesomeIcon icon={faChalkboardTeacher} className="me-2" />
-            PROFESSORS
+            GRADES SUBMISSION
           </Link>
 
           {user?.personnelType === 'Admin' && ( 
@@ -163,10 +163,10 @@ export default function RegistrarDashboard() {
             />
             {showDropdown && (
               <div className="dropdown-menu position-absolute end-0 mt-2 show">
-                <button className="dropdown-item" onClick={() => navigate('/dashboard/profile')}>
+                <button className="dropdown-item" onClick={() => navigate('/registrar-dashboard/profile')}>
                   Profile
                 </button>
-                <button className="dropdown-item" onClick={() => navigate('/dashboard/change-password')}>
+                <button className="dropdown-item" onClick={() => navigate('/registrar-dashboard/change-password')}>
                   Change Password
                 </button>
                 <button className="dropdown-item" onClick={handleLogout}>
@@ -183,7 +183,7 @@ export default function RegistrarDashboard() {
           <Route path="grades" element={<RegistrarGrades />} />
           <Route path="csog" element={<CSOG />} />
           <Route path="mog" element={<MOG />} />
-          <Route path="professors" element={<RegistrarProfessor />} />
+          <Route path="grades-submission" element={<RegistrarProfessor />} />
           <Route path="staff/*" element={<RegistrarStaff />} />
           <Route path="academicYear" element={<HeadRegistrarAcademicYear />} />
         </Routes>

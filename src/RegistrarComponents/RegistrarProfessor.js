@@ -1,77 +1,115 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Form, Button, Row, Col } from 'react-bootstrap';
+import { Table, Form, Button, Row, Col, Modal } from 'react-bootstrap';
 import ProgramModel from '../ReactModels/ProgramModel'; 
 import AcademicYearModel from '../ReactModels/AcademicYearModel';
-import YearLevelModel from '../ReactModels/YearLevelModel';
 import '../App.css';
 
 export default function RegistrarProfessor() {
-  const [activeView, setActiveView] = useState('professor');
   const [academicYear, setAcademicYear] = useState('');
+  const [program, setProgram] = useState('');
   const [yearLevel, setYearLevel] = useState('');
   const [semester, setSemester] = useState('First');
-  const [program, setProgram] = useState('');
-  const [programs, setPrograms] = useState([]);
   const [academicYears, setAcademicYears] = useState([]);
+  const [programs, setPrograms] = useState([]);
   const [yearLevels, setYearLevels] = useState([]);
-  const [options, setOptions] = useState([]); // Added options state for courses
+  const [programsByAcademicYear, setProgramsByAcademicYear] = useState({});
+  const [yearLevelsByProgram, setYearLevelsByProgram] = useState({});
+  const [showModal, setShowModal] = useState(false);
 
-  // Fetch data on component mount
+  const handleCloseModal = () => setShowModal(false);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // Fetch academic years
         const fetchedAcademicYears = await AcademicYearModel.fetchExistingAcademicYears();
         setAcademicYears(fetchedAcademicYears);
+
         if (fetchedAcademicYears.length > 0) {
           setAcademicYear(fetchedAcademicYears[0].academicYear);
         }
 
-        const fetchedYearLevels = await YearLevelModel.fetchExistingYearLevels();
-        setYearLevels(fetchedYearLevels);
-        if (fetchedYearLevels.length > 0) {
-          setYearLevel(fetchedYearLevels[0].yearName);
-        }
-
+        // Fetch all programs
         const fetchedPrograms = await ProgramModel.fetchAllPrograms();
-        setPrograms(fetchedPrograms);
-        if (fetchedPrograms.length > 0) {
-          setProgram(fetchedPrograms[0].programName);
-        }
+        const groupedPrograms = fetchedPrograms.reduce((acc, program) => {
+          acc[program.academicYear] = acc[program.academicYear] || [];
+          acc[program.academicYear].push(program);
+          return acc;
+        }, {});
 
-        // Initialize dummy data for options (courses with statuses)
-        setOptions([
-          { id: 1, name: 'Course 1', faculty: 'Faculty A', deadline: '2024-12-15', status: 'Pending', color: 'warning', submittedOn: null },
-          { id: 2, name: 'Course 2', faculty: 'Faculty B', deadline: '2024-12-20', status: 'Completed', color: 'success', submittedOn: '2024-12-10' },
-          { id: 3, name: 'Course 3', faculty: 'Faculty C', deadline: '2024-12-25', status: 'Overdue', color: 'danger', submittedOn: null },
-        ]);
+        setProgramsByAcademicYear(groupedPrograms);
+
+        // Group year levels by program
+        const groupedYearLevels = fetchedPrograms.reduce((acc, program) => {
+          acc[program.programName] = Array.from(
+            { length: program.programNumOfYear },
+            (_, index) => ({
+              id: `${program.programName}-${index + 1}`,
+              year: index + 1,
+              hasSummer: program.programYrLvlSummer.includes(index + 1),
+            })
+          );
+          return acc;
+        }, {});
+
+        setYearLevelsByProgram(groupedYearLevels);
       } catch (error) {
-        console.error("Error fetching data:", error);
+        console.error('Error fetching data:', error);
       }
     };
 
     fetchData();
   }, []);
 
-  // Update status of a specific course
-  const setStatus = (id, newStatus, color) => {
-    setOptions((prevOptions) =>
-      prevOptions.map((option) =>
-        option.id === id ? { ...option, status: newStatus, color } : option
-      )
-    );
+  const handleAcademicYearChange = (year) => {
+    setAcademicYear(year);
+    setProgram('');
+    setYearLevel('');
   };
+
+  const handleProgramChange = (prog) => {
+    setProgram(prog);
+    setYearLevel('');
+  };
+
+  const availablePrograms = programsByAcademicYear[academicYear] || [];
+  const availableYearLevels = yearLevelsByProgram[program] || [];
 
   return (
     <section className="container-fluid ms-0">
-      {/* Filters */}
+      <h2 className="custom-font custom-color-green-font my-3">Grade Submission Status</h2>
       <Row className="mb-4 bg-white rounded p-3">
         <Col>
           <Form.Group controlId="academicYear">
             <Form.Label>Academic Year</Form.Label>
-            <Form.Control as="select" value={academicYear} onChange={(e) => setAcademicYear(e.target.value)}>
-              {academicYears.map((year) => (
-                <option key={year.id} value={year.academicYear}>
-                  {year.academicYear}
+            <Form.Control
+              as="select"
+              value={academicYear}
+              onChange={(e) => handleAcademicYearChange(e.target.value)}
+            >
+              {academicYears
+                .sort((a, b) => b.academicYear.localeCompare(a.academicYear))
+                .map((year) => (
+                  <option key={year.id} value={year.academicYear}>
+                    {year.academicYear}
+                  </option>
+                ))}
+            </Form.Control>
+          </Form.Group>
+        </Col>
+        <Col>
+          <Form.Group controlId="program">
+            <Form.Label>Program</Form.Label>
+            <Form.Control
+              as="select"
+              value={program}
+              onChange={(e) => handleProgramChange(e.target.value)}
+              disabled={!academicYear}
+            >
+              <option value="">Select Program</option>
+              {availablePrograms.map((prog) => (
+                <option key={prog.id} value={prog.programName}>
+                  {prog.programName}
                 </option>
               ))}
             </Form.Control>
@@ -80,10 +118,16 @@ export default function RegistrarProfessor() {
         <Col>
           <Form.Group controlId="yearLevel">
             <Form.Label>Year Level</Form.Label>
-            <Form.Control as="select" value={yearLevel} onChange={(e) => setYearLevel(e.target.value)}>
-              {yearLevels.map((level) => (
-                <option key={level.id} value={level.yearName}>
-                  {level.yearName}
+            <Form.Control
+              as="select"
+              value={yearLevel}
+              onChange={(e) => setYearLevel(e.target.value)}
+              disabled={!program}
+            >
+              <option value="">Select Year Level</option>
+              {availableYearLevels.map((yl) => (
+                <option key={yl.id} value={yl.year}>
+                  {`Year ${yl.year}${yl.hasSummer ? ' (with Summer)' : ''}`}
                 </option>
               ))}
             </Form.Control>
@@ -92,83 +136,136 @@ export default function RegistrarProfessor() {
         <Col>
           <Form.Group controlId="semester">
             <Form.Label>Semester</Form.Label>
-            <Form.Control as="select" value={semester} onChange={(e) => setSemester(e.target.value)}>
+            <Form.Control
+              as="select"
+              value={semester}
+              onChange={(e) => setSemester(e.target.value)}
+              disabled={!yearLevel}
+            >
               <option value="First">First</option>
               <option value="Second">Second</option>
-            </Form.Control>
-          </Form.Group>
-        </Col>
-        <Col>
-          <Form.Group controlId="program">
-            <Form.Label>Program</Form.Label>
-            <Form.Control as="select" value={program} onChange={(e) => setProgram(e.target.value)}>
-              {programs.map((prog) => (
-                <option key={prog.id} value={prog.programName}>
-                  {prog.programName}
-                </option>
-              ))}
-            </Form.Control>
-          </Form.Group>
-        </Col>
-        <Col>
-          <Form.Group controlId="program">
-            <Form.Label>Section</Form.Label>
-            <Form.Control as="select" value={program} onChange={(e) => setProgram(e.target.value)}>
-              {programs.map((prog) => (
-                <option key={prog.id} value={prog.programName}>
-                  {prog.programName}
-                </option>
-              ))}
+              {availableYearLevels.find((yl) => yl.year === parseInt(yearLevel))?.hasSummer && (
+                <option value="Summer">Summer</option>
+              )}
             </Form.Control>
           </Form.Group>
         </Col>
       </Row>
 
       {/* Table */}
-      <div className="card mb-4 bg-white rounded p-3">
-        <div className="card-header bg-white">
-          <h3>Grade Submission Status</h3>
-        </div>
-        <div className="card-body">
-          <Table bordered className="table">
-            <thead className="table-success">
-              <tr>
-                <th className='align-middle text-center custom-color-green-font custom-font'>Course</th>
-                <th className='align-middle text-center custom-color-green-font custom-font'>Faculty</th>
-                <th className='align-middle text-center custom-color-green-font custom-font'>Deadline</th>
-                <th className='align-middle text-center custom-color-green-font custom-font'>Status</th>
-                <th className='align-middle text-center custom-color-green-font custom-font'>Submitted On</th>
-              </tr>
-            </thead>
-            <tbody>
-              {options.map((option) => (
-                <tr key={option.id}>
-                  <td>{option.name}</td>
-                  <td>{option.faculty}</td>
-                  <td>{option.deadline}</td>
-                  <td>
-                    <Form.Control
-                      as="select"
-                      value={option.status}
-                      className={`text-${option.color} fw-semibold`}
-                      onChange={(e) => {
-                        const status = e.target.value;
-                        const color = status === 'Pending' ? 'warning' : status === 'Completed' ? 'success' : 'danger';
-                        setStatus(option.id, status, color);
-                      }}
-                    >
-                      <option value="Pending">Pending</option>
-                      <option value="Completed">Completed</option>
-                      <option value="Overdue">Overdue</option>
-                    </Form.Control>
-                  </td>
-                  <td>{option.submittedOn || 'Not Submitted'}</td>
+      <Row>
+        <div className="card mb-4 bg-white rounded p-3">
+          <div className="card-body">
+            <Table bordered className="table">
+              <thead className="table-success">
+                <tr>
+                  <th>Course</th>
+                  <th>Faculty</th>
+                  <th>Date</th>
+                  <th>Time</th>
+                  <th>Status</th>
+                  <th>Submitted On</th>
+                  <th>Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </Table>
+              </thead>
+              <tbody>
+                {/* Example row mapping */}
+                {/* Use dynamic data for rows */}
+                <tr>
+                  <td>Course 1</td>
+                  <td>Faculty 1</td>
+                  <td>2024-12-04</td>
+                  <td>10:00 AM</td>
+                  <td>Completed</td>
+                  <td>2024-12-03</td>
+                  <td>
+                    <button
+                      className="btn btn-warning"
+                      onClick={() => setShowModal(true)}
+                    >
+                      Edit
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </Table>
+          </div>
         </div>
-      </div>
+      </Row>
+
+      <Modal show={showModal} onHide={handleCloseModal} size="lg">
+        <Modal.Header closeButton>
+          <Modal.Title>Edit Grade Submission</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form>
+            <Form.Group className="mb-3" controlId="courseCode">
+              <Form.Label>Course Code</Form.Label>
+              <Form.Control type="text">
+
+              </Form.Control>
+            </Form.Group>
+
+            <Form.Group className="mb-3" controlId="courseDescription">
+              <Form.Label>Course Description</Form.Label>
+              <Form.Control type="text">
+
+              </Form.Control>
+            </Form.Group>
+
+            <Form.Group className="mb-3" controlId="personnelNumber">
+              <Form.Label>Personnel Number</Form.Label>
+              <Form.Control type="text">
+
+              </Form.Control>
+            </Form.Group>
+
+            <Form.Group className="mb-3" controlId="personnelName">
+              <Form.Label>Personnel Name</Form.Label>
+              <Form.Control type="text">
+
+              </Form.Control>
+            </Form.Group>
+
+            <Form.Group className="mb-3" controlId="date">
+              <Form.Label>Date of Submission</Form.Label>
+              <Form.Control type="date">
+
+              </Form.Control>
+            </Form.Group>
+            <Form.Group className="mb-3" controlId="time">
+              <Form.Label>Time of Submission</Form.Label>
+              <Form.Control type="time">
+
+              </Form.Control>
+            </Form.Group>
+
+            <Form.Group className="mb-3" controlId="status">
+              <Form.Label>Status</Form.Label>
+              <Form.Control type="text">
+
+              </Form.Control>
+            </Form.Group>
+
+            <Form.Group className="mb-3" controlId="submittedOn">
+              <Form.Label>Submitted On</Form.Label>
+              <Form.Control type="text">
+
+              </Form.Control>
+            </Form.Group>
+          </Form>
+          
+        </Modal.Body>
+        <Modal.Footer>
+          <button className="btn btn-outline-success" onClick={handleCloseModal}>Close</button>
+          <button className="btn btn-success">Save</button>     
+        </Modal.Footer>
+      </Modal>
     </section>
   );
 }
+
+
+
+
+

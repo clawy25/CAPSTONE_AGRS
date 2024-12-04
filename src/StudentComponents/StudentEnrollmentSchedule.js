@@ -23,6 +23,7 @@ const ScheduleTable = () => {
   const [courses, setCourses] = useState([]);
   const [professors, setProfessors] = useState([]);
   const [sections, setSections] = useState([]);
+  const [studentName, setStudentName] = useState("");
   
   const [selectedSection, setSelectedSection] = useState('');
 
@@ -47,8 +48,7 @@ const ScheduleTable = () => {
         const currentYear = current[0].academicYear;
         const allPrograms = await ProgramModel.fetchProgramData(user.programNumber);
         const currentProgram = allPrograms.filter((program) => program.academicYear === currentYear);
-  
-        console.log(currentProgram);
+
         setProgram(currentProgram);
       } else {
         console.error('No current academic year found');
@@ -61,15 +61,24 @@ const ScheduleTable = () => {
   const fetchStudentInfo = async (studentNumber) => {
     try {
       const studentData = await StudentModel.fetchExistingStudents();
-      console.log("Fetched student data:", studentData);
   
-      const student = studentData.filter((student) => student.studentNumber === studentNumber);
-  
+      const student = studentData.find(student => student.studentNumber === user.studentNumber);
+      
       if (student.length > 0) {
         setStudentInfo(student);
         //fetchEnrollment(studentNumber);
       }
   
+      if (student) {
+        // Set the student's full name
+        const fullName = `${student.studentNameLast},${student.studentNameFirst} ${student.studentNameMiddle || ''} ${student.studentNameLast}`;
+        setStudentName(fullName.trim());
+      } else {
+        throw new Error("Student not found.");
+      }
+  
+      // Fetch the current academic year (adjust as necessary)
+    
     } catch (error) {
       console.error('Error fetching student data:', error.message);
     }
@@ -106,10 +115,8 @@ const ScheduleTable = () => {
 
   const fetchSections = async () => {
     try {
-      console.log(currentAcademicYear[0]?.academicYear,yearLevel,semester,program[0]?.programNumber);
       const fetchedSections = await SectionModel.fetchExistingSections(currentAcademicYear[0]?.academicYear, yearLevel, semester, program[0]?.programNumber);
 
-      console.log(fetchedSections);
       setSections(fetchedSections); // Update the sections state with the fetched data
     } catch (error) {
       console.error('Error fetching sections:', error);
@@ -130,7 +137,6 @@ const ScheduleTable = () => {
   const fetchCoursesAndSchedules = async (academicYear, yearLevel, semester, programNumber, selectedSection) => {
   try {
     const allSchedules = await ScheduleModel.fetchExistingschedule(selectedSection);
-    console.log(allSchedules);
     setSchedules(allSchedules);
     
     // Fetch courses for the specific criteria
@@ -162,11 +168,8 @@ const ScheduleTable = () => {
     });
 
     const sectionList = Array.from(userSections);
-    console.log(sectionList);
 
     const Enrolled = sections.some(item => sectionList.includes(item.sectionNumber));
-
-    console.log(Enrolled);
     if(Enrolled){
       setIsEnrolled(true);
     }
@@ -275,7 +278,6 @@ useEffect(() => {
           });
         })
       }
-      console.log(enrollment);
 
       await EnrollmentModel.createAndInsertEnrollment(enrollment);
       setIsEnrolled(true);
@@ -308,12 +310,14 @@ useEffect(() => {
     return `${day || 'No day'}, ${startHr}:${minutes} ${startampm} - ${endHr}:${endMin} ${endampm}`;
   }
   
-  
-
   return (
-    <section className='container-fluid ms-0'>
+    <section className='card bg-white'>
+      <div className='card-header bg-white d-flex'>
+        <p className='custom-color-green-font mt-3 ms-1 fs-6 custom-color-green-font fw-bold'>{studentName}</p>
+        <p className='custom-color-green-font mt-3 ms-1 fs-6 custom-color-green-font fw-bold'>  ({user.studentNumber})</p>
+        </div>
       {!isEnrolled && (
-        <div>
+        <div className='card-body '>
           <div 
             className="class-info-row mb-4 p-3 border border-success rounded"
             style={{
@@ -369,10 +373,6 @@ useEffect(() => {
   <span><strong>Year Level:</strong> {yearLevel || 'Loading...'}</span> {/* Display 'Loading...' if yearLevel is empty */}
   <span><strong>Semester:</strong> {semester || 'Loading...'}</span> {/* Display 'Loading...' if semester is empty */}
 </div>
-
-
-
-
 
     {/* Courses Table */}
       <div className="card card-success border-success rounded mb-4">
@@ -432,10 +432,7 @@ useEffect(() => {
       </Table>
       </div>
     </div>
-  </div>
-)}
-
-      <Button 
+    <Button 
         className='btn bg-custom-color-green' 
         onClick={handleSaveAndAssess} 
         style={{ marginTop: '20px' }}
@@ -443,6 +440,10 @@ useEffect(() => {
       >
         Save & Assess
       </Button>
+  </div>
+)}
+
+     
 
       {/* Modal for confirming the selected number of courses */}
       <Modal size="lg"show={showModal} onHide={handleCloseModal}>
@@ -507,7 +508,7 @@ useEffect(() => {
 
       {/* Enrollment confirmation */}
       {isEnrolled && (
-        <Card className="mt-4">
+        <Card className="mt-4 mx-3 mb-3">
           <Card.Header className="bg-custom-color-green text-white">
             <strong>You are qualified for Free Higher Education Act.</strong>
           </Card.Header>

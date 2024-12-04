@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useContext } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, Routes, Route, useLocation } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUser, faCalendarAlt, faGraduationCap, faBars } from '@fortawesome/free-solid-svg-icons';
 import './Dashboard.css';
@@ -16,6 +16,7 @@ export default function StudentDashboard() {
   const [showSidebar, setShowSidebar] = useState(false);
   const [selectedSection, setSelectedSection] = useState('enrollment'); // Default section
   const dropdownRef = useRef(null);
+  const location = useLocation();
 
   const SECTIONS = {
     ENROLLMENT: 'enrollment',
@@ -78,24 +79,24 @@ export default function StudentDashboard() {
               <div className="welcome-message mb-3 text-center">Hello, {user ? user.studentNameFirst : 'Student'}!</div>
               <nav className="menu mb-3">
                 <Link
-                    to=""
-                    className={`menu-item d-flex align-items-center mb-2 ${selectedSection === SECTIONS.ENROLLMENT ? 'active' : ''}`}
+                    to="/student-dashboard/enrollment" 
+                    className={`menu-item d-flex align-items-center mb-2 ${location.pathname === '/student-dashboard/enrollment' ? 'active' : ''}`}
                     onClick={() => {setSelectedSection(SECTIONS.ENROLLMENT); setShowSidebar(false);}}
                   >
                     <FontAwesomeIcon icon={faUser} className="me-2" />
                     ENROLLMENT
                 </Link>
                 <Link
-                    to=""
-                    className={`menu-item d-flex align-items-center mb-2 ${selectedSection === SECTIONS.SCHEDULE ? 'active' : ''}`}
+                    to="/student-dashboard/schedule" 
+                    className={`menu-item d-flex align-items-center mb-2 ${location.pathname === '/student-dashboard/schedule' ? 'active' : ''}`}
                     onClick={() => {setSelectedSection(SECTIONS.SCHEDULE); setShowSidebar(false);}}
                   >
                     <FontAwesomeIcon icon={faCalendarAlt} className="me-2" />
                     SCHEDULE
                 </Link>
                 <Link
-                    to=""
-                    className={`menu-item d-flex align-items-center mb-2 ${selectedSection === SECTIONS.GRADES ? 'active' : ''}`}
+                    to="/student-dashboard/grades"
+                    className={`menu-item d-flex align-items-center mb-2 ${location.pathname === '/student-dashboard/grades' ? 'active' : ''}`}
                     onClick={() => {setSelectedSection(SECTIONS.GRADES); setShowSidebar(false);}}
                   >
                     <FontAwesomeIcon icon={faGraduationCap} className="me-2" />
@@ -191,6 +192,12 @@ export default function StudentDashboard() {
             </button>
           </section>
         )}
+
+        <Routes>
+          <Route path="/student-dashboard/enrollment" element={<StudentEnrollment />} />
+          <Route path="/student-dashboard/schedule" element={<StudentSchedule />} /> {/* Sections as submenu */}
+          <Route path="/student-dashboard/grades" element={<StudentGrades />} />
+        </Routes>   
       </div>
     </div>
   );

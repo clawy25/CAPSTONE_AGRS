@@ -1,16 +1,19 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import StudentEnrollmentSchedule from './StudentEnrollmentSchedule';
 import '../App.css';
-import './StudentEnrollment.css';  // Import the CSS file
+import './StudentEnrollment.css'; // Import the CSS file
 
 export default function StudentEnrollment() {
   const [isEnrolled, setIsEnrolled] = useState(false); // State to track enrollment status
 
-  // Handle the enroll button click
-  const handleEnrollClick = () => {
-    setIsEnrolled(true); // Set enrolled state to true when button is clicked
-  };
+  // Simulate enrollment status (replace this logic as needed)
+  useEffect(() => {
+    // Example: Automatically set enrollment to true after a condition or delay
+    const checkEnrollment = () => {
+      setIsEnrolled(true); // Replace with actual logic
+    };
+    checkEnrollment();
+  }, []);
 
   return (
     <section>
@@ -25,14 +28,6 @@ export default function StudentEnrollment() {
               </p>
             </div>
           </div>
-
-          {/* Enroll button with class */}
-          <button
-            className="enroll-button"  // Use the class for the button
-            onClick={handleEnrollClick}
-          >
-            Enroll
-          </button>
         </div>
       ) : (
         // Once enrolled, display the StudentEnrollmentSchedule component
