@@ -63,7 +63,7 @@ export default function StudentPage() {
       
       setUser(credentials);
       
-      navigate('/dashboard');
+      navigate('/student-dashboard');
       console.log('Login successful:', user);
       
       
