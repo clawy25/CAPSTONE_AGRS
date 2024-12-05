@@ -25,9 +25,24 @@ import { Button } from 'react-bootstrap';
 export default function FacultyDashboard () {
   const navigate = useNavigate();
   const { user } = useContext(UserContext); // Get user context
+  const [currentAcademicYear, setCurrentAcadYear] = useState([]);
+
+  const [mappedData, setMappedData] = useState([]);
+
+  const [selectedAcademicYear, setSelectedAcademicYear] = useState('');
+  const [UserProgram, setUserProgram] = useState([]);
+  const [selectedYearLevel, setSelectedYearLevel] = useState('');
+  const [selectedSemester, setSelectedSemester] = useState('');
+  const [selectedSect, setSelectedSect] = useState('');
+  const [selectedCourse, setSelectedCourse] = useState('');
+
+  const [sections, setSections] = useState([]);
+  const [schedules, setSchedules] = useState([]);
+
+  const [selectedSection, setSelectedSection] = useState('classes');
+  
   const [showDropdown, setShowDropdown] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
-  const [selectedSection, setSelectedSection] = useState('classes'); // Default section
   const [selectedClass, setSelectedClass] = useState(null); // To track selected class
   const dropdownRef = useRef(null);
   const [program, setProgram] = useState('');
@@ -37,30 +52,22 @@ export default function FacultyDashboard () {
   const [section, setSection] = useState('');
   const [students, setStudents] = useState([]);
   const [courses, setCourses] = useState([]);
-  const [selectedCourse, setSelectedCourse] = useState('');
   const [programs, setPrograms] = useState([]);
   const [yearLevels, setYearLevels] = useState([]);
-  const [selectedAcademicYear, setSelectedAcademicYear] = useState('');
-  const [academicYear, setAcademicYear] = useState([]);
   const [errorMessage, setErrorMessage] = useState('');
-  const [selectedProgram, setSelectedProgram] = useState('');
   const [programName, setProgramName] = useState('');
-  const [sections, setSections] = useState([]); 
+   
   const [studentInfo, setStudentInfo] = useState([]);
-  const [schedules, setSchedules] = useState([]);
   const [professors, setProfessors] = useState([]);
-  const [currentAcademicYear, setCurrentAcadYear] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [checkedCount, setCheckedCount] = useState(0);
   const [userSelectedCount, setUserSelectedCount] = useState(null);
   const [isEnrolled, setIsEnrolled] = useState(false);
   const [showTable, setShowTable] = useState(false);
+
   const [finalData, setFinalData] = useState([]);
   const [isTableVisible, setIsTableVisible] = useState(false);
   const [classListData, setClassListData] = useState([]); // Store class list data
-
-
-
 
   const SECTIONS = {
     CLASSES: 'classes',
@@ -70,6 +77,149 @@ export default function FacultyDashboard () {
     CHANGE_PASSWORD: 'change-password',
   };
 
+  const fetchAcademicYearsAndPrograms = async () => {
+    try {
+  
+      const programs = await ProgramModel.fetchAllPrograms();
+      const userProgram = programs.filter(program => program.programNumber === user.programNumber);
+      let programDetails = null; // Default value in case no match is found
+
+      if (userProgram.length > 0) {
+        programDetails = {
+          programNumber: userProgram[0].programNumber,
+          programName: userProgram[0].programName
+        };
+        const data = [];
+
+        userProgram.forEach(row => {
+          // Find if there is an existing entry for the academic year
+          let existingAcadYear = data.find(item => item.academicYear === row.academicYear);
+        
+          if (!existingAcadYear) {
+            // If not found, create a new entry
+
+            const yearLevels = [];
+            const numYrs = row.programNumOfYear;
+            const summerlevels = [];
+
+
+              userProgram.forEach(row => {
+                summerlevels.push(row.programYrLvlSummer);  
+              });
+            
+            for (let i = 1; i <= numYrs; i++){
+
+              const semesters = [];
+              let isSummer = false;
+              
+              //For loop [0, 1, 2] to iterate per value summerLevelValue
+              for (let j = 0; j < summerlevels.length; j++) {
+                if (summerlevels[j] === i) {
+                  isSummer = true;
+                  
+                  break;
+                }
+              }
+
+              if(isSummer){
+                for (let x = 1; x <= 3; x++) {
+                  semesters.push(x);
+                }
+              } else{
+                for (let x = 1; x <= 2; x++) {
+                  semesters.push(x);
+                }
+              }
+
+              yearLevels.push({
+                yearLevel: i,
+                semesters: semesters,
+              });
+            }
+            
+            const entry = {
+              academicYear: row.academicYear,
+              yearLevels: yearLevels,
+            };
+            data.push(entry);  // Push the new entry into the data array
+          }
+        });
+        
+        console.log(data);
+        setUserProgram(programDetails);
+        setMappedData(data);
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  };
+
+  const fetchSections = async () => {
+    try {
+      if (!selectedAcademicYear || !selectedYearLevel || !selectedSemester || !UserProgram.programNumber) {
+        console.error("Missing required data: academic year, year level, semester, or program.");
+        return;
+      }
+      const fetchedSections = await SectionModel.fetchExistingSections(
+        selectedAcademicYear,
+        selectedYearLevel,
+        selectedSemester,
+        UserProgram.programNumber
+      );
+      setSections(fetchedSections);
+    } catch (error) {
+      console.error("Error fetching sections:", error);
+    }
+  };
+
+  const fetchScheduleForUser = async () => {
+    try {
+      // Fetch the schedules based on personnelNumber (user's personnelNumber)
+      const schedules = await ScheduleModel.fetchExistingschedule(selectedSect);
+
+      console.log(schedules);
+      
+      // Find the section associated with this user
+      const userSchedule = schedules.filter(schedule => schedule.personnelNumber === user.personnelNumber);
+
+      console.log(userSchedule);
+      if (userSchedule) {
+        setSchedules(userSchedule);
+      }
+    } catch (error) {
+      console.error('Error fetching schedule:', error);
+      setErrorMessage('Failed to fetch schedule.');
+    }
+  };
+
+  //On loading the dashboard
+  useEffect(() => {
+    if (!user) {
+      navigate('/login'); // Redirect to login if user is not present
+    } else {
+      fetchAcademicYearsAndPrograms();
+      setUserProgram(user.programNumber);
+    }
+  }, [user, navigate]);
+
+  useEffect(() => { //Fetching sections after selecting semester
+    if (selectedAcademicYear && UserProgram && selectedYearLevel && selectedSemester) {
+      setSections([]);
+      fetchSections();
+    }
+  }, [selectedAcademicYear, UserProgram, selectedYearLevel, selectedSemester]);
+  
+  useEffect(() => { //Fetching professor schedules after selecting section
+    if (selectedAcademicYear && UserProgram && selectedYearLevel && selectedSemester && selectedSect) {
+      setSchedules([]);
+      fetchScheduleForUser();
+    }
+  }, [selectedAcademicYear, UserProgram, selectedYearLevel, selectedSemester, selectedSect]);
+
+  const handleLogout = () => { //Log out
+    navigate('/login');
+    sessionStorage.clear();
+  };
 
   const toggleDropdown = () => {
     setShowDropdown((prevState) => !prevState);
@@ -94,233 +244,135 @@ export default function FacultyDashboard () {
     setShowSidebar(!showSidebar);
   };
 
+  const handleAcademicYearChange = (e) => {
+    const selectedYear = e.target.value;
+    setSelectedAcademicYear(selectedYear);
+    setSelectedYearLevel('');
+    setSelectedSemester('');
+    setSelectedSect('');
+    setSelectedCourse('');
+    setIsTableVisible(false);
+    setClassListData([]);
+    setFinalData([]);
+  };
+
+  const handleYearLevelChange = (e) => {
+    const selectedYear = e.target.value;
+    setSelectedYearLevel(selectedYear);
+    setSelectedSemester('');
+    setSelectedSect('');
+    setSelectedCourse('');
+    setIsTableVisible(false);
+    setClassListData([]);
+    setFinalData([]);
+  };
+
+  const handleSemesterChange = (e) => {
+    const level = (e.target.value);
+    setSelectedSemester(level);
+    setSelectedSect('');
+    setSelectedCourse('');
+    setIsTableVisible(false);
+    setClassListData([]);
+    setFinalData([]);
+  };
+
+  const handleSectionChange = (e) => {
+    const section = e.target.value;
+    setSelectedSect(section);
+    setSelectedCourse('');
+    setIsTableVisible(false);
+    setClassListData([]);
+    setFinalData([]);
+  };
+
+  const handleCourseChange = (e) => {
+    const course = e.target.value;
+    setSelectedCourse(course);
+    setIsTableVisible(false);
+    setClassListData([]);
+    setFinalData([]);
+  };
 
 
-
-  useEffect(() => {
-    if (!user) {
-      navigate('/login'); // Redirect to login if user is not logged in
-    } else {
-      // Set the user's programNumber as the default selected option
-      setSelectedProgram(user.programNumber);
+  const handleClassListClick = async () => {
+    // Check for missing required fields
+    if (!selectedAcademicYear || !UserProgram || !selectedYearLevel || !selectedSemester || !selectedSect || !selectedCourse) {
+      alert("Please fill in all required fields.");
+      return;
     }
-  }, [user, navigate]);
-
-  const handleLogout = () => {
-    navigate('/login');
-    sessionStorage.clear();
-  };
-
-  const handleProgramChange = (e) => {
-    setSelectedProgram(e.target.value); // Allow program change if needed
-  };
-
-
-  // Fetch Academic Years
-    useEffect(() => {
-      if (!user) {
-       console.error('User context is not available.');
-       setErrorMessage('User context is not available.');
-       return;
-        }
-        
-          const fetchAcademicYears = async () => {
-            try {
-              const data = await AcademicYearModel.fetchExistingAcademicYears();
-              if (data.length === 0) {
-                setErrorMessage('No academic years found.');
-              } else {
-                setAcademicYear(data); // Set fetched data
-              }
-            } catch (error) {
-              console.error('Error fetching academic years:', error);
-              setErrorMessage('Failed to load academic years.');
-            }
-          };
-        
-          fetchAcademicYears();
-        }, [user]);
-
-          // Fetch programs from ProgramModel
-  useEffect(() => {
-    const fetchPrograms = async () => {
+  
+    // Toggle table visibility
+    setIsTableVisible(true);
+  
+    if (isTableVisible) {
       try {
-        const fetchedPrograms = await ProgramModel.fetchAllPrograms();
-        setPrograms(fetchedPrograms);
-        
-        // Find the programName that corresponds to user.programNumber
-        const program = fetchedPrograms.find(program => program.programNumber === user?.programNumber);
-        if (program) {
-          setProgramName(program.programName);
-        } else {
-          setProgramName('Program Not Found');
-        }
+        // Fetch data from all models in parallel
+        const [enrollments, schedules, students, courses] = await Promise.all([
+          EnrollmentModel.fetchAllEnrollment(),
+          ScheduleModel.fetchSchedules(),
+          StudentModel.fetchExistingStudents(),
+          CourseModel.fetchAllCourses(),
+        ]);
+  
+        // Create Maps for faster lookups
+        const studentMap = new Map(students.map(student => [student.studentNumber, student]));
+        const scheduleMap = new Map(schedules.map(schedule => [schedule.scheduleNumber, schedule]));
+        const courseMap = new Map(courses.map(course => [course.courseCode, course]));
+  
+        // Map over enrollments to create class list
+        const mappedData = enrollments.map((enrollment) => {
+          const matchedStudent = studentMap.get(enrollment.studentNumber) || {};
+          const matchedSchedule = scheduleMap.get(enrollment.scheduleNumber) || {};
+          const matchedCourse = courseMap.get(enrollment.courseCode) || {};
+  
+          return {
+            studentNumber: matchedStudent.studentNumber || "N/A",
+            studentLastName: matchedStudent.studentNameLast || "N/A",
+            studentFirstName: matchedStudent.studentNameFirst || "N/A",
+            studentMiddleName: matchedStudent.studentNameMiddle || "N/A",
+            contactNumber: matchedStudent.studentContact || "N/A",
+            pccEmail: matchedStudent.studentPccEmail ? `${matchedStudent.studentPccEmail.split('@')[0]}@` : "N/A",
+            studentAddress: matchedStudent.studentAddress || "N/A",
+            scheduleNumber: matchedSchedule.scheduleNumber || "N/A",
+            academicYear: matchedSchedule.academicYear || "N/A",
+            yearLevel: matchedSchedule.yearLevel || "N/A",
+            semester: matchedSchedule.semester || "N/A",
+            sectionNumber: matchedSchedule.sectionNumber || "N/A",
+            courseCode: matchedCourse.courseCode || "N/A",
+            programNumber: matchedCourse.programNumber || "N/A",
+          };
+        });
+
+        console.log(mappedData);
+  
+        // Apply filtering
+        const filteredResults = mappedData.filter((student) => {
+          const program = UserProgram?.programNumber;
+  
+          return (
+            (!selectedAcademicYear || String(student.academicYear).trim() === String(selectedAcademicYear).trim()) &&
+            (!selectedYearLevel || String(student.yearLevel).trim() === String(selectedYearLevel).trim()) &&
+            (!program || student.programNumber === program) &&
+            (!selectedSemester || String(student.semester).trim() === String(selectedSemester).trim()) &&
+            (!selectedSect || String(student.sectionNumber).trim() === String(selectedSect).trim()) &&
+            (!selectedCourse || String(student.courseCode).trim() === String(selectedCourse).trim())
+          );
+        });
+  
+        // Update states with the results
+        setClassListData(mappedData);
+        setFinalData(filteredResults);
+  
+        console.log("Mapped Data:", mappedData);
+        console.log("Filtered Results:", filteredResults);
       } catch (error) {
-        console.error('Error fetching programs:', error);
+        console.error("Error fetching class list data:", error);
+        alert("An error occurred while fetching class list data. Please try again.");
       }
-    };
-    
-    fetchPrograms();
-  }, [user?.programNumber]);
-
-    // Fetch year levels from YearLevelModel
-    useEffect(() => {
-      const fetchYearLevels = async () => {
-        try {
-          const fetchedYearLevels = await YearLevelModel.fetchExistingYearLevels();
-          setYearLevels(fetchedYearLevels);
-        } catch (error) {
-          console.error('Error fetching year levels:', error);
-        }
-      };
-  
-      fetchYearLevels();
-    }, []);
-
-
-const handleClassListClick = async () => {
-  // Check for missing required fields
-  if (!selectedAcademicYear || !selectedProgram || !yearLevel || !semester || !section || !selectedCourse) {
-    alert("Please fill in all required fields.");
-    return;
-  }
-
-  // Toggle table visibility
-  setIsTableVisible(!isTableVisible);
-
-  if (!isTableVisible) {
-    try {
-      // Fetch class list data from your models or API in parallel
-      const [enrollments, schedules, students, courses] = await Promise.all([
-        EnrollmentModel.fetchAllEnrollment(),
-        ScheduleModel.fetchSchedules(),
-        StudentModel.fetchExistingStudents(),
-        CourseModel.fetchAllCourses()
-      ]);
-
-      // Create Maps for fast lookups
-      const studentMap = new Map(students.map(student => [student.studentNumber, student]));
-      const scheduleMap = new Map(schedules.map(schedule => [schedule.scheduleNumber, schedule]));
-      const courseMap = new Map(courses.map(course => [course.courseCode, course]));
-
-      // Map over enrollments and match data from other models using Maps for faster lookups
-      const classList = enrollments.map((enrollment) => {
-        const matchedStudent = studentMap.get(enrollment.studentNumber) || {};
-        const matchedSchedule = scheduleMap.get(enrollment.scheduleNumber) || {};
-        const matchedCourse = courseMap.get(enrollment.courseCode) || {};
-
-        return {
-          studentNumber: matchedStudent.studentNumber || "N/A",
-          studentFirstName: matchedStudent.studentNameFirst || "N/A",
-          studentLastName: matchedStudent.studentNameLast || "N/A",
-          courseCode: matchedCourse.courseCode || "N/A",
-          yearLevel: matchedSchedule.yearLevel || "N/A",
-          sectionNumber: matchedSchedule.sectionNumber || "N/A",
-        };
-      });
-
-      // Update state with fetched class list data
-      setClassListData(classList);
-    } catch (error) {
-      console.error("Error fetching class list data:", error);
-      alert("An error occurred while fetching class list data. Please try again.");
     }
-  }
-};
-
-    
+  };
   
-    const fetchExistingStudents = async () => {
-      
-      // Fetch data from all models
-      const enrollments = await EnrollmentModel.fetchAllEnrollment();
-      const schedules = await ScheduleModel.fetchSchedules();
-      const students = await StudentModel.fetchExistingStudents();
-      const courses = await CourseModel.fetchAllCourses();
-    
-      // Map over enrollments and match data from other models
-      const finalResults = enrollments.map(enrollment => {
-      
-        const matchedStudent = students.find(student => student.studentNumber === enrollment.studentNumber);
-        const matchedSchedule = schedules.find(schedule => schedule.scheduleNumber === enrollment.scheduleNumber);
-        const matchedCourse = courses.find(course => course.courseCode === enrollment.courseCode);
-      
-        return {
-          studentNumber: matchedStudent?.studentNumber || "N/A",
-          studentLastName: matchedStudent?.studentNameLast || "N/A",
-          studentFirstName: matchedStudent?.studentNameFirst || "N/A",
-          studentMiddleName: matchedStudent?.studentNameMiddle || "N/A",
-          contactNumber: matchedStudent?.studentContact || "N/A",
-          pccEmail: matchedStudent?.studentPccEmail || "N/A",
-          studentPccAddress: matchedStudent?.studentAddress || "N/A",
-          scheduleNumber: matchedSchedule?.scheduleNumber || "N/A",
-          academicYear: matchedSchedule?.academicYear || "N/A",
-          yearLevel: matchedSchedule?.yearLevel || "N/A",
-          semester: matchedSchedule?.semester || "N/A",
-          sectionNumber: matchedSchedule?.sectionNumber || "N/A", // Ensure sectionNumber is set correctly
-          courseCode: matchedCourse?.courseCode || "N/A", // Ensure courseCode is set correctly
-          programNumber: matchedCourse?.programNumber || "N/A",
-        };
-      });
-    
-      // Apply filtering logic here
-      const filteredResults = finalResults.filter(student => {
-    
-    
-        // Ensure all values are converted to strings and trimmed for comparison
-        const matchesAcademicYear = selectedAcademicYear ? String(student.academicYear).trim() === String(selectedAcademicYear).trim() : true;
-        const matchesYearLevel = yearLevel ? String(student.yearLevel).trim() === String(yearLevel).trim() : true;
-        const matchesProgram = selectedProgram ? student.programNumber === selectedProgram : true;
-        const matchesSemester = semester ? String(student.semester).trim() === String(semester).trim() : true;
-        const matchesSection = section ? String(student.sectionNumber).trim() === String(section).trim() : true;
-        const matchesCourse = selectedCourse ? String(student.courseCode).trim() === String(selectedCourse).trim() : true;
-    
-        // Only return the student if all conditions match
-        return matchesAcademicYear && matchesYearLevel && matchesProgram && matchesSemester && matchesSection && matchesCourse;
-      });
-    
-      console.table(filteredResults);
-    
-      // Update state with filtered data
-      setFinalData(filteredResults);
-    };
-  
-    // Fetch existing students onload when the table is visible
-    useEffect(() => {
-      if (isTableVisible) {
-        fetchExistingStudents(); // Fetch data only when the table is visible
-      }
-    }, [isTableVisible]); // This will trigger when isTableVisible changes
-
-     
-      useEffect(() => {
-        // Fetch the schedule when the component mounts
-        const fetchScheduleForUser = async () => {
-          if (!user) {
-            setErrorMessage('User not logged in');
-            return;
-          }
-    
-          try {
-            // Fetch the schedules based on personnelNumber (user's personnelNumber)
-            const schedules = await ScheduleModel.fetchSchedulesByPersonnelNumber(user.personnelNumber);
-            
-            // Find the section associated with this user
-            const userSchedule = schedules.find(schedule => schedule.personnelNumber === user.personnelNumber);
-    
-            if (userSchedule) {
-              setSection(userSchedule.sectionNumber); // Set the section based on the fetched data
-            } else {
-              setErrorMessage('No section found for this user');
-            }
-          } catch (error) {
-            console.error('Error fetching schedule:', error);
-            setErrorMessage('Failed to fetch schedule.');
-          }
-        };
-    
-        fetchScheduleForUser();
-      }, [user]); 
 
   useEffect(() => {
     const handleOutsideClick = (event) => {
@@ -340,181 +392,6 @@ const handleClassListClick = async () => {
     };
   }, [showDropdown]);
 
-    useEffect(() => {
-      // Fetch all academic years when the component is mounted
-      fetchAcademicYearsAndPrograms();
-      fetchStudentInfo(user.studentNumber);
-    }, [user.studentNumber]);
-  
-    useEffect(() => {
-      fetchYearLevelandSemester();
-    }, [selectedAcademicYear, user.studentNumber]);
-  
-    useEffect(() => {
-      if (selectedAcademicYear && yearLevel && semester && program.length > 0) {
-        fetchSections();
-      }
-    }, [selectedAcademicYear, yearLevel, semester, program]);
-  
-    const fetchAcademicYearsAndPrograms = async () => {
-      try {
-        // Fetch all academic years (current and past)
-        const fetchedAcademicYears = await AcademicYearModel.fetchExistingAcademicYears();
-        setCurrentAcadYear(fetchedAcademicYears); // Store all academic years
-  
-        // Default to the current academic year if available
-        const current = fetchedAcademicYears.filter(acadYears => acadYears.isCurrent === true);
-        if (current.length > 0) {
-          setSelectedAcademicYear(current[0].academicYear); // Default to the current academic year
-          fetchProgramsForYear(current[0].academicYear); // Fetch programs for the current year
-        } else {
-          console.error('No current academic year found');
-        }
-      } catch (error) {
-        console.error("Error fetching academic years:", error);
-      }
-    };
-  
-    const fetchProgramsForYear = async (academicYear) => {
-      try {
-        // Fetch programs based on the selected academic year
-        const allPrograms = await ProgramModel.fetchProgramData(user.programNumber);
-        const programsForYear = allPrograms.filter((program) => program.academicYear === academicYear);
-        setProgram(programsForYear); // Set the programs for the selected academic year
-      } catch (error) {
-        console.error("Error fetching programs for the selected academic year:", error);
-      }
-    };
-  
-    const fetchStudentInfo = async (studentNumber, academicYear, yearLevel, program, semester, section, course, personnelNumber) => {
-      try {
-        // Fetch student data
-        const studentData = await StudentModel.fetchExistingStudents();
-        const student = studentData.filter((student) => student.studentNumber === studentNumber);
-    
-        if (student.length === 0) {
-          console.error('No matching student found');
-          return;
-        }
-    
-        // Fetch enrollment data based on the student number
-        const enrollmentData = await EnrollmentModel.fetchEnrollmentData(studentNumber);
-    
-        if (!enrollmentData || enrollmentData.length === 0) {
-          console.error('No enrollment data found for this student');
-          return;
-        }
-    
-        // Filter enrollment data based on the provided filters
-        const filteredEnrollment = enrollmentData.filter((enrollment) => {
-          return (
-            enrollment.academicYear === academicYear &&
-            enrollment.yearLevel === yearLevel &&
-            enrollment.programNumber === program &&
-            enrollment.semester === semester &&
-            enrollment.section === section
-          );
-        });
-    
-        if (filteredEnrollment.length === 0) {
-          console.error('No matching enrollment data found');
-          return;
-        }
-    
-        // Combine student and filtered enrollment data
-        const studentInfo = {
-          studentNumber: student[0].studentNumber,
-          lastName: student[0].lastName,
-          firstName: student[0].firstName,
-          middleName: student[0].middleName,
-          contactNumber: student[0].contactNumber,
-          pccEmail: student[0].pccEmail,
-          address: student[0].address,
-          enrollmentInfo: filteredEnrollment, // Filtered enrollment information
-        };
-    
-        // Set the combined data
-        setStudentInfo(studentInfo);
-    
-      } catch (error) {
-        console.error('Error fetching student or enrollment data:', error.message);
-      }
-    };
-    
-
-  
-    const fetchYearLevelandSemester = async () => {
-      try {
-        const academicYear = selectedAcademicYear;
-        const studentNumber = user.studentNumber;
-      
-        if (!academicYear || !studentNumber) {
-          console.error('Missing academicYear or studentNumber');
-          setYearLevel('Missing data');
-          setSemester('Missing data');
-          return; // Stop if required data is missing
-        }
-         
-        const timelineData = await TimelineModel.fetchTimelineData(academicYear, studentNumber);
-      
-        if (timelineData && timelineData.length > 0) {
-          const latestTimeline = timelineData[0];
-          setYearLevel(latestTimeline.yearLevel || 'Unknown');
-          setSemester(latestTimeline.semester || 'Unknown');
-        } else {
-          console.log("No timeline data found for the provided academic year and student number.");
-          setYearLevel('No data available');
-          setSemester('No data available');
-        }
-      } catch (error) {
-        console.error('Error fetching semester:', error);
-        setYearLevel('Error fetching year level');
-        setSemester('Error fetching semester');
-      }
-    };
-  
-    const fetchSections = async () => {
-      try {
-        if (!selectedAcademicYear || !yearLevel || !semester || !program[0]?.programNumber) {
-          console.error("Missing required data: academic year, year level, semester, or program.");
-          return;
-        }
-        const fetchedSections = await SectionModel.fetchExistingSections(
-          selectedAcademicYear,
-          yearLevel,
-          semester,
-          program[0]?.programNumber
-        );
-        setSections(fetchedSections);
-      } catch (error) {
-        console.error("Error fetching sections:", error);
-      }
-    };
-
-      // Fetch courses from CourseModel
-      useEffect(() => {
-        const fetchCourses = async () => {
-          try {
-            const fetchedCourses = await CourseModel.fetchAllCourses();
-            const fetchedPersonnelNumber = await ScheduleModel.fetchAllSchedules()
-            
-            // Filter courses based on the selected program (user.programNumber)
-            const filteredCourses = fetchedCourses.filter(course => 
-              course.programNumber === user?.programNumber 
-            );
-            const filteredCoursesSchedule = fetchedPersonnelNumber.filter(schedule => 
-              schedule.personnelNumber === user?.personnelNumber 
-            );
-            
-            setCourses(filteredCourses, filteredCoursesSchedule);  // Set the filtered courses to the state
-          } catch (error) {
-            console.error('Error fetching courses:', error);
-          }
-        };
-      
-        fetchCourses();
-      }, [user?.programNumber, user?.personnelNumber ]);  // Re-fetch courses when the user's programNumber changes
-
   const printTableContent = (elementId) => {
     const printContent = document.getElementById(elementId);
     const newWindow = window.open('', '', 'width=800,height=600');
@@ -527,10 +404,22 @@ const handleClassListClick = async () => {
     newWindow.print();
   };
 
-  const getProgramNameByNumber = (programNumber) => {
-    const program = programs.find(p => p.programNumber === programNumber);
-    return program ? program.programName : null; // Return null if no match is found
+  const getSemesterText = (sem) => {
+    switch (sem) {
+      case 1:
+        return "First";
+      case 2:
+        return "Second";
+      case 3:
+        return "Summer";
+      default:
+        return `${sem}`;
+    }
   };
+
+  const selectedYearData = mappedData?.filter(p => p.academicYear === selectedAcademicYear)
+                                 ?.flatMap(p => p.yearLevels)
+                                 ?.find(p => p.yearLevel === Number(selectedYearLevel));
  
   return (
     <div className="dashboard-container d-flex">
@@ -601,13 +490,11 @@ const handleClassListClick = async () => {
 
 {/* FIRST ROW: DROPDOWNS BAR */}
         {selectedSection === SECTIONS.CLASSES && (
-  <section className="mt-3 ms-0">
-    <h2 className="custom-font custom-color-green-font">Class Records for {selectedClass}</h2>
-    {selectedClass ? ( <div className="ms-0"> <ClassDetails />
-      </div>
-    ) : (
-
-      <div>
+          <section className="mt-3 ms-0">
+            <h2 className="custom-font custom-color-green-font">Class Records for {selectedClass || ''}</h2>
+              {selectedClass ? ( <div className="ms-0"> <ClassDetails /></div>
+              ) : (
+        <div>
 
 
 
@@ -619,20 +506,18 @@ const handleClassListClick = async () => {
       <Form.Control
         as="select"
         value={selectedAcademicYear}
-        onChange={(e) => setSelectedAcademicYear(e.target.value)}
-      >
-        <option value="">Select an Academic Year</option>
-        {academicYear
-          .sort((a, b) => {
-            const yearA = parseInt(a.academicYear.split('-')[0]);
-            const yearB = parseInt(b.academicYear.split('-')[0]);
-            return yearB - yearA; // Sort in descending order
-          })
-          .map((year) => (
-            <option key={year.academicYear} value={year.academicYear}>
-              {year.academicYear}
-            </option>
-          ))}
+        onChange={handleAcademicYearChange}>
+        <option value="">Select Academic Year</option>
+              {mappedData.sort((a, b) => {
+                let yearA = parseInt(a.academicYear.split('-')[0]);
+                let yearB = parseInt(b.academicYear.split('-')[0]);
+                return yearB - yearA; // Sorting in descending order
+              })
+              .map((program) => (
+                <option key={program.academicYear} value={program.academicYear}>
+                  {program.academicYear}
+                </option>
+              ))}
       </Form.Control>
     </Form.Group>
   </Col>
@@ -642,12 +527,9 @@ const handleClassListClick = async () => {
       <Form.Label className='custom-color-green-font custom-font'>Program</Form.Label>
       <Form.Control
         as="select"
-        value={selectedProgram || ''}
-        onChange={handleProgramChange}
-        disabled // Disable dropdown since programNumber comes from user context
-      >
-        <option value={user?.programNumber || ''}>
-          {programName || 'Program Not Assigned'}
+        disabled>
+        <option value={UserProgram.programNumber}>
+          {UserProgram.programName || 'No Program'}
         </option>
       </Form.Control>
     </Form.Group>
@@ -658,15 +540,19 @@ const handleClassListClick = async () => {
       <Form.Label className="custom-color-green-font custom-font">Year Level</Form.Label>
       <Form.Control
         as="select"
-        value={yearLevel}
-        onChange={(e) => setYearLevel(e.target.value)}
-      >
+        value={selectedYearLevel}
+        onChange={handleYearLevelChange}
+        disabled={!selectedAcademicYear}>
         <option value="">Select a year level</option>
-        {yearLevels.map((level) => (
-          <option key={level.id} value={level.id}>
-            {level.id}
-          </option>
-        ))}
+        {mappedData
+          ?.filter(p => p.academicYear === selectedAcademicYear) // Filter by selected academic year
+          ?.flatMap(p => p.yearLevels) // Get year levels for selected academic year
+          ?.map(level => (
+            <option key={level.yearLevel} value={level.yearLevel}>
+              Year {level.yearLevel}
+            </option>
+          )
+        )}
       </Form.Control>
     </Form.Group>
   </Col>
@@ -675,11 +561,17 @@ const handleClassListClick = async () => {
   <Col>
     <Form.Group controlId="semester">
       <Form.Label className="custom-color-green-font custom-font">Semester</Form.Label>
-      <Form.Control as="select" value={semester} onChange={(e) => setSemester(e.target.value)}>
+      <Form.Control 
+        as="select" 
+        value={selectedSemester} 
+        onChange={handleSemesterChange}
+        disabled={!selectedAcademicYear || !selectedYearLevel}>
         <option value="">Select a semester</option>
-        <option value="1">1</option>
-        <option value="2">2</option>
-        <option value="3">3</option>
+          {selectedYearData?.semesters?.map((sem, index) => (
+            <option key={index} value={sem}>
+              {getSemesterText(sem)}
+            </option>
+          ))}
       </Form.Control>
     </Form.Group>
   </Col>
@@ -690,9 +582,9 @@ const handleClassListClick = async () => {
       <Form.Label className="custom-color-green-font custom-font">Select Section</Form.Label>
       <Form.Control
         as="select"
-        value={section}
-        onChange={(e) => setSection(e.target.value)}
-      >
+        value={selectedSect}
+        onChange={handleSectionChange}
+        disabled={!selectedAcademicYear || !selectedYearLevel || !selectedSemester}>
         <option value="">Select a section</option>
         {sections.map((section) => (
           <option key={section.id} value={section.sectionNumber}>
@@ -710,10 +602,10 @@ const handleClassListClick = async () => {
       <Form.Control
         as="select"
         value={selectedCourse}
-        onChange={(e) => setSelectedCourse(e.target.value)}
-      >
+        onChange={handleCourseChange}
+        disabled={!selectedAcademicYear || !selectedYearLevel || !selectedSemester || !selectedSect}>
         <option value="">Select a course</option>
-        {courses.map((course) => (
+        {schedules.map((course) => (
           <option key={course.id} value={course.courseCode}>
             {course.courseCode}
           </option>
@@ -739,7 +631,7 @@ const handleClassListClick = async () => {
 
   {/* Table and printable content */}
 
-  <div className="table-container mt-4 bg-white rounded">
+  {isTableVisible && (<div className="table-container mt-4 bg-white rounded">
   {/* Print Button */}
   <div
     className="d-flex flex-column flex-md-row justify-content-between align-items-center"
@@ -770,16 +662,16 @@ const handleClassListClick = async () => {
       <strong>Academic Year:</strong> {selectedAcademicYear || "N/A"}
     </div>
     <div className="col-12 col-md-2">
-      <strong>Program:</strong> {getProgramNameByNumber(user?.programNumber) || "Program Not Assigned"}
+      <strong>Program:</strong> {UserProgram.programName || "Program Not Assigned"}
     </div>
     <div className="col-12 col-md-2">
-      <strong>Year Level:</strong> {yearLevel || "N/A"}
+      <strong>Year Level:</strong> {selectedYearLevel || "N/A"}
     </div>
     <div className="col-12 col-md-2">
-      <strong>Semester:</strong> {semester || "N/A"}
+      <strong>Semester:</strong> {selectedSemester || "N/A"}
     </div>
     <div className="col-12 col-md-2">
-      <strong>Section:</strong> {section || "N/A"}
+      <strong>Section:</strong> {selectedSect || "N/A"}
     </div>
     <div className="col-12 col-md-2">
       <strong>Course/Subject:</strong> {selectedCourse || "N/A"}
@@ -813,7 +705,7 @@ const handleClassListClick = async () => {
               <td>{student.studentMiddleName}</td>
               <td>{student.contactNumber}</td>
               <td>{student.pccEmail}</td>
-              <td>{student.studentPccAddress}</td>
+              <td>{student.studentAddress}</td>
             </tr>
           ))
         ) : (
@@ -826,13 +718,11 @@ const handleClassListClick = async () => {
 </div>
 
   </div>
-</div>
-
-
+  </div>)}
   </div>
-    )}
-  </section>
 )}
+          </section>
+        )}
 
         {selectedSection === SECTIONS.SCHEDULE && (
           <section className="m-3 ms-0">

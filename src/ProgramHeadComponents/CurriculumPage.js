@@ -21,9 +21,6 @@ const CurriculumPage = () => {
   
   const fetchAcademicYearsAndPrograms = async () => {
     try {
-      // Fetch academic years and programs
-      //const fetchedAcademicYears = await AcademicYearModel.fetchExistingAcademicYears();
-      //setAcademicYears(fetchedAcademicYears);
   
       const programs = await ProgramModel.fetchAllPrograms();
       const userProgram = programs.filter(program => program.programNumber === user.programNumber);
@@ -77,31 +74,7 @@ const CurriculumPage = () => {
                 semesters: semesters,
               });
             }
-            /*
-            cnost summerlevels = [];
-            userProgram.forEach(row => {
-              summerlevels.push(row.programYrLvlSummer);
-            });
-
-            const semesters = [];
-
-            for (let i = 1; i <= numYrs; i++){
-              if (summerlevels.includes(i)){
-                for (let j = 1; j <= 3; j++){
-                  semesters.push({
-                    yearLevel: i,
-                    semester: j
-                  })
-                }
-              } else {
-                for (let j = 1; j <= 2; j++){
-                  semesters.push({
-                    yearLevel: i,
-                    semester: j
-                  })
-                }
-              }
-            }*/
+            
             const entry = {
               academicYear: row.academicYear,
               yearLevels: yearLevels,
