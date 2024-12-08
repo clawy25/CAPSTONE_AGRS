@@ -52,7 +52,7 @@ export default class SectionModel {
             }
             const data = await response.json();
 
-            console.log('Fetched Sections Data:', data); // Debugging log
+            //console.log('Fetched Sections Data:', data); // Debugging log
 
             return data;
         } catch (error) {

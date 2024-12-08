@@ -36,8 +36,11 @@ export default function FacultyDashboard () {
   const [selectedSect, setSelectedSect] = useState('');
   const [selectedCourse, setSelectedCourse] = useState('');
 
+  const [selectedSchedule, setSelectedSchedule] = useState([]);
+
   const [sections, setSections] = useState([]);
   const [schedules, setSchedules] = useState([]);
+  const [classListData, setClassListData] = useState([]);
 
   const [selectedSection, setSelectedSection] = useState('classes');
   
@@ -64,10 +67,7 @@ export default function FacultyDashboard () {
   const [userSelectedCount, setUserSelectedCount] = useState(null);
   const [isEnrolled, setIsEnrolled] = useState(false);
   const [showTable, setShowTable] = useState(false);
-
-  const [finalData, setFinalData] = useState([]);
   const [isTableVisible, setIsTableVisible] = useState(false);
-  const [classListData, setClassListData] = useState([]); // Store class list data
 
   const SECTIONS = {
     CLASSES: 'classes',
@@ -177,12 +177,12 @@ export default function FacultyDashboard () {
       // Fetch the schedules based on personnelNumber (user's personnelNumber)
       const schedules = await ScheduleModel.fetchExistingschedule(selectedSect);
 
-      console.log(schedules);
+      //console.log(schedules);
       
       // Find the section associated with this user
       const userSchedule = schedules.filter(schedule => schedule.personnelNumber === user.personnelNumber);
 
-      console.log(userSchedule);
+      //console.log(userSchedule);
       if (userSchedule) {
         setSchedules(userSchedule);
       }
@@ -235,77 +235,8 @@ export default function FacultyDashboard () {
     setShowDropdown(false);
   };
 
-  const handleClassClick = (className) => {
-    setSelectedClass(className); // Set the selected class
-    setSelectedSection(SECTIONS.CLASSES); // Ensure the section is still 'classes'
-  };
-
-  const toggleSidebar = () => {
-    setShowSidebar(!showSidebar);
-  };
-
-  const handleAcademicYearChange = (e) => {
-    const selectedYear = e.target.value;
-    setSelectedAcademicYear(selectedYear);
-    setSelectedYearLevel('');
-    setSelectedSemester('');
-    setSelectedSect('');
-    setSelectedCourse('');
-    setIsTableVisible(false);
-    setClassListData([]);
-    setFinalData([]);
-  };
-
-  const handleYearLevelChange = (e) => {
-    const selectedYear = e.target.value;
-    setSelectedYearLevel(selectedYear);
-    setSelectedSemester('');
-    setSelectedSect('');
-    setSelectedCourse('');
-    setIsTableVisible(false);
-    setClassListData([]);
-    setFinalData([]);
-  };
-
-  const handleSemesterChange = (e) => {
-    const level = (e.target.value);
-    setSelectedSemester(level);
-    setSelectedSect('');
-    setSelectedCourse('');
-    setIsTableVisible(false);
-    setClassListData([]);
-    setFinalData([]);
-  };
-
-  const handleSectionChange = (e) => {
-    const section = e.target.value;
-    setSelectedSect(section);
-    setSelectedCourse('');
-    setIsTableVisible(false);
-    setClassListData([]);
-    setFinalData([]);
-  };
-
-  const handleCourseChange = (e) => {
-    const course = e.target.value;
-    setSelectedCourse(course);
-    setIsTableVisible(false);
-    setClassListData([]);
-    setFinalData([]);
-  };
-
-
-  const handleClassListClick = async () => {
-    // Check for missing required fields
-    if (!selectedAcademicYear || !UserProgram || !selectedYearLevel || !selectedSemester || !selectedSect || !selectedCourse) {
-      alert("Please fill in all required fields.");
-      return;
-    }
-  
-    // Toggle table visibility
-    setIsTableVisible(true);
-  
-    if (isTableVisible) {
+  const handleClassClick = async (className) => {
+    if (!classListData || classListData.length === 0){
       try {
         // Fetch data from all models in parallel
         const [enrollments, schedules, students, courses] = await Promise.all([
@@ -343,33 +274,168 @@ export default function FacultyDashboard () {
             programNumber: matchedCourse.programNumber || "N/A",
           };
         });
-
-        console.log(mappedData);
+  
+        //console.log(mappedData);
   
         // Apply filtering
         const filteredResults = mappedData.filter((student) => {
           const program = UserProgram?.programNumber;
   
           return (
-            (!selectedAcademicYear || String(student.academicYear).trim() === String(selectedAcademicYear).trim()) &&
-            (!selectedYearLevel || String(student.yearLevel).trim() === String(selectedYearLevel).trim()) &&
-            (!program || student.programNumber === program) &&
-            (!selectedSemester || String(student.semester).trim() === String(selectedSemester).trim()) &&
+            //(!selectedAcademicYear || String(student.academicYear).trim() === String(selectedAcademicYear).trim()) &&
+            //(!selectedYearLevel || String(student.yearLevel).trim() === String(selectedYearLevel).trim()) &&
+            //(!program || student.programNumber === program) &&
+            //(!selectedSemester || String(student.semester).trim() === String(selectedSemester).trim()) &&
             (!selectedSect || String(student.sectionNumber).trim() === String(selectedSect).trim()) &&
             (!selectedCourse || String(student.courseCode).trim() === String(selectedCourse).trim())
           );
         });
+        
+        setClassListData(filteredResults);
   
-        // Update states with the results
-        setClassListData(mappedData);
-        setFinalData(filteredResults);
+        const selectedSchedule = schedules.filter(schedule => schedule.sectionNumber === selectedSect)
+                                          .filter(schedule => schedule.courseCode === selectedCourse);
+        
+        setSelectedSchedule(selectedSchedule);
   
+        console.log(selectedSchedule);
         console.log("Mapped Data:", mappedData);
         console.log("Filtered Results:", filteredResults);
       } catch (error) {
         console.error("Error fetching class list data:", error);
         alert("An error occurred while fetching class list data. Please try again.");
       }
+    }
+    setSelectedClass(className); // Set the selected class
+    setSelectedSection(SECTIONS.CLASSES); // Ensure the section is still 'classes'
+  };
+
+  const toggleSidebar = () => {
+    setShowSidebar(!showSidebar);
+  };
+
+  const handleAcademicYearChange = (e) => {
+    const selectedYear = e.target.value;
+    setSelectedAcademicYear(selectedYear);
+    setSelectedYearLevel('');
+    setSelectedSemester('');
+    setSelectedSect('');
+    setSelectedCourse('');
+    setIsTableVisible(false);
+    setClassListData([]);
+  };
+
+  const handleYearLevelChange = (e) => {
+    const selectedYear = e.target.value;
+    setSelectedYearLevel(selectedYear);
+    setSelectedSemester('');
+    setSelectedSect('');
+    setSelectedCourse('');
+    setIsTableVisible(false);
+    setClassListData([]);
+  };
+
+  const handleSemesterChange = (e) => {
+    const level = (e.target.value);
+    setSelectedSemester(level);
+    setSelectedSect('');
+    setSelectedCourse('');
+    setIsTableVisible(false);
+    setClassListData([]);
+  };
+
+  const handleSectionChange = (e) => {
+    const section = e.target.value;
+    setSelectedSect(section);
+    setSelectedCourse('');
+    setIsTableVisible(false);
+    setClassListData([]);
+  };
+
+  const handleCourseChange = (e) => {
+    const course = e.target.value;
+    setSelectedCourse(course);
+    setIsTableVisible(false);
+    setClassListData([]);
+  };
+
+
+  const handleClassListClick = async () => {
+    // Check for missing required fields
+    if (!selectedAcademicYear || !UserProgram || !selectedYearLevel || !selectedSemester || !selectedSect || !selectedCourse) {
+      alert("Please fill in all required fields.");
+      return;
+    }
+  
+    // Toggle table visibility
+    setIsTableVisible(true);
+    try {
+      // Fetch data from all models in parallel
+      const [enrollments, schedules, students, courses] = await Promise.all([
+        EnrollmentModel.fetchAllEnrollment(),
+        ScheduleModel.fetchSchedules(),
+        StudentModel.fetchExistingStudents(),
+        CourseModel.fetchAllCourses(),
+      ]);
+
+      // Create Maps for faster lookups
+      const studentMap = new Map(students.map(student => [student.studentNumber, student]));
+      const scheduleMap = new Map(schedules.map(schedule => [schedule.scheduleNumber, schedule]));
+      const courseMap = new Map(courses.map(course => [course.courseCode, course]));
+
+      // Map over enrollments to create class list
+      const mappedData = enrollments.map((enrollment) => {
+        const matchedStudent = studentMap.get(enrollment.studentNumber) || {};
+        const matchedSchedule = scheduleMap.get(enrollment.scheduleNumber) || {};
+        const matchedCourse = courseMap.get(enrollment.courseCode) || {};
+
+        return {
+          studentNumber: matchedStudent.studentNumber || "N/A",
+          studentLastName: matchedStudent.studentNameLast || "N/A",
+          studentFirstName: matchedStudent.studentNameFirst || "N/A",
+          studentMiddleName: matchedStudent.studentNameMiddle || "N/A",
+          contactNumber: matchedStudent.studentContact || "N/A",
+          pccEmail: matchedStudent.studentPccEmail ? `${matchedStudent.studentPccEmail.split('@')[0]}@` : "N/A",
+          studentAddress: matchedStudent.studentAddress || "N/A",
+          scheduleNumber: matchedSchedule.scheduleNumber || "N/A",
+          academicYear: matchedSchedule.academicYear || "N/A",
+          yearLevel: matchedSchedule.yearLevel || "N/A",
+          semester: matchedSchedule.semester || "N/A",
+          sectionNumber: matchedSchedule.sectionNumber || "N/A",
+          courseCode: matchedCourse.courseCode || "N/A",
+          programNumber: matchedCourse.programNumber || "N/A",
+        };
+      });
+
+      console.log(mappedData);
+
+      // Apply filtering
+      const filteredResults = mappedData.filter((student) => {
+        const program = UserProgram?.programNumber;
+
+        return (
+          //(!selectedAcademicYear || String(student.academicYear).trim() === String(selectedAcademicYear).trim()) &&
+          //(!selectedYearLevel || String(student.yearLevel).trim() === String(selectedYearLevel).trim()) &&
+          //(!program || student.programNumber === program) &&
+          //(!selectedSemester || String(student.semester).trim() === String(selectedSemester).trim()) &&
+          (!selectedSect || String(student.sectionNumber).trim() === String(selectedSect).trim()) &&
+          (!selectedCourse || String(student.courseCode).trim() === String(selectedCourse).trim())
+        );
+      });
+      
+      setClassListData(filteredResults);
+
+      const selectedSchedule = schedules.filter(schedule => schedule.sectionNumber === selectedSect)
+                                        .filter(schedule => schedule.courseCode === selectedCourse);
+      
+      setSelectedSchedule(selectedSchedule);
+
+      console.log(selectedSchedule);
+      console.log("Mapped Data:", mappedData);
+      console.log("Filtered Results:", filteredResults);
+    } catch (error) {
+      console.error("Error fetching class list data:", error);
+      alert("An error occurred while fetching class list data. Please try again.");
     }
   };
   
@@ -492,7 +558,7 @@ export default function FacultyDashboard () {
         {selectedSection === SECTIONS.CLASSES && (
           <section className="mt-3 ms-0">
             <h2 className="custom-font custom-color-green-font">Class Records for {selectedClass || ''}</h2>
-              {selectedClass ? ( <div className="ms-0"> <ClassDetails /></div>
+              {selectedClass ? ( <div className="ms-0"> <ClassDetails classList={classListData} classDetails={selectedSchedule} /></div>
               ) : (
         <div>
 
@@ -622,7 +688,7 @@ export default function FacultyDashboard () {
   </Col>
 
   <Col>
-    <Button variant="success" className="w-100 mt-4" onClick={() => handleClassClick('BSIT1-1')}>
+    <Button variant="success" className="w-100 mt-4" onClick={() => handleClassClick(selectedCourse)}>
       Grade Sheet
     </Button>
   </Col>
@@ -696,8 +762,8 @@ export default function FacultyDashboard () {
         </tr>
       </thead>
       <tbody className="table-light">
-        {finalData.length > 0 ? (
-          finalData.map((student, index) => (
+        {classListData.length > 0 ? (
+          classListData.map((student, index) => (
             <tr key={index}>
               <td>{student.studentNumber}</td>
               <td>{student.studentLastName}</td>

@@ -3,7 +3,6 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSearch, faPlus, faMinus, faMapMarkerAlt,  faEnvelope, faPhoneAlt } from '@fortawesome/free-solid-svg-icons'; // Import minus icon
 import '../StudentComponents/Dashboard.css';
 import DatePicker from 'react-datepicker';
-import StudentModel from '../ReactModels/StudentModel';
 import 'react-datepicker/dist/react-datepicker.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { ToastContainer, toast } from 'react-toastify';
@@ -15,11 +14,31 @@ import * as XLSX from 'xlsx';
 
 
 
-const ClassDetails = () => {
+const ClassDetails = ({classList , classDetails}) => {
 
-  const [students, setStudents] = useState([]);
+  const [students, setStudents] = useState(classList);
+  const [classInfo, setClassInfo] = useState(classDetails[0]);
+
   const [showModal, setShowModal] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
+
+
+
+  useEffect(() => {
+    students.sort((a, b) => {
+      const lastNameComparison = a.studentLastName.localeCompare(b.studentLastName);
+      if (lastNameComparison !== 0) return lastNameComparison; // If last names are different, sort by last name
+      return a.studentFirstName.localeCompare(b.studentFirstName); // If last names are the same, sort by first name
+    });
+    
+    // 2️⃣ Add an incremental ID starting from 0
+    const studentsWithIds = students.map((student, index) => ({
+      id: index, // Add an ID starting from 0
+      ...student // Spread the original student data
+    }));
+    console.log(studentsWithIds);
+    setStudents(studentsWithIds);
+  }, []);
   
 
   const handleModalShow = (action) => {
@@ -218,9 +237,11 @@ const handlePrint = () => {
   {/* FOR MIDTERMS */}
 
   {/* ATTENDANCE DECLARATION */}
-  const [midtermAttendanceColumns, setmidtermAttendanceColumns] = useState([{ id: 1, date: new Date() }]);
+  const [midtermAttendanceColumns, setmidtermAttendanceColumns] = useState([{ id: 1 }]);
+  console.log(midtermAttendanceColumns);
   const [midtermTotalAttendanceDays, setmidtermTotalAttendanceDays] = useState(0);
   const [midtermAttendanceData, setmidtermAttendanceData] = useState([]);
+  console.log(midtermAttendanceData);
   const [midtermAttendancePercentage, setmidtermAttendancePercentage] = useState();
 
   {/* ASSIGNMENT DECLARATION */}
@@ -296,25 +317,25 @@ const handlePrint = () => {
 
 
 
-  // Fetch existing students from StudentModel
-  const fetchExistingStudents = async () => {
-    try {
-        const existingStudents = await StudentModel.fetchExistingStudents();
+  // // Fetch existing students from StudentModel
+  // const fetchExistingStudents = async () => {
+  //   try {
+  //       const existingStudents = await StudentModel.fetchExistingStudents();
         
-        // Modify student.id to start from 0, 1, 2, etc.
-        const studentsWithModifiedIds = existingStudents.map((student, index) => ({
-            ...student, // Keep the existing student data
-            id: index   // Overwrite the id with the new index
-        }));
+  //       // Modify student.id to start from 0, 1, 2, etc.
+  //       const studentsWithModifiedIds = existingStudents.map((student, index) => ({
+  //           ...student, // Keep the existing student data
+  //           id: index   // Overwrite the id with the new index
+  //       }));
 
-        setStudents(studentsWithModifiedIds);
-    } catch (error) {
-        console.error('Error fetching existing students:', error);
-    }
-  };
+  //       setStudents(studentsWithModifiedIds);
+  //   } catch (error) {
+  //       console.error('Error fetching existing students:', error);
+  //   }
+  // };
   
-  // Fetch existing students onload
-  useEffect(() => {fetchExistingStudents();}, []);
+  // // Fetch existing students onload
+  // useEffect(() => {fetchExistingStudents();}, []);
 
   {/*ATTENDANCE FOR MIDTERM AND FINALS (COMPLETE)*/}
   useEffect(() => {
@@ -331,6 +352,25 @@ const handlePrint = () => {
   const removeColumn = (index, setColumns) => {
     setColumns((prevColumns) => prevColumns.filter((_, i) => i !== index));
   };
+  // Dedicated removeColumn function for attendance data only
+const removeAttendanceColumn = (index, setColumns, setAttendanceData) => {
+  setColumns((prevColumns) => {
+    const updatedColumns = prevColumns.filter((_, i) => i !== index);
+
+    // Update attendance data by removing the corresponding column (index)
+    setAttendanceData((prevData) => {
+      const updatedData = { ...prevData };
+      Object.keys(updatedData).forEach(studentId => {
+        const studentAttendance = updatedData[studentId] || [];
+        studentAttendance.splice(index, 1); // Remove the corresponding column data for this student
+      });
+      return updatedData;
+    });
+
+    return updatedColumns;
+  });
+};
+
 
   {/*SELECT FOR PERIOD (SWITCH CASES)*/}
   const handlePeriodChange = (period) => {
@@ -341,7 +381,8 @@ const handlePrint = () => {
   };
 
   {/*ATTENDANCE CHANGE HANDLER FOR BOTH PERIOD (COMPLETE)*/}
-  const handleMidtermAttendanceChange = (studentId, dateIndex, status) => {
+  const handleMidtermAttendanceChange = (studentId, studentNumber, dateIndex, status) => {
+    
     setmidtermAttendanceData((prevData) => {
       const studentAttendance = prevData[studentId] || [];
       const updatedAttendance = [...studentAttendance];
@@ -353,7 +394,77 @@ const handlePrint = () => {
         [studentId]: updatedAttendance,
       };
     });
+    setmidtermAttendanceColumns((prevColumns) => 
+      prevColumns.map((column, index) => {
+        if (index !== dateIndex) return column;//Check if this is the correct date (based on dateIndex)
+        
+        if (index === dateIndex) {// Create a new grade array (don't mutate the original array)
+          const updatedGrade = [...column.grade];
+          // Find the student in the grade array
+          const studentIndex = updatedGrade.findIndex((entry) => entry.studentNumber === studentNumber);
+  
+          if (studentIndex !== -1) {
+            // Update existing student's status
+            updatedGrade[studentIndex] = { 
+              ...updatedGrade[studentIndex], 
+              status 
+            };
+          } else {
+            // Add new student entry to grade array
+            updatedGrade.push({
+              studentNumber: studentNumber,
+              status
+            });
+          }
+  
+          // Return the updated column with the updated grade array
+          return {
+            ...column,
+            grade: updatedGrade
+          };
+        } 
+        return column; // If this is not the correct column, return it unchanged
+      })
+    );
   };
+  useEffect(() => {//Generation of objects for database storage (Attendance)
+    const AttendanceData = []; //For Database: gradeData
+    const AttendanceColumns = []; //For Database: attendanceData
+    //const AttendanceScores = []; //For computations
+  
+    midtermAttendanceColumns?.forEach((column) => {
+      AttendanceColumns.push({
+          instanceNumber: column.id,
+          scheduleNumber: classInfo.scheduleNumber,
+          date: column.date
+      });
+      column.grade?.forEach((student) => {
+        
+        AttendanceData.push({
+          scheduleNumber: classInfo.scheduleNumber, 
+          studentNumber: student.studentNumber, 
+          componentNumber: 1, 
+          instanceNumber: column.id, 
+          period: 1, 
+          value: student.status 
+        });
+
+        // AttendanceScores.push({
+        //   [student.studentNumber]: student.status
+        // });
+      });
+    });
+  
+    const filteredAttendance = AttendanceData.filter(attendance => attendance.value !== "Select");
+    
+    console.log("Rows for Database:",filteredAttendance);
+    console.log("List of Dates:", AttendanceColumns);
+    //console.log(AttendanceScores);
+    //setmidtermAttendanceData(AttendanceScores);
+    
+  }, [midtermAttendanceColumns, classInfo]);
+
+
   const handleFinalsAttendanceChange = (studentId, dateIndex, status) => {
     setfinalsAttendanceData((prevData) => {
       const studentAttendance = prevData[studentId] || [];
@@ -1331,27 +1442,31 @@ const handlePercentageChange = (setter, value) => {
               </th>
 
 
-                {midtermAttendanceColumns.map((column, index) => (
-                <th key={index} rowSpan="3" className='sticky-top-left-up'>
-                <DatePicker
-                  selected={column.date}
-                  onChange={(date) =>
-                    setmidtermAttendanceColumns((prevColumns) =>
-                      prevColumns.map((col, i) => (i === index ? { ...col, date } : col))
-                    )
-                  }
-                  dateFormat="yyyy-MM-dd"
-                  className="custom-datepicker"// Add custom class for width control
-                />
-                <button
-                  onClick={() => removeColumn(index, setmidtermAttendanceColumns)}
-                  style={{ background: 'none', border: 'none' }}
-                >
-                  <FontAwesomeIcon icon={faMinus} />
-                </button>
-              </th>
-              
-              ))}
+              {midtermAttendanceColumns.map((column, index) => (
+  <th key={index} rowSpan="3" className='sticky-top-left-up'>
+    <div style={{ display: 'flex', alignItems: 'center' }}>
+      {index === midtermAttendanceColumns.length - 1 && ( // Show button only for the last column
+        <button
+          onClick={() => removeAttendanceColumn(index, setmidtermAttendanceColumns, setmidtermAttendanceData)}
+          style={{ background: 'none', border: 'none', marginRight: '10px' }}
+        >
+          <FontAwesomeIcon icon={faMinus} />
+        </button>
+      )}
+      <DatePicker
+        selected={column.date}
+        onChange={(date) =>
+          setmidtermAttendanceColumns((prevColumns) =>
+            prevColumns.map((col, i) => (i === index ? { ...col, date, grade: [] } : col))
+          )
+        }
+        dateFormat="yyyy-MM-dd"
+        className="custom-datepicker"
+      />
+    </div>
+  </th>
+))}
+
 
               <th rowSpan="3" style={{ background: '#d1e7dd', position: 'sticky',left: 0,top: 42,padding: '0px',zIndex: 1,boxShadow: '1px 0 0 rgba(0, 0, 0, 0.1)', }}>
                 <button onClick={() => addColumn(setmidtermAttendanceColumns)} style={{background: 'none', border: 'none'}}>
@@ -1565,16 +1680,26 @@ const handlePercentageChange = (setter, value) => {
                   <tr key={student.id} className={getRowClass(autoRemarks)}>
                     <td style={{position: 'sticky',left: 0,backgroundColor: '#F6F7C4',padding: '10px',zIndex: 3,boxShadow: '1px 0 0 rgba(0, 0, 0, 0.1)',}}className="sticky-student-no">{student.studentNumber || 'Guest'}</td>
                     <td style={{position: 'sticky',left: 73,backgroundColor: '#F6F7C4',padding: '10px', zIndex: 3,whiteSpace: 'nowrap', overflow: 'hidden',   textOverflow: 'ellipsis', }}className="sticky-name">
-                      {student.studentNameLast || ''}, {student.studentNameFirst || ''} {student.studentNameMiddle || ''}
+                      {student.studentLastName || ''}, {student.studentFirstName || ''} {student.studentMiddleName || ''}
                     </td>
 
 
 
-                    {midtermAttendanceColumns.map((_, dateIndex) => (
-                      <td key={dateIndex}>
+                    {midtermAttendanceColumns.map((dateColumn, dateIndex) => (
+                      <td key={dateColumn.id}>
                         <select
                           defaultValue={midtermAttendanceData[student.id]?.[dateIndex]?.status || 'Select'}
-                          onChange={(e) => handleMidtermAttendanceChange(student.id, dateIndex, e.target.value)}
+                          //defaultValue={dateColumn?.grade?.find(g => g.studentNumber === student.studentNumber)?.status || 'Select'}
+                          disabled={!dateColumn?.date}
+                          onChange={(e) => {handleMidtermAttendanceChange(student.id, student.studentNumber, dateIndex, e.target.value);
+                            /*const date = new Date(dateColumn.date).toISOString().split('T')[0];
+                            if (!date) {
+                              alert(`Invalid date for student ${student.studentNumber} at Assignment ${dateIndex}. Please check the date.`);
+                              return e.target.value = 'Select'; // Exit early
+                            } else {
+                              handleMidtermAttendanceChange(student.id, student.studentNumber, dateIndex, e.target.value);
+                            }*/
+                          }}
                         >
                           <option value="Select">Select</option>
                           <option value="P">P</option>

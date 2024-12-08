@@ -3,6 +3,8 @@ import { Table, Form, Button, Row, Col, Modal } from 'react-bootstrap';
 import AcademicYearModel from '../ReactModels/AcademicYearModel';
 import ProgramModel from '../ReactModels/ProgramModel';
 import CourseModel from '../ReactModels/CourseModel';
+import EnrollmentModel from '../ReactModels/EnrollmentModel';
+import StudentModel from '../ReactModels/StudentModel';
 import SectionModel from '../ReactModels/SectionModel';
 import ScheduleModel from '../ReactModels/ScheduleModel';
 import PersonnelModel from '../ReactModels/PersonnelModel';
@@ -18,6 +20,7 @@ const Sections = () => {
 
   const [academicYears, setAcademicYears] = useState([]);
   const [mappedData, setMappedData] = useState([]);
+  const [classList, setClassList] = useState([]);
   
   const [newSection, setNewSection] = useState(null);
   
@@ -213,56 +216,93 @@ const Sections = () => {
 
   const handleView = () => {
     if (selectedAcademicYear && selectedProgram && selectedYearLevel && selectedSemester && selectedSection) {
-      setShowTable(true); 
+      handleClassList();
+      setShowTable(true);
     }
   };
 
-  // Mock data for students
-  const students = [
-    {
-      studentNumber: '20210101',
-      studentName: 'Alice Johnson',
-      program: 'BSREM',
-      academicYear: '2023-2024',
-      yearLevel: 'Freshman',
-      semester: 'First',
-      section: 'A',
-      contactNumber: '09123456789',
-      email: 'alice.johnson@pcc.edu',
-      address: '1234 Main St, Parañaque',
-    },
-    {
-      studentNumber: '20210102',
-      studentName: 'Bob Smith',
-      program: 'BSREM',
-      academicYear: '2023-2024',
-      yearLevel: 'Freshman',
-      semester: 'First',
-      section: 'B',
-      contactNumber: '09123456780',
-      email: 'bob.smith@pcc.edu',
-      address: '5678 Elm St, Parañaque',
-    },
-    // Add more students as needed
-  ];
+  const handleClassList = async () => {
+    try {
+      // Fetch data from all models in parallel
+      const [enrollments, schedules, students] = await Promise.all([
+        EnrollmentModel.fetchAllEnrollment(),
+        ScheduleModel.fetchSchedules(),
+        StudentModel.fetchExistingStudents(),
+      ]);
 
-  const filteredCourses = courses.filter(
-    (subject) =>
-      subject.selectedAcademicYear === selectedAcademicYear &&
-      subject.program === selectedProgram &&
-      subject.yearLevel === selectedYearLevel &&
-      subject.semester === selectedSemester /*&&
-      subject.section === selectedSection*/
-  );
+      // Create Maps for faster lookups
+      const studentMap = new Map(students.map(student => [student.studentNumber, student]));
+      const scheduleMap = new Map(schedules.map(schedule => [schedule.scheduleNumber, schedule]));
+      //const courseMap = new Map(courses.map(course => [course.courseCode, course]));
 
-  const filteredStudents = students.filter(
-    (student) =>
-      student.selectedAcademicYear === selectedAcademicYear &&
-      student.program === selectedProgram &&
-      student.yearLevel === selectedYearLevel &&
-      student.semester === selectedSemester /*&&
-      student.section === selectedSection*/
-  );
+      // Map over enrollments to create class list
+      const mappedData = enrollments.map((enrollment) => {
+        const matchedStudent = studentMap.get(enrollment.studentNumber) || {};
+        const matchedSchedule = scheduleMap.get(enrollment.scheduleNumber) || {};
+        //const matchedCourse = courseMap.get(enrollment.courseCode) || {};
+
+        return {
+          studentNumber: matchedStudent.studentNumber || "N/A",
+          studentLastName: matchedStudent.studentNameLast || "N/A",
+          studentFirstName: matchedStudent.studentNameFirst || "N/A",
+          studentMiddleName: matchedStudent.studentNameMiddle || "N/A",
+          contactNumber: matchedStudent.studentContact || "N/A",
+          pccEmail: matchedStudent.studentPccEmail ? `${matchedStudent.studentPccEmail.split('@')[0]}@` : "N/A",
+          studentAddress: matchedStudent.studentAddress || "N/A",
+          //scheduleNumber: matchedSchedule.scheduleNumber || "N/A",
+          academicYear: matchedSchedule.academicYear || "N/A",
+          yearLevel: matchedSchedule.yearLevel || "N/A",
+          semester: matchedSchedule.semester || "N/A",
+          sectionNumber: matchedSchedule.sectionNumber || "N/A",
+          //courseCode: matchedCourse.courseCode || "N/A",
+          //programNumber: matchedCourse.programNumber || "N/A",
+        };
+      });
+
+      const classList = removeDuplicates(mappedData);
+
+      console.log(classList);
+
+      // Apply filtering
+      const filteredResults = classList.filter((student) => {
+
+        return (
+          (!selectedSection || String(student.sectionNumber).trim() === String(selectedSection).trim())
+        );
+      });
+
+      console.log(filteredResults);
+
+      // Update states with the results
+      setClassList(filteredResults);
+      //setFinalData(filteredResults);
+
+      console.log("Mapped Data:", mappedData);
+      console.log("Filtered Results:", filteredResults);
+    } catch (error) {
+      console.error("Error fetching class list data:", error);
+      alert("An error occurred while fetching class list data. Please try again.");
+    }
+  };
+
+  function removeDuplicates(data) {
+    // Use a Map to store unique entries
+    const uniqueEntries = new Map();
+
+    data.forEach((entry) => {
+        // Create a unique key based on studentNumber and scheduleNumber
+        const uniqueKey = `${entry.studentNumber}-${entry.sectionNumber}`;
+
+        // Add to the map if the key doesn't exist yet
+        if (!uniqueEntries.has(uniqueKey)) {
+            uniqueEntries.set(uniqueKey, entry);
+        }
+    });
+
+    // Convert the Map back to an array
+    return Array.from(uniqueEntries.values());
+  };
+
 
   const handleAcademicYearChange = (e) => {
     const selectedYear = e.target.value;
@@ -605,13 +645,13 @@ const Sections = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredStudents.map((student, index) => (
+              {classList.map((student, index) => (
                 <tr key={index}>
                   <td>{student.studentNumber}</td>
-                  <td>{student.studentName}</td>
+                  <td>{student.studentLastName}, {student.studentFirstName} {student.studentMiddleName}</td>
                   <td>{student.contactNumber}</td>
-                  <td>{student.email}</td>
-                  <td>{student.address}</td>
+                  <td>{student.pccEmail}</td>
+                  <td>{student.studentAddress}</td>
                 </tr>
               ))}
             </tbody>
