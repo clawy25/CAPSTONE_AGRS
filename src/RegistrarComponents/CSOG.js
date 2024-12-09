@@ -66,192 +66,276 @@ const MasterlistOfGradesTable = () => {
       setSelectedProgramId(null);
     }
   };
-
-const printTable = () => {
-  const table = document.getElementById('printableTable');
-  if (!table) {
-    console.error('Table not found');
-    return;
-  }
-
-  const clonedTable = table.cloneNode(true);
-  const rows = clonedTable.querySelectorAll('tr');
-
-  // Remove the last column from each row
-  rows.forEach(row => row.deleteCell(row.cells.length - 1));
-
-  const printWindow = window.open('', '', 'height=500,width=1000');
-  printWindow.document.write('<html><head><title>Print Table</title>');
-  printWindow.document.write(`
-    <style>
-      @media print {
-        @page { size: landscape; margin: 0.5in; }
-        body { font-family: Arial, sans-serif; }
-        table { width: 100%; table-layout: auto; border-collapse: collapse; page-break-before: auto; }
-        th, td { border: 1px solid black; padding: 8px; text-align: center; }
-        td { background-color: white; }
-        th { background-color: #4CAF50; color: white; }
-        
-        /* Ensure the table header is only printed once per page */
-        thead { display: table-header-group; }
-        tbody { display: table-row-group; }
-        
-        /* Control page breaks */
-        tr { page-break-inside: avoid; }
-        
-        /* Flex container for logo and text */
-        .header-container {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin-bottom: 20px;
-          margin-top: 40px; /* Double line space above the header */
+  
+  const printTable = () => {
+    const table = document.getElementById('printableTable');
+    if (!table) {
+      console.error('Table not found');
+      return;
+    }
+  
+    // Clone the table
+    const clonedTable = table.cloneNode(true);
+  
+    // Select all rows (including header and body)
+    const rows = clonedTable.querySelectorAll('tr');
+  
+    // Get all rows for header and body
+    const headerRows = clonedTable.querySelectorAll('thead tr');
+    const bodyRows = clonedTable.querySelectorAll('tbody tr');
+  
+    // Highlight the last column (WGA) in both header and body (only for print)
+    // In header (last cell in both header rows)
+    const headerCells = clonedTable.querySelectorAll('thead th');
+    const lastHeaderCell = headerCells[headerCells.length - 1];
+    lastHeaderCell.style.backgroundColor = '#bf9000'; // Brown for WGA column in header
+    lastHeaderCell.style.color = 'black'; // Text color black for WGA header
+  
+    // In body (last column in each row)
+    bodyRows.forEach(row => {
+      const lastCell = row.cells[row.cells.length - 1]; // Target the last cell in each body row
+      lastCell.style.backgroundColor = '#bf9000'; // Brown for WGA column in body
+    });
+  
+    // Apply colors to the first and second header rows (only for print)
+    if (headerRows.length > 0) {
+      headerRows.forEach((headerRow, index) => {
+        // Apply blue color to the first header row and text color black (only for print)
+        if (index === 0) {
+          headerRow.querySelectorAll('th').forEach(cell => {
+            cell.style.backgroundColor = '#00b0f0'; // Blue
+            cell.style.color = 'black'; // Text color black
+          });
         }
-
-        .logo {
-          height: 80px;
-          margin-right: 20px;
+        // Apply yellow color to the second header row and text color black (only for print)
+        if (index === 1) {
+          headerRow.querySelectorAll('th').forEach(cell => {
+            cell.style.backgroundColor = '#ffff00'; // Yellow
+            cell.style.color = 'black'; // Text color black
+          });
         }
-
-        .text {
-          text-align: left;
-          margin-right: 20px;
+      });
+    }
+  
+    // Remove the last column from body rows (not the header)
+    bodyRows.forEach(row => {
+      row.deleteCell(row.cells.length - 1);
+    });
+  
+    const printWindow = window.open('', '', 'height=500,width=1000');
+    printWindow.document.write('<html><head><title>Print Table</title>');
+    printWindow.document.write(`
+      <style>
+        @media print {
+          @page {
+            size: legal landscape; /* Set Legal size and Landscape orientation */
+            margin: 0;
+            /* Ensure background graphics are included */
+            background: #fff;
+          }
+  
+          body {
+            font-family: Arial, sans-serif;
+          }
+  
+          table {
+            width: 100%;
+            table-layout: auto;
+            border-collapse: collapse;
+            page-break-before: auto;
+          }
+  
+          th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: center;
+          }
+  
+          td {
+            background-color: white;
+          }
+  
+          th {
+            background-color: #4CAF50;
+            color: black; /* Text color black in all header cells */
+          }
+  
+          /* Prevent repeated header on every page */
+          thead {
+            display: table-row-group;
+          }
+  
+          /* Keep rows from splitting between pages */
+          tr {
+            page-break-inside: avoid;
+          }
+  
+          /* Highlight last column in print */
+          th:last-child, td:last-child {
+            background-color: #bf9000; /* Highlight color for last column */
+            color: black; /* Text color black for WGA column */
+          }
+  
+          /* Apply print-specific header row colors */
+          thead tr:nth-child(1) th {
+            background-color: #00b0f0; /* Blue for the first header row */
+            color: black; /* Text color black for first header row */
+          }
+  
+          thead tr:nth-child(2) th {
+            background-color: #ffff00; /* Yellow for the second header row */
+            color: black; /* Text color black for second header row */
+          }
+  
+          .header-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            margin-top: 40px;
+          }
+  
+          .logo {
+            height: 80px;
+            margin-right: 20px;
+          }
+  
+          .text {
+            text-align: left;
+            margin-right: 20px;
+          }
+  
+          .city, .college {
+            color: green;
+          }
+  
+          .college {
+            font-size: 29px;
+            font-weight: bold;
+          }
+  
+          .vertical-line {
+            border-left: 2px solid green;
+            height: 80px;
+            margin-left: 20px;
+            margin-right: 20px;
+          }
+  
+          .additional-text {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+          }
+  
+          .additional-line {
+            font-size: 16px;
+            font-weight: normal;
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 5px;
+            color: green;
+          }
+  
+          .icon {
+            margin-right: 8px;
+            font-size: 18px;
+            min-width: 24px;
+            color: green;
+          }
+  
+          .address-container {
+            display: flex;
+            align-items: flex-start;
+          }
+  
+          .address-container .address-text {
+            display: flex;
+            flex-direction: column;
+          }
+  
+          .second-logo {
+            height: 80px;
+            margin-left: 40px;
+          }
+  
+          .separator {
+            border: 0;
+            border-top: 2px solid green;
+            width: 80%;
+            margin: 20px auto;
+          }
+  
+          .centered-text {
+            text-align: center;
+          }
         }
-
-        .city, .college {
-          color: green; /* Set text color to green */
-        }
-
-        .college {
-          font-size: 29px;
-          font-weight: bold;
-        }
-
-        /* Vertical line after the text */
-        .vertical-line {
-          border-left: 2px solid green; /* Set vertical line color to green */
-          height: 80px;
-          margin-left: 20px;
-          margin-right: 20px;
-        }
-
-        /* Additional text after the vertical line */
-        .additional-text {
-          display: flex;
-          flex-direction: column;
-          justify-content: flex-start;
-        }
-
-        .additional-line {
-          font-size: 16px;
-          font-weight: normal;
-          display: flex;
-          align-items: flex-start;
-          margin-bottom: 5px;
-          color: green; /* Set all address text to green */
-        }
-
-        .icon {
-          margin-right: 8px;
-          font-size: 18px;
-          min-width: 24px;
-          color: green; /* Set icons color to green */
-        }
-
-        /* For the first two address lines sharing one icon */
-        .address-container {
-          display: flex;
-          align-items: flex-start;
-        }
-
-        .address-container .address-text {
-          display: flex;
-          flex-direction: column;
-        }
-
-        /* Additional space before the second logo */
-        .second-logo {
-          height: 80px;
-          margin-left: 40px; /* Adds space before the second logo */
-        }
-
-        /* Horizontal line styling */
-        .separator {
-          border: 0;
-          border-top: 2px solid green; /* Set horizontal line color to green */
-          width: 80%; /* Adjust to control the line length */
-          margin: 20px auto; /* Center and add vertical spacing */
-        }
-
-        /* Centered text for heading and paragraphs */
-        .centered-text {
-          text-align: center;
-        }
-      }
-    </style>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"> <!-- Font Awesome CDN -->
-  `);
-  printWindow.document.write('</head><body>');
-
-  // Map program codes to their full names
-  let fullProgramName;
-  if (program === "BSHM") {
-    fullProgramName = "BACHELOR OF SCIENCE IN HOSPITALITY MANAGEMENT";
-  } else if (program === "BSEntrep") {
-    fullProgramName = "BACHELOR OF SCIENCE IN ENTREPRENEURSHIP";
-  } else {
-    fullProgramName = program; // Default to the program code if no match
-  }
-
-  // Add the header content, vertical line, and horizontal line
-  printWindow.document.write(`
-    <div class="header-container">
-      <img src="/pcc.png" alt="PCC Logo" class="logo">
-      <div class="text">
-        <div class="city">PARANAQUE CITY</div>
-        <div class="college">COLLEGE</div>
-      </div>
-      <div class="vertical-line"></div> <!-- Vertical Line -->
-      <div class="additional-text">
-        <!-- Address with single icon -->
-        <div class="additional-line address-container">
-          <span class="icon"><i class="fas fa-map-marker-alt"></i></span> <!-- Font Awesome location icon -->
-          <div class="address-text">
-            <div>Coastal Rd., cor. Victor Medina Street,</div>
-            <div>San Dionisio, Paranaque City, Philippines</div>
+  
+      </style>
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    `);
+    printWindow.document.write('</head><body>');
+  
+    let fullProgramName;
+    if (program === "BSHM") {
+      fullProgramName = "BACHELOR OF SCIENCE IN HOSPITALITY MANAGEMENT";
+    } else if (program === "BSEntrep") {
+      fullProgramName = "BACHELOR OF SCIENCE IN ENTREPRENEURSHIP";
+    } else {
+      fullProgramName = program;
+    }
+  
+    printWindow.document.write(`
+      <div class="header-container">
+        <img src="/pcc.png" alt="PCC Logo" class="logo" id="logo">
+        <div class="text">
+          <div class="city">PARANAQUE CITY</div>
+          <div class="college">COLLEGE</div>
+        </div>
+        <div class="vertical-line"></div>
+        <div class="additional-text">
+          <div class="additional-line address-container">
+            <span class="icon"><i class="fas fa-map-marker-alt"></i></span>
+            <div class="address-text">
+              <div>Coastal Rd., cor. Victor Medina Street,</div>
+              <div>San Dionisio, Paranaque City, Philippines</div>
+            </div>
+          </div>
+          <div class="additional-line">
+            <span class="icon"><i class="fas fa-envelope"></i></span>info@paranaquecitycollege.edu.ph
+          </div>
+          <div class="additional-line">
+            <span class="icon"><i class="fas fa-phone-alt"></i></span>(02)85343321
           </div>
         </div>
-        <!-- Email with mail icon -->
-        <div class="additional-line">
-          <span class="icon"><i class="fas fa-envelope"></i></span>info@paranaquecitycollege.edu.ph <!-- Font Awesome mail icon -->
-        </div>
-        <!-- Phone with phone icon -->
-        <div class="additional-line">
-          <span class="icon"><i class="fas fa-phone-alt"></i></span>(02)85343321 <!-- Font Awesome phone icon -->
-        </div>
+        <img src="/pcc.png" alt="PCC Logo" class="second-logo">
       </div>
-      <img src="/pcc.png" alt="PCC Logo" class="second-logo"> <!-- Second PCC logo with added margin -->
-    </div>
-    <hr class="separator"> <!-- Horizontal Line -->
-    
-    <!-- Centered Content -->
-    <div class="centered-text">
-      <h1>OFFICE OF THE COLLEGE REGISTRAR</h1>
-      <h2>Summary of Grades</h2>
-      <h2>${fullProgramName}</h2> <!-- Dynamically displaying full course name -->
-      <h2>${yearLevel}</h2>
-      <h2>${semester} Semester S.Y. ${academicYear}</h2> <!-- Semester and Academic Year on the same line -->
-    </div>
-  `);
-
-  printWindow.document.write(clonedTable.outerHTML);
-  printWindow.document.write('</body></html>');
-  printWindow.document.close();
-  printWindow.print();
-};
-
+      <hr class="separator">
+      <div class="centered-text">
+        <h1>OFFICE OF THE COLLEGE REGISTRAR</h1>
+        <h2>Summary of Grades</h2>
+        <h2>${fullProgramName}</h2>
+        <h2>${yearLevel}</h2>
+        <h2>${semester} Semester S.Y. ${academicYear}</h2>
+      </div>
+    `);
   
-    
+    printWindow.document.write(clonedTable.outerHTML);
+    printWindow.document.write('</body></html>');
+  
+    const logo = printWindow.document.getElementById('logo');
+    logo.onload = () => {
+      printWindow.print();
+      printWindow.close();
+    };
+  
+    logo.onerror = () => {
+      console.error('Logo failed to load.');
+      printWindow.print();
+      printWindow.close();
+    };
+  };
+  
+  
 
   const openModal = () => {
     setShowModal(true);
@@ -271,8 +355,9 @@ const printTable = () => {
     }
   
     const content = contentElement.innerHTML;
-    const printWindow = window.open('', '_blank');
-    
+  
+    // Open a new window with specific dimensions for printing
+    const printWindow = window.open('', '', 'width=800,height=600'); // Set the size of the window
     printWindow.document.write(`
       <html>
         <head>
@@ -280,68 +365,115 @@ const printTable = () => {
           <style>
             /* General print styles */
             @media print {
-              @page { size: A4 landscape; margin: 0; }
-              body { 
-                margin: 0; 
-                font-family: Arial, sans-serif; 
-                width: 100%; 
+              @page {
+                size: portrait; /* Set portrait orientation */
+                margin: 0;
               }
-              .modalContent { 
-                width: 100%; 
-                padding: 10px; 
+  
+              body {
+                margin: 0;
+                font-family: Arial, sans-serif;
+                width: 100%;
+                height: 100%;
+                position: relative;
+              }
+  
+              /* Background logo behind the content */
+              body::after {
+                content: "";
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-image: url('pcc.png'); /* Add logo image */
+                background-position: center;
+                background-repeat: no-repeat;
+                background-size: 25%; /* Adjust size of logo */
+                opacity: 0.1; /* Set opacity for transparency */
+                z-index: -1; /* Ensure it stays behind the content */
+              }
+  
+              /* Container for both tables */
+              .tableContainer {
+                display: block;
+                width: 100%;
+                padding: 10px;
+              }
+  
+              /* Each table should have its own box */
+              .modalContent {
+                width: 100%;
+                padding: 10px;
                 box-sizing: border-box;
+                margin-bottom: 20px; /* Add some space between the two tables */
+                border: 1px solid #ccc; /* Optional border around each table */
+                background: #fff; /* Optional background */
               }
+  
               /* Adjustments for fitting content on one page */
-              .modalContent h1 { font-size: 18px; margin: 0; padding: 5px; }
+              .modalContent h1 {
+                font-size: 18px;
+                margin: 0;
+                padding: 5px;
+              }
+  
               .modalContent p, .modalContent td, .modalContent th {
                 font-size: 10px;
                 padding: 4px;
               }
+  
               /* Table styling for compact view */
-              .modalContent table{
+              .modalContent table {
                 width: 100%;
                 border-collapse: collapse;
-
               }
+  
               .modalContent th, .modalContent td {
                 border: none;
-
               }
-
+  
               .modalContent .grading-system th, 
               .modalContent .grading-system td { 
-
                 font-size: 0.5em; 
                 font-style: italic;
               }
   
               .modalContent .table-upper td { 
-
                 font-size: 0.7rem; 
               }
-
+  
               .modalContent .table-upper th {
-
                 font-size: 0.9rem; 
               }
-
-              .modalContent .bottom-part-print .certify-statement , .modalContent .bottom-part-print .college-registrar-center {
-              text-align: center;
-              font-size: 0.7rem;
+  
+              .modalContent .bottom-part-print .certify-statement, 
+              .modalContent .bottom-part-print .college-registrar-center {
+                text-align: center;
+                font-size: 0.7rem;
               }
+  
               .modalContent .bottom-part-print .prepared-by{
-              font-size: 0.7rem;
+                font-size: 0.7rem;
               }
-
+  
               .modalContent .grades-table th, .modalContent .grades-table td {
-               border: 1px solid black;
-               font-size: 0.7rem; 
+                border: 1px solid black;
+                font-size: 0.7rem; 
               }
             }
           </style>
         </head>
         <body>
-          <div class="modalContent">${content}</div>
+          <!-- Container for both tables -->
+          <div class="tableContainer">
+            <!-- First table -->
+            <div class="modalContent">${content}</div>
+  
+            <!-- Second table (same content repeated) -->
+            <div class="modalContent">${content}</div>
+          </div>
+  
           <script>
             window.onload = function() {
               window.print();
@@ -351,9 +483,14 @@ const printTable = () => {
         </body>
       </html>
     `);
-    
+  
+    // Close the document after writing content to it
     printWindow.document.close();
-};
+  };
+  
+  
+  
+  
 
   
 
