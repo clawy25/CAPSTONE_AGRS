@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Form, Row, Col, Button, Table, Modal } from 'react-bootstrap';
-import * as XLSX from 'xlsx';
+import * as XLSX from 'sheetjs-style'; // Use sheetjs-style for formatting
 import ProgramModel from '../ReactModels/ProgramModel'; // Ensure this path is correct
+
+
 
 function ProgramFilter({ onView }) {
   const [programs, setPrograms] = useState([]);
@@ -33,66 +35,65 @@ function ProgramFilter({ onView }) {
     onView(programName, programCode, batchYear);
   };
 
-const downloadExcel = () => {
-  const table = document.querySelector('.table-success');
-  const workbook = XLSX.utils.table_to_book(table, { raw: true });
-
-  // Access the first sheet of the workbook
-  const ws = workbook.Sheets[workbook.SheetNames[0]];
-
-  // Get the range of the table
-  const range = XLSX.utils.decode_range(ws['!ref']);
-
-  // Find the index of the "Transcript of Records" column (assuming it's the last column)
-  const lastColumnIndex = range.e.c; // Get the last column index
-  const columnToRemove = lastColumnIndex; // Column to remove (update this if "Transcript of Records" is in a different column)
-
-  // Remove the "Transcript of Records" column by deleting the corresponding cells
-  for (let row = range.s.r; row <= range.e.r; row++) {
-    const cellAddress = { r: row, c: columnToRemove };
-    const cellRef = XLSX.utils.encode_cell(cellAddress);
-    delete ws[cellRef]; // Delete the cell in the "Transcript of Records" column
-  }
-
-  // Apply styles to all cells (center text and add borders)
-  for (let row = range.s.r; row <= range.e.r; row++) {
-    for (let col = range.s.c; col <= range.e.c; col++) {
-      const cellAddress = { r: row, c: col };
+  const downloadExcel = () => {
+    const table = document.querySelector('.table-success');
+    const workbook = XLSX.utils.table_to_book(table, { raw: true });
+    const ws = workbook.Sheets[workbook.SheetNames[0]];
+    const range = XLSX.utils.decode_range(ws['!ref']);
+  
+    // Remove "Transcript of Records" column (assuming it's the last column)
+    const lastColumnIndex = range.e.c;
+    const columnToRemove = lastColumnIndex;
+  
+    for (let row = range.s.r; row <= range.e.r; row++) {
+      const cellAddress = { r: row, c: columnToRemove };
       const cellRef = XLSX.utils.encode_cell(cellAddress);
-      const cell = ws[cellRef];
-
-      if (cell) {
-        // Initialize style object if it doesn't exist
-        if (!cell.s) cell.s = {};
-
-        // Apply alignment (center horizontally and vertically)
-        cell.s.alignment = {
-          horizontal: 'center',
-          vertical: 'center',
-          wrapText: true, // Optional: wrap text if it's too long
-        };
-
-        // Apply border to all cells
-        cell.s.border = {
-          top: { style: 'thin', color: { rgb: '000000' } },
-          left: { style: 'thin', color: { rgb: '000000' } },
-          bottom: { style: 'thin', color: { rgb: '000000' } },
-          right: { style: 'thin', color: { rgb: '000000' } },
-        };
-
-        // Apply background color for header cells (if it's the header row)
-        if (row === range.s.r) { // Header row
-          cell.s.fill = {
-            fgColor: { rgb: '28a745' } // Green color for header
+      delete ws[cellRef];
+    }
+  
+    // Apply styles to all cells
+    for (let row = range.s.r; row <= range.e.r; row++) {
+      for (let col = range.s.c; col <= range.e.c; col++) {
+        const cellAddress = { r: row, c: col };
+        const cellRef = XLSX.utils.encode_cell(cellAddress);
+        const cell = ws[cellRef];
+  
+        if (cell) {
+          if (!cell.s) cell.s = {};
+  
+          // Apply alignment
+          cell.s.alignment = {
+            horizontal: 'center',
+            vertical: 'center',
+            wrapText: true,
           };
+  
+          // Apply border
+          cell.s.border = {
+            top: { style: 'thin', color: { rgb: '000000' } },
+            left: { style: 'thin', color: { rgb: '000000' } },
+            bottom: { style: 'thin', color: { rgb: '000000' } },
+            right: { style: 'thin', color: { rgb: '000000' } },
+          };
+  
+          // Apply header styles
+          if (row === range.s.r) { // Header row
+            cell.s.fill = {
+              patternType: 'solid',
+              fgColor: { rgb: '28a745' }, // Green color for header
+            };
+            cell.s.font = {
+              bold: true,
+              color: { rgb: 'FFFFFF' }, // White text for header
+            };
+          }
         }
       }
     }
-  }
-
-  // Write the workbook to an Excel file
-  XLSX.writeFile(workbook, `${programName || "Masterlist"}_Grades.xlsx`);
-};
+  
+    // Write the workbook to an Excel file
+    XLSX.writeFile(workbook, `${programName || "Masterlist"}_Grades.xlsx`);
+  };
 
   
   

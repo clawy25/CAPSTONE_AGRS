@@ -492,75 +492,98 @@ const MasterlistOfGradesTable = () => {
     }
   
     const content = contentElement.innerHTML;
+    const logoURL = '/pcc.png'; 
   
-    // Open a new window with specific dimensions for printing
-    const printWindow = window.open('', '', 'width=800,height=600'); // Set the size of the window
+    const printWindow = window.open('', '', 'width=800,height=600');
     printWindow.document.write(`
       <html>
         <head>
           <title>Print COG</title>
           <style>
-            /* General print styles */
             @media print {
               @page {
-                size: portrait; /* Set portrait orientation */
+                size: legal;
                 margin: 0;
               }
   
               body {
                 margin: 0;
                 font-family: Arial, sans-serif;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transform: scale(0.90);
+                transform-origin: center center;
                 width: 100%;
                 height: 100%;
-                position: relative;
               }
   
-              /* Background logo behind the content */
-              body::after {
-                content: "";
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background-image: url('pcc.png'); /* Add logo image */
-                background-position: center;
-                background-repeat: no-repeat;
-                background-size: 25%; /* Adjust size of logo */
-                opacity: 0.1; /* Set opacity for transparency */
-                z-index: -1; /* Ensure it stays behind the content */
-              }
-  
-              /* Container for both tables */
               .tableContainer {
                 display: block;
                 width: 100%;
                 padding: 10px;
               }
   
-              /* Each table should have its own box */
               .modalContent {
                 width: 100%;
                 padding: 10px;
                 box-sizing: border-box;
-                margin-bottom: 20px; /* Add some space between the two tables */
-                border: 1px solid #ccc; /* Optional border around each table */
-                background: #fff; /* Optional background */
+                margin-bottom: 20px;
+                border: 1px solid #ccc;
+                background: #fff;
+                position: relative;
+              }
+
+              .modalContent::before {
+                content: '';
+                position: absolute;
+                top: 100;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-image: url('${logoURL}'), url('${logoURL}'), url('${logoURL}'),
+                                  url('${logoURL}'), url('${logoURL}'), url('${logoURL}');
+                background-position: 16% 16%, 50% 16%, 84% 16%, 
+                                    16% 50%, 50% 50%, 84% 50%; /* Centered positions for six logos */
+                background-repeat: no-repeat;
+                background-size: 100px 100px; /* Adjust size of each logo */
+                opacity: 0.15; /* Low opacity for watermark */
+                z-index: 0;
+              }
+
+
+            .modalContent * {
+              position: relative;
+              z-index: 1; /* Ensure content is above the watermark */
+            }
+  
+              .modalContent .label {
+                position: absolute;
+                top: 50%;
+                left: -280px; /* Position the label outside the table */
+                transform: translateY(-50%) rotate(-90deg); /* Rotate to vertical and center align */
+                font-size: 1rem;
+                font-weight: bold;
+                text-transform: uppercase;
+                background-color: green;
+                color: white;
+                padding: 10px 5px;
+                border-radius: 5px;
+                width: 530px; /* Increase width to accommodate longer text */
+                text-align: center;
+                white-space: nowrap; /* Prevent text from wrapping */
+                box-sizing: border-box; /* Ensure padding fits inside the label */
+              }
+
+  
+              .modalContent:first-of-type .label {
+                content: "STUDENT'S COPY";
               }
   
-              /* Adjustments for fitting content on one page */
-              .modalContent h1 {
-                font-size: 18px;
-                margin: 0;
-                padding: 5px;
+              .modalContent:nth-of-type(2) .label {
+                content: "REGISTRAR'S COPY";
               }
   
-              .modalContent p, .modalContent td, .modalContent th {
-                font-size: 10px;
-                padding: 4px;
-              }
-  
-              /* Table styling for compact view */
               .modalContent table {
                 width: 100%;
                 border-collapse: collapse;
@@ -570,7 +593,7 @@ const MasterlistOfGradesTable = () => {
                 border: none;
               }
   
-              .modalContent .grading-system th, 
+              .modalContent .grading-system th,
               .modalContent .grading-system td { 
                 font-size: 0.5em; 
                 font-style: italic;
@@ -598,19 +621,29 @@ const MasterlistOfGradesTable = () => {
                 border: 1px solid black;
                 font-size: 0.7rem; 
               }
+  
+              .broken-line {
+                border: none;
+                border-top: 2px dashed black;
+                margin: 20px 0;
+              }
             }
           </style>
         </head>
         <body>
-          <!-- Container for both tables -->
           <div class="tableContainer">
-            <!-- First table -->
-            <div class="modalContent">${content}</div>
-  
-            <!-- Second table (same content repeated) -->
-            <div class="modalContent">${content}</div>
+            <div class="modalContent">
+              <div class="label">STUDENT'S COPY</div>
+              ${content}
+            </div>
+            <br>
+            <hr class="broken-line">
+            <br>
+            <div class="modalContent">
+              <div class="label">REGISTRAR'S COPY</div>
+              ${content}
+            </div>
           </div>
-  
           <script>
             window.onload = function() {
               window.print();
@@ -621,9 +654,16 @@ const MasterlistOfGradesTable = () => {
       </html>
     `);
   
-    // Close the document after writing content to it
     printWindow.document.close();
   };
+  
+
+  
+  
+  
+  
+  
+  
   
 
   return (
