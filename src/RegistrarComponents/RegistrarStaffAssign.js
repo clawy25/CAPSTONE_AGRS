@@ -158,7 +158,9 @@ export default function RegistrarStaffAssign({ onBack }) {
 
   const renderTable = () => {
     return (
-      <Table hover className="table table-hover success-border">
+     <div className='table-responsive bg-white  mt-3 overflow-hidden'>
+
+<Table hover className="table table-hover success-border">
         <thead className="table-success">
           <tr>
             <th className='custom-font custom-color-green-font'>Personnel Number</th>
@@ -195,6 +197,7 @@ export default function RegistrarStaffAssign({ onBack }) {
           )}
         </tbody>
       </Table>
+     </div>
     );
   };
 
@@ -320,7 +323,7 @@ export default function RegistrarStaffAssign({ onBack }) {
       </Modal>
 
       
-      <div className="d-flex justify-content-end mt-3">
+      <div className="d-flex justify-content-end mt-3 mb-2">
         <Button variant="success" onClick={handleShowAdd}>
           Add Registrar Staff
         </Button>

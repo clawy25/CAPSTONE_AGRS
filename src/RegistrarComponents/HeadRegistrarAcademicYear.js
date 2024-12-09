@@ -415,11 +415,9 @@ export default function HeadRegistrarAcademicYear() {
 
   return (
       <div className='container-fluid bg-white p-4 rounded mt-3'>
+       <h3 className="mt-2 custom-color-green-font custom-font" >Programs</h3>
     <Row>
       <Col>
-      <h3 className="mt-2 custom-color-green-font custom-font" >Programs</h3>
-      </Col>
-      <Col className="">
       <Form.Group className="align-items-center">
         {/*<Form.Label className='custom-color-green-font custom-font'>Select Academic Year</Form.Label>*/}
         <Form.Select className='p-2 mt-2' value={selectedAcademicYear} onChange={handleAcademicYearChange}>
@@ -438,8 +436,8 @@ export default function HeadRegistrarAcademicYear() {
         </Form.Select>
       </Form.Group>
       </Col>
-      <Col>
-      <Button variant="success" className="mt-3" value="addNew" onClick={handleAcademicYearChange}>
+      <Col className='d-flex'>
+      <Button variant="success" className="mt-3 p-2 mb-1" value="addNew" onClick={handleAcademicYearChange}>
         Proceed to Next Academic Year
       </Button>
       </Col>

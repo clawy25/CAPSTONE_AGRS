@@ -181,7 +181,8 @@ export default function RegistrarProgramHead({ onBack }) {
 
   const renderTable = () => {
     return (
-      <Table hover className="table table-hover success-border">
+      <div className='table-responsive bg-white mt-3 overflow-hidden'>
+        <Table hover className="table table-hover success-border mb-1 ">
         <thead className="table-success">
           <tr>
             <th className='custom-font custom-color-green-font'>Personnel Number</th>
@@ -218,6 +219,7 @@ export default function RegistrarProgramHead({ onBack }) {
           )}
         </tbody>
       </Table>
+      </div>
     );
   };
 
@@ -360,7 +362,7 @@ export default function RegistrarProgramHead({ onBack }) {
 
      
 
-      <div className="d-flex justify-content-end mt-3">
+      <div className="d-flex justify-content-end mt-3 mb-2">
         <Button variant="success" onClick={handleShowAdd}>
           Add Program Head
         </Button>
