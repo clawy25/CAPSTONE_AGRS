@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react'; 
+import React, { useState, useEffect, useContext } from 'react'; 
 import { Table, Form, Button, Row, Col, Modal } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMapMarkerAlt,  faEnvelope, faPhoneAlt} from '@fortawesome/free-solid-svg-icons';
-
+import { UserContext } from '../Context/UserContext';
 import AcademicYearModel from '../ReactModels/AcademicYearModel';
 import YearLevelModel from '../ReactModels/YearLevelModel';
 import ProgramModel from '../ReactModels/ProgramModel';
@@ -13,57 +13,194 @@ const MasterlistOfGradesTable = () => {
   const [yearLevel, setYearLevel] = useState('');
   const [semester, setSemester] = useState('First');
   const [program, setProgram] = useState('');
-  const [sections, setSections] = useState(Array(8).fill(null).map((_, index) => `Section ${index + 1}`));
+  //const [sections, setSections] = useState(Array(8).fill(null).map((_, index) => `Section ${index + 1}`));
+  const [sections, setSections] = useState([]);
 
   const [academicYears, setAcademicYears] = useState([]);
   const [yearLevels, setYearLevels] = useState([]);
   const [programs, setPrograms] = useState([]);
-  const [selectedProgramId, setSelectedProgramId] = useState(null);
+  //const [selectedProgramId, setSelectedProgramId] = useState(null);
+  const [showModal, setShowModal] = useState(false); 
+  const { user } = useContext(UserContext);
+  const [selectedAcademicYear, setSelectedAcademicYear] = useState('');
+  const [selectedProgram, setSelectedProgram] = useState('');
+  const [selectedYearLevel, setSelectedYearLevel] = useState('');
+  const [selectedSemester, setSelectedSemester] = useState('First');
+  const [selectedSection, setSelectedSection] = useState('A'); // Default to Section A
+  const [currentAcademicYear, setCurrentAcadYear] = useState([]);
+  const [courses, setCourses] = useState([]);
+  const [mappedData, setMappedData] = useState([]);
 
-  const [showModal, setShowModal] = useState(false);
+  const fetchAcademicYearsAndPrograms = async () => {
+    try {
+      // Fetch academic years and programs
+      const fetchedAcademicYears = await AcademicYearModel.fetchExistingAcademicYears();
+      setAcademicYears(fetchedAcademicYears);
 
+      const current = fetchedAcademicYears.filter(acadYears => acadYears.isCurrent === true);
+      setCurrentAcadYear(current);
   
+      const fetchedProgram = await ProgramModel.fetchAllPrograms(user.programNumber);
+
+      setPrograms(fetchedProgram);
+  
+      if (fetchedProgram.length > 0) {
+        const data = [];
+      
+        fetchedProgram.forEach(row => {
+          // Check if there is already an entry for the current academicYear
+          let existingAcadYear = data.find(item => item.academicYear === row.academicYear);
+      
+          if (!existingAcadYear) {
+            // Filter programs for the current academicYear
+            const programsForYear = fetchedProgram.filter(item => item.academicYear === row.academicYear);
+            
+            // Collect unique programs for the academicYear
+            const programs = [];
+            const programNamesSet = new Set();
+      
+            programsForYear.forEach(row => {
+              if (!programNamesSet.has(row.programName)) {
+                programNamesSet.add(row.programName);
+      
+                // Create yearLevels with default semesters [1, 2], and add semester 3 if programYrLvlSummer matches
+                const yearLevels = Array.from({ length: row.programNumOfYear }, (_, i) => {
+                  const yearLevel = i + 1;
+                  const semesters = yearLevel === row.programYrLvlSummer ? [1, 2, 3] : [1, 2];
+                  return { yearLevel, semesters };
+                });
+      
+                programs.push({
+                  programName: row.programName,
+                  yearLevels: yearLevels
+                });
+              }
+            });
+      
+            // Create a new entry for the academicYear
+            const entry = {
+              academicYear: row.academicYear,
+              programs
+            };
+            data.push(entry); // Push the new entry into the data array
+          }
+        });
+      
+        console.log(data);
+        setMappedData(data);
+      }      
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  };
+
+
+  const fetchSections = async () => {
+    try{
+      const program = programs.find(
+        (p) => p.academicYear === selectedAcademicYear && p.programName === selectedProgram
+      );
+
+      const selectedProgramNumber = program ? program.programNumber : null;
+      const yearLevel = parseInt(selectedYearLevel);
+      const semester = parseInt(selectedSemester);
+
+      if (selectedProgramNumber) {
+        // Await the data here
+        const sectionData = await SectionModel.fetchExistingSections(
+          selectedAcademicYear,
+          yearLevel,
+          semester,
+          selectedProgramNumber
+        );
+  
+        setSections(sectionData); // This should now receive the resolved data array
+      }
+    } catch (error) {
+      console.error("Error fetching sections:", error);
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const fetchedAcademicYears = await AcademicYearModel.fetchExistingAcademicYears();
-        setAcademicYears(fetchedAcademicYears);
-        if (fetchedAcademicYears.length > 0) {
-          setAcademicYear(fetchedAcademicYears[0].academicYear); 
-        }
+    fetchAcademicYearsAndPrograms();
+  }, [user.programNumber]);
 
-        const fetchedYearLevels = await YearLevelModel.fetchExistingYearLevels();
-        setYearLevels(fetchedYearLevels);
-        if (fetchedYearLevels.length > 0) {
-          setYearLevel(fetchedYearLevels[0].yearName); 
-        }
 
-        const fetchedPrograms = await ProgramModel.fetchAllPrograms();
-        setPrograms(fetchedPrograms);
-        if (fetchedPrograms.length > 0) {
-          setProgram(fetchedPrograms[0].programName); 
-        }
+  const handleAcademicYearChange = (e) => {
+    const selectedYear = e.target.value;
+    setSelectedAcademicYear(selectedYear);
+    setSelectedProgram('');  // Reset dependent fields
+    setSelectedYearLevel('');
+    setSelectedSemester('');
+    setSelectedSection('');
+    
+  };
 
-        setSections(Array(8).fill(null).map((_, index) => `Section ${index + 1}`));
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    };
+  const handleProgramChange = (e) => {
+    const selectedProgram = e.target.value;
+    setSelectedProgram(selectedProgram);
+    setSelectedYearLevel('');
+    setSelectedSemester('');
+    setSelectedSection('');
+    
+  };
 
-    fetchData();
-  }, []);
+  const handleYearLevelChange = (e) => {
+    const selectedYear = e.target.value;
+    setSelectedYearLevel(selectedYear);
+    setSelectedSemester('');
+    setSelectedSection('');
+    
+  };
+
+  const handleSemesterChange = (e) => {
+    const level = (e.target.value);
+    setSelectedSemester(level);
+    setSelectedSection('');
+    
+  };
+
+  const handleSectionChange = (e) => {
+    const selectedSection = e.target.value;
+    setSelectedSection(selectedSection)
+    
+  };
+
+
+  const getSemesterText = (sem) => {
+    switch (sem) {
+      case 1:
+        return "First";
+      case 2:
+        return "Second";
+      case 3:
+        return "Summer";
+      default:
+        return `${sem}`;
+    }
+  };
+  
+  const selectedProgramData = mappedData?.filter(p => p.academicYear === selectedAcademicYear)
+                                        ?.flatMap(p => p.programs)
+                                        ?.filter(p => p.programName === selectedProgram)
+                                        ?.flatMap(p => p.yearLevels);
+
+  const selectedYearData = mappedData?.filter(p => p.academicYear === selectedAcademicYear)
+                                     ?.flatMap(p => p.programs)
+                                     ?.filter(p => p.programName === selectedProgram)
+                                     ?.flatMap(p => p.yearLevels)
+                                     ?.filter(p => p.yearLevel === Number(selectedYearLevel))
+                                     ?.flatMap(p => p.semesters);
 
   const columns = ["ITEM", "SNUMBER", "STUDENT NAME", "PAN101", "HUM101", "STS101", "VE101", "NSTP102", "PE12", "LIT101"];
   const weightedColumns = ["PAN101", "HUM101", "STS101", "VE101", "NSTP102", "PE12", "LIT101", "WGA"];
   const professors = ["Oreta", "Gatdula", "Escaran", "Sagun", "Bautista", "Dela Cruz", "Ramos"];
 
   const handleView = () => {
-    const selectedProgram = programs.find((prog) => prog.programName === program);
-    if (selectedProgram && academicYear && yearLevel && semester) {
-      setSelectedProgramId(selectedProgram.id);
+    if (selectedAcademicYear && selectedProgram && selectedYearLevel && selectedSemester) {
+      fetchSections();
     } else {
-      setSelectedProgramId(null);
+      alert("Please complete all filters (Academic Year, Program, Year Level, Semester, Section) to view schedules.");
     }
   };
   
@@ -488,57 +625,71 @@ const MasterlistOfGradesTable = () => {
     printWindow.document.close();
   };
   
-  
-  
-  
-
-  
-
 
   return (
     <div>
       <Row className="mb-4 bg-white rounded p-3 m-1">
-        <Col>
+      <Col xs={12} sm={6} md={4} lg={2} className='mb-3'>
           <Form.Group controlId="academicYear">
             <Form.Label>Academic Year</Form.Label>
-            <Form.Control as="select" value={academicYear} onChange={(e) => setAcademicYear(e.target.value)}>
-              {academicYears.map((year) => (
-                <option key={year.id} value={year.academicYear}>
-                  {year.academicYear}
+            <Form.Control as="select" value={selectedAcademicYear} onChange={handleAcademicYearChange}>
+              <option value="">Select Academic Year</option>
+              {academicYears.sort((a, b) => {
+                let yearA = parseInt(a.academicYear.split('-')[0]);
+                let yearB = parseInt(b.academicYear.split('-')[0]);
+                return yearB - yearA; // Sorting in descending order
+              })
+              .map((program) => (
+                <option key={program.academicYear} value={program.academicYear}>
+                  {program.academicYear}
                 </option>
               ))}
             </Form.Control>
           </Form.Group>
         </Col>
-        <Col>
-          <Form.Group controlId="yearLevel">
-            <Form.Label>Year Level</Form.Label>
-            <Form.Control as="select" value={yearLevel} onChange={(e) => setYearLevel(e.target.value)}>
-              {yearLevels.map((level) => (
-                <option key={level.id} value={level.yearName}>
-                  {level.yearName}
-                </option>
-              ))}
-            </Form.Control>
-          </Form.Group>
-        </Col>
-        <Col>
-          <Form.Group controlId="semester">
-            <Form.Label>Semester</Form.Label>
-            <Form.Control as="select" value={semester} onChange={(e) => setSemester(e.target.value)}>
-              <option value="First">First</option>
-              <option value="Second">Second</option>
-            </Form.Control>
-          </Form.Group>
-        </Col>
-        <Col>
+        <Col  xs={12} sm={6} md={4} lg={2} className='mb-3'>
           <Form.Group controlId="program">
             <Form.Label>Program</Form.Label>
-            <Form.Control as="select" value={program} onChange={(e) => setProgram(e.target.value)}>
-              {programs.map((prog) => (
-                <option key={prog.id} value={prog.programName}>
-                  {prog.programName}
-                </option>
+            <Form.Control as="select" value={selectedProgram} onChange={handleProgramChange}
+              disabled={!selectedAcademicYear}>
+            <option value="">Select Program</option>
+              {mappedData
+                ?.filter(p => p.academicYear === selectedAcademicYear)
+                ?.flatMap(p => p.programs)
+                .map((program) => (
+                  <option key={program.programNumber} value={program.programNumber}>
+                    {program.programName}
+                  </option>
+              ))}
+            </Form.Control>
+          </Form.Group>
+        </Col>
+        <Col xs={12} sm={6} md={4} lg={2} className='mb-3'>
+          <Form.Group controlId="yearLevel">
+            <Form.Label>Year Level</Form.Label>
+            <Form.Control as="select" value={selectedYearLevel} onChange={handleYearLevelChange}
+              disabled={!selectedAcademicYear || !selectedProgram}>
+              <option value="">Select Year Level</option>
+              {selectedProgramData // Get year levels for selected academic year
+                ?.map(level => (
+                  <option key={level.yearLevel} value={level.yearLevel}>
+                    Year {level.yearLevel}
+                  </option>
+              ))}
+            </Form.Control>
+          </Form.Group>
+        </Col>
+        <Col xs={12} sm={6} md={4} lg={2} className='mb-3'>
+          <Form.Group controlId="semester">
+            <Form.Label>Semester</Form.Label>
+            <Form.Control as="select" value={selectedSemester} onChange={handleSemesterChange}
+              disabled={!selectedYearLevel || !selectedAcademicYear || !selectedProgram}>
+            <option value="">Select Semester</option>
+              {selectedYearData
+                ?.map((sem, index) => (
+                  <option key={index} value={sem}>
+                    {getSemesterText(sem)}
+                  </option>
               ))}
             </Form.Control>
           </Form.Group>
@@ -549,21 +700,20 @@ const MasterlistOfGradesTable = () => {
         </Col>
       </Row>
 
-      {selectedProgramId && (
+     
         <div id="printableTable" style={{ overflowX: 'auto', marginBottom: '20px' }}>
           <h5 className="text-center">{program}</h5>
           {sections.map((section, sectionIndex) => (
             <Table bordered key={sectionIndex} className="text-center">
               <thead className='table-success'>
                 <tr>
-                  <th colSpan="3" className='custom-color-green-font'>{`${program} - ${section}`}</th>
-                  {columns.slice(3).map((col, index) => (
-                    <th key={index} className='custom-color-green-font'>{professors[index]}</th>
-                  ))}
+                <th colSpan="3" className='custom-color-green-font'>
+                    {`${section.sectionNumber}`}
+                  </th>
                   <th colSpan={weightedColumns.length} className='custom-color-green-font'>
                     WEIGHTED GRADE AVERAGE
                   </th>
-                  <th rowSpan={2} className='custom-color-green-font'>Certificate of Grades (COG)</th>
+                 
                 </tr>
                 <tr>
                 {columns.map((col, index) => (
@@ -572,6 +722,8 @@ const MasterlistOfGradesTable = () => {
                 {weightedColumns.map((col, index) => (
                   <th key={`wg-${index}`} className="bg-success text-white">{col}</th> // Corrected here
                 ))}
+
+                <th rowSpan={2} className='custom-color-green-font'>Certificate of Grades (COG)</th>
               </tr>
               </thead>
 
@@ -600,7 +752,7 @@ const MasterlistOfGradesTable = () => {
             </Table>
           ))}
         </div>
-      )}
+  
 
        {/* Modal for COG */}
        <Modal show={showModal} onHide={closeModal} className="modal-xxl" centered>

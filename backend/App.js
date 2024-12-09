@@ -886,7 +886,7 @@ app.put('/schedule/update', async (req, res) => {
     }
 });
 
-app.post('/submission', async (req, res) => {
+app.post('/submission/bySchedule', async (req, res) => {
     const { scheduleNumber } = req.body;
     try {
         const { data, error } = await supabase
@@ -900,23 +900,24 @@ app.post('/submission', async (req, res) => {
 
         res.json(data);
     } catch (error) {
-        console.error('Error fetching schedules:', error);
+        console.error('Error fetching submission:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
 
 app.post('/submission/upload', async (req, res) => {
     try {
-        const { submissionData } = req.body;
+        const newSubmissionData = req.body.data;
 
-        // Check if submissionData is defined and is an array
-        if (!submissionData || submissionData.length === 0) {
-            return res.status(400).json({ message: 'Invalid data format or no submissionData to insert' });
+        // Check if newSubmissionData is defined and is an array
+        if (!newSubmissionData || !Array.isArray(newSubmissionData) || newSubmissionData.length === 0) {
+            return res.status(400).json({ message: 'Invalid data format or no submission to insert' });
         }
 
+        // Insert multiple schedules into the database (e.g., Supabase)
         const { data, error } = await supabase
             .from('submission')
-            .insert(submissionData);
+            .insert(newSubmissionData);
 
         if (error) {
             console.error('Supabase error:', error);

@@ -319,15 +319,7 @@ const handleAddSubmission = async (scheduleData) => {
     }
   }, [selectedAcademicYear, selectedProgram, selectedYearLevel, selectedSemester]);
   
-  const handleAcademicYearChange = (e) => {
-    const selectedYear = e.target.value;
-    setSelectedAcademicYear(selectedYear);
-    setSelectedProgram('');  // Reset dependent fields
-    setSelectedYearLevel('');
-    setSelectedSemester('');
-    setSelectedSection('');
-    
-  };
+
   
   const handleView = () => {
     if (selectedAcademicYear && selectedProgram && selectedYearLevel && selectedSemester && selectedSection) {
@@ -337,6 +329,16 @@ const handleAddSubmission = async (scheduleData) => {
     }
   };
 
+
+  const handleAcademicYearChange = (e) => {
+    const selectedYear = e.target.value;
+    setSelectedAcademicYear(selectedYear);
+    setSelectedProgram('');  // Reset dependent fields
+    setSelectedYearLevel('');
+    setSelectedSemester('');
+    setSelectedSection('');
+    
+  };
 
   const handleProgramChange = (e) => {
     const selectedProgram = e.target.value;
