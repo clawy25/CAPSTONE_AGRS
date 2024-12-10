@@ -451,9 +451,8 @@ const ProgramHeadClassDesig = () => {
                                      ?.flatMap(p => p.semesters);
   return (
     <div>
-      {/* First Row for Academic Year */}
-      <Row className="mb-2 bg-white rounded p-3 m-1">
-        <Col xs={6} sm={4}>
+      <Row className="mb-4 bg-white rounded p-3 m-1 d-flex justify-items-center align-items-center">
+      <Col>
           <Form.Group controlId="academicYear">
             <Form.Label>Academic Year</Form.Label>
             <Form.Control as="select" value={selectedAcademicYear} onChange={handleAcademicYearChange}>
@@ -471,10 +470,6 @@ const ProgramHeadClassDesig = () => {
             </Form.Control>
           </Form.Group>
         </Col>
-      </Row>
-
-      {/* Second Row for Program, Year Level, Semester */}
-      <Row className="mb-4 bg-white rounded p-3 m-1">
         <Col>
           <Form.Group controlId="program">
             <Form.Label>Program</Form.Label>
@@ -522,11 +517,7 @@ const ProgramHeadClassDesig = () => {
             </Form.Control>
           </Form.Group>
         </Col>
-      </Row>
-
-      {/* Section Selection on a New Line */}
-      <Row className="mb-4 bg-white rounded p-2 m-1">
-        <Col xs={6} sm={4}>
+        <Col className='mt-4'>
           <Form.Group controlId="section">
             <Form.Control as="select" value={selectedSection} onChange={handleSectionChange}
               disabled={!selectedYearLevel || !selectedAcademicYear || !selectedSemester || !selectedProgram}>

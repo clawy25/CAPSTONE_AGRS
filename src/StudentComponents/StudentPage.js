@@ -4,6 +4,7 @@ import '../App.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 import StudentModel from '../ReactModels/StudentModel';
+import Forgotpassword from '../ForgotPassword';
 import { UserContext } from '../Context/UserContext';
 
 export default function StudentPage() {
@@ -74,6 +75,10 @@ export default function StudentPage() {
       setError('Account does not exist. Try again.');
     }
   };
+
+  const handleForgotpassword = () => {
+    navigate('/ForgotPassword');
+  }
 
   const handleBackClick = () => {
     navigate('/login');
@@ -153,6 +158,12 @@ export default function StudentPage() {
               className="btn bg-custom-color-yellow custom-font custom-button fs-5 fw-semibold"
               type="submit">
               Login
+            </button>
+
+            <button
+              className="btn bg-transparent custom-color-font fs-5 fw-semibold mt-3"
+              onClick={handleForgotpassword}>
+              Forgot Password
             </button>
           </form>
           <button

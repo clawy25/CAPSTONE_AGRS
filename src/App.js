@@ -18,6 +18,7 @@ import RegistrarPage from './RegistrarComponents/RegistrarPage';
 import ProgramHeadDashboard from './ProgramHeadComponents/ProgramHeadDashboard';
 import ProgramHeadPage from './ProgramHeadComponents/ProgramHeadPage';
 import StudentEnrollmentSchedule from './StudentComponents/StudentEnrollmentSchedule';
+import ForgotPassword from './ForgotPassword';
 import ErrorPage from './ErrorPage';
 
 const App = () => {
@@ -42,6 +43,7 @@ const App = () => {
         <Route path="/programHead-dashboard" element={<ProgramHeadDashboard />} /> 
         <Route path="*" element={<ErrorPage />} />
         <Route path="/studentEnrollmentSchedule" element={<StudentEnrollmentSchedule/>} />
+        <Route path="/ForgotPassword" element={<ForgotPassword />} />
       </Routes>
     </UserProvider>
   );

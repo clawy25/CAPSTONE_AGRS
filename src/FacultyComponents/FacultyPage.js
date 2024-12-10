@@ -14,6 +14,10 @@ export default function FacultyPage() {
   const { setUser } = useContext(UserContext);
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+
+  const handleForgotpassword = () => {
+    navigate('/ForgotPassword');
+  }
     
 
     const handleLogin = async (e) => {
@@ -160,6 +164,12 @@ export default function FacultyPage() {
                     className="btn bg-custom-color-yellow custom-font custom-button fs-5 fw-semibold"
                     type="submit">
                         Login
+                </button>
+
+                <button
+                    className="btn bg-transparent custom-color-font fs-5 fw-semibold mt-3"
+                    onClick={handleForgotpassword}>
+                    Forgot Password
                 </button>
             </form>
             

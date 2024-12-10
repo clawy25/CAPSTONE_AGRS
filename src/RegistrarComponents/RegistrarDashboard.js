@@ -7,6 +7,7 @@ import RegistrarStudents from './RegistrarStudents';
 import RegistrarGrades from './RegistrarGrades';
 import RegistrarProfessor from './RegistrarProfessor';
 import RegistrarStaff from './RegistrarStaff';
+import RegistrarProfile from './RegistrarProfile';
 import '../App.css';
 import { UserContext } from '../Context/UserContext';
 import CSOG from './CSOG';
@@ -186,6 +187,7 @@ export default function RegistrarDashboard() {
           <Route path="grades-submission" element={<RegistrarProfessor />} />
           <Route path="staff/*" element={<RegistrarStaff />} />
           <Route path="academicYear" element={<HeadRegistrarAcademicYear />} />
+          <Route path="profile" element={<RegistrarProfile />} />
         </Routes>
       </div>
     </div>

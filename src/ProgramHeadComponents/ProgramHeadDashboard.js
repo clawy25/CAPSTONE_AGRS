@@ -9,6 +9,8 @@ import ProgramHeadClassDesig from './ProgramHeadClassDesig';
 import CurriculumPage from './CurriculumPage'; 
 import ProgramHeadMOG from './ProgramHeadMOG';
 import ProgramHeadCSOG from './ProgramHeadCSOG';
+import PersonnelModel from '../ReactModels/PersonnelModel';
+import AcademicYearModel from '../ReactModels/AcademicYearModel';
 
 export default function ProgramHeadDashboard() {
   const navigate = useNavigate();
@@ -20,6 +22,45 @@ export default function ProgramHeadDashboard() {
   const [selectedProgram, setSelectedProgram] = useState(null);
   const [showGradesSubMenu, setShowGradesSubMenu] = useState(false);
   const [showClassDesignationSubMenu, setShowClassDesignationSubMenu] = useState(false);
+  const [personnelInfo, setPersonnelInfo] = useState([]);
+
+    const fetchPersonnelData = async () => {
+        try {
+            // Fetch all academic years
+            const academicYearData = await AcademicYearModel.fetchExistingAcademicYears();
+            console.log("Academic years:", academicYearData);
+    
+            // Find the current academic year
+            const currentAcademicYear = academicYearData.find(year => year.isCurrent);
+            if (!currentAcademicYear) {
+                console.error("No current academic year found");
+                return;
+            }
+            console.log("Current academic year:", currentAcademicYear.academicYear);
+    
+            // Fetch personnel data using programNumber and current academic year
+            const personnelData = await PersonnelModel.getProfessorsbyProgram(user.programNumber, currentAcademicYear.academicYear);
+            console.log("Personnel data:", personnelData);
+
+            const findPersonnel = personnelData.find(personnel => personnel.personnelNumber === user.personnelNumber);
+            console.log("Personnel matched",findPersonnel)
+    
+            if (findPersonnel) {
+                setPersonnelInfo(findPersonnel);
+            } else {
+                console.error("Cannot fetch the personnel data");
+            }
+
+
+        } catch (error) {
+            console.error("Error in fetchPersonnelData:", error);
+        }
+    };
+    
+
+    useEffect(() => {
+        fetchPersonnelData()
+    }, [user.personnelNumber]) 
   const dropdownRef = useRef(null);
 
   // Constants for section names
@@ -216,7 +257,7 @@ export default function ProgramHeadDashboard() {
         </header>
 
         {/* Main Content Section based on selected section */}
-        <div className="content-section m-3">
+        <div className="content-section">
           {/* MOG Section */}
           {selectedSection === SECTIONS.MOG && <ProgramHeadMOG />}
 
@@ -237,16 +278,57 @@ export default function ProgramHeadDashboard() {
           {selectedSection === SECTIONS.CURRICULUM && <CurriculumPage />}
 
           {selectedSection === 'profile' && (
-          <section className="card border-success p-3">
-            <h2 className="custom-color-green-font custom-font">Profile</h2>
-            <div className="custom-font custom-color-green-font fs-6 mb-2">Student Number: 2020-00202-PQ-O</div>
-            <input type="text" placeholder="First Name" className="form-control custom-color-green-font mb-2" required />
-            <input type="text" placeholder="Last Name" className="form-control custom-color-green-font mb-2" required />
-            <input type="email" placeholder="Email" className="form-control custom-color-green-font mb-2" required />
-            <button className="btn custom-color-font bg-custom-color-green p-2" onClick={() => alert('Profile information saved!')}>
-              Save
-            </button>
-          </section>
+          <div className="card bg-white rounded">
+          <div className="card-header bg-white">
+              <p className="fs-5 fw-semibold my-2">{user.personnelNameLast}, {user.personnelNameFirst} {user.personnelNameMiddle} ({user.personnelNumber})</p>
+          </div>
+          <div className="card-body">
+              <div className="row d-flex justify-content-center align-items-center">
+                  <div className="col">
+                      <p className="fs-6">Personnel Number: </p>
+                      <p className="fs-6">Personnel Name: </p>
+                      <p className="fs-6">Gender: </p>
+                      <p className="fs-6">Date of Birth: </p>                    
+                  </div>
+                  <div className="col">
+                      <p className="fs-6 mb-2 fw-semibold">{user.personnelNumber}</p>
+                      <p className="fs-6 mb-3 fw-semibold">{user.personnelNameFirst} {user.personnelNameMiddle} {user.personnelNameLast}</p>
+                      <p className="fs-6 mb-2 fw-semibold">{personnelInfo.personnelSex}</p>
+                      <p className="fs-6 mb-2 fw-semibold">{personnelInfo.personnelBirthDate}</p>
+                  </div>
+                  <div className="col">
+                      <p className="fs-6">Personnel Type: </p>
+                      <p className="fs-6">Mobile No.: </p>
+                      <p className="fs-6">Email Address: </p>
+                      <p className="fs-6">Home Address: </p>
+                  </div>
+                  <div className="col">
+                      <p className="fs-6 mb-3 fw-semibold">{personnelInfo.personnelType}</p>
+                      <input 
+                          type="text" 
+                          className="fs-6 mb-3 fw-semibold" 
+                          value={personnelInfo.personnelContact || ''} 
+                          readOnly
+                      />
+                      <input 
+                          type="text" 
+                          className="fs-6 mb-3 fw-semibold d-block" 
+                          value={personnelInfo.personnelEmail || ''} 
+                          readOnly
+                      />
+                      <input 
+                          type="text" 
+                          className="fs-6 mb-2 fw-semibold" 
+                          value={personnelInfo.personnelAddress || ''} 
+                          readOnly
+                      />
+                  </div>
+              </div>
+          </div>
+          <div className="card-footer p-2 bg-white">
+              <button className="btn btn-success">Save</button>
+          </div>
+      </div>
         )}
 
         {selectedSection === 'change-password' && (
