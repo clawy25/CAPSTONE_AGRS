@@ -37,14 +37,14 @@ export default class SubmissionModel {
   }
 }
 
-static async createAndInsertSubmission(submissionData) {
+static async createAndInsertSubmission(newSubmissionData) {
   try {
       const response = await fetch(`http://localhost:5000/submission/upload`, {
           method: 'POST',
           headers: {
               'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ data: submissionData }),
+          body: JSON.stringify({ data: newSubmissionData }),
       });
       if (!response.ok) {
           throw new Error('Error inserting submission data');

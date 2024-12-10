@@ -23,6 +23,7 @@ const ClassDetails = ({classList , classDetails}) => {
   const [classInfo, setClassInfo] = useState(classDetails[0]);
 
   const [classGradeData, setClassGradeData] = useState([]);
+  const [attendanceLabelData, setAttendanceLabelData] = useState([]);
 
   const [showModal, setShowModal] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
@@ -65,6 +66,10 @@ const ClassDetails = ({classList , classDetails}) => {
 
       const attendanceDates = await AttendanceModel.fetchAttendanceData(myClass);
 
+      const midtermAttendanceDates = attendanceDates.filter(item => item.period === 1); // Midterm (Period 1)
+      const finalAttendanceDates = attendanceDates.filter(item => item.period === 2); // Finals (Period 2)
+
+      console.log(attendanceDates);
       const studentNumbers = students.map(student => student.studentNumber);
 
       console.log(studentNumbers);
@@ -111,12 +116,15 @@ const ClassDetails = ({classList , classDetails}) => {
       console.log('Grouped Grades:', groupedGrades);
 
 
-      setmidtermAttendance(groupedGrades.midterm?.Attendance);
-      setmidtermAttendanceLabels(attendanceDates);
+      setmidtermAttendance(groupedGrades.midterm?.Attendance);//Initialize the rows to db as soon as they are fetched
+      setmidtermAttendanceLabels(midtermAttendanceDates);
+      
+      setfinalAttendance(groupedGrades.midterm?.Attendance);//Initialize the rows to db as soon as they are fetched
+      setfinalAttendanceLabels(finalAttendanceDates);
 
       const ToMidtermAttendanceColumns = transformAttendanceData(
         groupedGrades.midterm?.Attendance ? groupedGrades.midterm.Attendance : [],
-        attendanceDates ? attendanceDates : []
+        midtermAttendanceDates ? midtermAttendanceDates : []
       );
 
       if(ToMidtermAttendanceColumns){// Initializing midtermAttendanceColumns and midtermAttendanceData
@@ -139,6 +147,33 @@ const ClassDetails = ({classList , classDetails}) => {
           return acc;
         }, {});
         setmidtermAttendanceData(initialData);//Initialize midtermAttendanceData
+      }
+
+      const ToFinalAttendanceColumns = transformAttendanceData(
+        groupedGrades.finals?.Attendance ? groupedGrades.finals.Attendance : [],
+        finalAttendanceDates ? finalAttendanceDates : []
+      );
+
+      if(ToFinalAttendanceColumns){// Initializing finalsAttendanceColumns and finalsAttendanceData
+        //If successfully created pre-initialized midtermAttendanceColumns, sort them by names, then update midtermAttendanceData to sync
+
+        //Sorting them to match the indexes from student ClassList
+        ToFinalAttendanceColumns[0].grade.sort((a, b) => {
+          return studentNumbers.indexOf(a.studentNumber) - studentNumbers.indexOf(b.studentNumber);
+        });
+        setfinalsAttendanceColumns(ToFinalAttendanceColumns); //Initialize midtermAttendanceColumns
+
+        const initialData = ToFinalAttendanceColumns.reduce((acc, column, dateIndex) => {
+          column.grade.forEach((entry, studentIndex) => {
+            if (!acc[studentIndex]) acc[studentIndex] = []; // Ensure each student has their own array
+            acc[studentIndex][dateIndex] = { 
+              date: column.date, 
+              status: entry.status 
+            };
+          });
+          return acc;
+        }, {});
+        setfinalsAttendanceData(initialData);//Initialize midtermAttendanceData
       }
     } catch (error) {
       console.error("Error submitting class record:", error);
@@ -173,16 +208,22 @@ const ClassDetails = ({classList , classDetails}) => {
   const handleSubmit = async () => {
     try{
       // For Submission Status
-      const submissionData = {
-        scheduleNumber: classInfo.scheduleNumber,
-        submissionStatus: 'Pending'
-      };
-      const submission = await SubmissionModel.createAndInsertSubmission(submissionData);
+      // const submissionData = {
+      //   created_at: new Date(),
+      //   scheduleNumber: classInfo.scheduleNumber,
+      //   submissionStatus: 'Pending'
+      // };
 
-      const grade = await GradeModel.updateGradeData(midtermAttendance);//Change to classGradeData later
+      // console.log(submissionData);
 
-      const attendance = await AttendanceModel.updateAttendanceData(midtermAttendanceLabels);
-      if (submission && grade && attendance){
+      // const submission = await SubmissionModel.createAndInsertSubmission(submissionData);
+
+      const [grade, attendance] = await Promise.all([
+        GradeModel.updateGradeData(classGradeData),
+        AttendanceModel.updateAttendanceData(attendanceLabelData)
+      ]);
+
+      if (grade && attendance){
         handleModalShow('submitted');
       }
     } catch (error){
@@ -190,17 +231,17 @@ const ClassDetails = ({classList , classDetails}) => {
     }
   };
 
-  const handleSave = async () => {
-    try{
-      const grade = await GradeModel.updateGradeData(midtermAttendance);
+  // const handleSave = async () => {
+  //   try{
+  //     const grade = await GradeModel.updateGradeData(midtermAttendance);
 
-      if (grade){
-        handleModalShow('submitted');
-      }
-    } catch (error){
-      console.error("Error submitting class record:", error);
-    }
-  };
+  //     if (grade){
+  //       handleModalShow('submitted');
+  //     }
+  //   } catch (error){
+  //     console.error("Error submitting class record:", error);
+  //   }
+  // };
 
   const handlePost = () => {
     // Your post logic here
@@ -428,10 +469,12 @@ const handlePrint = () => {
   {/*FOR FINALS*/}
 
   {/* ATTENDANCE DECLARATION */}
-  const [finalsAttendanceColumns, setfinalsAttendanceColumns] = useState([{ id: 1, date: new Date().toLocaleDateString('en-CA') }]);
+  const [finalsAttendanceColumns, setfinalsAttendanceColumns] = useState([{ id: 1 }]);
   const [finalsTotalAttendanceDays, setfinalsTotalAttendanceDays] = useState(0);
   const [finalsAttendanceData, setfinalsAttendanceData] = useState([]);
   const [finalsAttendancePercentage, setfinalsAttendancePercentage] = useState(); // Default value of 0
+  const [finalAttendance, setfinalAttendance] = useState([]); //Storing raw values (PLEA) for db upsertion
+  const [finalAttendanceLabels, setfinalAttendanceLabels] = useState([]); //Storing attendance column dates for db upsertion
 
   {/* ASSIGNMENT DECLARATION */}
   const [finalsAssignmentColumns, setfinalsAssignmentColumns] = useState([]);
@@ -576,7 +619,7 @@ const removeAttendanceColumn = (index, setColumns, setAttendanceData) => {
     );
   };
 
-  useEffect(() => {//Automatic Generation of objects for database storage (Attendance)
+  useEffect(() => {//Automatic Generation of objects for database storage (Attendance: Midterm)
     const AttendanceData = []; //For Database: gradeData
     const AttendanceColumns = []; //For Database: attendanceData
 
@@ -602,14 +645,13 @@ const removeAttendanceColumn = (index, setColumns, setAttendanceData) => {
   
     const filteredAttendance = AttendanceData.filter(attendance => attendance.value !== "Select");
     
-    //console.log("Rows for Database:",filteredAttendance);
+    console.log("Rows for Database:",filteredAttendance);
     //console.log("List of Dates:", AttendanceColumns);
     setmidtermAttendance(filteredAttendance); //Storing raw values
     setmidtermAttendanceLabels(AttendanceColumns);
   }, [midtermAttendanceColumns, classInfo]);
 
-
-  const handleFinalsAttendanceChange = (studentId, dateIndex, status) => {
+  const handleFinalsAttendanceChange = (studentId, studentNumber, dateIndex, status) => {
     setfinalsAttendanceData((prevData) => {
       const studentAttendance = prevData[studentId] || [];
       const updatedAttendance = [...studentAttendance];
@@ -621,7 +663,77 @@ const removeAttendanceColumn = (index, setColumns, setAttendanceData) => {
         [studentId]: updatedAttendance,
       };
     });
+    setfinalsAttendanceColumns((prevColumns) => 
+      prevColumns.map((column, index) => {
+        if (index !== dateIndex) return column;//Check if this is the correct date (based on dateIndex)
+        
+        if (index === dateIndex) {// Create a new grade array (don't mutate the original array)
+          const updatedGrade = [...column.grade];
+          // Find the student in the grade array
+          const studentIndex = updatedGrade.findIndex((entry) => entry.studentNumber === studentNumber);
+  
+          if (studentIndex !== -1) {
+            // Update existing student's status
+            updatedGrade[studentIndex] = { 
+              ...updatedGrade[studentIndex], 
+              status 
+            };
+          } else {
+            // Add new student entry to grade array
+            updatedGrade.push({
+              studentNumber: studentNumber,
+              status
+            });
+          }
+  
+          // Return the updated column with the updated grade array
+          return {
+            ...column,
+            grade: updatedGrade
+          };
+        } 
+        return column; // If this is not the correct column, return it unchanged
+      })
+    );
   };
+  useEffect(() => {//Automatic Generation of objects for database storage (Attendance: Finals)
+    const AttendanceData = []; //For Database: gradeData
+    const AttendanceColumns = []; //For Database: attendanceData
+
+    finalsAttendanceColumns?.forEach((column, index) => {
+      AttendanceColumns.push({
+          scheduleNumber: classInfo.scheduleNumber,
+          period: 2,
+          instanceNumber: index + 1,
+          attendanceLabel: column.date
+      });
+      column.grade?.forEach((student) => {
+        
+        AttendanceData.push({
+          scheduleNumber: classInfo.scheduleNumber, 
+          studentNumber: student.studentNumber, 
+          componentNumber: 1, 
+          instanceNumber: index + 1, 
+          period: 2, 
+          value: student.status 
+        });
+      });
+    });
+  
+    const filteredAttendance = AttendanceData.filter(attendance => attendance.value !== "Select");
+    
+    console.log("Rows for Database:",filteredAttendance);
+    console.log("List of Dates:", AttendanceColumns);
+    setfinalAttendance(filteredAttendance); //Storing raw values
+    setfinalAttendanceLabels(AttendanceColumns);
+  }, [finalsAttendanceColumns, classInfo]);
+
+  useEffect(() => {
+    const combinedClassGradeData = [...midtermAttendance, ...finalAttendance];
+    const combinedAttendanceLabelData = [...midtermAttendanceLabels, ...finalAttendanceLabels];
+    setClassGradeData(combinedClassGradeData);
+    setAttendanceLabelData(combinedAttendanceLabelData);
+  }, [midtermAttendance, finalAttendance, midtermAttendanceLabels, finalAttendanceLabels]);
 
   {/*ATTENDANCE TOTALS FOR BOTH PERIOD (COMPLETE)*/}
   const getMidtermAttendanceTotals = (studentId) => {
@@ -2186,26 +2298,28 @@ const handlePercentageChange = (setter, value) => {
                   Name
                 </th>
                 {finalsAttendanceColumns.map((column, index) => (
-                <th key={index} rowSpan="3" className='sticky-top-left'>
-                <DatePicker
-                  selected={column.date}
-                  onChange={(date) =>
-                    setfinalsAttendanceColumns((prevColumns) =>
-                      prevColumns.map((col, i) => (i === index ? { ...col, date } : col))
-                    )
-                  }
-                  dateFormat="yyyy-MM-dd"
-                  className="custom-datepicker" // Add custom class for width control
-                />
-                <button
-                  onClick={() => removeColumn(index, setfinalsAttendanceColumns)}
-                  style={{ background: 'none', border: 'none' }}
-                >
-                  <FontAwesomeIcon icon={faMinus} />
-                </button>
-              </th>
-              
-              ))}
+                  <th key={index} rowSpan="3" className='sticky-top-left-up'>
+                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                  {index === finalsAttendanceColumns.length - 1 && ( // Show button only for the last column
+                    <button
+                      onClick={() => removeAttendanceColumn(index, setfinalsAttendanceColumns, setfinalsAttendanceData)}
+                      style={{ background: 'none', border: 'none', marginRight: '10px' }}
+                    >
+                      <FontAwesomeIcon icon={faMinus} />
+                    </button>
+                  )}
+                  <DatePicker
+                    selected={column.date}
+                    onChange={(date) => {
+                      const formattedDate = date.toLocaleDateString('en-CA');
+                      setfinalsAttendanceColumns((prevColumns) =>
+                      prevColumns.map((col, i) => (i === index ? { ...col, date:formattedDate, grade: [] } : col)))}}
+                    dateFormat="yyyy-MM-dd"
+                    className="custom-datepicker"
+                  />
+                  </div>
+                  </th>
+                ))}
   
                 <th rowSpan="3" style={{ background: '#d1e7dd', position: 'sticky',left: 0,top: 42,padding: '0px',zIndex: 1,boxShadow: '1px 0 0 rgba(0, 0, 0, 0.1)', }}>
                   <button onClick={() => addColumn(setfinalsAttendanceColumns)} style={{ background: 'none', border: 'none' }}>
@@ -2420,13 +2534,12 @@ const handlePercentageChange = (setter, value) => {
                       {student.studentNameLast || ''}, {student.studentNameFirst || ''} {student.studentNameMiddle || ''}
                     </td>
 
-
-                      {finalsAttendanceColumns.map((_, dateIndex) => (
-                      <td key={dateIndex}>
+                    {finalsAttendanceColumns.map((dateColumn, dateIndex) => (
+                      <td key={dateColumn.id}>
                         <select
-                          defaultValue={finalsAttendanceData[student.id]?.[dateIndex]?.status || 'Select'}
-                          onChange={(e) => handleFinalsAttendanceChange(student.id, dateIndex, e.target.value)}
-                        >
+                          disabled={!dateColumn?.date}
+                          value={dateColumn?.grade?.find((entry) => entry.studentNumber === student.studentNumber)?.status || "Select"}
+                          onChange={(e) => {handleFinalsAttendanceChange(student.id, student.studentNumber, dateIndex, e.target.value);}}>
                           <option value="Select">Select</option>
                           <option value="P">P</option>
                           <option value="L">L</option>
@@ -3016,7 +3129,7 @@ const handlePercentageChange = (setter, value) => {
             padding: '10px 20px',
             cursor: 'pointer',
           }}
-          onClick={handleSubmit} // Attach handler for Submit
+          onClick={handleSubmit} // Attach handler for Submit to ProgramHead
         >
           SUBMIT
         </button>
@@ -3030,7 +3143,7 @@ const handlePercentageChange = (setter, value) => {
             cursor: 'pointer',
             marginLeft: '10px',
           }}
-          onClick={handlePost} // Attach handler for Post
+          onClick={handlePost} // Attach handler for Post to Students
         >
           POST
         </button>
