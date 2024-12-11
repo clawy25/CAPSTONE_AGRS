@@ -3,12 +3,13 @@ import { Table, Form, Button, Row, Col, Modal } from 'react-bootstrap';
 import AcademicYearModel from '../ReactModels/AcademicYearModel';
 import ProgramModel from '../ReactModels/ProgramModel';
 import CourseModel from '../ReactModels/CourseModel';
-import EnrollmentModel from '../ReactModels/EnrollmentModel';
-import StudentModel from '../ReactModels/StudentModel';
 import SectionModel from '../ReactModels/SectionModel';
 import ScheduleModel from '../ReactModels/ScheduleModel';
 import PersonnelModel from '../ReactModels/PersonnelModel';
+import EnrollmentModel from '../ReactModels/EnrollmentModel';
+import StudentModel from '../ReactModels/StudentModel'
 import { UserContext } from '../Context/UserContext';
+import '../App.css'
 
 const Sections = () => {
   const { user } = useContext(UserContext);
@@ -17,10 +18,10 @@ const Sections = () => {
   const [selectedYearLevel, setSelectedYearLevel] = useState('');
   const [selectedSemester, setSelectedSemester] = useState('');
   const [selectedSection, setSelectedSection] = useState('');
+  const [students, setStudents] = useState('');
 
   const [academicYears, setAcademicYears] = useState([]);
   const [mappedData, setMappedData] = useState([]);
-  const [classList, setClassList] = useState([]);
   
   const [newSection, setNewSection] = useState(null);
   
@@ -215,93 +216,89 @@ const Sections = () => {
   }, [selectedAcademicYear, selectedProgram, selectedYearLevel, selectedSemester, functionCalled]);
 
   const handleView = () => {
-    if (selectedAcademicYear && selectedProgram && selectedYearLevel && selectedSemester && selectedSection) {
-      handleClassList();
-      setShowTable(true);
+    if (selectedAcademicYear && selectedYearLevel && selectedSemester && selectedSection) {
+      setShowTable(true); 
+      fetchAndCombineData()
     }
   };
 
-  const handleClassList = async () => {
+  //students
+  const fetchAndCombineData = async () => {
     try {
-      // Fetch data from all models in parallel
-      const [enrollments, schedules, students] = await Promise.all([
-        EnrollmentModel.fetchAllEnrollment(),
-        ScheduleModel.fetchSchedules(),
-        StudentModel.fetchExistingStudents(),
-      ]);
-
-      // Create Maps for faster lookups
-      const studentMap = new Map(students.map(student => [student.studentNumber, student]));
-      const scheduleMap = new Map(schedules.map(schedule => [schedule.scheduleNumber, schedule]));
-      //const courseMap = new Map(courses.map(course => [course.courseCode, course]));
-
-      // Map over enrollments to create class list
-      const mappedData = enrollments.map((enrollment) => {
-        const matchedStudent = studentMap.get(enrollment.studentNumber) || {};
-        const matchedSchedule = scheduleMap.get(enrollment.scheduleNumber) || {};
-        //const matchedCourse = courseMap.get(enrollment.courseCode) || {};
-
-        return {
-          studentNumber: matchedStudent.studentNumber || "N/A",
-          studentLastName: matchedStudent.studentNameLast || "N/A",
-          studentFirstName: matchedStudent.studentNameFirst || "N/A",
-          studentMiddleName: matchedStudent.studentNameMiddle || "N/A",
-          contactNumber: matchedStudent.studentContact || "N/A",
-          pccEmail: matchedStudent.studentPccEmail ? `${matchedStudent.studentPccEmail.split('@')[0]}@` : "N/A",
-          studentAddress: matchedStudent.studentAddress || "N/A",
-          //scheduleNumber: matchedSchedule.scheduleNumber || "N/A",
-          academicYear: matchedSchedule.academicYear || "N/A",
-          yearLevel: matchedSchedule.yearLevel || "N/A",
-          semester: matchedSchedule.semester || "N/A",
-          sectionNumber: matchedSchedule.sectionNumber || "N/A",
-          //courseCode: matchedCourse.courseCode || "N/A",
-          //programNumber: matchedCourse.programNumber || "N/A",
-        };
-      });
-
-      const classList = removeDuplicates(mappedData);
-
-      console.log(classList);
-
-      // Apply filtering
-      const filteredResults = classList.filter((student) => {
-
-        return (
-          (!selectedSection || String(student.sectionNumber).trim() === String(selectedSection).trim())
-        );
-      });
-
-      console.log(filteredResults);
-
-      // Update states with the results
-      setClassList(filteredResults);
-      //setFinalData(filteredResults);
-
-      console.log("Mapped Data:", mappedData);
-      console.log("Filtered Results:", filteredResults);
+      // Fetch data from models
+      const allEnrollments = await EnrollmentModel.fetchAllEnrollment();
+      const allStudents = await StudentModel.fetchExistingStudents();
+      const allSchedules = await ScheduleModel.fetchSchedules();
+    
+    
+      // Combine data using explicit relationships
+      const combinedData = allEnrollments
+        .map((enrollment) => {
+          // Find the corresponding schedule using scheduleNumber
+          const schedule = allSchedules.find(
+            (sched) => sched.scheduleNumber === enrollment.scheduleNumber
+          );
+    
+          // Find the corresponding student using studentNumber
+          const student = allStudents.find(
+            (stu) => stu.studentNumber === enrollment.studentNumber
+          );
+       
+          // Combine the data if both schedule and student exist
+          if (schedule && student) {
+            return {
+              StudentNumber: student.studentNumber,
+              StudentName: `${student.studentNameFirst} ${student.studentNameMiddle} ${student.studentNameLast}`,
+              ContactNumber: student.studentContact,
+              PCCEmail: student.studentPccEmail,
+              Address: student.studentAddress,
+              AcademicYear: schedule.academicYear,
+              YearLevel: schedule.yearLevel,
+              Semester: schedule.semester || 'N/A', // Handle undefined semester
+              Section: schedule.sectionNumber,
+            };
+          }
+          return null; // Ignore if no match is found
+        })
+        .filter((entry) => entry !== null); // Filter out null values
+    
+      // Filter combined data based on selected section
+      const filteredData = combinedData.filter(student => 
+        !selectedSection || student.Section === selectedSection
+      );
+    
+      // Make the filtered data distinct by StudentNumber (or any other field)
+      const distinctData = filteredData.filter((value, index, self) => 
+        index === self.findIndex((t) => t.StudentNumber === value.StudentNumber)
+      );
+  
+      setStudents(distinctData);
+    
+      // Check if filtered data exists
+      if (distinctData.length === 0) {
+        console.log("No matching data found for the selected filters.");
+      } else {
+        // Log the filtered distinct data as a table
+        console.table(distinctData);
+      }
     } catch (error) {
-      console.error("Error fetching class list data:", error);
-      alert("An error occurred while fetching class list data. Please try again.");
+      console.error("Error fetching data:", error);
     }
   };
+  
+  
+  
+  
 
-  function removeDuplicates(data) {
-    // Use a Map to store unique entries
-    const uniqueEntries = new Map();
+  const filteredCourses = courses.filter(
+    (subject) =>
+      subject.selectedAcademicYear === selectedAcademicYear &&
+      subject.program === selectedProgram &&
+      subject.yearLevel === selectedYearLevel &&
+      subject.semester === selectedSemester /*&&
+      subject.section === selectedSection*/
+  );
 
-    data.forEach((entry) => {
-        // Create a unique key based on studentNumber and scheduleNumber
-        const uniqueKey = `${entry.studentNumber}-${entry.sectionNumber}`;
-
-        // Add to the map if the key doesn't exist yet
-        if (!uniqueEntries.has(uniqueKey)) {
-            uniqueEntries.set(uniqueKey, entry);
-        }
-    });
-
-    // Convert the Map back to an array
-    return Array.from(uniqueEntries.values());
-  };
 
 
   const handleAcademicYearChange = (e) => {
@@ -455,8 +452,11 @@ const Sections = () => {
   return (
     <div>
       {/* First Row for Academic Year */}
-      <Row className="mb-2 bg-white rounded p-3 m-1">
-        <Col>
+ 
+
+      {/* Second Row for Program, Year Level, Semester, Section, and Add Section */}
+      <Row className="mb-3 bg-white rounded p-3 m-1">
+      <Col>
           <Form.Group controlId="academicYear">
             <Form.Label>Academic Year</Form.Label>
             <Form.Control as="select" value={selectedAcademicYear} onChange={handleAcademicYearChange}>
@@ -474,10 +474,6 @@ const Sections = () => {
             </Form.Control>
           </Form.Group>
         </Col>
-      </Row>
-
-      {/* Second Row for Program, Year Level, Semester, Section, and Add Section */}
-      <Row className="mb-4 bg-white rounded p-3 m-1">
         <Col>
           <Form.Group controlId="program">
             <Form.Label>Program</Form.Label>
@@ -555,110 +551,107 @@ const Sections = () => {
         
       </Row>
 
-      {/* Section Status Display */}
-      <Row className="mb-3">
-        <Col>
-          <h5>Section {selectedSection} <span className="text-muted">[Status: {sectionStatus}]</span></h5>
-        </Col>
-      </Row>
-
       {showTable && (
-        <>
-      {/* Table for Courses */}
-      <Row className="mb-3">
-        <Col>
-          <Table bordered hover className="text-center">
-            <thead className="table-success">
-              <tr>
-                <th>Subject Code</th>
-                <th>Subject Description</th>
-                <th>Lecture Units</th>
-                <th>Lab Units</th>
-                <th>Schedule</th>
-                <th>Professor</th>
-              </tr>
-            </thead>
-            <tbody>
-            {schedules.map((schedule, index) => {
-                // Find the matching course based on courseCode
-                const courseDetails = courses?.find(course => course.courseCode === schedule.courseCode);
-                // If courseDetails exist, render the row
-                return (
-    <tr key={index}>
-      <td>{schedule.courseCode}</td>
-      <td>{courseDetails?.courseDescriptiveTitle || 'N/A'}</td>
-      <td>{courseDetails?.courseLecture || 'N/A'}</td>
-      <td>{courseDetails?.courseLaboratory || 'N/A'}</td>
-      <td>
-        {/* Schedule Inputs aligned in a single line */}
-        <div className="d-flex justify-content-start align-items-center">
-          {/* Example schedule inputs */}
-          <Form.Control
-            as="text"
-            readOnly
-            className="mr-2">
-              {schedule.scheduleDay || 'N/A'}
-          </Form.Control>
-          <Form.Control
-            type="time"
-            value={schedule.startTime || ''}
-            readOnly
-            className="mr-2"/>
-          <Form.Control
-            type="time"
-            value={schedule.endTime || ''}
-            readOnly
-            className="mr-2"/>
-        </div>
-      </td>
-      <td>
-        <Form.Control
-          as="input"
-          type="text"
-          value={
-            schedule.personnelNumber
-            ? `${professors.find((prof) => prof.personnelNumber === schedule.personnelNumber)?.personnelNameFirst || ''} ${
-                professors.find((prof) => prof.personnelNumber === schedule.personnelNumber)?.personnelNameLast || ''}` : 'No Professor'}
-          readOnly
-          className="mr-2"
-        />
-      </td>
-    </tr>
-                );
-              })}
-            </tbody>
-          </Table>
-        </Col>
-      </Row>
-
-      {/* Table for Students */}
-      <Row>
-        <Col>
-          <Table bordered hover className="text-center">
-            <thead className="table-info">
-              <tr>
-                <th>Student Number</th>
-                <th>Student Name</th>
-                <th>Contact Number</th>
-                <th>PCC Email</th>
-                <th>Address</th>
-              </tr>
-            </thead>
-            <tbody>
-              {classList.map((student, index) => (
-                <tr key={index}>
-                  <td>{student.studentNumber}</td>
-                  <td>{student.studentLastName}, {student.studentFirstName} {student.studentMiddleName}</td>
-                  <td>{student.contactNumber}</td>
-                  <td>{student.pccEmail}</td>
-                  <td>{student.studentAddress}</td>
-                </tr>
-              ))}
-            </tbody>
-          </Table>
-        </Col>
-      </Row>
-        </>
+        <Row className="mb-3 m-1">
+          <div className='card bg-white rounded'>
+              <div className="card-header bg-white pt-4">
+                <h5>Section {selectedSection} <span className="text-muted">[Status: {sectionStatus}]</span></h5>
+              </div>
+              <div className="card-body mt-2 mx-1 mb-1">
+                  <div className='mb-3 table-responsive'>
+                    <Table bordered hover className="text-center">
+                      <thead className="table-success">
+                        <tr>
+                          <th>Subject Code</th>
+                          <th>Subject Description</th>
+                          <th>Lecture Units</th>
+                          <th>Lab Units</th>
+                          <th>Schedule</th>
+                          <th>Professor</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                      {schedules.map((schedule, index) => {
+                          // Find the matching course based on courseCode
+                          const courseDetails = courses?.find(course => course.courseCode === schedule.courseCode);
+                          // If courseDetails exist, render the row
+                          return (
+                        <tr key={index}>
+                          <td>{schedule.courseCode}</td>
+                          <td>{courseDetails?.courseDescriptiveTitle || 'N/A'}</td>
+                          <td>{courseDetails?.courseLecture || 'N/A'}</td>
+                          <td>{courseDetails?.courseLaboratory || 'N/A'}</td>
+                          <td>
+                            {/* Schedule Inputs aligned in a single line */}
+                            <div className="d-flex justify-content-start align-items-center">
+                              {/* Example schedule inputs */}
+                              <Form.Control
+                                as="text"
+                                readOnly
+                                className="mr-2">
+                                  {schedule.scheduleDay || 'N/A'}
+                              </Form.Control>
+                              <Form.Control
+                                type="time"
+                                value={schedule.startTime || ''}
+                                readOnly
+                                className="mr-2"/>
+                              <Form.Control
+                                type="time"
+                                value={schedule.endTime || ''}
+                                readOnly
+                                className="mr-2"/>
+                            </div>
+                          </td>
+                          <td>
+                            <Form.Control
+                              as="input"
+                              type="text"
+                              value={
+                                schedule.personnelNumber
+                                ? `${professors.find((prof) => prof.personnelNumber === schedule.personnelNumber)?.personnelNameFirst || ''} ${
+                                    professors.find((prof) => prof.personnelNumber === schedule.personnelNumber)?.personnelNameLast || ''}` : 'No Professor'}
+                              readOnly
+                              className="mr-2"
+                            />
+                          </td>
+                        </tr>);
+                        })}
+                      </tbody>
+                    </Table>
+                  </div>
+                  <div className='mt-2 table-responsive'>
+                  {students.length > 0 ? (
+                    <Table bordered hover className="text-center">
+                      <thead className="table-info">
+                        <tr>
+                          <th>Student Number</th>
+                          <th>Student Name</th>
+                          <th>Contact Number</th>
+                          <th>PCC Email</th>
+                          <th>Address</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                      {students.map((studentData, index) => (
+                      <tr key={index}>
+                        <td>{studentData.StudentNumber}</td>
+                        <td>{studentData.StudentName}</td>
+                        <td>{studentData.ContactNumber}</td>
+                        <td>{studentData.PCCEmail}</td>
+                        <td>{studentData.Address}</td>
+                      </tr>
+                    ))}
+                      </tbody>
+                    </Table>
+                  ) : (
+                    <div>No students found for the selected criteria.</div>
+                  )}
+              </div>
+              
+              </div>
+          </div>
+        </Row>
       )}
 
       {/* Add Section Modal */}

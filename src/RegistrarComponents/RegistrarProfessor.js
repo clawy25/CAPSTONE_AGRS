@@ -217,11 +217,9 @@ export default function RegistrarProfessor() {
             const formattedSchedules = await Promise.all(
                 scheduleData.map(async (schedule) => {
                     try {
-                        console.log(`Fetching submission for scheduleNumber: ${schedule.scheduleNumber}`);
 
                         // Fetch submission data for the current schedule using scheduleNumber
-                        const submissionData = await SubmissionModel.fetchSubmissionBySchedule(schedule.scheduleNumber);
-                        console.log(`Fetched`, submissionData);
+                        const submissionData = await SubmissionModel.fetchSubmissionBySchedule(schedule.scheduleNumber);   
 
                         // If no submission data found, use null for matching submission
                         const matchingSubmission = submissionData && submissionData.length > 0 ? submissionData[0] : null;

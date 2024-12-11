@@ -54,7 +54,7 @@ export default function Schedule() {
         }
 
         // Fetch personnel for the current academic year
-        const personnelData = await PersonnelModel.fetchAllPersonnel(currentAcadYear);
+        const personnelData = await PersonnelModel.getProfessorsbyProgram(user.programNumber, currentAcadYear);
 
         // Fetch enrollments, schedules, and courses
         const enrollments = await EnrollmentModel.fetchAllEnrollment();
@@ -80,13 +80,7 @@ export default function Schedule() {
                 (person) => person.personnelNumber === matchedSchedule.personnelNumber
               );
 
-              console.log("Fetched Personnel Data:", fetchedPersonnel);
-
-              // Ensure the data has been correctly fetched
-              if (!fetchedPersonnel || !fetchedPersonnel.firstName || !fetchedPersonnel.lastName) {
-                console.warn(`No valid personnel data found for personnelNumber: ${matchedSchedule.personnelNumber}`);
-              }
-
+           
               // Find the matching course
               const matchedCourse = fetchedCourses.find(
                 (course) => course.courseCode === matchedSchedule.courseCode
@@ -97,8 +91,8 @@ export default function Schedule() {
                 const totalUnits = matchedCourse.courseLecture + matchedCourse.courseLaboratory;
 
                 // Fix the personnel name display to handle undefined or missing fields
-                const professorName = `${fetchedPersonnel.firstName} ${fetchedPersonnel.middleName || ''} ${fetchedPersonnel.lastName}`.trim();
-
+                const professorName = `${fetchedPersonnel.personnelNameFirst} ${fetchedPersonnel.personnelNameLast}`.trim();
+                
                 return {
                   courseCode: matchedCourse.courseCode,
                   courseDesc: matchedCourse.courseDescriptiveTitle,

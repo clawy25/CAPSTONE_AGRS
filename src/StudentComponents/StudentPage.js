@@ -160,11 +160,13 @@ export default function StudentPage() {
               Login
             </button>
 
-            <button
-              className="btn bg-transparent custom-color-font fs-5 fw-semibold mt-3"
-              onClick={handleForgotpassword}>
-              Forgot Password
-            </button>
+            <span
+                  className="bg-transparent custom-color-font fs-5 fw-semibold mt-3 text-center pe-auto"
+                  onClick={handleForgotpassword}
+                  style={{ cursor: 'pointer' }}
+                >
+                  Forgot Password
+                </span>
           </form>
           <button
             className="btn btn-back custom-font fs-6 mt-3 custom-color-font fw-semibold"

@@ -4,6 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 import PersonnelModel from '../ReactModels/PersonnelModel'; // Adjust the path as necessary
 import '../App.css';
+import 'bootstrap/dist/css/bootstrap.min.css';
 import { UserContext } from '../Context/UserContext';
 
 
@@ -166,11 +167,14 @@ export default function FacultyPage() {
                         Login
                 </button>
 
-                <button
-                    className="btn bg-transparent custom-color-font fs-5 fw-semibold mt-3"
-                    onClick={handleForgotpassword}>
-                    Forgot Password
-                </button>
+                <span
+                  className="bg-transparent custom-color-font fs-5 fw-semibold mt-3 text-center pe-auto"
+                  onClick={handleForgotpassword}
+                  style={{ cursor: 'pointer' }}
+                >
+                  Forgot Password
+                </span>
+
             </form>
             
             <button

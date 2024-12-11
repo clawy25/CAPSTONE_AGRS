@@ -155,7 +155,7 @@ const formatTimeTo12Hour = (timeStr) => {
 };
 
   return (
-    <section className="m-3">
+    <section>
       {errorMessage && <Alert variant="danger">{errorMessage}</Alert>}
 
       <Row className="p-3 bg-white border border-success rounded mb-4 m-1">
@@ -202,7 +202,7 @@ const formatTimeTo12Hour = (timeStr) => {
         </Col>
       </Row>
 
-      <div className="card card-success border-success rounded">
+      <div className="card rounded bg-white px-3 pb-3 pt-4">
         <Table className="table">
           <thead className="table-success">
             <tr>
