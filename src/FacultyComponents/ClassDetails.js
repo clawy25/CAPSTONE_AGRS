@@ -115,65 +115,119 @@ const ClassDetails = ({classList , classDetails}) => {
   
       console.log('Grouped Grades:', groupedGrades);
 
+      if(groupedGrades){
+        //INITIALIZING THE FETCHED RECORDS FOR DATABASE RIGHT AWAY
+        setmidtermAttendance(groupedGrades.midterm?.Attendance);
+        setmidtermAttendanceLabels(midtermAttendanceDates);
 
-      setmidtermAttendance(groupedGrades.midterm?.Attendance);//Initialize the rows to db as soon as they are fetched
-      setmidtermAttendanceLabels(midtermAttendanceDates);
-      
-      setfinalAttendance(groupedGrades.midterm?.Attendance);//Initialize the rows to db as soon as they are fetched
-      setfinalAttendanceLabels(finalAttendanceDates);
+        setfinalAttendance(groupedGrades.finals?.Attendance);
+        setfinalAttendanceLabels(finalAttendanceDates);
 
-      const ToMidtermAttendanceColumns = transformAttendanceData(
-        groupedGrades.midterm?.Attendance ? groupedGrades.midterm.Attendance : [],
-        midtermAttendanceDates ? midtermAttendanceDates : []
-      );
+        setmidtermAssignment(groupedGrades.midterm?.Assignment);
+        setfinalAssignment(groupedGrades.finals?.Assignment);
 
-      if(ToMidtermAttendanceColumns){// Initializing midtermAttendanceColumns and midtermAttendanceData
-        //If successfully created pre-initialized midtermAttendanceColumns, sort them by names, then update midtermAttendanceData to sync
+        //TRANSFORMING ATTENDANCE RECORDS FOR RENDERING IN TABLE
+        const ToMidtermAttendanceColumns = transformAttendanceData(
+          groupedGrades.midterm?.Attendance ? groupedGrades.midterm.Attendance : [],
+          midtermAttendanceDates ? midtermAttendanceDates : []
+        );
 
-        //Sorting them to match the indexes from student ClassList
-        ToMidtermAttendanceColumns[0].grade.sort((a, b) => {
-          return studentNumbers.indexOf(a.studentNumber) - studentNumbers.indexOf(b.studentNumber);
-        });
-        setmidtermAttendanceColumns(ToMidtermAttendanceColumns); //Initialize midtermAttendanceColumns
+        const ToFinalAttendanceColumns = transformAttendanceData(
+          groupedGrades.finals?.Attendance ? groupedGrades.finals.Attendance : [],
+          finalAttendanceDates ? finalAttendanceDates : []
+        );
 
-        const initialData = ToMidtermAttendanceColumns.reduce((acc, column, dateIndex) => {
-          column.grade.forEach((entry, studentIndex) => {
-            if (!acc[studentIndex]) acc[studentIndex] = []; // Ensure each student has their own array
-            acc[studentIndex][dateIndex] = { 
-              date: column.date, 
-              status: entry.status 
-            };
+        const ToMidtermAssignmentColumns = transfromComponentData(
+          groupedGrades.midterm?.Assignment ? groupedGrades.midterm.Assignment : []
+        );
+
+        const ToFinalAssignmentColumns = transfromComponentData(
+          groupedGrades.finals?.Assignment ? groupedGrades.finals.Assignment : []
+        );
+        
+
+        if(ToMidtermAttendanceColumns[0]?.grade){// Initializing midtermAttendanceColumns and midtermAttendanceData
+          
+          //Sorting them to match the indexes from student ClassList
+          ToMidtermAttendanceColumns[0].grade.sort((a, b) => {
+            return studentNumbers.indexOf(a.studentNumber) - studentNumbers.indexOf(b.studentNumber);
           });
-          return acc;
-        }, {});
-        setmidtermAttendanceData(initialData);//Initialize midtermAttendanceData
-      }
-
-      const ToFinalAttendanceColumns = transformAttendanceData(
-        groupedGrades.finals?.Attendance ? groupedGrades.finals.Attendance : [],
-        finalAttendanceDates ? finalAttendanceDates : []
-      );
-
-      if(ToFinalAttendanceColumns){// Initializing finalsAttendanceColumns and finalsAttendanceData
-        //If successfully created pre-initialized midtermAttendanceColumns, sort them by names, then update midtermAttendanceData to sync
-
-        //Sorting them to match the indexes from student ClassList
-        ToFinalAttendanceColumns[0].grade.sort((a, b) => {
-          return studentNumbers.indexOf(a.studentNumber) - studentNumbers.indexOf(b.studentNumber);
-        });
-        setfinalsAttendanceColumns(ToFinalAttendanceColumns); //Initialize midtermAttendanceColumns
-
-        const initialData = ToFinalAttendanceColumns.reduce((acc, column, dateIndex) => {
-          column.grade.forEach((entry, studentIndex) => {
-            if (!acc[studentIndex]) acc[studentIndex] = []; // Ensure each student has their own array
-            acc[studentIndex][dateIndex] = { 
-              date: column.date, 
-              status: entry.status 
-            };
+          setmidtermAttendanceColumns(ToMidtermAttendanceColumns); //Initialize midtermAttendanceColumns
+  
+          const initialData = ToMidtermAttendanceColumns.reduce((acc, column, dateIndex) => {
+            column.grade.forEach((entry, studentIndex) => {
+              if (!acc[studentIndex]) acc[studentIndex] = []; // Ensure each student has their own array
+              acc[studentIndex][dateIndex] = { 
+                date: column.date, 
+                status: entry.status 
+              };
+            });
+            return acc;
+          }, {});
+          setmidtermAttendanceData(initialData);//Initialize midtermAttendanceData
+        }
+  
+        if(ToFinalAttendanceColumns[0]?.grade){// Initializing finalsAttendanceColumns and finalsAttendanceData
+          
+          //Sorting them to match the indexes from student ClassList
+          ToFinalAttendanceColumns[0].grade.sort((a, b) => {
+            return studentNumbers.indexOf(a.studentNumber) - studentNumbers.indexOf(b.studentNumber);
           });
-          return acc;
-        }, {});
-        setfinalsAttendanceData(initialData);//Initialize midtermAttendanceData
+          setfinalsAttendanceColumns(ToFinalAttendanceColumns); //Initialize midtermAttendanceColumns
+  
+          const initialData = ToFinalAttendanceColumns.reduce((acc, column, dateIndex) => {
+            column.grade.forEach((entry, studentIndex) => {
+              if (!acc[studentIndex]) acc[studentIndex] = []; // Ensure each student has their own array
+              acc[studentIndex][dateIndex] = { 
+                date: column.date, 
+                status: entry.status 
+              };
+            });
+            return acc;
+          }, {});
+          setfinalsAttendanceData(initialData);//Initialize midtermAttendanceData
+        }
+
+        if(ToMidtermAssignmentColumns[0]?.grade){// Initializing midtermAssignmentColumns and midtermAssignmentScores
+          
+          //Sorting them to match the indexes from student ClassList
+          ToMidtermAssignmentColumns[0].grade.sort((a, b) => {
+            return studentNumbers.indexOf(a.studentNumber) - studentNumbers.indexOf(b.studentNumber);
+          });
+          console.log(ToMidtermAssignmentColumns);
+          setmidtermAssignmentColumns(ToMidtermAssignmentColumns); //Initialize midtermAssignmentColumns
+  
+          const initialData = ToMidtermAssignmentColumns.reduce((acc, column, index) => {
+            column.grade.forEach((entry, studentIndex) => {
+              if (!acc[studentIndex]) acc[studentIndex] = []; // Ensure each student has their own array
+              acc[studentIndex][index] = entry.score;
+            });
+            return acc;
+          }, {});
+          console.log(initialData);
+          setmidtermAssignmentScores(initialData);//Initialize midtermAssignmentScores
+        }
+
+        if(ToFinalAssignmentColumns[0]?.grade){// Initializing finalsAssignmentColumns and finalsAssignmentScores
+          
+          //Sorting them to match the indexes from student ClassList
+          ToFinalAssignmentColumns[0].grade.sort((a, b) => {
+            return studentNumbers.indexOf(a.studentNumber) - studentNumbers.indexOf(b.studentNumber);
+          });
+          console.log(ToFinalAssignmentColumns);
+          setfinalsAssignmentColumns(ToFinalAssignmentColumns); //Initialize finalsAssignmentColumns
+  
+          const initialData = ToFinalAssignmentColumns.reduce((acc, column, index) => {
+            column.grade.forEach((entry, studentIndex) => {
+              if (!acc[studentIndex]) acc[studentIndex] = []; // Ensure each student has their own array
+              acc[studentIndex][index] = entry.score;
+            });
+            return acc;
+          }, {});
+          console.log(initialData);
+          setfinalsAssignmentScores(initialData);//Initialize finalsAssignmentScores
+        }
+
       }
     } catch (error) {
       console.error("Error submitting class record:", error);
@@ -204,6 +258,31 @@ const ClassDetails = ({classList , classDetails}) => {
   
     return result;
   };
+
+  const transfromComponentData = (componentData) => { //FOR ASSIGNMENT & RECITATION
+    const groupedData = componentData.reduce((acc, item) => {
+      const instanceId = item.instanceNumber; // Use instanceNumber as the group id
+      if (!acc[instanceId]) {
+          acc[instanceId] = {
+              id: instanceId, // Use instanceNumber as the id
+              grade: []
+          };
+      }
+      acc[instanceId].grade.push({
+          studentNumber: item.studentNumber,
+          score: parseInt(item.value) // Convert value to a number
+      });
+      return acc;
+  }, {});
+  
+  // Convert the grouped object into an array and sort each grade list by studentNumber
+  const transformedData = Object.values(groupedData).map(group => ({
+      id: group.id,
+      grade: group.grade.sort((a, b) => a.studentNumber.localeCompare(b.studentNumber))
+  }));
+
+  return transformedData;
+  };
   
   const handleSubmit = async () => {
     try{
@@ -218,30 +297,34 @@ const ClassDetails = ({classList , classDetails}) => {
 
       // const submission = await SubmissionModel.createAndInsertSubmission(submissionData);
 
+      // const [grade, attendance] = await Promise.all([
+      //   GradeModel.updateGradeData(classGradeData),
+      //   AttendanceModel.updateAttendanceData(attendanceLabelData)
+      // ]);
+
+      // if (grade && attendance){
+      // }
+      
+      handleModalShow('submitted');
+    } catch (error){
+      console.error("Error submitting class record:", error);
+    }
+  };
+
+  const handleSave = async () => {
+    try{
       const [grade, attendance] = await Promise.all([
         GradeModel.updateGradeData(classGradeData),
         AttendanceModel.updateAttendanceData(attendanceLabelData)
       ]);
 
       if (grade && attendance){
-        handleModalShow('submitted');
+        handleModalShow('saved');
       }
     } catch (error){
       console.error("Error submitting class record:", error);
     }
   };
-
-  // const handleSave = async () => {
-  //   try{
-  //     const grade = await GradeModel.updateGradeData(midtermAttendance);
-
-  //     if (grade){
-  //       handleModalShow('submitted');
-  //     }
-  //   } catch (error){
-  //     console.error("Error submitting class record:", error);
-  //   }
-  // };
 
   const handlePost = () => {
     // Your post logic here
@@ -425,21 +508,24 @@ const handlePrint = () => {
   {/* FOR MIDTERMS */}
 
   {/* ATTENDANCE DECLARATION */}
-  const [midtermAttendanceColumns, setmidtermAttendanceColumns] = useState([{ id: 1 }]); //Storing raw values (PLEA) for table rendering
-  console.log("Midtem Attendance Columns: ",midtermAttendanceColumns);
+  const [midtermAttendanceColumns, setmidtermAttendanceColumns] = useState([{ id: 1, grade:[] }]); //Storing raw values (PLEA) for table rendering
+  //console.log("Midterm Attendance Columns: ",midtermAttendanceColumns);
   const [midtermTotalAttendanceDays, setmidtermTotalAttendanceDays] = useState(0);
   const [midtermAttendanceData, setmidtermAttendanceData] = useState([]); //Storing raw values (PLEA) for calculations
-  console.log("Midtem Attendance Data: ", midtermAttendanceData);
+  //console.log("Midterm Attendance Data: ", midtermAttendanceData);
   const [midtermAttendancePercentage, setmidtermAttendancePercentage] = useState();
   const [midtermAttendance, setmidtermAttendance] = useState([]); //Storing raw values (PLEA) for db upsertion
   const [midtermAttendanceLabels, setmidtermAttendanceLabels] = useState([]); //Storing attendance column dates for db upsertion
 
   {/* ASSIGNMENT DECLARATION */}
-  const [midtermAssignmentColumns, setmidtermAssignmentColumns] = useState([]);
-  const [midtermAssignmentScores, setmidtermAssignmentScores] = useState([]);
-  const [midtermAssignmentPercentage, setmidtermAssignmentPercentage] = useState(); // Default to 10%
+  const [midtermAssignmentColumns, setmidtermAssignmentColumns] = useState([{ id: 1 , grade:[] }]); //Storing raw values (50-100) for table rendering
+  //console.log("Midterm Assignment Columns:",midtermAssignmentColumns);
+  const [midtermAssignmentScores, setmidtermAssignmentScores] = useState([]); //Storing raw values (50-100) for calculations
+  //console.log("Midterm Assignment Scores:", midtermAssignmentScores);
+  const [midtermAssignmentPercentage, setmidtermAssignmentPercentage] = useState();
   const [invalidAssignmentScores, setInvalidAssignmentScores] = useState([]);
-
+  const [midtermAssignment, setmidtermAssignment] = useState([]); //Storing raw values (50-100) for db upsertion
+  
   // QUIZZES DECLARATION
   const [midtermQuizColumns, setmidtermQuizColumns] = useState([]); // Initialize quiz columns
   const [midtermQuizScores, setmidtermQuizScores] = useState([]); // Scores for each quiz
@@ -469,7 +555,7 @@ const handlePrint = () => {
   {/*FOR FINALS*/}
 
   {/* ATTENDANCE DECLARATION */}
-  const [finalsAttendanceColumns, setfinalsAttendanceColumns] = useState([{ id: 1 }]);
+  const [finalsAttendanceColumns, setfinalsAttendanceColumns] = useState([{ id: 1, grade:[] }]);
   const [finalsTotalAttendanceDays, setfinalsTotalAttendanceDays] = useState(0);
   const [finalsAttendanceData, setfinalsAttendanceData] = useState([]);
   const [finalsAttendancePercentage, setfinalsAttendancePercentage] = useState(); // Default value of 0
@@ -477,11 +563,12 @@ const handlePrint = () => {
   const [finalAttendanceLabels, setfinalAttendanceLabels] = useState([]); //Storing attendance column dates for db upsertion
 
   {/* ASSIGNMENT DECLARATION */}
-  const [finalsAssignmentColumns, setfinalsAssignmentColumns] = useState([]);
+  const [finalsAssignmentColumns, setfinalsAssignmentColumns] = useState([{ id: 1, grade:[] }]);
   const [finalsAssignmentScores, setfinalsAssignmentScores] = useState([]);
   const [finalsAssignmentPercentage, setfinalsAssignmentPercentage] = useState(); // Default to 5%
   const [finalsinvalidAssignmentScores, setfinalsInvalidAssignmentScores] = useState([]);
-
+  const [finalAssignment, setfinalAssignment] = useState([]); //Storing raw values (50-100) for db upsertion
+  
   {/* QUIZZES DECLARATION */}
   const [finalsQuizColumns, setfinalsQuizColumns] = useState([]); // Initialize quiz columns
   const [finalsQuizScores, setfinalsQuizScores] = useState(
@@ -539,7 +626,7 @@ const handlePrint = () => {
 
   {/*ADD AND REMOVE COLUMN FOR MIDTERM AND FINALS (COMPLETE)*/}
   const addColumn = (setColumns) => {
-    setColumns((prevColumns) => [...prevColumns, { id: prevColumns.length + 1 }]);
+    setColumns((prevColumns) => [...prevColumns, { id: prevColumns.length + 1, grade: [] }]);
   };
   const removeColumn = (index, setColumns) => {
     setColumns((prevColumns) => prevColumns.filter((_, i) => i !== index));
@@ -551,6 +638,23 @@ const removeAttendanceColumn = (index, setColumns, setAttendanceData) => {
 
     // Update attendance data by removing the corresponding column (index)
     setAttendanceData((prevData) => {
+      const updatedData = { ...prevData };
+      Object.keys(updatedData).forEach(studentId => {
+        const studentAttendance = updatedData[studentId] || [];
+        studentAttendance.splice(index, 1); // Remove the corresponding column data for this student
+      });
+      return updatedData;
+    });
+
+    return updatedColumns;
+  });
+};
+
+const removeAssignmentColumn = (index, setColumns, setAssignmentScores) => {
+  setColumns((prevColumns) => {
+    const updatedColumns = prevColumns.filter((_, i) => i !== index);
+
+    setAssignmentScores((prevData) => {
       const updatedData = { ...prevData };
       Object.keys(updatedData).forEach(studentId => {
         const studentAttendance = updatedData[studentId] || [];
@@ -729,11 +833,22 @@ const removeAttendanceColumn = (index, setColumns, setAttendanceData) => {
   }, [finalsAttendanceColumns, classInfo]);
 
   useEffect(() => {
-    const combinedClassGradeData = [...midtermAttendance, ...finalAttendance];
-    const combinedAttendanceLabelData = [...midtermAttendanceLabels, ...finalAttendanceLabels];
+    const combinedClassGradeData = [
+      ...(midtermAttendance?.length ? midtermAttendance : []), 
+      ...(finalAttendance?.length ? finalAttendance : []),
+      ...(midtermAssignment?.length ? midtermAssignment : []),
+      ...(finalAssignment?.length ? finalAssignment : []),
+      //ADD MORE 
+    ];
+    const combinedAttendanceLabelData = [
+      ...(midtermAttendanceLabels?.length ? midtermAttendanceLabels : []),
+      ...(finalAttendanceLabels?.length ? finalAttendanceLabels : [])
+    ];
+  
     setClassGradeData(combinedClassGradeData);
     setAttendanceLabelData(combinedAttendanceLabelData);
-  }, [midtermAttendance, finalAttendance, midtermAttendanceLabels, finalAttendanceLabels]);
+  }, [midtermAttendance, finalAttendance, midtermAttendanceLabels, finalAttendanceLabels, midtermAssignment, finalAssignment]);
+  
 
   {/*ATTENDANCE TOTALS FOR BOTH PERIOD (COMPLETE)*/}
   const getMidtermAttendanceTotals = (studentId) => {
@@ -795,52 +910,161 @@ const removeAttendanceColumn = (index, setColumns, setAttendanceData) => {
     return calculatedPoints.toFixed(2); // Return the value with 2 decimal points
   };
 
-  const handleMidtermAssignmentScoreChange = (studentIndex, assignmentIndex, score) => {
-    // Update the assignment scores state
-    setmidtermAssignmentScores((prevScores) => {
-      const updatedScores = [...prevScores];
-      if (!updatedScores[studentIndex]) {
-        updatedScores[studentIndex] = [];
-      }
-      updatedScores[studentIndex][assignmentIndex] = score;
-      return updatedScores;
+  const handleMidtermAssignmentScoreChange = (studentId, studentNumber, assignmentIndex, score) => {
+    setmidtermAssignmentScores((prevData) => {
+      const studentScores = prevData[studentId] || [];
+      const updatedScores = [...studentScores];
+      updatedScores[assignmentIndex] = score;
+      return {
+        ...prevData,
+        [studentId]: updatedScores,
+      };
     });
-  
-    // Update the invalid state for real-time border change
     setInvalidAssignmentScores((prevInvalid) => {
-      const updatedInvalid = [...prevInvalid];
-      if (!updatedInvalid[studentIndex]) {
-        updatedInvalid[studentIndex] = {};
-      }
-      updatedInvalid[studentIndex][assignmentIndex] = score < 50 || score > 100; // Mark as invalid if out of range
-      return updatedInvalid;
+      const studentInvalid = prevInvalid[studentId] || {};
+      const updatedInvalid = { ...studentInvalid, [assignmentIndex]: score < 50 || score > 100 };
+      return {
+        ...prevInvalid,
+        [studentId]: updatedInvalid,
+      };
     });
+    setmidtermAssignmentColumns((prevColumns) => 
+      prevColumns.map((column, index) => {
+        if (index !== assignmentIndex) return column;
+        
+        if (index === assignmentIndex) { 
+          // Create a new grade array (don't mutate the original array)
+          const updatedGrade = [...column.grade];
+          
+          // Find the student in the grade array
+          const studentIndex = updatedGrade.findIndex((entry) => entry.studentNumber === studentNumber);
+      
+          if (studentIndex !== -1) {
+            // Update existing student's status
+            updatedGrade[studentIndex] = { 
+              ...updatedGrade[studentIndex], 
+              score 
+            };
+          } else {
+            // Add new student entry to grade array
+            updatedGrade.push({
+              studentNumber: studentNumber,
+              score
+            });
+          }
+      
+          // Return the updated column with the updated grade array
+          return {
+            ...column,
+            grade: updatedGrade
+          };
+        } 
+        return column; // If this is not the correct column, return it unchanged
+      })
+    );    
   };
+  useEffect(() => {//Automatic Generation of objects for database storage (Assignment: Midterm)
+    const AssignmentData = []; //For Database: gradeData
+
+    midtermAssignmentColumns?.forEach((column, index) => {
+      column.grade?.forEach((student) => {
+        
+        AssignmentData.push({
+          scheduleNumber: classInfo.scheduleNumber, 
+          studentNumber: student.studentNumber, 
+          componentNumber: 2, 
+          instanceNumber: index + 1, 
+          period: 1, 
+          value: student.score
+        });
+      });
+    });
+
+    const filteredAssignment = AssignmentData.filter(assignment => assignment.value <= 100 && assignment.value >= 50);
+    
+    console.log("Rows for Database:",filteredAssignment);
+    setmidtermAssignment(filteredAssignment); //Storing raw values
+  }, [midtermAssignmentColumns, classInfo]);
   
   
 
   // ASSIGNMENT SCORES FOR FINALS PERIOD
-  const handleFinalAssignmentScoreChange = (studentIndex, assignmentIndex, score) => {
-    // Update the assignment scores state
-    setfinalsAssignmentScores((prevScores) => {
-      const finalsupdatedScores = [...prevScores];
-      if (!finalsupdatedScores[studentIndex]) {
-        finalsupdatedScores[studentIndex] = [];
-      }
-      finalsupdatedScores[studentIndex][assignmentIndex] = score;
-      return finalsupdatedScores;
+  const handleFinalAssignmentScoreChange = (studentId, studentNumber, assignmentIndex, score) => {
+    setfinalsAssignmentScores((prevData) => {
+      const studentScores = prevData[studentId] || [];
+      const updatedScores = [...studentScores];
+      updatedScores[assignmentIndex] = score;
+      return {
+        ...prevData,
+        [studentId]: updatedScores,
+      };
     });
-  
-    // Update the invalid state for real-time border change
     setfinalsInvalidAssignmentScores((prevInvalid) => {
-      const finalsupdatedInvalid = [...prevInvalid];
-      if (!finalsupdatedInvalid[studentIndex]) {
-        finalsupdatedInvalid[studentIndex] = {};
-      }
-      finalsupdatedInvalid[studentIndex][assignmentIndex] = score < 50 || score > 100; // Mark as invalid if out of range
-      return finalsupdatedInvalid;
+      const studentInvalid = prevInvalid[studentId] || {};
+      const updatedInvalid = { ...studentInvalid, [assignmentIndex]: score < 50 || score > 100 };
+      return {
+        ...prevInvalid,
+        [studentId]: updatedInvalid,
+      };
     });
+    setfinalsAssignmentColumns((prevColumns) => 
+      prevColumns.map((column, index) => {
+        if (index !== assignmentIndex) return column;
+        
+        if (index === assignmentIndex) { 
+          // Create a new grade array (don't mutate the original array)
+          const updatedGrade = [...column.grade];
+          
+          // Find the student in the grade array
+          const studentIndex = updatedGrade.findIndex((entry) => entry.studentNumber === studentNumber);
+      
+          if (studentIndex !== -1) {
+            // Update existing student's status
+            updatedGrade[studentIndex] = { 
+              ...updatedGrade[studentIndex], 
+              score 
+            };
+          } else {
+            // Add new student entry to grade array
+            updatedGrade.push({
+              studentNumber: studentNumber,
+              score
+            });
+          }
+      
+          // Return the updated column with the updated grade array
+          return {
+            ...column,
+            grade: updatedGrade
+          };
+        } 
+        return column; // If this is not the correct column, return it unchanged
+      })
+    );
   };
+  
+  useEffect(() => {//Automatic Generation of objects for database storage (Assignment: Finals)
+    const AssignmentData = []; //For Database: gradeData
+
+    finalsAssignmentColumns?.forEach((column, index) => {
+      column.grade?.forEach((student) => {
+        
+        AssignmentData.push({
+          scheduleNumber: classInfo.scheduleNumber, 
+          studentNumber: student.studentNumber, 
+          componentNumber: 2, 
+          instanceNumber: index + 1, 
+          period: 2, 
+          value: student.score
+        });
+      });
+    });
+
+    const filteredAssignment = AssignmentData.filter(assignment => assignment.value <= 100 && assignment.value >= 50);
+    
+    console.log("Rows for Database:",filteredAssignment);
+    setfinalAssignment(filteredAssignment); //Storing raw values
+  }, [finalsAssignmentColumns, classInfo]);
 
 
   {/* ASSIGNMENTS AVERAGE FOR MIDTERM */}
@@ -1714,7 +1938,7 @@ const handlePercentageChange = (setter, value) => {
                     onChange={(date) => {
                       const formattedDate = date.toLocaleDateString('en-CA');
                       setmidtermAttendanceColumns((prevColumns) =>
-                      prevColumns.map((col, i) => (i === index ? { ...col, date:formattedDate, grade: [] } : col)))}}
+                      prevColumns.map((col, i) => (i === index ? { ...col, date:formattedDate } : col)))}}
                     dateFormat="yyyy-MM-dd"
                     className="custom-datepicker"
                   />
@@ -1810,12 +2034,20 @@ const handlePercentageChange = (setter, value) => {
                 {/* Assignment Column Header */}
                 {midtermAssignmentColumns.map((_, index) => (
                   <th key={index} className='sticky-top-left-offset-168'>
-                    A {index + 1}
-                    <button onClick={() => removeColumn(index, setmidtermAssignmentColumns)} style={{ background: 'none', border: 'none' }}>
+                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                  {index === midtermAssignmentColumns.length - 1 && (
+                    <button 
+                      onClick={() => removeAssignmentColumn(index, setmidtermAssignmentColumns, setmidtermAssignmentScores)} 
+                      style={{ background: 'none', border: 'none', marginRight: '8px' }}
+                    >
                       <FontAwesomeIcon icon={faMinus} />
                     </button>
-                  </th>
+                  )}
+                    Assignment {index + 1}
+                  </div>
+                </th>
                 ))}
+
                 <th style={{ background: '#d1e7dd', position: 'sticky',left: 0,top: 168,padding: '0px',zIndex: 1,boxShadow: '1px 0 0 rgba(0, 0, 0, 0.1)', }}>
                   <button onClick={() => addColumn(setmidtermAssignmentColumns)} style={{ background: 'none', border: 'none' }}>
                     <FontAwesomeIcon icon={faPlus} />
@@ -1984,48 +2216,30 @@ const handlePercentageChange = (setter, value) => {
 
 
                     {/* ASSIGNMENT COMPONENT: DEFINE midtermAssignmentScores IN INPUT */}
-                    {midtermAssignmentColumns.map((_, assignmentIndex) => (
-                    <td key={assignmentIndex}>
-                      <input
-                        type="number"
-                        style={{
-                          width: '70px',
-                          borderColor:
-                            invalidAssignmentScores[studentIndex]?.[assignmentIndex] ? 'red' : 'initial',
-                          borderWidth:
-                            invalidAssignmentScores[studentIndex]?.[assignmentIndex] ? '2px' : '1px',
-                        }}
-                        placeholder="Score"
-                        value={midtermAssignmentScores[studentIndex]?.[assignmentIndex] || ''}
-                        onChange={(e) => {
-                          const inputScore = e.target.value === '' ? null : parseFloat(e.target.value); // Treat empty input as null
-                          handleMidtermAssignmentScoreChange(studentIndex, assignmentIndex, inputScore);
-
-                          // Show the red border in real-time
-                          if (inputScore !== null && (inputScore < 50 || inputScore > 100)) {
-                            setInvalidAssignmentScores((prevInvalid) => {
-                              const updatedInvalid = [...prevInvalid];
-                              if (!updatedInvalid[studentIndex]) {
-                                updatedInvalid[studentIndex] = {};
-                              }
-                              updatedInvalid[studentIndex][assignmentIndex] = true; // Mark as invalid
-                              return updatedInvalid;
-                            });
-                          }
-                        }}
-                        onBlur={(e) => {
-                          const inputScore = parseFloat(e.target.value);
-
-                          // Trigger toast only when input is invalid and not empty
-                          if (inputScore !== null && (inputScore < 50 || inputScore > 100)) {
-                            toast.error(`Score must be between 50 and 100 for Assignment ${assignmentIndex + 1}`);
-                          }
-                        }}
-                      />
-                    </td>
-                  ))}
-
-
+                    {midtermAssignmentColumns.map((assignmentColumn, assignmentIndex) => (//UNRESOLVED
+                      <td key={assignmentColumn.id}>
+                        <input
+                          type="number"
+                          style={{
+                            width: '70px',
+                            borderColor: invalidAssignmentScores[student.id]?.[assignmentIndex] ? 'red' : 'initial',
+                            borderWidth: invalidAssignmentScores[student.id]?.[assignmentIndex] ? '2px' : '1px',
+                          }}
+                          placeholder="Score"
+                          value={assignmentColumn?.grade?.find((entry) => entry.studentNumber === student.studentNumber)?.score || ''}
+                          onChange={(e) => {
+                            const inputScore = e.target.value === '' ? null : parseFloat(e.target.value); 
+                            handleMidtermAssignmentScoreChange(student.id, student.studentNumber, assignmentIndex, inputScore);
+                          }}
+                          onBlur={(e) => {
+                            const inputScore = parseFloat(e.target.value);
+                            if (!isNaN(inputScore) && (inputScore < 50 || inputScore > 100)) {
+                              toast.error(`Score must be between 50 and 100 for ${student.studentLastName} at Assignment No.${assignmentIndex + 1}`);
+                            }
+                          }}
+                        />
+                      </td>
+                    ))}
 
                     <td></td>
                     <td>{calculateMidtermAssignmentColumnAverage(student.id)}%</td> {/* Display average directly */}
@@ -2313,7 +2527,7 @@ const handlePercentageChange = (setter, value) => {
                     onChange={(date) => {
                       const formattedDate = date.toLocaleDateString('en-CA');
                       setfinalsAttendanceColumns((prevColumns) =>
-                      prevColumns.map((col, i) => (i === index ? { ...col, date:formattedDate, grade: [] } : col)))}}
+                      prevColumns.map((col, i) => (i === index ? { ...col, date:formattedDate } : col)))}}
                     dateFormat="yyyy-MM-dd"
                     className="custom-datepicker"
                   />
@@ -2408,12 +2622,20 @@ const handlePercentageChange = (setter, value) => {
                   {/* Assignment Column Header */}
                   {finalsAssignmentColumns.map((_, index) => (
                     <th key={index} className='sticky-top-left-offset-168'>
-                      A {index + 1}
-                      <button onClick={() => removeColumn(index, setfinalsAssignmentColumns)} style={{ background: 'none', border: 'none' }}>
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                    {index === finalsAssignmentColumns.length - 1 && (
+                      <button 
+                        onClick={() => removeAssignmentColumn(index, setfinalsAssignmentColumns, setfinalsAssignmentScores)} 
+                        style={{ background: 'none', border: 'none', marginRight: '8px' }}
+                      >
                         <FontAwesomeIcon icon={faMinus} />
                       </button>
+                    )}
+                      Assignment {index + 1}
+                    </div>
                     </th>
                   ))}
+
                   <th style={{ background: '#d1e7dd', position: 'sticky',left: 0,top: 168,padding: '0px',zIndex: 1,boxShadow: '1px 0 0 rgba(0, 0, 0, 0.1)', }}>
                     <button onClick={() => addColumn(setfinalsAssignmentColumns)} style={{ background: 'none', border: 'none' }}>
                       <FontAwesomeIcon icon={faPlus} />
@@ -2579,41 +2801,25 @@ const handlePercentageChange = (setter, value) => {
   
 
                     {/* ASSIGNMENT COMPONENT: DEFINE finalsAssignmentScores IN INPUT */}
-                    {finalsAssignmentColumns.map((_, assignmentIndex) => (
-                      <td key={assignmentIndex}>
+                    {finalsAssignmentColumns.map((assignmentColumn, assignmentIndex) => (//UNRESOLVED
+                      <td key={assignmentColumn.id}>
                         <input
                           type="number"
                           style={{
                             width: '70px',
-                            borderColor:
-                              finalsinvalidAssignmentScores[studentIndex]?.[assignmentIndex] ? 'red' : 'initial',
-                            borderWidth:
-                              finalsinvalidAssignmentScores[studentIndex]?.[assignmentIndex] ? '2px' : '1px',
+                            borderColor: invalidAssignmentScores[student.id]?.[assignmentIndex] ? 'red' : 'initial',
+                            borderWidth: invalidAssignmentScores[student.id]?.[assignmentIndex] ? '2px' : '1px',
                           }}
                           placeholder="Score"
-                          value={finalsAssignmentScores[studentIndex]?.[assignmentIndex] || ''}
+                          value={assignmentColumn?.grade?.find((entry) => entry.studentNumber === student.studentNumber)?.score || ''}
                           onChange={(e) => {
-                            const inputScore = e.target.value === '' ? null : parseFloat(e.target.value); // Treat empty input as null
-                            handleFinalAssignmentScoreChange(studentIndex, assignmentIndex, inputScore);
-
-                            // Show the red border in real-time for finals
-                            if (inputScore !== null && (inputScore < 50 || inputScore > 100)) {
-                              setfinalsInvalidAssignmentScores((prevInvalid) => {
-                                const updatedInvalid = [...prevInvalid];
-                                if (!updatedInvalid[studentIndex]) {
-                                  updatedInvalid[studentIndex] = {};
-                                }
-                                updatedInvalid[studentIndex][assignmentIndex] = true; // Mark as invalid
-                                return updatedInvalid;
-                              });
-                            }
+                            const inputScore = e.target.value === '' ? null : parseFloat(e.target.value); 
+                            handleFinalAssignmentScoreChange(student.id, student.studentNumber, assignmentIndex, inputScore);
                           }}
                           onBlur={(e) => {
                             const inputScore = parseFloat(e.target.value);
-
-                            // Trigger toast only when input is invalid and not empty for finals
-                            if (inputScore !== null && (inputScore < 50 || inputScore > 100)) {
-                              toast.error(`Score must be between 50 and 100 for Assignment ${assignmentIndex + 1}`);
+                            if (!isNaN(inputScore) && (inputScore < 50 || inputScore > 100)) {
+                              toast.error(`Score must be between 50 and 100 for ${student.studentLastName} at Assignment No.${assignmentIndex + 1}`);
                             }
                           }}
                         />
@@ -3120,8 +3326,7 @@ const handlePercentageChange = (setter, value) => {
 
       {/* Button Container */}
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '10px' }}>
-        <button
-          className="submit-button"
+        <Button
           style={{
             backgroundColor: '#004d00',
             color: 'white',
@@ -3129,11 +3334,26 @@ const handlePercentageChange = (setter, value) => {
             padding: '10px 20px',
             cursor: 'pointer',
           }}
+          onClick={handleSave} // Attach handler for Saving changes made in grades
+        >
+          SAVE
+        </Button>
+        <Button
+          style={{
+            backgroundColor: '#004d00',
+            color: 'white',
+            border: 'none',
+            padding: '10px 20px',
+            cursor: 'pointer',
+            marginLeft: '10px',
+          }}
           onClick={handleSubmit} // Attach handler for Submit to ProgramHead
         >
           SUBMIT
-        </button>
-        <button
+        </Button>
+        
+        
+        <Button
           className="post-button"
           style={{
             backgroundColor: '#508D4E',
@@ -3146,7 +3366,7 @@ const handlePercentageChange = (setter, value) => {
           onClick={handlePost} // Attach handler for Post to Students
         >
           POST
-        </button>
+        </Button>
       </div>
 
       {/* Confirmation Modal */}
