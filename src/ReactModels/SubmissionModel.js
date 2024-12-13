@@ -36,23 +36,29 @@ export default class SubmissionModel {
       throw error;
   }
 }
-
 static async createAndInsertSubmission(newSubmissionData) {
   try {
-      const response = await fetch(`http://localhost:5000/submission/upload`, {
-          method: 'POST',
-          headers: {
-              'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ data: newSubmissionData }),
-      });
-      if (!response.ok) {
-          throw new Error('Error inserting submission data');
-      }
-      return await response.json(); // Return the response if needed
+    // Wrap submissions in the required API format
+    const submissionPayload = { data: Array.isArray(newSubmissionData) ? newSubmissionData : [newSubmissionData] };
+    console.log('Submitting Data:', submissionPayload);
+
+    const response = await fetch('http://localhost:5000/submission/upload', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(submissionPayload), // Send all submissions in one request
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(Error `inserting submission data: ${errorData.message}`);
+    }
+
+    return await response.json(); // Return server response
   } catch (error) {
-      console.error('Error inserting submission data:', error);
-      throw error;
+    console.error('Error inserting submission data:', error);
+    throw error;
   }
 }
 

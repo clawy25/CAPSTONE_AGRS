@@ -70,7 +70,7 @@ export default function StudentDashboard() {
         >
           &times;
         </button>
-              <img src="pcc.png" alt="Logo" className="college-logo align-items-center ms-5 mb-3" />
+              <img src="/pcc.png" alt="Logo" className="college-logo align-items-center ms-5 mb-3" />
               <div className="welcome-message mb-3 text-center">Hello, {user ? user.studentNameFirst : 'Student'}!</div>
               <nav className="menu mb-3">
                 <Link

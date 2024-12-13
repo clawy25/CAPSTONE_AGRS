@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useContext } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, Routes, Route, useLocation } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUser, faBars, faAngleDown, faAngleUp, faTable, faGraduationCap, faClipboardList } from '@fortawesome/free-solid-svg-icons';
 import '../App.css';
@@ -11,6 +11,7 @@ import ProgramHeadMOG from './ProgramHeadMOG';
 import ProgramHeadCSOG from './ProgramHeadCSOG';
 import PersonnelModel from '../ReactModels/PersonnelModel';
 import AcademicYearModel from '../ReactModels/AcademicYearModel';
+import RegistrarProfile from '../RegistrarComponents/RegistrarProfile';
 
 export default function ProgramHeadDashboard() {
   const navigate = useNavigate();
@@ -23,6 +24,7 @@ export default function ProgramHeadDashboard() {
   const [showGradesSubMenu, setShowGradesSubMenu] = useState(false);
   const [showClassDesignationSubMenu, setShowClassDesignationSubMenu] = useState(false);
   const [personnelInfo, setPersonnelInfo] = useState([]);
+  const location = useLocation();
 
     const fetchPersonnelData = async () => {
         try {
@@ -88,7 +90,7 @@ export default function ProgramHeadDashboard() {
 
   // When Class Designation section is clicked, open the submenu
   const handleClassDesignationClick = () => {
-    setSelectedSection(SECTIONS.CLASSDESIGNATION); // Ensure Class Designation is selected
+
     setShowClassDesignationSubMenu(true); // Open submenu by default
   };
 
@@ -146,7 +148,7 @@ export default function ProgramHeadDashboard() {
       {/* Sidebar */}
       <div className={`sidebar bg-custom-color-green ${showSidebar ? 'd-block' : 'd-none d-md-block'}`}>
         {/* Logo and Welcome Message */}
-        <img src="pcc.png" alt="Logo" className="college-logo ms-5 mb-3" />
+        <img src="/pcc.png" alt="Logo" className="college-logo ms-5 mb-3" />
         <div className="welcome-message mb-3 text-center">
           Hello, {user ? user.personnelNameFirst : 'Guest'}!
         </div>
@@ -158,7 +160,9 @@ export default function ProgramHeadDashboard() {
     {/* Grades Section Link */}
     <div
       className={`menu-item d-flex align-items-center mb-2 ${selectedSection === SECTIONS.GRADES || selectedSection === SECTIONS.CSOG || selectedSection === SECTIONS.MOG ? 'active' : ''}`}
-      onClick={handleGradesClick} // Ensure submenu toggles when Grades is clicked
+      onClick={() => {
+        setShowGradesSubMenu(!showGradesSubMenu);
+      }} // Ensure submenu toggles when Grades is clicked
     >
       <FontAwesomeIcon icon={faGraduationCap} className="me-2" />
       GRADES
@@ -167,16 +171,16 @@ export default function ProgramHeadDashboard() {
     {showGradesSubMenu && (
       <div className="submenu">
         <Link
-          to="#"
-          className={`submenu-item d-flex align-items-center mb-2 ${selectedSection === SECTIONS.CSOG ? 'active' : ''}`}
+          to="/programHead-dashboard/csog"
+          className={`submenu-item d-flex align-items-center mb-2 ${location.pathname === '/programHead-dashboard/csog' ? 'active' : ''}`}
           onClick={() => handleSectionChange(SECTIONS.CSOG)} // Navigate to CSOG
         >
           <FontAwesomeIcon icon={faTable} className="me-2" />
           CSOG
         </Link>
         <Link
-          to="#"
-          className={`submenu-item d-flex align-items-center mb-2 ${selectedSection === SECTIONS.MOG ? 'active' : ''}`}
+          to="/programHead-dashboard/mog"
+          className={`submenu-item d-flex align-items-center mb-2 ${location.pathname === '/programHead-dashboard/mog' ? 'active' : ''}`}
           onClick={() => handleSectionChange(SECTIONS.MOG)} // Navigate to MOG
         >
           <FontAwesomeIcon icon={faClipboardList} className="me-2" />
@@ -185,29 +189,33 @@ export default function ProgramHeadDashboard() {
       </div>
     )}
 
-    {/* Class Designation Section Link */}
-    <div
-      className={`menu-item d-flex align-items-center mb-2 ${selectedSection === SECTIONS.CLASSDESIGNATION ? 'active' : ''}`}
-      onClick={handleClassDesignationClick} // Ensure submenu toggles when Class Designation is clicked
-    >
-      <FontAwesomeIcon icon={faTable} className="me-2" />
-      CLASS SCHEDULING
-      <FontAwesomeIcon icon={showClassDesignationSubMenu ? faAngleUp : faAngleDown} className="ms-auto" />
-    </div>
-    {showClassDesignationSubMenu && (
-      <div className="submenu">
-        <Link
-          to="#"
-          className="submenu-item d-flex align-items-center mb-2"
-          onClick={() => handleSectionChange(SECTIONS.CURRICULUM)} // Navigate to Curriculum
-        >
-          <FontAwesomeIcon icon={faTable} className="me-2" />
-          CURRICULUM
-        </Link>
-      </div>
-    )}
+   
   </div>
 
+
+  <div 
+            className="menu-item d-flex align-items-center mb-2" 
+            onClick={() => {
+              setShowClassDesignationSubMenu(!showClassDesignationSubMenu);
+              navigate('/programHead-dashboard/class-scheduling'); // Directly navigate to RegistrarStudents
+            }}
+          >
+            <FontAwesomeIcon icon={faTable} className="me-2" />
+            CLASS SCHEDULING
+            <FontAwesomeIcon icon={showClassDesignationSubMenu ? faAngleUp : faAngleDown} className="ms-auto" />
+          </div>
+          
+          {showClassDesignationSubMenu && (
+            <div className="submenu">
+              <Link 
+                to="/programHead-dashboard/curriculum" 
+                className={`submenu-item d-flex align-items-center mb-2 ${location.pathname === '/programHead-dashboard/curriculum' ? 'active' : ''}`}
+              >
+                <FontAwesomeIcon icon={faTable} className="me-2" />
+                CURRICULUM
+              </Link>
+            </div>
+          )}
   <div
       className={`menu-item d-flex align-items-center mb-2 ${selectedSection === SECTIONS.HRIS ? 'active' : ''}`} 
     >
@@ -242,7 +250,7 @@ export default function ProgramHeadDashboard() {
             />
             {showDropdown && (
               <div className="dropdown-menu position-absolute end-0 mt-2 show">
-                <button className="dropdown-item" onClick={() => { handleSectionChange(SECTIONS.PROFILE); setShowDropdown(false); }}>
+                <button className="dropdown-item" onClick={() => navigate('/programhead-dashboard/profile')}>
                   Profile
                 </button>
                 <button className="dropdown-item" onClick={() => { handleSectionChange(SECTIONS.CHANGEPASSWORD); setShowDropdown(false); }}>
@@ -258,26 +266,8 @@ export default function ProgramHeadDashboard() {
 
         {/* Main Content Section based on selected section */}
         <div className="content-section">
-          {/* MOG Section */}
-          {selectedSection === SECTIONS.MOG && <ProgramHeadMOG />}
 
-          {/* CSOG Section */}
-          {selectedSection === SECTIONS.CSOG && <ProgramHeadCSOG />}
-
-          {/* Class Designation Section */}
-          {selectedSection === SECTIONS.CLASSDESIGNATION && (
-            <ProgramHeadClassDesig
-              programHeadView={programHeadView}
-              setProgramHeadView={setProgramHeadView}
-              setSelectedProgram={setSelectedProgram}
-              selectedProgram={selectedProgram}
-            />
-          )}
-
-          {/* Curriculum Section */}
-          {selectedSection === SECTIONS.CURRICULUM && <CurriculumPage />}
-
-          {selectedSection === 'profile' && (
+        {/*  {selectedSection === 'profile' && (
           <div className="card bg-white rounded">
           <div className="card-header bg-white">
               <p className="fs-5 fw-semibold my-2">{user.personnelNameLast}, {user.personnelNameFirst} {user.personnelNameMiddle} ({user.personnelNumber})</p>
@@ -329,7 +319,7 @@ export default function ProgramHeadDashboard() {
               <button className="btn btn-success">Save</button>
           </div>
       </div>
-        )}
+        )}   */}
 
         {selectedSection === 'change-password' && (
           <section className="card border-success p-3">
@@ -341,6 +331,17 @@ export default function ProgramHeadDashboard() {
           </section>
         )}
         </div>
+
+        <Routes>
+          <Route path="csog" element={<ProgramHeadCSOG />} />
+          <Route path="mog" element={<ProgramHeadMOG />} />
+          <Route path="class-scheduling" element={<ProgramHeadClassDesig  programHeadView={programHeadView}
+              setProgramHeadView={setProgramHeadView}
+              setSelectedProgram={setSelectedProgram}
+              selectedProgram={selectedProgram}/>} />
+          <Route path="curriculum" element={<CurriculumPage />} />
+          <Route path="profile" element={<RegistrarProfile />}/>
+        </Routes>
       </div>
     </div>
   );

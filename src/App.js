@@ -40,7 +40,7 @@ const App = () => {
         <Route path="/grades" element={<Grades />} /> 
         <Route path="/class-details/:className" element={<ClassDetails />} />
         <Route path="/registrar-dashboard/*" element={<RegistrarDashboard />} /> 
-        <Route path="/programHead-dashboard" element={<ProgramHeadDashboard />} /> 
+        <Route path="/programHead-dashboard/*" element={<ProgramHeadDashboard />} /> 
         <Route path="*" element={<ErrorPage />} />
         <Route path="/studentEnrollmentSchedule" element={<StudentEnrollmentSchedule/>} />
         <Route path="/ForgotPassword" element={<ForgotPassword />} />

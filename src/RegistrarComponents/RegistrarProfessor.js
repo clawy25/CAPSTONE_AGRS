@@ -188,7 +188,7 @@ export default function RegistrarProfessor() {
     }
   };
 
-  const fetchSchedules = async () => {
+  const fetchSchedules = async () => { 
     try {
         // Ensure all necessary filters are selected
         if (!selectedAcademicYear || !selectedProgram || !selectedYearLevel || !selectedSemester || !selectedSection) {
@@ -196,20 +196,8 @@ export default function RegistrarProfessor() {
             return;
         }
 
-        // Log the selected filters for debugging
-        console.log("Filters:", {
-            selectedAcademicYear,
-            selectedProgram,
-            selectedYearLevel,
-            selectedSemester,
-            selectedSection,
-        });
-
-        const personnelData = await PersonnelModel.getProfessorByPersonnelNumber();
-        console.log("Fetched personnel:", personnelData);
         // Fetch all schedules
         const scheduleData = await ScheduleModel.fetchExistingschedule(selectedSection);
-        console.log("Fetched schedules:", scheduleData);
 
         // If schedules are available, check for matching submissions
         if (scheduleData.length > 0) {
@@ -217,9 +205,8 @@ export default function RegistrarProfessor() {
             const formattedSchedules = await Promise.all(
                 scheduleData.map(async (schedule) => {
                     try {
-
                         // Fetch submission data for the current schedule using scheduleNumber
-                        const submissionData = await SubmissionModel.fetchSubmissionBySchedule(schedule.scheduleNumber);   
+                        const submissionData = await SubmissionModel.fetchSubmissionBySchedule(schedule.scheduleNumber);
 
                         // If no submission data found, use null for matching submission
                         const matchingSubmission = submissionData && submissionData.length > 0 ? submissionData[0] : null;
@@ -227,11 +214,19 @@ export default function RegistrarProfessor() {
                         // Format the created_at field (if found) into a human-readable date and time
                         let formattedDate = null;
                         let formattedTime = null;
+
                         if (matchingSubmission && matchingSubmission.created_at) {
                             const timestamp = matchingSubmission.created_at;
                             const dateObj = new Date(timestamp.replace(" ", "T")); // Convert to Date object
-                            formattedDate = dateObj.toISOString().split('T')[0];  // YYYY-MM-DD
-                            formattedTime = dateObj.toISOString().split('T')[1].slice(0, 8); // HH:MM:SS
+
+                            // Format the date as YYYY-MM-DD
+                            const year = dateObj.getFullYear();  // Get full year (YYYY)
+                            const month = (dateObj.getMonth() + 1).toString().padStart(2, '0');  // Get month (1-12) and pad to 2 digits
+                            const day = dateObj.getDate().toString().padStart(2, '0');  // Get day (1-31) and pad to 2 digits
+                            formattedDate = `${year}-${month}-${day}`;  // Format as YYYY-MM-DD
+
+                            // Format the time as HH:MM
+                            formattedTime = dateObj.toTimeString().slice(0, 5); // Extract HH:MM
                         }
 
                         // Return the schedule data, including matching submission details if found
@@ -239,7 +234,7 @@ export default function RegistrarProfessor() {
                             courseCode: schedule.courseCode,
                             personnelNumber: schedule.personnelNumber,
                             scheduleNumber: schedule.scheduleNumber,
-                            created_at: formattedDate,  // Display formatted date
+                            date: formattedDate,  // Display formatted date in YYYY-MM-DD
                             submissionStatus: matchingSubmission ? matchingSubmission.submissionStatus : null, // Include submissionStatus if match found
                             time: formattedTime, // Display formatted time
                         };
@@ -250,7 +245,7 @@ export default function RegistrarProfessor() {
                             courseCode: schedule.courseCode,
                             personnelNumber: schedule.personnelNumber,
                             scheduleNumber: schedule.scheduleNumber,
-                            created_at: null,
+                            date: null,
                             submissionStatus: null,
                             time: null,
                         };
@@ -270,42 +265,135 @@ export default function RegistrarProfessor() {
     }
 };
 
+
+
+const handleDateChange = (index, newDate) => {
+  setSchedules((prevSchedules) => {
+    const updatedSchedules = prevSchedules.map((schedule, i) => {
+      if (i === index) {
+        const updatedSchedule = { ...schedule, date: newDate };
+
+        // Combine date and time to create `created_at`
+        if (updatedSchedule.date && updatedSchedule.time) {
+          updatedSchedule.created_at = `${updatedSchedule.date}T${updatedSchedule.time}`;
+        }
+
+        return updatedSchedule;
+      }
+      return schedule;
+    });
+
+
+
+    return updatedSchedules;
+  });
+};
+
+const handleTimeChange = (index, newTime) => {
+  setSchedules((prevSchedules) => {
+    const updatedSchedules = prevSchedules.map((schedule, i) => {
+      if (i === index) {
+        const updatedSchedule = { ...schedule, time: newTime };
+
+        // Combine date and time to create `created_at`
+        if (updatedSchedule.date && updatedSchedule.time) {
+          updatedSchedule.created_at = `${updatedSchedule.date}T${updatedSchedule.time}`;
+        }
+
+        return updatedSchedule;
+      }
+      return schedule;
+    });
+
+    console.log("Updated schedules:", updatedSchedules);
+
+    return updatedSchedules;
+  });
+};
+
+
+
+
+const handleStatusChange = (index, newStatus) => {
+  setSchedules((prevSchedules) =>
+    prevSchedules.map((schedule, i) =>
+      i === index ? { ...schedule, submissionStatus: newStatus } : schedule
+    )
+  );
+};
+
+useEffect(() => {
+}, [schedules]);
+
+
+useEffect(() => {
+  // Ensure all schedules have required fields
+  setSchedules((prevSchedules) =>
+    prevSchedules.map((schedule) => ({
+      ...schedule,
+      date: schedule.date || "", // Default to an empty string
+      time: schedule.time || "",
+      submissionStatus: schedule.submissionStatus || "Pending", // Default to "Pending"
+    }))
+  );
+}, []);
+
+
+
 const handleAddSubmission = async (scheduleData) => {
+  
+
+  // Ensure scheduleData is an array
+  const submissionArray = Array.isArray(scheduleData) ? scheduleData : [scheduleData];
+
+  // Validate and sanitize data
+  const validSubmissions = submissionArray
+    .filter(schedule => {
+      const { created_at, scheduleNumber, submissionStatus } = schedule;
+      if (!created_at || !scheduleNumber || !submissionStatus) {
+        console.error('Missing required fields:', schedule);
+        return false; // Exclude invalid entries
+      }
+      return true;
+    })
+    .map(schedule => {
+      // Return only the required fields for each valid submission
+      const { created_at, scheduleNumber, submissionStatus } = schedule;
+      return { created_at, scheduleNumber, submissionStatus };
+    });
+
+  if (validSubmissions.length === 0) {
+    console.error('No valid submissions to process.');
+    return;
+  }
+
+  // Define a batch size for bulk insertions
+  const BATCH_SIZE = 10; // Adjust batch size based on database capabilities
+
   try {
-    // Destructure the necessary values from scheduleData
-    const { date, time, scheduleNumber, submissionStatus } = scheduleData;
+    for (let i = 0; i < validSubmissions.length; i += BATCH_SIZE) {
+      const batch = validSubmissions.slice(i, i + BATCH_SIZE); // Create batches
 
-    // Combine the date and time fields to form the created_at timestamp
-    const combinedDateTime = new Date(`${date}T${time}`); // Assuming date and time are in string format
 
-    // Check if the scheduleNumber already exists in the database
-    const existingSubmission = await SubmissionModel.fetchSubmissionBySchedule(scheduleNumber);
-    
-    // If the scheduleNumber exists, don't insert the submission again
-    if (existingSubmission && existingSubmission.length > 0) {
-      console.log('Submission with this schedule number already exists.');
-      return;
+      // Insert the current batch
+      const response = await SubmissionModel.createAndInsertSubmission(batch);
+
+      // Handle the API response for the batch
+      if (response.success) {
+        console.log(`Batch ${Math.ceil(i / BATCH_SIZE) + 1} added successfully:`, response.data);
+      } else {
+        console.error(`Batch ${Math.ceil(i / BATCH_SIZE) + 1} failed:`, response.message);
+      }
     }
 
-    // Prepare the submission data
-    const submission = {
-      created_at: combinedDateTime.toISOString(), // Store the combined date and time as an ISO string
-      scheduleNumber: scheduleNumber,
-      submissionStatus: submissionStatus,
-    };
-
-    // Call the method to create and insert the submission
-    const response = await SubmissionModel.createAndInsertSubmission(submission);
-
-    if (response.success) {
-      console.log('Submission added successfully:', response);
-    } else {
-      console.error('Failed to add submission:', response.message);
-    }
+    console.log('All batches processed successfully.');
   } catch (error) {
-    console.error('Error adding submission:', error);
+    console.error('Error during bulk submission:', error);
   }
 };
+
+
+
 
 
   useEffect(() => {
@@ -491,78 +579,83 @@ const handleAddSubmission = async (scheduleData) => {
             <Table bordered hover>
               <thead className='table-success text-center'>
                 <tr>
-                  <th>Course</th>
-                  <th>Faculty</th>
-                  <th>Date</th>
-                  <th>Time</th>
-                  <th>Status</th>
-                  <th>Submitted On</th>
-                  <th>Actions</th>
+                  <th className="custom-color-green-font">Schedule Number</th>
+                  <th className="custom-color-green-font">Course</th>
+                  <th className="custom-color-green-font">Faculty</th>
+                  <th className="custom-color-green-font">Date</th>
+                  <th className="custom-color-green-font">Time</th>
+                  <th className="custom-color-green-font">Status</th>
+                  <th className="custom-color-green-font">Submitted On</th>
+                  <th className="custom-color-green-font">Actions</th>
                 </tr>
               </thead>
-              <tbody>
-              { schedules.length > 0 ? (
-    schedules.map((schedule, index) => (
-        <tr key={index}>
-            <td>{schedule.courseCode}</td>
-            <td>{schedule.personnelNumber}</td>
-            
-            {/* Date Input */}
-            <td>
-                <Form.Group className="mb-3" controlId="date">
-                    <Form.Control
-                        type="date"
-                        value={schedule.created_at ? schedule.created_at : ''}
-                        onChange={(e) => setDate(e.target.value)} // Optional: handle date change if needed
-                    />
-                </Form.Group>
-            </td>
+                <tbody>
+                  {schedules.length > 0 ? (
+                    schedules.map((schedule, index) => (
+                      <tr key={index}>
+                        <td>{schedule.scheduleNumber}</td>
+                        <td>{schedule.courseCode}</td>
+                        <td>{schedule.personnelNumber}</td>
 
-            {/* Time Input */}
-            <td>
-                <Form.Group className="mb-3" controlId="time">
-                    <Form.Control
-                        type="time"
-                        value={schedule.time ? schedule.time : ''}
-                        onChange={(e) => setTime(e.target.value)} // Optional: handle time change if needed
-                    />
-                </Form.Group>
-            </td>
+                        {/* Date Input */}
+                        <td>
+                          <Form.Group className="mb-3" controlId={`date-${index}`}>
+                            <Form.Control
+                              type="date"
+                              value={schedule.date || ""}
+                              onChange={(e) => handleDateChange(index, e.target.value)}
+                            />
+                          </Form.Group>
+                        </td>
 
-            {/* Submission Status Dropdown */}
-            <td>
-                <Form.Group className="mb-3" controlId="status">
-                    <Form.Select
-                        aria-label="Default select example"
-                        value={schedule.submissionStatus || status}  // Bind value to submission status or default state
-                        onChange={(e) => setStatus(e.target.value)}  // Update state on change
-                    >
-                        <option className="text-success" value="Submitted">Submitted</option>
-                        <option className="text-warning" value="Pending">Pending</option>
-                        <option className="text-danger" value="Overdue">Overdue</option>
-                    </Form.Select>
-                </Form.Group>
-            </td>
+                        {/* Time Input */}
+                        <td>
+                          <Form.Group className="mb-3" controlId={`time-${index}`}>
+                            <Form.Control
+                              type="time"
+                              value={schedule.time || ""}
+                              onChange={(e) => handleTimeChange(index, e.target.value)}
+                            />
+                          </Form.Group>
+                        </td>
 
-            {/* Empty Cell for Placeholder */}
-            <td></td>
+                        {/* Submission Status Dropdown */}
+                        <td>
+                          <Form.Group className="mb-3" controlId={`status-${index}`}>
+                            <Form.Select
+                              aria-label="Submission Status"
+                              value={schedule.submissionStatus || "Pending"}
+                              onChange={(e) => handleStatusChange(index, e.target.value)}
+                            >
+                              <option value="Submitted">Submitted</option>
+                              <option value="Pending">Pending</option>
+                              <option value="Overdue">Overdue</option>
+                            </Form.Select>
+                          </Form.Group>
+                        </td>
+                        
+                        <td></td>
+                        {/* Edit Button */}
+                        <td>
+                          <Button className="btn-warning" onClick={() => handleEdit(schedule)}>
+                            Edit
+                          </Button>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="8" className="text-center">
+                        No Schedules Available
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
 
-            {/* Edit Button */}
-            <td>
-                <Button className="btn-warning" onClick={() => handleEdit(schedule)}>Edit</Button>
-            </td>
-        </tr>
-    ))
-) : (
-    <tr>
-        <td colSpan="7" className="text-center">No Schedules Available</td>
-    </tr>
-)}
-
-              </tbody>
             </Table>
        
-          <Button className='btn-success' onClick={(() => handleAddSubmission(schedules))}>Save</Button>
+            <Button className='btn-success' onClick={() => handleAddSubmission(schedules)}>Save</Button>
+
           </div>
           
         </div>
@@ -613,8 +706,8 @@ const handleAddSubmission = async (scheduleData) => {
           <Form.Label>Day</Form.Label>
           <Form.Control
             type="text"
-            value={editableData.created_at}
-            onChange={(e) => setEditableData({ ...editableData, created_at: e.target.value })}
+            value={editableData.date}
+            onChange={(e) => setEditableData({ ...editableData, date: e.target.value })}
           />
         </Form.Group>
         <Form.Group className="mt-2" controlId="status">
