@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Form, Row, Col, Button, Table, Modal } from 'react-bootstrap';
+import { Form, Row, Col, Button, Modal, Table } from 'react-bootstrap';
 import * as XLSX from 'sheetjs-style'; // Use sheetjs-style for formatting
 import ProgramModel from '../ReactModels/ProgramModel'; // Ensure this path is correct
-
-
 
 function ProgramFilter({ onView }) {
   const [programs, setPrograms] = useState([]);
   const [programName, setProgramName] = useState("");
   const [programCode, setProgramCode] = useState("");
   const [batchYear, setBatchYear] = useState("");
+
+  const [showPrintModal, setShowPrintModal] = useState(false);
+  const [tableContent, setTableContent] = useState("");
 
   useEffect(() => {
     const fetchPrograms = async () => {
@@ -95,12 +96,13 @@ function ProgramFilter({ onView }) {
     XLSX.writeFile(workbook, `${programName || "Masterlist"}_Grades.xlsx`);
   };
 
-  
-  
-  
-  
-  
-  
+  const handlePrintModal = () => {
+    const table = document.querySelector('.table-success'); // Select the table to copy
+    if (table) {
+      setTableContent(table.outerHTML); // Copy table's HTML content
+      setShowPrintModal(true);
+    }
+  };
 
   return (
     <Form className="p-3 bg-white border border-success rounded">
@@ -158,14 +160,48 @@ function ProgramFilter({ onView }) {
             <Form.Label className="custom-color-green-font custom-font">Action</Form.Label>
             <div className="d-flex">
               <Button className="w-25 btn-success me-2" onClick={handleView}>View</Button>
-              <Button className="w-75 btn-success" onClick={downloadExcel}>Download Excel</Button>
+              <Button className="w-50 btn-success me-2" onClick={downloadExcel}>Download Excel</Button>
+              <Button className="w-25 btn-success me-2" onClick={handlePrintModal}>Print</Button>
             </div>
           </Form.Group>
         </Col>
       </Row>
+
+      {/* Print Modal */}
+      <Modal
+        show={showPrintModal}
+        onHide={() => setShowPrintModal(false)}
+        size="xl"
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Print Preview</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <div style={{ overflowX: 'auto' }}>
+            {/* Render the copied table */}
+            <div dangerouslySetInnerHTML={{ __html: tableContent }} />
+          </div>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowPrintModal(false)}>
+            Close
+          </Button>
+          <Button
+            variant="success"
+            onClick={() => {
+              window.print();
+            }}
+          >
+            Print
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </Form>
   );
 }
+
+
+
 
 
 
@@ -250,51 +286,131 @@ function MasterlistOfGradesTable() {
     }
   
     const content = contentElement.innerHTML;
-    const printWindow = window.open('', '_blank');
-    
+    const logoURL = '/pcc.png'; 
+  
+    const printWindow = window.open('', '', 'width=800,height=600');
     printWindow.document.write(`
       <html>
         <head>
-          <title>Print COG</title>
+          <title>Print TOR</title>
           <style>
-            /* General print styles */
             @media print {
-              @page { size: A3 portrait; margin: 0; }
-              body { 
-                margin: 0; 
-                font-family: Arial, sans-serif; 
-                width: 100%; 
+              @page {
+                size: legal;
+                margin: 0;
               }
-              .modalContent { 
-                width: 100%; 
-                padding: 10px; 
+  
+              body {
+                margin: 0;
+                font-family: Arial, sans-serif;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transform: scale(1.00); /* Adjust scale for fitting content */
+                transform-origin: center center;
+                width: 100%;
+                height: 100%;
+                overflow: hidden; /* Prevent overflow */
+              }
+  
+              .tableContainer {
+                display: block;
+                width: 100%;
+                padding: 10px;
+              }
+  
+              .modalContent {
+                width: 100%;
+                padding: 10px;
+                background: #fff;
+                position: relative;
                 box-sizing: border-box;
               }
-              /* Adjustments for fitting content on one page */
-              .modalContent h1 { font-size: 18px; margin: 0; padding: 5px; }
-              .modalContent p, .modalContent td, .modalContent th {
-                font-size: 10px;
-                padding: 4px;
+  
+              /* Watermark logo - centered */
+              .modalContent::before {
+                content: '';
+                position: absolute;
+                top: 30%;
+                left: 50%;
+                transform: translate(-50%, -50%); /* Center the logo */
+                width: 100%;
+                height: 100%;
+                background-image: url('${logoURL}');
+                background-position: center;
+                background-repeat: no-repeat;
+                background-size: 500px 500px; /* Adjust size of logo */
+                opacity: 0.1; /* Low opacity for watermark effect */
+                z-index: 0;
               }
-              /* Table styling for compact view */
+  
+              /* Ensure content is above the watermark */
+              .modalContent * {
+                position: relative;
+                z-index: 1;
+              }
+  
+              /* Default table styling (with borders) */
               .modalContent table {
                 width: 100%;
                 border-collapse: collapse;
-                margin-bottom:2px;
+                table-layout: fixed; /* Fix table layout to prevent overflow */
               }
-              .modalContent th, .modalContent td {
-                border: 0.25px solid black;
+  
+              /* Add borders to table cells */
+              .modalContent th {
+                border: 1px solid black; /* Add border to table cells */
+                padding: 5px; /* Optional: Adds padding inside cells */
+                text-align: center; /* Align text to the left */
               }
 
-              .modalContent div {
-              border: 0.25px solid black;
-              
+              /* Add borders to table cells */
+              .modalContent td {
+                border: 1px solid black; /* Add border to table cells */
+                padding: 5px; /* Optional: Adds padding inside cells */
+                text-align: left; /* Align text to the left */
+              }
+  
+              /* Specific tables with no borders */
+              .no-border th, .no-border td {
+                border: none; /* Remove borders from these tables */
+              }
+  
+              .modalContent .grading-system th,
+              .modalContent .grading-system td { 
+                font-size: 0.5em; 
+                font-style: italic;
+              }
+  
+              .modalContent .table-upper td { 
+                font-size: 0.7rem; 
+              }
+  
+              .modalContent .table-upper th {
+                font-size: 0.9rem; 
+              }
+  
+              .modalContent .bottom-part-print .certify-statement, 
+              .modalContent .bottom-part-print .college-registrar-center {
+                text-align: center;
+                font-size: 0.7rem;
+              }
+  
+              .modalContent .bottom-part-print .prepared-by{
+                font-size: 0.7rem;
+              }
+  
+              .modalContent .grades-table th, .modalContent .grades-table td {
+                border: 1px solid black;
+                font-size: 0.7rem; 
               }
             }
           </style>
         </head>
         <body>
-          <div class="modalContent">${content}</div>
+          <div class="modalContent">
+            ${content}
+          </div>
           <script>
             window.onload = function() {
               window.print();
@@ -304,9 +420,15 @@ function MasterlistOfGradesTable() {
         </body>
       </html>
     `);
-    
+  
     printWindow.document.close();
-};
+  };
+  
+  
+  
+  
+  
+  
   
   
 
@@ -412,7 +534,7 @@ function MasterlistOfGradesTable() {
           {selectedStudent && (
             <div>
            <table className="table table-white">
-            <thead>
+            <thead class="no-border">
               <tr>
                 <th className="text-center" style={{ width: '25%' }}>
                   <img src="/pcc.png" alt="Logo" className="img-fluid" style={{ width: '110px' }} />
@@ -432,89 +554,108 @@ function MasterlistOfGradesTable() {
             </thead>
           </table>
           
-          <table style={{ border: "2px solid black" }} className='mb-2'>
-            <thead>
-              <tr>
-                <td colSpan="2">
-                  <p className="text-white bg-custom-color-green fw-bold m-0 px-2 py-1" style={{ display: 'inline-block', border: '5px solid #F7FE28' }}>
-                    PERSONAL DATA
-                  </p>
-                </td>
-                <td><p className='fs-6'>STUDENT NUMBER: </p></td>
-                <td><p className='fs-6'>(STUDENT NUMBER)</p></td>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><p className='fs-6'>NAME</p></td>
-                <td><p className='fs-6'>(NAME)</p></td>
-                
-                <td><p className='fs-6'>SEX:</p></td>
-                <td><p className='fs-6'>(FEMALE?)</p></td>
-              </tr>
-              <tr>
-              <td rowSpan={2}><p className='fs-6'>PERMANENT ADDRESS:</p></td>
-              <td  rowSpan={2}><p className='fs-6'>(PERMANENT ADDRESS)</p></td>
-              <td><p className='fs-6'>GR NO.:</p></td>
-              <td><p className='fs-6'>(COPC-032 s. 2023 CRO)</p></td>    
-              </tr>
-              <tr>
-                <td><p className='fs-6'>SPECIAL ORDER NO.:</p></td>
-                <td><p className='fs-6'>((B) 50-343924 - 0028 S. 2024, Dated April 27,2024)</p></td>
-              </tr>
-              <tr>
-              <td><p className='fs-6'>DATE OF BIRTH</p></td>
-              <td><p className='fs-6'>(BIRTHDAY)</p></td>
-              <td><p className='fs-6'>ACADEMIC PROGRAM:</p></td>
-                <td><p className='fs-6'>(BACHELOR OF SCIENCE IN ENTREPRENEURSHIP?)</p></td>
-              </tr>
-              <tr>
-                <td><p className='fs-6'>PLACE OF BIRTH</p></td>
-                <td><p className='fs-6'>(BIRTH PLACE)</p></td>
-                <td><p className='fs-6'>ATTENDED:</p></td>
-                <td><p className='fs-6'>(8 semester(s)?)</p></td>
-              </tr>
-              <tr>
-                <td><p className='fs-6'>NATIONALITY</p></td>
-                <td><p className='fs-6'>(FILIPINO?)</p></td>
-                
-                <td><p className='fs-6'>DATE GRADUATED:</p></td>
-                <td><p className='fs-6'>(GRADUATE KA?)</p></td>
-              </tr>
-            </tbody>
-          </table>
-            
-          <table style={{ border: " 2px solid black" }} className='p-2 mb-0'>
-            <thead>
-              <tr>
-                <td colSpan="2">
-                  <p className="text-white bg-custom-color-green fw-bold m-0 px-2 py-1" style={{ display: 'inline-block', border: '5px solid #F7FE28' }}>
-                    ENTRANCE DATA
-                  </p>
-                </td>
-                <td><p className='fs-6'>ADMISSION CREDENTIALS</p></td>
-                <td><p>(F-137)</p></td>
-                <td></td>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>     
-                <td><p className='fs-6'>DATE GRADUATED/LAST ATTENDED:</p></td>
-                <td><p className='fs-6'>(2019)</p></td>
-                <td><p className='fs-6'>SCHOOL LAST ATTENDED:</p></td>
-                <td><p className='fs-6'>(COLLEGE NAME)</p></td>
-                <td></td>
-              </tr>
-              <tr>     
-                <td><p className='fs-6'>CATEGORY:</p></td>
-                <td><p className='fs-6'>SHS - TVL Strand</p></td>
-                <td><p className='fs-6'>DATE/SEMESTER ADMITTED: </p></td>
-                <td><p className='fs-6'>(1st Semester A.Y. 2019-2020)</p></td>
-                <td></td>
-              </tr>
-              
-            </tbody>
-          </table>
+          <table style={{ border: "2px solid black", width: '100%'  }} className="mb-2">
+        <thead className="no-border">
+          <tr>
+          <td className="no-border" colSpan="2">
+            <p
+              className="fw-bold m-0 px-2 py-1"
+              style={{
+                display: 'inline-block',
+                border: '5px solid #F7FE28',
+                backgroundColor: '#004d00',
+                color: 'white',
+              }}
+            >
+              PERSONAL DATA
+            </p>
+          </td>
+            <td><p style={{ fontSize: '0.7rem' }}>STUDENT NUMBER: </p></td>
+            <td><p style={{ fontSize: '0.7rem' }}>(STUDENT NUMBER)</p></td>
+          </tr>
+        </thead>
+        <tbody className="no-border">
+          <tr>
+            <td><p style={{ fontSize: '0.7rem' }}>NAME</p></td>
+            <td><p style={{ fontSize: '0.7rem' }}>(NAME)</p></td>
+
+            <td><p style={{ fontSize: '0.7rem' }}>SEX:</p></td>
+            <td><p style={{ fontSize: '0.7rem' }}>(FEMALE?)</p></td>
+          </tr>
+          <tr>
+            <td rowSpan={2}><p style={{ fontSize: '0.7rem' }}>PERMANENT ADDRESS:</p></td>
+            <td rowSpan={2}><p style={{ fontSize: '0.7rem' }}>(PERMANENT ADDRESS)</p></td>
+            <td><p style={{ fontSize: '0.7rem' }}>GR NO.:</p></td>
+            <td><p style={{ fontSize: '0.7rem' }}>(COPC-032 s. 2023 CRO)</p></td>
+          </tr>
+          <tr>
+            <td><p style={{ fontSize: '0.7rem' }}>SPECIAL ORDER NO.:</p></td>
+            <td><p style={{ fontSize: '0.7rem' }}>((B) 50-343924 - 0028 S. 2024, Dated April 27,2024)</p></td>
+          </tr>
+          <tr>
+            <td><p style={{ fontSize: '0.7rem' }}>DATE OF BIRTH</p></td>
+            <td><p style={{ fontSize: '0.7rem' }}>(BIRTHDAY)</p></td>
+            <td><p style={{ fontSize: '0.7rem' }}>ACADEMIC PROGRAM:</p></td>
+            <td><p style={{ fontSize: '0.7rem' }}>(BACHELOR OF SCIENCE IN ENTREPRENEURSHIP?)</p></td>
+          </tr>
+          <tr>
+            <td><p style={{ fontSize: '0.7rem' }}>PLACE OF BIRTH</p></td>
+            <td><p style={{ fontSize: '0.7rem' }}>(BIRTH PLACE)</p></td>
+            <td><p style={{ fontSize: '0.7rem' }}>ATTENDED:</p></td>
+            <td><p style={{ fontSize: '0.7rem' }}>(8 semester(s)?)</p></td>
+          </tr>
+          <tr>
+            <td><p style={{ fontSize: '0.7rem' }}>NATIONALITY</p></td>
+            <td><p style={{ fontSize: '0.7rem' }}>(FILIPINO?)</p></td>
+
+            <td><p style={{ fontSize: '0.7rem' }}>DATE GRADUATED:</p></td>
+            <td><p style={{ fontSize: '0.7rem' }}>(GRADUATE KA?)</p></td>
+          </tr>
+        </tbody>
+      </table>
+
+
+
+      <table style={{ border: "2px solid black", width: '100%'  }} className="p-2 mb-0">
+        <thead className="no-border">
+          <tr >
+          <td colSpan="1">
+            <p
+              className="fw-bold m-0 px-2 py-1"
+              style={{
+                display: 'inline-block',
+                border: '5px solid #F7FE28',
+                backgroundColor: '#004d00',
+                color: 'white',
+              }}
+            >
+              ENTRANCE DATA
+            </p>
+          </td>
+            <td><p style={{ fontSize: '0.7rem' }}>ADMISSION CREDENTIALS</p></td>
+            <td><p style={{ fontSize: '0.7rem' }}>(F-137)</p></td>
+            <td></td>
+          </tr>
+        </thead>
+        <tbody className="no-border">
+          <tr>
+            <td><p style={{ fontSize: '0.7rem' }}>DATE GRADUATED/LAST ATTENDED:</p></td>
+            <td><p style={{ fontSize: '0.7rem' }}>(2019)</p></td>
+            <td><p style={{ fontSize: '0.7rem' }}>SCHOOL LAST ATTENDED:</p></td>
+            <td><p style={{ fontSize: '0.7rem' }}>(COLLEGE NAME)</p></td>
+            <td></td>
+          </tr>
+          <tr>
+            <td><p style={{ fontSize: '0.7rem' }}>CATEGORY:</p></td>
+            <td><p style={{ fontSize: '0.7rem' }}>SHS - TVL Strand</p></td>
+            <td><p style={{ fontSize: '0.7rem' }}>DATE/SEMESTER ADMITTED: </p></td>
+            <td><p style={{ fontSize: '0.7rem' }}>(1st Semester A.Y. 2019-2020)</p></td>
+            <td></td>
+          </tr>
+        </tbody>
+      </table>
+
+
          
           <Table bordered responsive className="text-center">
             <thead>
@@ -571,89 +712,109 @@ function MasterlistOfGradesTable() {
             )} */}
           </tbody>
           </Table>
-          <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                {/* Left Column: Grading System Table */}
-                <div style={{ flex: 1, padding: '10px', maxWidth: '50%' }}>
-                  <Table className="tables border-white">
-                    <thead>
-                      <tr className="border-black">
-                        <th style={{ fontSize: '0.7rem' }}>GRADE</th>
-                        <th style={{ fontSize: '0.7rem' }}>EQUIVALENCE</th>
-                        <th style={{ fontSize: '0.7rem' }}>DESCRIPTION</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {/* Grading System Data */}
-                      {[
-                        { grade: '1.00', equivalence: '99-100%', description: 'EXCELLENT' },
-                        { grade: '1.25', equivalence: '96-98%', description: 'SUPERIOR' },
-                        { grade: '1.5', equivalence: '93-95%', description: 'VERY GOOD' },
-                        { grade: '1.75', equivalence: '90-92%', description: 'GOOD' },
-                        { grade: '2.00', equivalence: '87-89%', description: 'MERITORIOUS' },
-                        { grade: '2.25', equivalence: '84-86%', description: 'VERY SATISFACTORY' },
-                        { grade: '2.50', equivalence: '81-83%', description: 'SATISFACTORY' },
-                        { grade: '2.75', equivalence: '76-80%', description: 'FAIR SATISFACTORY' },
-                        { grade: '3.00', equivalence: '75-77%', description: 'PASSING' },
-                        { grade: '5.00', equivalence: 'Below 50%', description: 'FAILED' },
-                        { grade: 'INC', equivalence: '', description: 'INCOMPLETE' },
-                        { grade: 'OD', equivalence: '', description: 'OFFICIALLY DROPPED' },
-                        { grade: 'UD', equivalence: '', description: 'UNOFFICIALLY DROPPED' },
-                        { grade: 'FA', equivalence: '', description: 'FAILURE DUE TO EXCESSIVE ABSENCES' }
-                      ].map(({ grade, equivalence, description }, index) => (
-                        <tr className="border-black" key={index}>
-                          <td style={{ fontSize: '0.7rem' }}>{grade}</td>
-                          <td style={{ fontSize: '0.7rem' }}>{equivalence}</td>
-                          <td style={{ fontSize: '0.7rem' }}>{description}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </Table>
-                </div>
+          <Table bordered responsive className="text-center">
+            <thead>
+            <tr style={{ border: "2px solid black" }}>
+                <th colSpan={1}><p className='fs-6 text-start mb-1'>REMARKS:</p></th>
+                <th colSpan={7}><p className='fs-6 text-start mb-1'>CLEARED OF ALL PROPERTY AND MONEY ACCOUNTABILITIES</p></th>
+              </tr>
+              <tr style={{ border: "2px solid black" }}>
+                <th colSpan={3}  rowSpan={1}><p style={{ fontSize: '0.7rem' }}>GRADING SYSTEM</p></th>
+                <th colSpan={5} rowSpan={2}><p style={{ fontSize: '0.7rem' }}>This Transcript is valid only when it bears the school seal and the original signature of the Registrar. Any erasure or alteration made on this document renders it void unless initialed by the foregoing official.</p></th>
+              </tr>
+              <tr style={{ border: "2px solid black" }}>
+                <th colSpan={1}  rowSpan={1}> <p style={{ fontSize: '0.7rem' }}>GRADE</p></th>
+                <th colSpan={1}  rowSpan={1}><p style={{ fontSize: '0.7rem' }}>EQUIVALENCE</p></th>
+                <th colSpan={1}  rowSpan={1}><p style={{ fontSize: '0.7rem' }}>DESCRIPTION</p></th>
+              </tr>
+            </thead>
+            <tbody>
+            <tr style={{ border: "2px solid black", borderBottom: 'none' }}>
+              <td colSpan={1} rowSpan={1} style={{ fontSize: '0.7rem' }}>1.00</td>
+              <td colSpan={1} rowSpan={1} style={{ fontSize: '0.7rem' }}>99-100%</td>
+              <td colSpan={1} rowSpan={1} style={{ fontSize: '0.7rem' }}>EXCELLENT</td>
+              <td colSpan={3} rowSpan={1} style={{ fontSize: '0.7rem', textAlign: "left",  borderBottom: 'none'}}>Prepared by:</td>
+              <td colSpan={2}  rowSpan={14}><p style={{ fontSize: '0.7rem', paddingTop: '210px', textAlign: "center"}}>Transcript is <strong>NOT</strong> valid without PCC seal</p></td>
+            </tr>
+            <tr style={{ border: "2px solid black" }}>
+              <td colSpan={1} rowSpan={1} style={{ fontSize: '0.7rem' }}>1.25</td>
+              <td colSpan={1} rowSpan={1} style={{ fontSize: '0.7rem' }}>96-98%</td>
+              <td colSpan={1} rowSpan={1} style={{ fontSize: '0.7rem' }}>SUPERIOR</td>
+              <td colSpan={3} rowSpan={1} style={{ fontSize: '0.7rem', textAlign: "center" }}><strong><big>MELISSA TAN</big></strong></td>
+            </tr>
+            <tr style={{ border: "2px solid black" }}>
+              <td colSpan={1} rowSpan={1} style={{ fontSize: '0.7rem' }}>1.50</td>
+              <td colSpan={1} rowSpan={1} style={{ fontSize: '0.7rem' }}>93-95%</td>
+              <td colSpan={1} rowSpan={1} style={{ fontSize: '0.7rem' }}>VERY GOOD</td>
+              <td colSpan={3} rowSpan={1} style={{ fontSize: '0.7rem', textAlign: "center" }}>Program Records-In-Charge</td>
+            </tr>
+            <tr style={{ border: "2px solid black" }}>
+              <td colSpan={1} rowSpan={1} style={{ fontSize: '0.7rem' }}>1.75</td>
+              <td colSpan={1} rowSpan={1} style={{ fontSize: '0.7rem' }}>90-92%</td>
+              <td colSpan={1} rowSpan={1} style={{ fontSize: '0.7rem' }}>GOOD</td>
+              <td colSpan={3} rowSpan={1} style={{ fontSize: '0.7rem', textAlign: "left" }}>Checked & Verified by:</td>
+            </tr>
+              <tr style={{ border: "2px solid black" }}>
+                <td colSpan={1}  rowSpan={1}><p  style={{ fontSize: '0.7rem' }}>2.00</p></td>
+                <td colSpan={1}  rowSpan={1}><p  style={{ fontSize: '0.7rem' }}>87-89%</p></td>
+                <td colSpan={1}  rowSpan={1}><p  style={{ fontSize: '0.7rem' }}>MERITORIOUS</p></td>
+                <td colSpan={3}  rowSpan={1}><p  style={{ fontSize: '0.7rem', textAlign: "center"}} ><strong><big>LORNA L. DELLORO</big></strong></p></td>
+              </tr>
+              <tr style={{ border: "2px solid black" }}>
+                <td colSpan={1}  rowSpan={1}><p style={{ fontSize: '0.7rem' }}>2.25</p></td>
+                <td colSpan={1}  rowSpan={1}><p style={{ fontSize: '0.7rem' }}>84-86%</p></td>
+                <td colSpan={1}  rowSpan={1}><p style={{ fontSize: '0.7rem' }}>VERY SATISFACTORY</p></td>
+                <td colSpan={3}  rowSpan={1}><p style={{ fontSize: '0.7rem', textAlign: "center"}}>Registrar I</p></td>
+              </tr>
+              <tr style={{ border: "2px solid black" }}>
+                <td colSpan={1}  rowSpan={1}><p  style={{ fontSize: '0.7rem' }}>2.50</p></td>
+                <td colSpan={1}  rowSpan={1}><p  style={{ fontSize: '0.7rem' }}>81-83%</p></td>
+                <td colSpan={1}  rowSpan={1}><p  style={{ fontSize: '0.7rem' }}>SATISFACTORY</p></td>
+                <td colSpan={3}  rowSpan={1}><p  style={{ fontSize: '0.7rem', textAlign: "left" }} >Date Issued:</p></td>
+              </tr>
+              <tr style={{ border: "2px solid black" }}>
+                <td colSpan={1}  rowSpan={1}><p  style={{ fontSize: '0.7rem' }}>2.75</p></td>
+                <td colSpan={1}  rowSpan={1}><p  style={{ fontSize: '0.7rem' }}>76-80%</p></td>
+                <td colSpan={1}  rowSpan={1}><p  style={{ fontSize: '0.7rem' }}>FAIRLY SATISFACTORY</p></td>
+                <td colSpan={3}  rowSpan={1}><p  style={{ fontSize: '0.7rem', textAlign: "center"}}><big>MAY 23, 2024</big></p></td>
+              </tr>
+              <tr style={{ border: "2px solid black" }}>
+                <td colSpan={1}  rowSpan={1}><p style={{ fontSize: '0.7rem' }}>3.00</p></td>
+                <td colSpan={1}  rowSpan={1}><p style={{ fontSize: '0.7rem' }}>75-77%</p></td>
+                <td colSpan={1}  rowSpan={1}><p style={{ fontSize: '0.7rem' }}>PASSING</p></td>
+                <td colSpan={3}  rowSpan={4}><p style={{ fontSize: '0.7rem' }}></p></td>
+              </tr>
+              <tr style={{ border: "2px solid black" }}>
+                <td colSpan={1}  rowSpan={1}><p style={{ fontSize: '0.7rem' }}>5.00</p></td>
+                <td colSpan={1}  rowSpan={1}><p style={{ fontSize: '0.7rem' }}>Below 50</p></td>
+                <td colSpan={1}  rowSpan={1}><p style={{ fontSize: '0.7rem' }}>FAILED</p></td>
+              </tr>
+              <tr style={{ border: "2px solid black" }}>
+                <td colSpan={1}  rowSpan={1}><p style={{ fontSize: '0.7rem' }}>INC</p></td>
+                <td colSpan={1}  rowSpan={1}><p style={{ fontSize: '0.7rem' }}></p></td>
+                <td colSpan={1}  rowSpan={1}><p style={{ fontSize: '0.7rem' }}>INCOMPLETE</p></td>
+              </tr>
+              <tr style={{ border: "2px solid black" }}>
+                <td colSpan={1}  rowSpan={1}><p style={{ fontSize: '0.7rem' }}>OD</p></td>
+                <td colSpan={1}  rowSpan={1}><p style={{ fontSize: '0.7rem' }}></p></td>
+                <td colSpan={1}  rowSpan={1}><p style={{ fontSize: '0.7rem' }}>OFFICIALY DROPPED</p></td>
+              </tr>
+              <tr style={{ border: "2px solid black" }}>
+                <td colSpan={1}  rowSpan={1}><p style={{ fontSize: '0.7rem' }}>UD</p></td>
+                <td colSpan={1}  rowSpan={1}><p style={{ fontSize: '0.7rem' }}></p></td>
+                <td colSpan={1}  rowSpan={1}><p style={{ fontSize: '0.7rem' }}>UNOFFICIALY DROPPED</p></td>
+                <td colSpan={3}  rowSpan={1}><p style={{ textAlign: "center", fontSize: '0.7rem'}} ><strong><big>JORGE ERWIN A. RAD, RL, MLIS, MBA</big></strong></p></td>
+              </tr>
+              <tr style={{ border: "2px solid black" }}>
+                <td colSpan={1}  rowSpan={1}><p style={{ fontSize: '0.7rem' }}>FA</p></td>
+                <td colSpan={1}  rowSpan={1}><p style={{ fontSize: '0.7rem' }}></p></td>
+                <td colSpan={1}  rowSpan={1}><p style={{ fontSize: '0.7rem' }}>FAILURE DUE TO EXCESSIVE ABSENCES</p></td>
+                <td colSpan={3}  rowSpan={1}><p style={{ textAlign: "center", fontSize: '0.7rem'}} >College Registrar</p></td>
+              </tr>
+              
 
-                {/* Right Column: Remarks and Information Section */}
-                <div style={{ flex: 1, padding: '10px', maxWidth: '50%' }}>
-                  <Table className="tables border-white">
-                    <tbody>
-                      {/* Remarks and Information Section */}
-                      <tr>
-                        <td colSpan={6} style={{ fontSize: '0.7rem', border: '2px solid black' }} className="p-3">
-                          This Transcript is valid only when it bears the school seal and the original signature of the Registrar. Any erasure or alteration made on this document renders it void unless initialed by the foregoing official.
-                        </td>
-                      </tr>
-
-                      {/* Prepared By, Checked & Verified By, Date Issued Section */}
-                      <tr>
-                        <td colSpan={3} className="align-top">
-                          {['Prepared by', 'Checked & Verified by', 'Date Issued'].map((label, index) => (
-                            <div className="mb-3" key={index}>
-                              <p className="fs-6">{label}:</p>
-                              <div className="border border-black pt-3 px-4">
-                                <p className="fs-6">(Name of Person)</p>
-                                <p className="fs-6">{label === 'Prepared by' ? 'Program Records-In-Charge' : 'Registrar I'}</p>
-                              </div>
-                            </div>
-                          ))}
-                          <div className="border border-black pt-3 px-4">
-                            <p className="fs-6">(Name of Person)</p>
-                            <p className="fs-6">College Registrar</p>
-                          </div>
-                        </td>
-                        {/* Right Column with "Transcript is NOT valid" message */}
-                        <td colSpan={3} rowSpan={3} className="text-center align-top">
-                          <div className="mt-3">
-                            <div className="border border-black p-5 ms-5">
-                              <p className="fs-6">Transcript is <span>NOT</span> valid without PCC seal</p>
-                            </div>
-                            <p className="fs-6">Page 1 of 2</p>
-                          </div>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </Table>
-                </div>
-              </div>
-              </div>
+          </tbody>
+          </Table>
            </div>
           )}
           </div>

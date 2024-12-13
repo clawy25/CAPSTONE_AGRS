@@ -8,6 +8,7 @@ import YearLevelModel from '../ReactModels/YearLevelModel';
 import ProgramModel from '../ReactModels/ProgramModel';
 import SectionModel from '../ReactModels/SectionModel';
 
+
 const MasterlistOfGradesTable = () => {
   const [academicYear, setAcademicYear] = useState('');
   const [yearLevel, setYearLevel] = useState('');
@@ -569,7 +570,7 @@ const MasterlistOfGradesTable = () => {
                 color: white;
                 padding: 10px 5px;
                 border-radius: 5px;
-                width: 530px; /* Increase width to accommodate longer text */
+                width: 524px; /* Increase width to accommodate longer text */
                 text-align: center;
                 white-space: nowrap; /* Prevent text from wrapping */
                 box-sizing: border-box; /* Ensure padding fits inside the label */
@@ -797,35 +798,141 @@ const MasterlistOfGradesTable = () => {
        {/* Modal for COG */}
        <Modal show={showModal} onHide={closeModal} className="modal-xxl" centered>
         <Modal.Header closeButton>
+        <FontAwesomeIcon icon="certificate" style={{ marginRight: '8px' }} />
           <Modal.Title className='custom-color-green-font'>Certificate of Grades</Modal.Title>
         </Modal.Header>
         <Modal.Body>
         <div id="modalContent">
         <div className="d-flex justify-content-center">
-       
-          <table className="header-logo" style={{ width: '100%', maxWidth: '800px', textAlign: 'center' }}>
+          <table
+            className="header-logo"
+            style={{
+              width: '100%',
+              maxWidth: '800px',
+              marginLeft: '100px',
+              marginRight: '100px',
+              paddingLeft: '200px',
+            }}
+          >
             <tbody>
               <tr>
-                <td style={{ width: '80px'}}>
-                  <img src="/pcc.png" alt="Logo" className="img-fluid" style={{ width: '70px' }} />
+                {/* Logo Section */}
+                <td
+                  style={{
+                    width: '80px',
+                    textAlign: 'center',
+                    verticalAlign: 'middle',
+                    padding: '0',
+                    margin: '0',
+                  }}
+                >
+                  <img
+                    src="/pcc.png"
+                    alt="Logo"
+                    className="img-fluid"
+                    style={{
+                      width: '70px',
+                      margin: '0',
+                    }}
+                  />
                 </td>
-                <td style={{ textAlign: 'left' }}>
-                  <p className="fw-bold text-uppercase mb-0" style={{ fontSize: '0.8rem', lineHeight: '1.2' }}>
+
+                {/* Text Section */}
+                <td
+                  style={{
+                    textAlign: 'left',
+                    verticalAlign: 'middle',
+                    padding: '0',
+                    margin: '0',
+                    marginRight: '-2px',
+                    whiteSpace: 'nowrap',
+                    color: '#07770b', // Set text color to green
+                  }}
+                >
+                  <p
+                    className="fw-bold text-uppercase mb-0"
+                    style={{
+                      fontSize: '0.8rem',
+                      lineHeight: '1.2',
+                      margin: '0',
+                      padding: '0',
+                    }}
+                  >
                     Parañaque City <br />
-                    <span style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>College</span>
+                    <span
+                      style={{
+                        fontSize: '1.5rem',
+                        fontWeight: 'bold',
+                        margin: '0',
+                        padding: '0',
+                      }}
+                    >
+                      College
+                    </span>
                   </p>
                 </td>
-                <td style={{ textAlign: 'left'}}>
-                  <p className="mb-0" style={{ fontSize: '0.7rem', display: 'flex', alignItems: 'center' }}>
-                    <faMapMarkerAlt className="me-2" /> 
-                    Coastal Rd., cor. Victor Medina Street, San Dionisio, Parañaque City, Philippines
+
+                {/* Contact Information Section */}
+                <td
+                  style={{
+                    verticalAlign: 'middle',
+                    borderLeft: '2px solid #07770b', // Set vertical line color to green
+                    paddingLeft: '5px',
+                    marginLeft: '0',
+                    paddingRight: '0',
+                    color: '#07770b', // Set text color to green
+                  }}
+                >
+                  <p
+                    className="mb-0"
+                    style={{
+                      fontSize: '0.7rem',
+                      lineHeight: '0.5',
+                    }}
+                  >
+                    <i
+                      className="fas fa-map-marker-alt"
+                      style={{ marginRight: '5px', color: '#07770b' }}
+                    ></i>
+                    Coastal Rd., cor. Victor Medina Street
                   </p>
-                  <p className="mb-0" style={{ fontSize: '0.7rem', display: 'flex', alignItems: 'center' }}>
-                    <faEnvelope className="me-2" /> 
+                  <p
+                    className="mb-0"
+                    style={{
+                      fontSize: '0.7rem',
+                      lineHeight: '0.5',
+                    }}
+                  >
+                    <i
+                      className="fas fa-map-marker-alt"
+                      style={{ marginRight: '5px', color: '#07770b' }}
+                    ></i>
+                    San Dionisio, Parañaque City, Philippines
+                  </p>
+                  <p
+                    className="mb-0"
+                    style={{
+                      fontSize: '0.7rem',
+                      lineHeight: '0.5',
+                    }}
+                  >
+                    <i
+                      className="fas fa-envelope"
+                      style={{ marginRight: '5px', color: '#07770b' }}
+                    ></i>
                     info@parañaquecitycollege.edu.ph
                   </p>
-                  <p className="mb-0" style={{ fontSize: '0.7rem', display: 'flex', alignItems: 'center' }}>
-                    <faPhoneAlt className="me-2" /> 
+                  <p
+                    className="mb-0"
+                    style={{
+                      fontSize: '0.7rem',
+                      lineHeight: '0.5',
+                    }}
+                  >
+                    <i
+                      className="fas fa-phone-alt"
+                      style={{ marginRight: '5px', color: '#07770b' }}
+                    ></i>
                     (02) 85343321
                   </p>
                 </td>
