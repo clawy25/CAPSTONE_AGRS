@@ -12,6 +12,7 @@ import { Dropdown } from 'react-bootstrap';
 import SubmissionModel from '../ReactModels/SubmissionModel.js';
 import GradeModel from '../ReactModels/GradeModel.js';
 import AttendanceModel from '../ReactModels/AttendanceModel.js';
+import QuizModel from '../ReactModels/QuizModel.js';
 import { Modal, Button } from 'react-bootstrap';
 import * as XLSX from 'xlsx';
 
@@ -24,6 +25,7 @@ const ClassDetails = ({classList , classDetails}) => {
 
   const [classGradeData, setClassGradeData] = useState([]);
   const [attendanceLabelData, setAttendanceLabelData] = useState([]);
+  const [quizMaxData, setQuizMaxData] = useState([]);
 
   const [showModal, setShowModal] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
@@ -65,11 +67,13 @@ const ClassDetails = ({classList , classDetails}) => {
       const grade = await GradeModel.fetchGradeData(myClass);
 
       const attendanceDates = await AttendanceModel.fetchAttendanceData(myClass);
-
       const midtermAttendanceDates = attendanceDates.filter(item => item.period === 1); // Midterm (Period 1)
       const finalAttendanceDates = attendanceDates.filter(item => item.period === 2); // Finals (Period 2)
 
-      console.log(attendanceDates);
+      const quizMax = await QuizModel.fetchQuizData(myClass);
+      const midtermQuizMax = quizMax.filter(item => item.period === 1);
+      const finalQuizMax = quizMax.filter(item => item.period === 2);
+
       const studentNumbers = students.map(student => student.studentNumber);
 
       console.log(studentNumbers);
@@ -126,6 +130,16 @@ const ClassDetails = ({classList , classDetails}) => {
         setmidtermAssignment(groupedGrades.midterm?.Assignment);
         setfinalAssignment(groupedGrades.finals?.Assignment);
 
+        setmidtermQuiz(groupedGrades.midterm?.QuizSeat);
+        setmidtermQuizMax(midtermQuizMax);
+
+        setfinalQuiz(groupedGrades.finals?.QuizSeat);
+        setfinalQuizMax(finalQuizMax);
+
+        setmidtermRecitation(groupedGrades.midterm?.Recitation);
+        setfinalRecitation(groupedGrades.finals?.Recitation);
+        
+
         //TRANSFORMING ATTENDANCE RECORDS FOR RENDERING IN TABLE
         const ToMidtermAttendanceColumns = transformAttendanceData(
           groupedGrades.midterm?.Attendance ? groupedGrades.midterm.Attendance : [],
@@ -143,6 +157,24 @@ const ClassDetails = ({classList , classDetails}) => {
 
         const ToFinalAssignmentColumns = transfromComponentData(
           groupedGrades.finals?.Assignment ? groupedGrades.finals.Assignment : []
+        );
+
+        const ToMidtermQuizColumns = transformQuizData(
+          groupedGrades.midterm?.QuizSeat ? groupedGrades.midterm.QuizSeat : [],
+          midtermQuizMax ? midtermQuizMax : []
+        );
+
+        const ToFinalQuizColumns = transformQuizData(
+          groupedGrades.finals?.QuizSeat ? groupedGrades.finals.QuizSeat : [],
+          finalQuizMax ? finalQuizMax : []
+        );
+
+        const ToMidtermRecitationColumns = transfromComponentData(
+          groupedGrades.midterm?.Recitation ? groupedGrades.midterm.Recitation : []
+        );
+
+        const ToFinalRecitationColumns = transfromComponentData(
+          groupedGrades.finals?.Recitation ? groupedGrades.finals.Recitation : []
         );
         
 
@@ -228,6 +260,90 @@ const ClassDetails = ({classList , classDetails}) => {
           setfinalsAssignmentScores(initialData);//Initialize finalsAssignmentScores
         }
 
+        if(ToMidtermQuizColumns[0]?.grade){// Initializing midtermQuizColumns, midtermQuizScores and midtermQuizMaxScores
+          //Sorting them to match the indexes from student ClassList
+          ToMidtermQuizColumns[0].grade.sort((a, b) => {
+            return studentNumbers.indexOf(a.studentNumber) - studentNumbers.indexOf(b.studentNumber);
+          });
+          setmidtermQuizColumns(ToMidtermQuizColumns); //Initialize midtermQuizColumns
+  
+          const initialData = ToMidtermQuizColumns.reduce((acc, column) => {
+            column.grade.forEach((entry, studentIndex) => {
+              if (!acc[studentIndex]) acc[studentIndex] = []; // Ensure each student has their own array
+              acc[studentIndex].push(entry.score); // Add the score for the current quiz
+            });
+            return acc;
+          }, []);
+          // Initialize midtermQuizScores with the transformed data
+          setmidtermQuizScores(initialData);
+          
+          const maxQuizScores = midtermQuizMax.map(quiz => quiz.maxScore);
+          setmidtermQuizMaxScores(maxQuizScores);
+
+        }
+
+        if(ToFinalQuizColumns[0]?.grade){// Initializing finalsQuizColumns, finalsQuizScores and finalQuizMaxScores
+          //Sorting them to match the indexes from student ClassList
+          ToFinalQuizColumns[0].grade.sort((a, b) => {
+            return studentNumbers.indexOf(a.studentNumber) - studentNumbers.indexOf(b.studentNumber);
+          });
+          setfinalsQuizColumns(ToFinalQuizColumns); //Initialize finalsQuizColumns
+  
+          const initialData = ToFinalQuizColumns.reduce((acc, column) => {
+            column.grade.forEach((entry, studentIndex) => {
+              if (!acc[studentIndex]) acc[studentIndex] = []; // Ensure each student has their own array
+              acc[studentIndex].push(entry.score); // Add the score for the current quiz
+            });
+            return acc;
+          }, []);
+          // Initialize midtermQuizScores with the transformed data
+          setfinalsQuizScores(initialData);
+          
+          const maxQuizScores = finalQuizMax.map(quiz => quiz.maxScore);
+          setfinalsQuizMaxScores(maxQuizScores);
+
+        }
+
+        if(ToMidtermRecitationColumns[0]?.grade){// Initializing midtermRecitationColumns and midtermRecitationScores
+          
+          //Sorting them to match the indexes from student ClassList
+          ToMidtermRecitationColumns[0].grade.sort((a, b) => {
+            return studentNumbers.indexOf(a.studentNumber) - studentNumbers.indexOf(b.studentNumber);
+          });
+          console.log(ToMidtermRecitationColumns);
+          setmidtermRecitationColumns(ToMidtermRecitationColumns); //Initialize midtermRecitationColumns
+  
+          const initialData = ToMidtermRecitationColumns.reduce((acc, column, index) => {
+            column.grade.forEach((entry, studentIndex) => {
+              if (!acc[studentIndex]) acc[studentIndex] = []; // Ensure each student has their own array
+              acc[studentIndex][index] = entry.score;
+            });
+            return acc;
+          }, {});
+          console.log(initialData);
+          setmidtermRecitationScores(initialData);//Initialize midtermRecitationScores
+        }
+
+        if(ToFinalRecitationColumns[0]?.grade){// Initializing finalsRecitationColumns and finalsRecitationScores
+          
+          //Sorting them to match the indexes from student ClassList
+          ToFinalRecitationColumns[0].grade.sort((a, b) => {
+            return studentNumbers.indexOf(a.studentNumber) - studentNumbers.indexOf(b.studentNumber);
+          });
+          console.log(ToFinalRecitationColumns);
+          setfinalsRecitationColumns(ToFinalRecitationColumns); //Initialize finalsRecitationColumns
+  
+          const initialData = ToFinalRecitationColumns.reduce((acc, column, index) => {
+            column.grade.forEach((entry, studentIndex) => {
+              if (!acc[studentIndex]) acc[studentIndex] = []; // Ensure each student has their own array
+              acc[studentIndex][index] = entry.score;
+            });
+            return acc;
+          }, {});
+          console.log(initialData);
+          setfinalsRecitationScores(initialData);//Initialize finalsRecitationScores
+        }
+
       }
     } catch (error) {
       console.error("Error submitting class record:", error);
@@ -283,6 +399,32 @@ const ClassDetails = ({classList , classDetails}) => {
 
   return transformedData;
   };
+
+  const transformQuizData = (groupedQuiz, quizMax) => {
+    // Step 1: Group quiz by instanceNumber
+    const quizByInstance = groupedQuiz.reduce((acc, item) => {
+      const { instanceNumber, studentNumber, value } = item;
+      if (!acc[instanceNumber]) acc[instanceNumber] = [];
+      acc[instanceNumber].push({ studentNumber, score: parseInt(value) });
+      return acc;
+    }, {});
+  
+    // Step 2: Structure the final output
+    const result = quizMax.map((quiz) => {
+      const { id, instanceNumber, maxScore } = quiz;
+
+      // Get the student grades for this instanceNumber
+      const studentGrades = quizByInstance[instanceNumber] || [];
+
+      return {
+        id, // Use the id from quizMax
+        max: maxScore, // Use the maxScore from quizMax
+        grade: studentGrades
+      };
+  });
+
+  return result;
+  };
   
   const handleSubmit = async () => {
     try{
@@ -313,12 +455,13 @@ const ClassDetails = ({classList , classDetails}) => {
 
   const handleSave = async () => {
     try{
-      const [grade, attendance] = await Promise.all([
+      const [grade, attendance, quiz] = await Promise.all([
         GradeModel.updateGradeData(classGradeData),
-        AttendanceModel.updateAttendanceData(attendanceLabelData)
+        AttendanceModel.updateAttendanceData(attendanceLabelData),
+        QuizModel.updateQuizData(quizMaxData)
       ]);
 
-      if (grade && attendance){
+      if (grade && attendance && quiz){
         handleModalShow('saved');
       }
     } catch (error){
@@ -527,19 +670,29 @@ const handlePrint = () => {
   const [midtermAssignment, setmidtermAssignment] = useState([]); //Storing raw values (50-100) for db upsertion
   
   // QUIZZES DECLARATION
-  const [midtermQuizColumns, setmidtermQuizColumns] = useState([]); // Initialize quiz columns
+  const [midtermQuizColumns, setmidtermQuizColumns] = useState([{ id: 1, grade:[] }]); // Initialize quiz columns
+  //console.log("Midterm Quiz Columns:",midtermQuizColumns);
   const [midtermQuizScores, setmidtermQuizScores] = useState([]); // Scores for each quiz
+  //console.log("Midterm Quiz Scores:",midtermQuizScores);
   const [midtermQuizMaxScores, setmidtermQuizMaxScores] = useState([]); // Maximum scores for each quiz
+  //console.log("Midterm Quiz Max:",midtermQuizMaxScores);
   const [midtermQuizPercentage, setmidtermQuizPercentage] = useState();
+  const [midtermQuiz, setmidtermQuiz] = useState([]); //Storing raw values (int) for db upsertion
+  const [midtermQuizMax, setmidtermQuizMax] = useState([]); //Storing attendance column dates for db upsertion
+
 
   {/* RECITATION DECLARATION */}
-  const [midtermRecitationColumns, setmidtermRecitationColumns] = useState([]);
+  const [midtermRecitationColumns, setmidtermRecitationColumns] = useState([{ id: 1, grade:[] }]);
+  //console.log("Midterm Recitation Columns:",midtermRecitationColumns);
   const [midtermRecitationScores, setmidtermRecitationScores] = useState([]);
+  //console.log("Midterm Recitation Scores:",midtermRecitationScores);
   const [midtermRecitationPercentage, setmidtermRecitationPercentage] = useState();
   const [invalidRecitationScores, setInvalidRecitationScores] = useState([]);
+  const [midtermRecitation, setmidtermRecitation] = useState([]); //Storing raw values (50-100) for db upsertion
+  
 
    // PBA Declaration
-   const [midtermPBAColumns, setmidtermPBAColumns] = useState([]);
+   const [midtermPBAColumns, setmidtermPBAColumns] = useState([{ id: 1, grade:[] }]);
    const [midtermPBAGradeScores, setmidtermPBAGradeScores] = useState([]);  // Store scores for each PBA column per student
    const [midtermPBAGradePercentage, setmidtermPBAGradePercentage] = useState();
    const [invalidPBAScores, setInvalidPBAScores] = useState([]);
@@ -570,21 +723,25 @@ const handlePrint = () => {
   const [finalAssignment, setfinalAssignment] = useState([]); //Storing raw values (50-100) for db upsertion
   
   {/* QUIZZES DECLARATION */}
-  const [finalsQuizColumns, setfinalsQuizColumns] = useState([]); // Initialize quiz columns
-  const [finalsQuizScores, setfinalsQuizScores] = useState(
-    students.map(() => Array(finalsQuizColumns.length).fill(0))
-  );
+  const [finalsQuizColumns, setfinalsQuizColumns] = useState([{ id: 1, grade:[] }]); // Initialize quiz columns
+  //console.log("Final Quiz Columns:", finalsQuizColumns);
+  const [finalsQuizScores, setfinalsQuizScores] = useState([]);
+  //console.log("Final Quiz Scores:", finalsQuizScores);
   const [finalsQuizMaxScores, setfinalsQuizMaxScores] = useState([]);
+  //console.log("Final Quiz Max Scores:", finalsQuizMaxScores);
   const [finalsQuizPercentage, setfinalsQuizPercentage] = useState();
+  const [finalQuiz, setfinalQuiz] = useState([]); //Storing raw values (int) for db upsertion
+  const [finalQuizMax, setfinalQuizMax] = useState([]); //Storing attendance column dates for db upsertion
 
   {/* RECITATION DECLARATION */}
-  const [finalsRecitationColumns, setfinalsRecitationColumns] = useState([]);
+  const [finalsRecitationColumns, setfinalsRecitationColumns] = useState([{ id: 1, grade:[] }]);
   const [finalsRecitationScores, setfinalsRecitationScores] = useState([]);
   const [finalsRecitationPercentage, setfinalsRecitationPercentage] = useState();
   const [finalsinvalidRecitationScores, setfinalsInvalidRecitationScores] = useState([]);
-
+  const [finalRecitation, setfinalRecitation] = useState([]); //Storing raw values (50-100) for db upsertion
+  
   {/* PBA DECLARATION */}
-  const [finalsPBAColumns, setfinalsPBAColumns] = useState([]);
+  const [finalsPBAColumns, setfinalsPBAColumns] = useState([{ id: 1, grade:[] }]);
   const [finalsPBAGradeScores, setfinalsPBAGradeScores] = useState([]);
   const [finalsPBAGradePercentage, setfinalsPBAGradePercentage] = useState();
   const [finalsinvalidPBAScores, setfinalsInvalidPBAScores] = useState([]);
@@ -838,16 +995,32 @@ const removeAssignmentColumn = (index, setColumns, setAssignmentScores) => {
       ...(finalAttendance?.length ? finalAttendance : []),
       ...(midtermAssignment?.length ? midtermAssignment : []),
       ...(finalAssignment?.length ? finalAssignment : []),
+      ...(midtermQuiz?.length ? midtermQuiz : []),
+      ...(finalQuiz?.length ? finalQuiz : []),
+      ...(midtermRecitation?.length ? midtermRecitation : []),
+      ...(finalRecitation?.length ? finalRecitation : []),
       //ADD MORE 
     ];
     const combinedAttendanceLabelData = [
       ...(midtermAttendanceLabels?.length ? midtermAttendanceLabels : []),
       ...(finalAttendanceLabels?.length ? finalAttendanceLabels : [])
     ];
+    const combinedQuizMaxData = [
+      ...(midtermQuizMax?.length ? midtermQuizMax : []),
+      ...(finalQuizMax?.length ? finalQuizMax : []),
+    ];
   
     setClassGradeData(combinedClassGradeData);
     setAttendanceLabelData(combinedAttendanceLabelData);
-  }, [midtermAttendance, finalAttendance, midtermAttendanceLabels, finalAttendanceLabels, midtermAssignment, finalAssignment]);
+    setQuizMaxData(combinedQuizMaxData);
+  }, [midtermAttendance, finalAttendance,
+      midtermAttendanceLabels, finalAttendanceLabels,
+      midtermAssignment, finalAssignment,
+      midtermQuiz, finalQuiz,
+      midtermQuizMax, finalQuizMax,
+      midtermRecitation, finalRecitation,
+
+    ]);
   
 
   {/*ATTENDANCE TOTALS FOR BOTH PERIOD (COMPLETE)*/}
@@ -1127,7 +1300,9 @@ const removeAssignmentColumn = (index, setColumns, setAssignmentScores) => {
         ? [...prevMaxScores, ...Array(midtermQuizColumns.length - prevMaxScores.length).fill(0)] 
         : prevMaxScores
     );
+  }, [students]);
 
+  useEffect(() => {
     setfinalsQuizScores(prevScores =>
       students.map((_, index) => prevScores[index] || Array(finalsQuizColumns.length).fill(0)) // Retain previous scores
     );
@@ -1138,52 +1313,47 @@ const removeAssignmentColumn = (index, setColumns, setAssignmentScores) => {
     );
   }, [students]);
   
+  
   {/*ADD QUIZ COLUMNS FOR BOTH PERIODS (COMPLETE)*/}
   // ADD MIDTERM QUIZ COLUMN
   const addMidtermQuizColumn = () => {
-    setmidtermQuizColumns(prevColumns => [...prevColumns, {}]);
-    setmidtermQuizScores(prevScores =>
-      prevScores.map(studentScores => [...studentScores, 0]) // Append a new score (0) for the new column
+    setmidtermQuizColumns((prevColumns) => [...prevColumns, { id: prevColumns.length + 1, grade: [] }]);
+    setmidtermQuizScores((prevScores) =>
+      prevScores.map((studentScores) => [...studentScores, 0]) // Add a 0 for each student for the new column
     );
-    setmidtermQuizMaxScores(prevMaxScores => [...prevMaxScores, 0]);
+    setmidtermQuizMaxScores((prevMaxScores) => [...prevMaxScores, 0]);
   };
 
   // ADD FINALS QUIZ COLUMN
   const addFinalQuizColumn = () => {
-    setfinalsQuizColumns(prevColumns => [...prevColumns, {}]);
-    setfinalsQuizScores(prevScores =>
-      prevScores.map(studentScores => [...studentScores, 0]) // Append a new score (0) for the new column
+    setfinalsQuizColumns((prevColumns) => [...prevColumns, { id: prevColumns.length + 1, grade: [] }]);
+    setfinalsQuizScores((prevScores) =>
+      prevScores.map((studentScores) => [...studentScores, 0]) // Append a new score (0) for the new column
     );
-    setfinalsQuizMaxScores(prevMaxScores => [...prevMaxScores, 0]);
+    setfinalsQuizMaxScores((prevMaxScores) => [...prevMaxScores, 0]);
   };
 
   
   {/*REMOVE QUIZ COLUMNS FOR BOTH PERIODS (COMPLETE)*/}
-  const removeQuizColumn = (indexToRemove) => {
-    //MIDTERM
-    setmidtermQuizColumns(prevColumns => prevColumns.filter((_, index) => index !== indexToRemove));
-    setmidtermQuizScores(prevScores =>
+  const removeQuizColumn = (index, setColumns, setQuizData, setQuizMax) => {
+    setColumns((prevColumns) => {
+      const updatedColumns = prevColumns.filter((_, i) => i !== index);
+      return updatedColumns;
+    });
+    setQuizData(prevScores =>
       prevScores.map(studentScores =>
-        studentScores.filter((_, index) => index !== indexToRemove) // Remove the column at the specified index
+        studentScores?.filter((_, i) => i !== index)
       )
     );
-    setmidtermQuizMaxScores(prevMaxScores => 
-      prevMaxScores.filter((_, index) => index !== indexToRemove)
-    );
-    //FINALS
-    setfinalsQuizColumns(prevColumns => prevColumns.filter((_, index) => index !== indexToRemove));
-    setfinalsQuizScores(prevScores =>
-      prevScores.map(studentScores =>
-        studentScores.filter((_, index) => index !== indexToRemove) // Remove the column at the specified index
-      )
-    );
-    setfinalsQuizMaxScores(prevMaxScores => 
-      prevMaxScores.filter((_, index) => index !== indexToRemove)
-    );
+    setQuizMax((prevColumns) => {
+      const updatedColumns = prevColumns.filter((_, i) => i !== index);
+      return updatedColumns;
+    });
   };
+
   
   {/*QUIZ SCORE CHANGE HANDLER FOR BOTH PERIOD (COMPLETE)*/}
-  const handleMidtermQuizScoreChange = (studentIndex, quizIndex, score) => {
+  const handleMidtermQuizScoreChange = (studentId, studentNumber, quizIndex, score) => {
     // Validate that the score does not exceed the max score
     const maxScore = midtermQuizMaxScores[quizIndex];
     
@@ -1191,10 +1361,15 @@ const removeAssignmentColumn = (index, setColumns, setAssignmentScores) => {
       toast.error(`Score cannot exceed ${maxScore} for Quiz ${quizIndex + 1}`);
       return; // Do not update if validation fails
     }
+
+    if(score < 0){
+      toast.error(`Score cannot have negative values for Quiz ${quizIndex + 1}`);
+      return; // Do not update if validation fails
+    }
   
     setmidtermQuizScores((prevScores) =>
       prevScores.map((scores, index) => {
-        if (index === studentIndex) {
+        if (index === studentId) {
           const updatedScores = [...scores];
           updatedScores[quizIndex] = score; // Set the new score for the quiz
           return updatedScores;
@@ -1202,9 +1377,73 @@ const removeAssignmentColumn = (index, setColumns, setAssignmentScores) => {
         return scores;
       })
     );
+    setmidtermQuizColumns((prevColumns) => 
+      prevColumns.map((column, index) => {
+        if (index !== quizIndex) return column;//Check if this is the correct date (based on dateIndex)
+        
+        if (index === quizIndex) {// Create a new grade array (don't mutate the original array)
+          const updatedGrade = [...column.grade];
+          // Find the student in the grade array
+          const studentIndex = updatedGrade.findIndex((entry) => entry.studentNumber === studentNumber);
+  
+          if (studentIndex !== -1) {
+            // Update existing student's status
+            updatedGrade[studentIndex] = { 
+              ...updatedGrade[studentIndex], 
+              score 
+            };
+          } else {
+            // Add new student entry to grade array
+            updatedGrade.push({
+              studentNumber: studentNumber,
+              score
+            });
+          }
+  
+          // Return the updated column with the updated grade array
+          return {
+            ...column,
+            grade: updatedGrade
+          };
+        } 
+        return column; // If this is not the correct column, return it unchanged
+      })
+    );
   };
+  
+  useEffect(() => {//Automatic Generation of objects for database storage (Quiz: Midterm)
+    const QuizData = []; //For Database: gradeData
+    const QuizColumns = []; //For Database: attendanceData
 
-  const handleFinalsQuizScoreChange = (studentIndex, quizIndex, score) => {
+    midtermQuizColumns?.forEach((column, index) => {
+      QuizColumns.push({
+          scheduleNumber: classInfo.scheduleNumber,
+          period: 1,
+          instanceNumber: index + 1,
+          maxScore: column.max
+      });
+      column.grade?.forEach((student) => {
+        
+        QuizData.push({
+          scheduleNumber: classInfo.scheduleNumber, 
+          studentNumber: student.studentNumber, 
+          componentNumber: 3, 
+          instanceNumber: index + 1, 
+          period: 1,
+          value: student.score
+        });
+      });
+    });
+  
+    //const filteredAttendance = QuizData.filter(quiz => quiz.value !== 0); NO NEED?
+    
+    console.log("Rows for Database:",QuizData);
+    console.log("List of Max Scores:", QuizColumns);
+    setmidtermQuiz(QuizData); //Storing raw values
+    setmidtermQuizMax(QuizColumns);
+  }, [midtermQuizColumns, classInfo]);
+
+  const handleFinalsQuizScoreChange = (studentId, studentNumber, quizIndex, score) => {
     // Validate that the score does not exceed the max score
     const maxScore = finalsQuizMaxScores[quizIndex];
     
@@ -1212,10 +1451,15 @@ const removeAssignmentColumn = (index, setColumns, setAssignmentScores) => {
       toast.error(`Score cannot exceed ${maxScore} for Quiz ${quizIndex + 1}`);
       return; // Do not update if validation fails
     }
-  
+
+    if(score < 0){
+      toast.error(`Score cannot have negative values for Quiz ${quizIndex + 1}`);
+      return; // Do not update if validation fails
+    }
+
     setfinalsQuizScores((prevScores) =>
       prevScores.map((scores, index) => {
-        if (index === studentIndex) {
+        if (index === studentId) {
           const updatedScores = [...scores];
           updatedScores[quizIndex] = score; // Set the new score for the quiz
           return updatedScores;
@@ -1223,7 +1467,71 @@ const removeAssignmentColumn = (index, setColumns, setAssignmentScores) => {
         return scores;
       })
     );
+    setfinalsQuizColumns((prevColumns) => 
+      prevColumns.map((column, index) => {
+        if (index !== quizIndex) return column;//Check if this is the correct date (based on dateIndex)
+        
+        if (index === quizIndex) {// Create a new grade array (don't mutate the original array)
+          const updatedGrade = [...column.grade];
+          // Find the student in the grade array
+          const studentIndex = updatedGrade.findIndex((entry) => entry.studentNumber === studentNumber);
+  
+          if (studentIndex !== -1) {
+            // Update existing student's status
+            updatedGrade[studentIndex] = { 
+              ...updatedGrade[studentIndex], 
+              score 
+            };
+          } else {
+            // Add new student entry to grade array
+            updatedGrade.push({
+              studentNumber: studentNumber,
+              score
+            });
+          }
+  
+          // Return the updated column with the updated grade array
+          return {
+            ...column,
+            grade: updatedGrade
+          };
+        } 
+        return column; // If this is not the correct column, return it unchanged
+      })
+    );
   };
+
+  useEffect(() => {//Automatic Generation of objects for database storage (Quiz: Finals)
+    const QuizData = []; //For Database: gradeData
+    const QuizColumns = []; //For Database: attendanceData
+
+    finalsQuizColumns?.forEach((column, index) => {
+      QuizColumns.push({
+          scheduleNumber: classInfo.scheduleNumber,
+          period: 2,
+          instanceNumber: index + 1,
+          maxScore: column.max
+      });
+      column.grade?.forEach((student) => {
+        
+        QuizData.push({
+          scheduleNumber: classInfo.scheduleNumber, 
+          studentNumber: student.studentNumber, 
+          componentNumber: 3, 
+          instanceNumber: index + 1, 
+          period: 2,
+          value: student.score
+        });
+      });
+    });
+  
+    //const filteredAttendance = QuizData.filter(quiz => quiz.value !== 0); NO NEED?
+    
+    console.log("Rows for Database:",QuizData);
+    console.log("List of Max Scores:", QuizColumns);
+    setfinalQuiz(QuizData); //Storing raw values
+    setfinalQuizMax(QuizColumns);
+  }, [finalsQuizColumns, classInfo]);
 
   {/*QUIZ MAX SCORE CHANGE HANDLER FOR BOTH PERIOD (COMPLETE)*/}
   const handleMidtermMaxScoreChange = (quizIndex, value) => {
@@ -1291,50 +1599,162 @@ const removeAssignmentColumn = (index, setColumns, setAssignmentScores) => {
   {/* RECITATION/PARTICIPATION */}
 
   {/* RECITATION CHANGE HANDLER FOR BOTH PERIOD (COMPLETE)*/}
-  const handleMidtermRecitationScoreChange = (studentIndex, recitationIndex, score) => {
-    // Update the recitation scores
-    setmidtermRecitationScores((prevScores) => {
-      const updatedScores = [...prevScores];
-      if (!updatedScores[studentIndex]) {
-        updatedScores[studentIndex] = [];
-      }
-      updatedScores[studentIndex][recitationIndex] = score;
-      return updatedScores;
+  const handleMidtermRecitationScoreChange = (studentId, studentNumber, recitationIndex, score) => {
+    setmidtermRecitationScores((prevData) => {
+      const studentScores = prevData[studentId] || [];
+      const updatedScores = [...studentScores];
+      updatedScores[recitationIndex] = score;
+      return {
+        ...prevData,
+        [studentId]: updatedScores,
+      };
     });
-  
     // Real-time validation for red border
     setInvalidRecitationScores((prevInvalid) => {
-      const updatedInvalid = [...prevInvalid];
-      if (!updatedInvalid[studentIndex]) {
-        updatedInvalid[studentIndex] = {};
-      }
-      updatedInvalid[studentIndex][recitationIndex] = score < 50 || score > 100; // Mark as invalid if out of range
-      return updatedInvalid;
+      const studentInvalid = prevInvalid[studentId] || {};
+      const updatedInvalid = { ...studentInvalid, [recitationIndex]: score < 50 || score > 100 };
+      return {
+        ...prevInvalid,
+        [studentId]: updatedInvalid,
+      };
     });
+    setmidtermRecitationColumns((prevColumns) => 
+      prevColumns.map((column, index) => {
+        if (index !== recitationIndex) return column;
+        
+        if (index === recitationIndex) { 
+          // Create a new grade array (don't mutate the original array)
+          const updatedGrade = [...column.grade];
+          
+          // Find the student in the grade array
+          const studentIndex = updatedGrade.findIndex((entry) => entry.studentNumber === studentNumber);
+      
+          if (studentIndex !== -1) {
+            // Update existing student's status
+            updatedGrade[studentIndex] = { 
+              ...updatedGrade[studentIndex], 
+              score 
+            };
+          } else {
+            // Add new student entry to grade array
+            updatedGrade.push({
+              studentNumber: studentNumber,
+              score
+            });
+          }
+      
+          // Return the updated column with the updated grade array
+          return {
+            ...column,
+            grade: updatedGrade
+          };
+        } 
+        return column; // If this is not the correct column, return it unchanged
+      })
+    );
   };
+
+  useEffect(() => {//Automatic Generation of objects for database storage (Recitation: Midterm)
+    const RecitationData = []; //For Database: gradeData
+
+    midtermRecitationColumns?.forEach((column, index) => {
+      column.grade?.forEach((student) => {
+        
+        RecitationData.push({
+          scheduleNumber: classInfo.scheduleNumber, 
+          studentNumber: student.studentNumber, 
+          componentNumber: 4, 
+          instanceNumber: index + 1, 
+          period: 1, 
+          value: student.score
+        });
+      });
+    });
+
+    const filteredRecitation = RecitationData.filter(assignment => assignment.value <= 100 && assignment.value >= 50);
+    
+    console.log("Rows for Database:",filteredRecitation);
+    setmidtermRecitation(filteredRecitation); //Storing raw values
+  }, [midtermRecitationColumns, classInfo]);
   
 
-  const handleFinalsRecitationScoreChange = (studentIndex, recitationIndex, score) => {
-    // Update the recitation scores
-    setfinalsRecitationScores((prevScores) => {
-      const updatedScores = [...prevScores];
-      if (!updatedScores[studentIndex]) {
-        updatedScores[studentIndex] = [];
-      }
-      updatedScores[studentIndex][recitationIndex] = score;
-      return updatedScores;
+  const handleFinalsRecitationScoreChange = (studentId, studentNumber, recitationIndex, score) => {
+    setfinalsRecitationScores((prevData) => {
+      const studentScores = prevData[studentId] || [];
+      const updatedScores = [...studentScores];
+      updatedScores[recitationIndex] = score;
+      return {
+        ...prevData,
+        [studentId]: updatedScores,
+      };
     });
-  
     // Real-time validation for red border
-    setfinalsInvalidRecitationScores((prevInvalid) => {
-      const updatedInvalid = [...prevInvalid];
-      if (!updatedInvalid[studentIndex]) {
-        updatedInvalid[studentIndex] = {};
-      }
-      updatedInvalid[studentIndex][recitationIndex] = score < 50 || score > 100; // Mark as invalid if out of range
-      return updatedInvalid;
+    setInvalidRecitationScores((prevInvalid) => {
+      const studentInvalid = prevInvalid[studentId] || {};
+      const updatedInvalid = { ...studentInvalid, [recitationIndex]: score < 50 || score > 100 };
+      return {
+        ...prevInvalid,
+        [studentId]: updatedInvalid,
+      };
     });
+    setfinalsRecitationColumns((prevColumns) => 
+      prevColumns.map((column, index) => {
+        if (index !== recitationIndex) return column;
+        
+        if (index === recitationIndex) { 
+          // Create a new grade array (don't mutate the original array)
+          const updatedGrade = [...column.grade];
+          
+          // Find the student in the grade array
+          const studentIndex = updatedGrade.findIndex((entry) => entry.studentNumber === studentNumber);
+      
+          if (studentIndex !== -1) {
+            // Update existing student's status
+            updatedGrade[studentIndex] = { 
+              ...updatedGrade[studentIndex], 
+              score 
+            };
+          } else {
+            // Add new student entry to grade array
+            updatedGrade.push({
+              studentNumber: studentNumber,
+              score
+            });
+          }
+      
+          // Return the updated column with the updated grade array
+          return {
+            ...column,
+            grade: updatedGrade
+          };
+        } 
+        return column; // If this is not the correct column, return it unchanged
+      })
+    );
   };
+
+  useEffect(() => {//Automatic Generation of objects for database storage (Recitation: Finals)
+    const RecitationData = []; //For Database: gradeData
+
+    finalsRecitationColumns?.forEach((column, index) => {
+      column.grade?.forEach((student) => {
+        
+        RecitationData.push({
+          scheduleNumber: classInfo.scheduleNumber, 
+          studentNumber: student.studentNumber, 
+          componentNumber: 4, 
+          instanceNumber: index + 1, 
+          period: 2, 
+          value: student.score
+        });
+      });
+    });
+
+    const filteredRecitation = RecitationData.filter(assignment => assignment.value <= 100 && assignment.value >= 50);
+    
+    console.log("Rows for Database:",filteredRecitation);
+    setfinalRecitation(filteredRecitation); //Storing raw values
+  }, [finalsRecitationColumns, classInfo]);
   
 
   {/*RECITATION AVERAGE FOR MIDTERM*/}
@@ -1528,6 +1948,8 @@ const calculateTotalMidtermCSPercentage = () => {
     {/* PBA */}
       // Handle PBA score change with validation for scores between 50-100
       const handleMidtermPBAScoreChange = (studentIndex, pbaIndex, score) => {
+
+        
         // Update the PBA scores
         setmidtermPBAGradeScores((prevScores) => {
           const updatedScores = [...prevScores];
@@ -1968,22 +2390,41 @@ const handlePercentageChange = (setter, value) => {
               <th colSpan="4" className='sticky-top-left-offset'>Total Student Attendance</th>
                 
                 {/* Quiz Columns WITH REMOVE BUTTON */}
-                {midtermQuizColumns.map((_, index) => (
-                <th key={index} rowSpan={2}  className='sticky-top-left-offset'>
-                  Q/S {index + 1}
-                  <button onClick={() => removeQuizColumn(index)} style={{ background: 'none', border: 'none' }}>
-                    <FontAwesomeIcon icon={faMinus} />
-                  </button>
+                {midtermQuizColumns.map((column, index) => (
+                  <th key={index} rowSpan={2} className='sticky-top-left-offset'>
+                  <div style={{ display: 'flex', alignItems: 'center' }}> 
+                    {index === midtermQuizColumns.length - 1 && ( // Show button only for the last column
+                      <button 
+                        onClick={() => removeQuizColumn(index, setmidtermQuizColumns, setmidtermQuizScores, setmidtermQuizMaxScores)} 
+                        style={{ background: 'none', border: 'none', marginRight: '5px' }} // Add margin-right for spacing
+                      >
+                        <FontAwesomeIcon icon={faMinus} />
+                      </button>
+                    )}
+                  <span>Quiz No. {index + 1}</span> 
+                  </div>
                   <input
                     type="number"
-                    value={midtermQuizMaxScores[index] || ''}
-                    onChange={(e) => handleMidtermMaxScoreChange(index, parseFloat(e.target.value) || '')} // Avoid setting 0 as default
+                    value={column.max || ""}
+                    onChange={(e) => {
+                      const maxScore = parseFloat(e.target.value) || 0;
+                      // Update midtermQuizColumns
+                      setmidtermQuizColumns((prevColumns) =>
+                        prevColumns.map((col, i) => (i === index ? { ...col, max: maxScore } : col))
+                      );
+                      // Update midtermQuizMaxScores
+                      handleMidtermMaxScoreChange(index, maxScore);
+                      // setmidtermQuizScores((prevScores) =>
+                      //   prevScores.map((studentScores) =>
+                      //     studentScores.map((score, i) => i === index ? 0 : score) // Set only the score at index to 0
+                      //   )
+                      // );
+                    }}
                     style={{ width: '60px' }} // Adjust width as needed
                     placeholder="Items"
                   />
-
-                </th>
-              ))}
+                  </th>
+                ))}
 
               <th rowSpan={2} style={{ background: '#d1e7dd', position: 'sticky',left: 0,top: 105,padding: '0px',zIndex: 1,boxShadow: '1px 0 0 rgba(0, 0, 0, 0.1)', }}>
                           <button onClick={addMidtermQuizColumn} style={{ background: 'none', border: 'none' }}>
@@ -2066,12 +2507,20 @@ const handlePercentageChange = (setter, value) => {
                 {/* Recitation Columns */}
                 {midtermRecitationColumns.map((_, index) => (
                   <th key={index} className='sticky-top-left-offset-168'>
-                    R {index + 1}
-                    <button onClick={() => removeColumn(index, setmidtermRecitationColumns)} style={{ background: 'none', border: 'none' }}>
+                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                  {index === midtermRecitationColumns.length - 1 && (
+                    <button 
+                      onClick={() => removeAssignmentColumn(index, setmidtermRecitationColumns, setmidtermRecitationScores)} 
+                      style={{ background: 'none', border: 'none', marginRight: '8px' }}
+                    >
                       <FontAwesomeIcon icon={faMinus} />
                     </button>
-                  </th>
+                  )}
+                    Recitation {index + 1}
+                  </div>
+                </th>
                 ))}
+
                 <th style={{ background: '#d1e7dd', position: 'sticky',left: 0,top: 168,padding: '0px',zIndex: 1,boxShadow: '1px 0 0 rgba(0, 0, 0, 0.1)', }}>
                   <button onClick={() => addColumn(setmidtermRecitationColumns)} style={{ background: 'none', border: 'none' }}>
                     <FontAwesomeIcon icon={faPlus} />
@@ -2255,19 +2704,19 @@ const handlePercentageChange = (setter, value) => {
 
 
                     {/*QUIZ COMPONENT: DEFINE midtermQuizScores IN INPUT*/}
-                    {midtermQuizColumns.map((_, quizIndex) => (
-                      <td key={quizIndex}>
+                    {midtermQuizColumns.map((quizColumn, quizIndex) => (
+                      <td key={quizColumn.id}>
                         <input
                           type="number"
                           style={{ width: '70px' }}
                           placeholder="Score"
-                          value={midtermQuizScores[studentIndex]?.[quizIndex] || ''} // Ensure that the input shows the current score
+                          disabled={!quizColumn?.max}
+                          value={quizColumn?.grade?.find((entry) => entry.studentNumber === student.studentNumber)?.score || ""}
                           onChange={(e) => {
                             const inputScore = parseFloat(e.target.value) || 0;
-                            handleMidtermQuizScoreChange(studentIndex, quizIndex, inputScore);
+                            handleMidtermQuizScoreChange(student.id, student.studentNumber, quizIndex, inputScore);
                           }}
                         />
-
                       </td>
                     ))}
 
@@ -2293,46 +2742,30 @@ const handlePercentageChange = (setter, value) => {
 
                     
                   {/* RECITATION COMPONENT: DEFINE midtermRecitationScores IN INPUT */}
-                  {midtermRecitationColumns.map((_, recitationIndex) => (
-                  <td key={recitationIndex}>
-                    <input
-                      type="number"
-                      style={{
-                        width: '70px',
-                        borderColor:
-                          invalidRecitationScores[studentIndex]?.[recitationIndex] ? 'red' : 'initial',
-                        borderWidth:
-                          invalidRecitationScores[studentIndex]?.[recitationIndex] ? '2px' : '1px',
-                      }}
-                      placeholder="Score"
-                      value={midtermRecitationScores[studentIndex]?.[recitationIndex] || ''}
-                      onChange={(e) => {
-                        const inputScore = e.target.value === '' ? null : parseFloat(e.target.value); // Treat empty input as null
-                        handleMidtermRecitationScoreChange(studentIndex, recitationIndex, inputScore);
-
-                        // Show the red border in real-time
-                        if (inputScore !== null && (inputScore < 50 || inputScore > 100)) {
-                          setInvalidRecitationScores((prevInvalid) => {
-                            const updatedInvalid = [...prevInvalid];
-                            if (!updatedInvalid[studentIndex]) {
-                              updatedInvalid[studentIndex] = {};
+                  {midtermRecitationColumns.map((recitationColumn, recitationIndex) => (
+                      <td key={recitationColumn.id}>
+                        <input
+                          type="number"
+                          style={{
+                            width: '70px',
+                            borderColor: invalidRecitationScores[student.id]?.[recitationIndex] ? 'red' : 'initial',
+                            borderWidth: invalidRecitationScores[student.id]?.[recitationIndex] ? '2px' : '1px',
+                          }}
+                          placeholder="Score"
+                          value={recitationColumn?.grade?.find((entry) => entry.studentNumber === student.studentNumber)?.score || ''}
+                          onChange={(e) => {
+                            const inputScore = e.target.value === '' ? null : parseFloat(e.target.value); 
+                            handleMidtermRecitationScoreChange(student.id, student.studentNumber, recitationIndex, inputScore);
+                          }}
+                          onBlur={(e) => {
+                            const inputScore = parseFloat(e.target.value);
+                            if (!isNaN(inputScore) && (inputScore < 50 || inputScore > 100)) {
+                              toast.error(`Score must be between 50 and 100 for ${student.studentLastName} at Recitation No.${recitationIndex + 1}`);
                             }
-                            updatedInvalid[studentIndex][recitationIndex] = true; // Mark as invalid
-                            return updatedInvalid;
-                          });
-                        }
-                      }}
-                      onBlur={(e) => {
-                        const inputScore = parseFloat(e.target.value);
-
-                        // Trigger toast only when input is invalid and not empty
-                        if (inputScore !== null && (inputScore < 50 || inputScore > 100)) {
-                          toast.error(`Score must be between 50 and 100 for Recitation ${recitationIndex + 1}`);
-                        }
-                      }}
-                    />
-                  </td>
-                ))}
+                          }}
+                        />
+                      </td>
+                  ))}
 
                   <td></td>
                   <td>{calculateMidtermRecitationColumnAverage(student.id)}%</td>
@@ -2556,23 +2989,36 @@ const handlePercentageChange = (setter, value) => {
                 <th colSpan="4" className='sticky-top-left-offset'>Total Student Attendance</th>
                   
                   {/* Quiz Columns WITH REMOVE BUTTON */}
-                  {finalsQuizColumns.map((_, index) => (
-                <th key={index} rowSpan={2} className='sticky-top-left-offset'>
-                  Q/S {index + 1}
-                  <button onClick={() => removeQuizColumn(index)} style={{ background: 'none', border: 'none' }}>
-                    <FontAwesomeIcon icon={faMinus} />
-                  </button>
-                  <input
-                    type="number"
-                    value={finalsQuizMaxScores[index] || ''}
-                    onChange={(e) => handleFinalsMaxScoreChange(index, parseFloat(e.target.value) || '')} // Avoid setting 0 as default
-                    style={{ width: '60px' }} // Adjust width as needed
-                    placeholder="Items"
-                  />
-
-                </th>
-              ))}
-  
+                  {finalsQuizColumns.map((column, index) => (
+                    <th key={index} rowSpan={2} className='sticky-top-left-offset'>
+                    <div style={{ display: 'flex', alignItems: 'center' }}> 
+                      {index === finalsQuizColumns.length - 1 && ( // Show button only for the last column
+                        <button 
+                          onClick={() => removeQuizColumn(index, setfinalsQuizColumns, setfinalsQuizScores, setfinalsQuizMaxScores)} 
+                          style={{ background: 'none', border: 'none', marginRight: '5px' }} // Add margin-right for spacing
+                        >
+                          <FontAwesomeIcon icon={faMinus} />
+                        </button>
+                      )}
+                    <span>Quiz No. {index + 1}</span> 
+                    </div>
+                    <input
+                      type="number"
+                      value={column.max || ""}
+                      onChange={(e) => {
+                        const maxScore = parseFloat(e.target.value) || 0;
+                        // Update finalsQuizColumns
+                        setfinalsQuizColumns((prevColumns) =>
+                          prevColumns.map((col, i) => (i === index ? { ...col, max: maxScore } : col))
+                        );
+                        // Update finalsQuizMaxScores
+                        handleFinalsMaxScoreChange(index, maxScore);
+                      }}
+                      style={{ width: '60px' }} // Adjust width as needed
+                      placeholder="Items"
+                    />
+                    </th>
+                  ))}
                 <th rowSpan={2} style={{ background: '#d1e7dd', position: 'sticky',left: 0,top: 105,padding: '0px',zIndex: 1,boxShadow: '1px 0 0 rgba(0, 0, 0, 0.1)', }}>
                             <button onClick={addFinalQuizColumn} style={{ background: 'none', border: 'none' }}>
                               <FontAwesomeIcon icon={faPlus} />
@@ -2653,13 +3099,20 @@ const handlePercentageChange = (setter, value) => {
             </th>
                   {/* Recitation Columns */}
                   {finalsRecitationColumns.map((_, index) => (
-                    <th key={index} className='sticky-top-left-offset-168'>
-                      R {index + 1}
-                      <button onClick={() => removeColumn(index, setfinalsRecitationColumns)} style={{ background: 'none', border: 'none' }}>
-                        <FontAwesomeIcon icon={faMinus} />
-                      </button>
-                    </th>
-                  ))}
+                  <th key={index} className='sticky-top-left-offset-168'>
+                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                  {index === finalsRecitationColumns.length - 1 && (
+                    <button 
+                      onClick={() => removeAssignmentColumn(index, setfinalsRecitationColumns, setfinalsRecitationScores)} 
+                      style={{ background: 'none', border: 'none', marginRight: '8px' }}
+                    >
+                      <FontAwesomeIcon icon={faMinus} />
+                    </button>
+                  )}
+                    Recitation {index + 1}
+                  </div>
+                </th>
+                ))}
                   <th style={{ background: '#d1e7dd', position: 'sticky',left: 0,top: 168,padding: '0px',zIndex: 1,boxShadow: '1px 0 0 rgba(0, 0, 0, 0.1)', }}>
                     <button onClick={() => addColumn(setfinalsRecitationColumns)} style={{ background: 'none', border: 'none' }}>
                       <FontAwesomeIcon icon={faPlus} />
@@ -2807,8 +3260,8 @@ const handlePercentageChange = (setter, value) => {
                           type="number"
                           style={{
                             width: '70px',
-                            borderColor: invalidAssignmentScores[student.id]?.[assignmentIndex] ? 'red' : 'initial',
-                            borderWidth: invalidAssignmentScores[student.id]?.[assignmentIndex] ? '2px' : '1px',
+                            borderColor: finalsinvalidAssignmentScores[student.id]?.[assignmentIndex] ? 'red' : 'initial',
+                            borderWidth: finalsinvalidAssignmentScores[student.id]?.[assignmentIndex] ? '2px' : '1px',
                           }}
                           placeholder="Score"
                           value={assignmentColumn?.grade?.find((entry) => entry.studentNumber === student.studentNumber)?.score || ''}
@@ -2838,19 +3291,19 @@ const handlePercentageChange = (setter, value) => {
                     </td>
 
     
-                    {finalsQuizColumns.map((_, quizIndex) => (
-                      <td key={quizIndex}>
+                    {finalsQuizColumns.map((quizColumn, quizIndex) => (
+                      <td key={quizColumn.id}>
                         <input
                           type="number"
                           style={{ width: '70px' }}
                           placeholder="Score"
-                          value={finalsQuizScores[studentIndex]?.[quizIndex] || ''} 
+                          disabled={!quizColumn?.max}
+                          value={quizColumn?.grade?.find((entry) => entry.studentNumber === student.studentNumber)?.score || ""}
                           onChange={(e) => {
                             const inputScore = parseFloat(e.target.value) || 0;
-                            handleFinalsQuizScoreChange(studentIndex, quizIndex, inputScore);
+                            handleFinalsQuizScoreChange(student.id, student.studentNumber, quizIndex, inputScore);
                           }}
                         />
-
                       </td>
                     ))}
 
@@ -2874,46 +3327,30 @@ const handlePercentageChange = (setter, value) => {
                     </td>
 
                     {/* RECITATION COMPONENT: DEFINE midtermRecitationScores IN INPUT */}
-                    {finalsRecitationColumns.map((_, recitationIndex) => (
-                    <td key={recitationIndex}>
-                      <input
-                        type="number"
-                        style={{
-                          width: '70px',
-                          borderColor:
-                            finalsinvalidRecitationScores[studentIndex]?.[recitationIndex] ? 'red' : 'initial',
-                          borderWidth:
-                            finalsinvalidRecitationScores[studentIndex]?.[recitationIndex] ? '2px' : '1px',
-                        }}
-                        placeholder="Score"
-                        value={finalsRecitationScores[studentIndex]?.[recitationIndex] || ''}
-                        onChange={(e) => {
-                          const inputScore = e.target.value === '' ? null : parseFloat(e.target.value); // Treat empty input as null
-                          handleFinalsRecitationScoreChange(studentIndex, recitationIndex, inputScore);
-
-                          // Show the red border in real-time
-                          if (inputScore !== null && (inputScore < 50 || inputScore > 100)) {
-                            setfinalsInvalidRecitationScores((prevInvalid) => {
-                              const updatedInvalid = [...prevInvalid];
-                              if (!updatedInvalid[studentIndex]) {
-                                updatedInvalid[studentIndex] = {};
-                              }
-                              updatedInvalid[studentIndex][recitationIndex] = true; // Mark as invalid
-                              return updatedInvalid;
-                            });
-                          }
-                        }}
-                        onBlur={(e) => {
-                          const inputScore = parseFloat(e.target.value);
-
-                          // Trigger toast only when input is invalid and not empty
-                          if (inputScore !== null && (inputScore < 50 || inputScore > 100)) {
-                            toast.error(`Score must be between 50 and 100 for Recitation ${recitationIndex + 1}`);
-                          }
-                        }}
-                      />
-                    </td>
-                  ))}
+                    {finalsRecitationColumns.map((recitationColumn, recitationIndex) => (
+                      <td key={recitationColumn.id}>
+                        <input
+                          type="number"
+                          style={{
+                            width: '70px',
+                            borderColor: invalidRecitationScores[student.id]?.[recitationIndex] ? 'red' : 'initial',
+                            borderWidth: invalidRecitationScores[student.id]?.[recitationIndex] ? '2px' : '1px',
+                          }}
+                          placeholder="Score"
+                          value={recitationColumn?.grade?.find((entry) => entry.studentNumber === student.studentNumber)?.score || ''}
+                          onChange={(e) => {
+                            const inputScore = e.target.value === '' ? null : parseFloat(e.target.value); 
+                            handleFinalsRecitationScoreChange(student.id, student.studentNumber, recitationIndex, inputScore);
+                          }}
+                          onBlur={(e) => {
+                            const inputScore = parseFloat(e.target.value);
+                            if (!isNaN(inputScore) && (inputScore < 50 || inputScore > 100)) {
+                              toast.error(`Score must be between 50 and 100 for ${student.studentLastName} at Recitation No.${recitationIndex + 1}`);
+                            }
+                          }}
+                        />
+                      </td>
+                    ))}
                   <td></td>
                   <td>{calculateFinalsRecitationColumnAverage(student.id)}%</td>
                   <td>
@@ -3253,30 +3690,30 @@ const handlePercentageChange = (setter, value) => {
         >
           {/* Left Section: Period Buttons */}
           <div style={{ display: 'flex', gap: '10px' }}>
-            <button
+            <Button
               className={`period-button ${selectedPeriod === 'midterm' ? 'active' : ''}`}
               onClick={() => handlePeriodChange('midterm')}
             >
               Midterm
-            </button>
-            <button
+            </Button>
+            <Button
               className={`period-button ${selectedPeriod === 'finals' ? 'active' : ''}`}
               onClick={() => handlePeriodChange('finals')}
             >
               Finals
-            </button>
-            <button
+            </Button>
+            <Button
               className={`period-button ${selectedPeriod === 'summary' ? 'active' : ''}`}
               onClick={() => handlePeriodChange('summary')}
             >
               Summary
-            </button>
-            <button
+            </Button>
+            <Button
               className={`period-button ${selectedPeriod === 'gradeSheet' ? 'active' : ''}`}
               onClick={() => handlePeriodChange('gradeSheet')}
             >
               Grade Sheet
-            </button>
+            </Button>
           </div>
     
           {/* Right Section: Menu Dropdown */}
