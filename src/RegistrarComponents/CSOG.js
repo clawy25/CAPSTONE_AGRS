@@ -7,6 +7,10 @@ import AcademicYearModel from '../ReactModels/AcademicYearModel';
 import YearLevelModel from '../ReactModels/YearLevelModel';
 import ProgramModel from '../ReactModels/ProgramModel';
 import SectionModel from '../ReactModels/SectionModel';
+import StudentModel from '../ReactModels/StudentModel';
+import EnrollmentModel from '../ReactModels/EnrollmentModel';
+import ScheduleModel from '../ReactModels/ScheduleModel';
+import PersonnelModel from '../ReactModels/PersonnelModel';
 
 
 const MasterlistOfGradesTable = () => {
@@ -29,8 +33,11 @@ const MasterlistOfGradesTable = () => {
   const [selectedSemester, setSelectedSemester] = useState('First');
   const [selectedSection, setSelectedSection] = useState('A'); // Default to Section A
   const [currentAcademicYear, setCurrentAcadYear] = useState([]);
-  const [courses, setCourses] = useState([]);
+  const [selectedStudent, setSelectedStudent] = useState([]);
   const [mappedData, setMappedData] = useState([]);
+  const [combinedData, setCombinedData] = useState([]);
+
+  const [groupedData, setGroupedData] = useState({});  
 
   const fetchAcademicYearsAndPrograms = async () => {
     try {
@@ -86,8 +93,7 @@ const MasterlistOfGradesTable = () => {
             data.push(entry); // Push the new entry into the data array
           }
         });
-      
-        console.log(data);
+
         setMappedData(data);
       }      
     } catch (error) {
@@ -95,33 +101,153 @@ const MasterlistOfGradesTable = () => {
     }
   };
 
-
-  const fetchSections = async () => {
-    try{
+  const fetchCourses = async () => {
+    try {
+      // Find the selected program based on academic year and program name
       const program = programs.find(
-        (p) => p.academicYear === selectedAcademicYear && p.programName === selectedProgram
+        (p) =>
+          p.academicYear === selectedAcademicYear &&
+          p.programName === selectedProgram
       );
-
-      const selectedProgramNumber = program ? program.programNumber : null;
-      const yearLevel = parseInt(selectedYearLevel);
-      const semester = parseInt(selectedSemester);
-
-      if (selectedProgramNumber) {
-        // Await the data here
-        const sectionData = await SectionModel.fetchExistingSections(
-          selectedAcademicYear,
-          yearLevel,
-          semester,
-          selectedProgramNumber
-        );
   
-        setSections(sectionData); // This should now receive the resolved data array
+      const selectedProgramNumber = program ? program.programNumber : null;
+      const yearLevel = parseInt(selectedYearLevel, 10);
+      const semester = parseInt(selectedSemester, 10);
+  
+      if (!selectedProgramNumber) {
+        console.error("No matching program found for the selected criteria.");
+        return;
       }
+  
+      // Fetch sections filtered by the selected criteria
+      const sectionData = await SectionModel.fetchExistingSections(
+        selectedAcademicYear,
+        yearLevel,
+        semester,
+        selectedProgramNumber
+      );
+    
+  
+      // Extract section numbers from sectionData and sort them in ascending order
+      const sectionNumbers = sectionData
+        .map((section) => section.sectionNumber)
+        .sort((a, b) => {
+          // Regex to split the section number into numeric part and alphanumeric part
+          const regex = /(\d+)-([A-Za-z]+)(\d*)/;
+          const [, numA, alphaA, suffixA] = a.match(regex) || [];
+          const [, numB, alphaB, suffixB] = b.match(regex) || [];
+  
+          // First compare the numeric part
+          if (parseInt(numA) !== parseInt(numB)) {
+            return parseInt(numA) - parseInt(numB);
+          }
+  
+          // If numeric parts are the same, compare the alphanumeric part (HM41A, HM41B, etc.)
+          if (alphaA !== alphaB) {
+            return alphaA.localeCompare(alphaB);
+          }
+  
+          // If both numeric and alpha parts are the same, compare the suffixes (e.g., B, C, etc.)
+          return suffixA.localeCompare(suffixB);
+        });
+  
+      if (sectionNumbers.length === 0) {
+        console.warn("No sections found for the selected criteria.");
+        setGroupedData([]); // Clear data if no sections found
+        return;
+      }
+  
+      // Fetch all schedules for the selected academic year
+      const scheduleData = await ScheduleModel.fetchAllSchedules(selectedAcademicYear);
+  
+      // Filter schedules to match the sorted section numbers
+      const filteredSchedules = scheduleData.filter((schedule) =>
+        sectionNumbers.includes(schedule.sectionNumber)
+      );
+  
+      // Fetch personnel data for the selected academic year
+      const personnelData = await PersonnelModel.fetchAllPersonnel(selectedAcademicYear);
+  
+      // Map personnel numbers to their last names
+      const personnelNameLastMap = personnelData.reduce((map, personnel) => {
+        map[personnel.personnelNumber] = personnel.personnelNameLast;
+        return map;
+      }, {});
+  
+  
+      // Group course codes and assigned personnel by section number
+      const groupedData = filteredSchedules.reduce((acc, schedule) => {
+        const { sectionNumber, courseCode, personnelNumber } = schedule;
+        const personnelLastName = personnelNameLastMap[personnelNumber] || "Unknown";
+  
+        // Initialize section entry if not already present
+        if (!acc[sectionNumber]) {
+          acc[sectionNumber] = { courseCodes: [], personnelNames: [] };
+        }
+  
+        // Add the course code to the section's list
+        acc[sectionNumber].courseCodes.push(courseCode);
+  
+        // Always append the personnel's last name for each course code, even if redundant
+        acc[sectionNumber].personnelNames.push(personnelLastName);
+  
+        return acc;
+      }, {});
+  
+      // Save the grouped data to state for rendering
+      setGroupedData(groupedData);
     } catch (error) {
-      console.error("Error fetching sections:", error);
+      console.error("Error fetching courses:", error);
     }
   };
 
+  const fetchStudentData = async () => {
+    try {
+      // Fetch only the necessary data from the models
+      const studentsData = await StudentModel.fetchExistingStudents();
+  
+      const enrolledStudents = await EnrollmentModel.fetchAllEnrollment();
+  
+      const scheduleData = await ScheduleModel.fetchAllSchedules(selectedAcademicYear);
+  
+      // Combine the data and remove duplicates by studentNumber
+      const combinedData = enrolledStudents.map((enrollment) => {
+        // Match student details
+        const student = studentsData.find(
+          (student) => student.studentNumber === enrollment.studentNumber
+        );
+  
+        // Match schedule details
+        const schedule = scheduleData.find(
+          (schedule) => schedule.scheduleNumber === enrollment.scheduleNumber
+        );
+  
+        return {
+          studentNumber: enrollment.studentNumber,
+          studentName: student
+            ? `${student.studentNameFirst} ${student.studentNameMiddle || ''} ${student.studentNameLast}`
+            : 'Unknown',
+          sectionNumber: schedule ? schedule.sectionNumber : null,
+          scheduleNumber: enrollment.scheduleNumber,
+        };
+      });
+  
+      // Remove duplicates based on studentNumber
+      const distinctData = combinedData.filter(
+        (value, index, self) =>
+          index === self.findIndex((t) => t.studentNumber === value.studentNumber)
+      );
+  
+      // Set the distinct data to the state
+      setCombinedData(distinctData);
+  
+      return distinctData;
+    } catch (error) {
+      console.error('Failed to fetch student data:', error);
+    }
+  };
+  
+  
   useEffect(() => {
     fetchAcademicYearsAndPrograms();
   }, [user.programNumber]);
@@ -161,12 +287,6 @@ const MasterlistOfGradesTable = () => {
     
   };
 
-  const handleSectionChange = (e) => {
-    const selectedSection = e.target.value;
-    setSelectedSection(selectedSection)
-    
-  };
-
 
   const getSemesterText = (sem) => {
     switch (sem) {
@@ -193,13 +313,11 @@ const MasterlistOfGradesTable = () => {
                                      ?.filter(p => p.yearLevel === Number(selectedYearLevel))
                                      ?.flatMap(p => p.semesters);
 
-  const columns = ["ITEM", "SNUMBER", "STUDENT NAME", "PAN101", "HUM101", "STS101", "VE101", "NSTP102", "PE12", "LIT101"];
-  const weightedColumns = ["PAN101", "HUM101", "STS101", "VE101", "NSTP102", "PE12", "LIT101", "WGA"];
-  const professors = ["Oreta", "Gatdula", "Escaran", "Sagun", "Bautista", "Dela Cruz", "Ramos"];
 
   const handleView = () => {
     if (selectedAcademicYear && selectedProgram && selectedYearLevel && selectedSemester) {
-      fetchSections();
+      fetchCourses();
+      fetchStudentData();
     } else {
       alert("Please complete all filters (Academic Year, Program, Year Level, Semester, Section) to view schedules.");
     }
@@ -473,14 +591,15 @@ const MasterlistOfGradesTable = () => {
     };
   };
   
-  
-
-  const openModal = () => {
+  const openModal = (student) => {
     setShowModal(true);
+    console.log('sstudent',student)
+    setSelectedStudent(student);
   };
 
   const closeModal = () => {
     setShowModal(false);
+    setSelectedStudent(null);
   };
 
 
@@ -658,15 +777,6 @@ const MasterlistOfGradesTable = () => {
     printWindow.document.close();
   };
   
-
-  
-  
-  
-  
-  
-  
-  
-
   return (
     <div>
       <Row className="mb-4 bg-white rounded p-3 m-1">
@@ -744,55 +854,86 @@ const MasterlistOfGradesTable = () => {
      
         <div id="printableTable" style={{ overflowX: 'auto', marginBottom: '20px' }}>
           <h5 className="text-center">{program}</h5>
-          {sections.map((section, sectionIndex) => (
-            <Table bordered key={sectionIndex} className="text-center">
-              <thead className='table-success'>
-                <tr>
-                <th colSpan="3" className='custom-color-green-font'>
-                    {`${section.sectionNumber}`}
-                  </th>
-                  <th colSpan={weightedColumns.length} className='custom-color-green-font'>
-                    WEIGHTED GRADE AVERAGE
-                  </th>
-                 
-                </tr>
-                <tr>
-                {columns.map((col, index) => (
-                  <th key={index} className="bg-success text-white">{col}</th> // Correct comment syntax
-                ))}
-                {weightedColumns.map((col, index) => (
-                  <th key={`wg-${index}`} className="bg-success text-white">{col}</th> // Corrected here
-                ))}
-
-                <th rowSpan={2} className='custom-color-green-font'>Certificate of Grades (COG)</th>
-              </tr>
-              </thead>
-
-              <tbody className='table-success'>
-                {Array.from({ length: 15 }).map((_, rowIndex) => (
-                  <tr key={rowIndex}>
-                    <td className='bg-white'>{rowIndex + 1}</td>
-                    <td className='bg-white'>-</td>
-                    <td className='bg-white'>-</td>
-                    {columns.slice(3).map((_, colIndex) => (
-                      <td key={`col-${colIndex}`} className='bg-white'></td>
-                    ))}
-                    {weightedColumns.map((_, colIndex) => (
-                      <td key={`wg-col-${colIndex}`}>0.0</td>
-                    ))}
-                    <td><Button 
-                      variant="success" 
-                      className='w-100' 
-                      onClick={openModal}
-                    >
-                      COG
-                    </Button></td>
-                  </tr>
-                ))}
-              </tbody>
-            </Table>
+          {Object.entries(groupedData)
+  .sort(([sectionNumberA], [sectionNumberB]) => sectionNumberA.localeCompare(sectionNumberB))
+  .map(([sectionNumber, sectionData], sectionIndex) => (
+    <Table bordered key={sectionIndex} className="text-center">
+      <thead className="table-success">
+        <tr>
+          <th colSpan="3" className="custom-color-green-font">
+            {`${sectionNumber}`}
+          </th>
+          {sectionData.personnelNames.map((personnelNames, index) => (
+            <th key={`personnel-${index}`} className="bg-success text-white">
+              {personnelNames}
+            </th>
           ))}
-        </div>
+          <th
+            colSpan={sectionData.courseCodes.length + 1}
+            className="custom-color-green-font"
+          >
+            WEIGHTED GRADE AVERAGE
+          </th>
+          <th rowSpan={2} className="custom-color-green-font">
+            Certificate of Grades (COG)
+          </th>
+        </tr>
+        <tr>
+          <th className="bg-success text-white">ITEM</th>
+          <th className="bg-success text-white">SNUMBER</th>
+          <th className="bg-success text-white">STUDENT NAME</th>
+          {sectionData.courseCodes.map((courseCode, index) => (
+            <th key={`course-${index}`} className="bg-success text-white">
+              {courseCode}
+            </th>
+          ))}
+          {sectionData.courseCodes.map((courseCode, index) => (
+            <th key={`course-${index}`} className="bg-success text-white">
+              {courseCode}
+            </th>
+          ))}
+          <th className="bg-success text-white">WGA</th>
+        </tr>
+      </thead>
+
+      <tbody className="table-success">
+        {combinedData
+          .filter((studentData) => studentData.sectionNumber === sectionNumber) // Filter for students in the current section
+          .map((studentData, rowIndex) => (
+            <tr key={rowIndex}>
+              <td className="bg-white">{rowIndex + 1}</td>
+              <td className="bg-white">{studentData.studentNumber}</td>
+              <td className="bg-white">{studentData.studentName}</td>
+
+              {/* Render empty cells for course data */}
+              {sectionData.courseCodes.map((courseCode, courseIndex) => (
+                <td key={`course-${courseIndex}`} className="bg-white">
+                  -
+                </td>
+              ))}
+
+              {/* Render empty cells for course grades */}
+              {sectionData.courseCodes.map((courseCode, courseIndex) => (
+                <td key={`course-${courseIndex}`} className="bg-white">
+                  0.0
+                </td>
+              ))}
+
+              {/* Weighted Grade Average (WGA) */}
+              <td className="bg-white">0.0</td>
+
+              {/* COG Button */}
+              <td>
+                <Button variant="success" className="w-100" onClick={() => openModal(studentData)}>
+                  COG
+                </Button>
+              </td>
+            </tr>
+          ))}
+      </tbody>
+    </Table>
+  ))}
+   </div>
   
 
        {/* Modal for COG */}
@@ -952,22 +1093,23 @@ const MasterlistOfGradesTable = () => {
           </thead>
           <tbody>
             <tr>
+              
               <td className="fs-6 fw-bold">STUDENT NAME:</td>
-              <td className="fs-6">(NAME OF THE STUDENT)</td>
+              <td className="fs-6">{selectedStudent ? selectedStudent.studentName : "(Name of the Student)"}</td>
               <td className="fs-6 fw-bold">ACADEMIC YEAR:</td>
-              <td className="fs-6">(STUDENT ACADEMIC YEAR)</td>
+              <td className="fs-6">{selectedAcademicYear}</td>
             </tr>
             <tr>
               <td className="fs-6 fw-bold">STUDENT ID NO.:</td>
-              <td className="fs-6">(STUDENT NUMBER)</td>
+              <td className="fs-6">{selectedStudent ? selectedStudent.studentNumber : "(Student Number of the Student)"}</td>
               <td className="fs-6 fw-bold">SEMESTER:</td>
-              <td className="fs-6">(FIRST SEMESTER?)</td>
+              <td className="fs-6">{selectedSemester}</td>
             </tr>
             <tr>
               <td className="fs-6 fw-bold">PROGRAM CODE & DESCRIPTION:</td>
-              <td className="fs-6">(BSHM)</td>
+              <td className="fs-6">{selectedProgram}</td>
               <td className="fs-6 fw-bold">YEAR LEVEL:</td>
-              <td className="fs-6">(FIRST SEMESTER)</td>
+              <td className="fs-6">{selectedYearLevel}</td>
             </tr>
           </tbody>
         </Table>
