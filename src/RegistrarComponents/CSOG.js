@@ -403,7 +403,7 @@ const MasterlistOfGradesTable = () => {
       <style>
         @media print {
           @page {
-            size: legal landscape; /* Set Legal size and Landscape orientation */
+            size: letter landscape; /* Set Legal size and Landscape orientation */
             margin: 0;
             /* Ensure background graphics are included */
             background: #fff;
@@ -414,7 +414,7 @@ const MasterlistOfGradesTable = () => {
           }
   
           table {
-            width: 100%;
+            width: 125%;
             table-layout: auto;
             border-collapse: collapse;
             page-break-before: auto;
@@ -660,7 +660,7 @@ const MasterlistOfGradesTable = () => {
               .tableContainer {
                 display: block;
                 width: 100%;
-                padding: 10px;
+                padding: 50px;
               }
   
               .modalContent {
@@ -695,6 +695,7 @@ const MasterlistOfGradesTable = () => {
               position: relative;
               z-index: 1; /* Ensure content is above the watermark */
             }
+              
   
               .modalContent .label {
                 position: absolute;
@@ -708,7 +709,7 @@ const MasterlistOfGradesTable = () => {
                 color: white;
                 padding: 10px 5px;
                 border-radius: 5px;
-                width: 524px; /* Increase width to accommodate longer text */
+                width: 525px; /* Increase width to accommodate longer text */
                 text-align: center;
                 white-space: nowrap; /* Prevent text from wrapping */
                 box-sizing: border-box; /* Ensure padding fits inside the label */
@@ -982,137 +983,131 @@ const MasterlistOfGradesTable = () => {
             className="header-logo"
             style={{
               width: '100%',
-              maxWidth: '800px',
+              maxWidth: '500px',
               marginLeft: '100px',
               marginRight: '100px',
               paddingLeft: '200px',
             }}
           >
-            <tbody>
-              <tr>
-                {/* Logo Section */}
-                <td
+          <tbody>
+            <tr>
+              {/* Logo Section */}
+              <td
+                style={{
+                  width: '80px',
+                  textAlign: 'center',
+                  verticalAlign: 'middle',
+                  padding: '0',
+                  margin: '0',
+                }}
+              >
+                <img
+                  src="/pcc.png"
+                  alt="Logo"
+                  className="img-fluid"
                   style={{
-                    width: '80px',
-                    textAlign: 'center',
-                    verticalAlign: 'middle',
-                    padding: '0',
+                    width: '70px',
                     margin: '0',
                   }}
-                >
-                  <img
-                    src="/pcc.png"
-                    alt="Logo"
-                    className="img-fluid"
-                    style={{
-                      width: '70px',
-                      margin: '0',
-                    }}
-                  />
-                </td>
+                />
+              </td>
 
-                {/* Text Section */}
-                <td
+              {/* Text Section */}
+              <td
+                style={{
+                  textAlign: 'left',
+                  verticalAlign: 'middle',
+                  color: '#07770b', // Set text color to green
+                }}
+              >
+                <p
+                  className="fw-bold text-uppercase mb-0"
                   style={{
-                    textAlign: 'left',
-                    verticalAlign: 'middle',
-                    padding: '0',
+                    fontSize: '0.8rem',
+                    lineHeight: '1.2',
                     margin: '0',
-                    marginRight: '-2px',
-                    whiteSpace: 'nowrap',
-                    color: '#07770b', // Set text color to green
+                    padding: '0',
                   }}
                 >
-                  <p
-                    className="fw-bold text-uppercase mb-0"
+                  Parañaque City <br />
+                  <span
                     style={{
-                      fontSize: '0.8rem',
-                      lineHeight: '1.2',
+                      fontSize: '1.5rem',
+                      fontWeight: 'bold',
                       margin: '0',
                       padding: '0',
                     }}
                   >
-                    Parañaque City <br />
-                    <span
-                      style={{
-                        fontSize: '1.5rem',
-                        fontWeight: 'bold',
-                        margin: '0',
-                        padding: '0',
-                      }}
-                    >
-                      College
-                    </span>
-                  </p>
-                </td>
+                    College
+                  </span>
+                </p>
+              </td>
 
-                {/* Contact Information Section */}
-                <td
+              {/* Contact Information Section */}
+              <td
+                style={{
+                  verticalAlign: 'middle',
+                  borderLeft: '2px solid #07770b', // Set vertical line color to green
+                  paddingLeft: '10px', // Adjust this to control the space between the line and text
+                  marginLeft: '0',
+                  paddingRight: '0',
+                  color: '#07770b', // Set text color to green
+                }}
+              >
+                <p
+                  className="mb-0"
                   style={{
-                    verticalAlign: 'middle',
-                    borderLeft: '2px solid #07770b', // Set vertical line color to green
-                    paddingLeft: '5px',
-                    marginLeft: '0',
-                    paddingRight: '0',
-                    color: '#07770b', // Set text color to green
+                    fontSize: '0.7rem',
+                    lineHeight: '1',
                   }}
                 >
-                  <p
-                    className="mb-0"
-                    style={{
-                      fontSize: '0.7rem',
-                      lineHeight: '0.5',
-                    }}
-                  >
-                    <i
-                      className="fas fa-map-marker-alt"
-                      style={{ marginRight: '5px', color: '#07770b' }}
-                    ></i>
-                    Coastal Rd., cor. Victor Medina Street
-                  </p>
-                  <p
-                    className="mb-0"
-                    style={{
-                      fontSize: '0.7rem',
-                      lineHeight: '0.5',
-                    }}
-                  >
-                    <i
-                      className="fas fa-map-marker-alt"
-                      style={{ marginRight: '5px', color: '#07770b' }}
-                    ></i>
+                  <i
+                    className="fas fa-map-marker-alt"
+                    style={{ marginRight: '5px', color: '#07770b' }}
+                  ></i>
+                  Coastal Rd., cor. Victor Medina Street <br />
+                  <span style={{ paddingLeft: '14px' }}>
                     San Dionisio, Parañaque City, Philippines
-                  </p>
-                  <p
-                    className="mb-0"
-                    style={{
-                      fontSize: '0.7rem',
-                      lineHeight: '0.5',
-                    }}
-                  >
-                    <i
-                      className="fas fa-envelope"
-                      style={{ marginRight: '5px', color: '#07770b' }}
-                    ></i>
-                    info@parañaquecitycollege.edu.ph
-                  </p>
-                  <p
-                    className="mb-0"
-                    style={{
-                      fontSize: '0.7rem',
-                      lineHeight: '0.5',
-                    }}
-                  >
-                    <i
-                      className="fas fa-phone-alt"
-                      style={{ marginRight: '5px', color: '#07770b' }}
-                    ></i>
-                    (02) 85343321
-                  </p>
-                </td>
-              </tr>
-            </tbody>
+                  </span>
+                </p>
+
+                <p
+                  className="mb-0"
+                  style={{
+                    fontSize: '0.7rem',
+                    lineHeight: '1',
+                  }}
+                >
+                  <i
+                    className="fas fa-envelope"
+                    style={{ marginRight: '5px', color: '#07770b' }}
+                  ></i>
+                  info@parañaquecitycollege.edu.ph
+                </p>
+                <p
+                  className="mb-0"
+                  style={{
+                    fontSize: '0.7rem',
+                    lineHeight: '1',
+                  }}
+                >
+                  <i
+                    className="fas fa-phone-alt"
+                    style={{ marginRight: '5px', color: '#07770b' }}
+                  ></i>
+                  (02) 85343321
+                </p>
+              </td>
+            </tr>
+          </tbody>
+
+
           </table>
+          {/* Add the external stylesheet in the <head> of your HTML or as a global import */}
+          <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
+          />
         </div>
         <hr/>
         <Table className="border-white table-upper">
