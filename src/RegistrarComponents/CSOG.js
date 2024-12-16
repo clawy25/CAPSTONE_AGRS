@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react'; 
 import { Table, Form, Button, Row, Col, Modal } from 'react-bootstrap';
+import 'bootstrap/dist/css/bootstrap.min.css'; 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMapMarkerAlt,  faEnvelope, faPhoneAlt} from '@fortawesome/free-solid-svg-icons';
 import { UserContext } from '../Context/UserContext';
@@ -11,6 +12,7 @@ import StudentModel from '../ReactModels/StudentModel';
 import EnrollmentModel from '../ReactModels/EnrollmentModel';
 import ScheduleModel from '../ReactModels/ScheduleModel';
 import PersonnelModel from '../ReactModels/PersonnelModel';
+import '../App.css';
 
 
 const MasterlistOfGradesTable = () => {
@@ -26,6 +28,8 @@ const MasterlistOfGradesTable = () => {
   const [programs, setPrograms] = useState([]);
   //const [selectedProgramId, setSelectedProgramId] = useState(null);
   const [showModal, setShowModal] = useState(false); 
+  const [showModalAlert, setShowModalAlert] =useState(false);
+  const [showModalAlertView, setShowModalAlertView] =useState(false);
   const { user } = useContext(UserContext);
   const [selectedAcademicYear, setSelectedAcademicYear] = useState('');
   const [selectedProgram, setSelectedProgram] = useState('');
@@ -36,7 +40,7 @@ const MasterlistOfGradesTable = () => {
   const [selectedStudent, setSelectedStudent] = useState([]);
   const [mappedData, setMappedData] = useState([]);
   const [combinedData, setCombinedData] = useState([]);
-
+  const [dataFetched, setDataFetched] = useState(false);
   const [groupedData, setGroupedData] = useState({});  
 
   const fetchAcademicYearsAndPrograms = async () => {
@@ -318,12 +322,27 @@ const MasterlistOfGradesTable = () => {
     if (selectedAcademicYear && selectedProgram && selectedYearLevel && selectedSemester) {
       fetchCourses();
       fetchStudentData();
+      setDataFetched(true); // Indicate that data has been fetched successfully.
     } else {
-      alert("Please complete all filters (Academic Year, Program, Year Level, Semester, Section) to view schedules.");
+      setShowModalAlertView(true);
+      setDataFetched(false); // Ensure dataFetched is false if filters are incomplete.
     }
   };
+
+  const closeShowModalAlert = () => {
+    setShowModalAlert(false);
+  }
+
+  const closeShowModalAlertView = () => {
+    setShowModalAlertView(false);
+  }
   
   const printTable = () => {
+    if (!dataFetched) {
+      setShowModalAlert(true);
+      return;
+    }
+
     const table = document.getElementById('printableTable');
     if (!table) {
       console.error('Table not found');
@@ -779,11 +798,12 @@ const MasterlistOfGradesTable = () => {
   
   return (
     <div>
-      <Row className="mb-4 bg-white rounded p-3 m-1">
-      <Col xs={12} sm={6} md={4} lg={2} className='mb-3'>
+      <Form className="p-3 mb-4 bg-white border border-success rounded">
+      <Row className="align-items-center">
+      <Col md={2} className='mb-3'>
           <Form.Group controlId="academicYear">
-            <Form.Label>Academic Year</Form.Label>
-            <Form.Control as="select" value={selectedAcademicYear} onChange={handleAcademicYearChange}>
+            <Form.Label className='custom-color-green-font custom-font'>Academic Year</Form.Label>
+            <Form.Select value={selectedAcademicYear} onChange={handleAcademicYearChange} className="border-success">
               <option value="">Select Academic Year</option>
               {academicYears.sort((a, b) => {
                 let yearA = parseInt(a.academicYear.split('-')[0]);
@@ -795,13 +815,13 @@ const MasterlistOfGradesTable = () => {
                   {program.academicYear}
                 </option>
               ))}
-            </Form.Control>
+            </Form.Select>
           </Form.Group>
         </Col>
-        <Col  xs={12} sm={6} md={4} lg={2} className='mb-3'>
+        <Col md={2}  className='mb-3'>
           <Form.Group controlId="program">
-            <Form.Label>Program</Form.Label>
-            <Form.Control as="select" value={selectedProgram} onChange={handleProgramChange}
+            <Form.Label className='custom-color-green-font custom-font'>Program</Form.Label>
+            <Form.Select value={selectedProgram} onChange={handleProgramChange} className="border-success"
               disabled={!selectedAcademicYear}>
             <option value="">Select Program</option>
               {mappedData
@@ -812,13 +832,13 @@ const MasterlistOfGradesTable = () => {
                     {program.programName}
                   </option>
               ))}
-            </Form.Control>
+            </Form.Select>
           </Form.Group>
         </Col>
-        <Col xs={12} sm={6} md={4} lg={2} className='mb-3'>
+        <Col md={2} className='mb-3'>
           <Form.Group controlId="yearLevel">
-            <Form.Label>Year Level</Form.Label>
-            <Form.Control as="select" value={selectedYearLevel} onChange={handleYearLevelChange}
+            <Form.Label className='custom-color-green-font custom-font'>Year Level</Form.Label>
+            <Form.Select value={selectedYearLevel} onChange={handleYearLevelChange} className="border-success"
               disabled={!selectedAcademicYear || !selectedProgram}>
               <option value="">Select Year Level</option>
               {selectedProgramData // Get year levels for selected academic year
@@ -827,13 +847,13 @@ const MasterlistOfGradesTable = () => {
                     Year {level.yearLevel}
                   </option>
               ))}
-            </Form.Control>
+            </Form.Select>
           </Form.Group>
         </Col>
-        <Col xs={12} sm={6} md={4} lg={2} className='mb-3'>
+        <Col md={2} className='mb-3'>
           <Form.Group controlId="semester">
-            <Form.Label>Semester</Form.Label>
-            <Form.Control as="select" value={selectedSemester} onChange={handleSemesterChange}
+            <Form.Label className='custom-color-green-font custom-font'>Semester</Form.Label>
+            <Form.Select value={selectedSemester} onChange={handleSemesterChange} className="border-success"
               disabled={!selectedYearLevel || !selectedAcademicYear || !selectedProgram}>
             <option value="">Select Semester</option>
               {selectedYearData
@@ -842,98 +862,111 @@ const MasterlistOfGradesTable = () => {
                     {getSemesterText(sem)}
                   </option>
               ))}
-            </Form.Control>
+            </Form.Select>
           </Form.Group>
         </Col>
-        <Col className="d-flex align-items-end">
-          <Button className="w-25 btn-success me-2" onClick={handleView}>View</Button>
-          <Button className="w-75 btn-success" onClick={printTable}>Print</Button>
+      
+
+        <Col md={4} className='mb-3'>
+        <Form.Group controlId="viewButton">
+            <Form.Label className="custom-color-green-font custom-font">Action</Form.Label>
+              <div className='d-flex'>
+                  <Button className="w-100 btn-success me-2" onClick={handleView}>View</Button>
+                  <Button className="w-100 bg-white custom-color-green-font btn-outline-success py-2" onClick={printTable}>Print</Button>
+              </div>
+          </Form.Group>
         </Col>
       </Row>
+      </Form>
+      
 
      
-        <div id="printableTable" style={{ overflowX: 'auto', marginBottom: '20px' }}>
-          <h5 className="text-center">{program}</h5>
-          {Object.entries(groupedData)
-  .sort(([sectionNumberA], [sectionNumberB]) => sectionNumberA.localeCompare(sectionNumberB))
-  .map(([sectionNumber, sectionData], sectionIndex) => (
-    <Table bordered key={sectionIndex} className="text-center">
-      <thead className="table-success">
-        <tr>
-          <th colSpan="3" className="custom-color-green-font">
-            {`${sectionNumber}`}
-          </th>
-          {sectionData.personnelNames.map((personnelNames, index) => (
-            <th key={`personnel-${index}`} className="bg-success text-white">
-              {personnelNames}
-            </th>
-          ))}
-          <th
-            colSpan={sectionData.courseCodes.length + 1}
-            className="custom-color-green-font"
-          >
-            WEIGHTED GRADE AVERAGE
-          </th>
-          <th rowSpan={2} className="custom-color-green-font">
-            Certificate of Grades (COG)
-          </th>
-        </tr>
-        <tr>
-          <th className="bg-success text-white">ITEM</th>
-          <th className="bg-success text-white">SNUMBER</th>
-          <th className="bg-success text-white">STUDENT NAME</th>
-          {sectionData.courseCodes.map((courseCode, index) => (
-            <th key={`course-${index}`} className="bg-success text-white">
-              {courseCode}
-            </th>
-          ))}
-          {sectionData.courseCodes.map((courseCode, index) => (
-            <th key={`course-${index}`} className="bg-success text-white">
-              {courseCode}
-            </th>
-          ))}
-          <th className="bg-success text-white">WGA</th>
-        </tr>
-      </thead>
+        <div id="printableTable" className='bg-white rounded pt-5 px-3 pb-3 table-responsive' >
+          {/*<h5 className="text-center">{program}</h5>*/}
+          {Object.keys(groupedData).length === 0 || combinedData.length === 0 ? (
+            <div className="text-center py-5">
+              <h5 className='custom-color-green-font fs-5'>No Data Available</h5>
+              <p className='fs-6'>Please ensure that all filters are applied or data is available to display.</p>
+            </div>
+          ) : (Object.entries(groupedData).sort(([sectionNumberA], [sectionNumberB]) => sectionNumberA.localeCompare(sectionNumberB))
+            .map(([sectionNumber, sectionData], sectionIndex) => (
+              <Table bordered hover key={sectionIndex} className="text-center mb-3">
+                <thead className="table-success">
+                  <tr>
+                    <th colSpan="3" className="custom-color-green-font">
+                      {`${sectionNumber}`}
+                    </th>
+                    {sectionData.personnelNames.map((personnelNames, index) => (
+                      <th key={`personnel-${index}`} className="bg-success text-white">
+                        {personnelNames}
+                      </th>
+                    ))}
+                    <th
+                      colSpan={sectionData.courseCodes.length + 1}
+                      className="custom-color-green-font"
+                    >
+                      WEIGHTED GRADE AVERAGE
+                    </th>
+                    <th rowSpan={2} className="custom-color-green-font">
+                      Certificate of Grades (COG)
+                    </th>
+                  </tr>
+                  <tr>
+                    <th className="bg-success text-white">ITEM</th>
+                    <th className="bg-success text-white">SNUMBER</th>
+                    <th className="bg-success text-white">STUDENT NAME</th>
+                    {sectionData.courseCodes.map((courseCode, index) => (
+                      <th key={`course-${index}`} className="bg-success text-white">
+                        {courseCode}
+                      </th>
+                    ))}
+                    {sectionData.courseCodes.map((courseCode, index) => (
+                      <th key={`course-${index}`} className="bg-success text-white">
+                        {courseCode}
+                      </th>
+                    ))}
+                    <th className="bg-success text-white">WGA</th>
+                  </tr>
+                </thead>
 
-      <tbody className="table-success">
-        {combinedData
-          .filter((studentData) => studentData.sectionNumber === sectionNumber) // Filter for students in the current section
-          .map((studentData, rowIndex) => (
-            <tr key={rowIndex}>
-              <td className="bg-white">{rowIndex + 1}</td>
-              <td className="bg-white">{studentData.studentNumber}</td>
-              <td className="bg-white">{studentData.studentName}</td>
+                <tbody className="table-success">
+                  {combinedData
+                    .filter((studentData) => studentData.sectionNumber === sectionNumber) // Filter for students in the current section
+                    .map((studentData, rowIndex) => (
+                      <tr key={rowIndex}>
+                        <td className="bg-white">{rowIndex + 1}</td>
+                        <td className="bg-white">{studentData.studentNumber}</td>
+                        <td className="bg-white">{studentData.studentName}</td>
 
-              {/* Render empty cells for course data */}
-              {sectionData.courseCodes.map((courseCode, courseIndex) => (
-                <td key={`course-${courseIndex}`} className="bg-white">
-                  -
-                </td>
-              ))}
+                        {/* Render empty cells for course data */}
+                        {sectionData.courseCodes.map((courseCode, courseIndex) => (
+                          <td key={`course-${courseIndex}`} className="bg-white">
+                            -
+                          </td>
+                        ))}
 
-              {/* Render empty cells for course grades */}
-              {sectionData.courseCodes.map((courseCode, courseIndex) => (
-                <td key={`course-${courseIndex}`} className="bg-white">
-                  0.0
-                </td>
-              ))}
+                        {/* Render empty cells for course grades */}
+                        {sectionData.courseCodes.map((courseCode, courseIndex) => (
+                          <td key={`course-${courseIndex}`} className="bg-white">
+                            0.0
+                          </td>
+                        ))}
 
-              {/* Weighted Grade Average (WGA) */}
-              <td className="bg-white">0.0</td>
+                        {/* Weighted Grade Average (WGA) */}
+                        <td className="bg-white">0.0</td>
 
-              {/* COG Button */}
-              <td>
-                <Button variant="success" className="w-100" onClick={() => openModal(studentData)}>
-                  COG
-                </Button>
-              </td>
-            </tr>
-          ))}
-      </tbody>
-    </Table>
-  ))}
-   </div>
+                        {/* COG Button */}
+                        <td>
+                          <Button variant="success" className="w-100" onClick={() => openModal(studentData)}>
+                            COG
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              </Table>
+            ))) }
+        </div>
   
 
        {/* Modal for COG */}
@@ -1213,10 +1246,39 @@ const MasterlistOfGradesTable = () => {
          </div>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="success" onClick={closeModal}>Close</Button>
-          <Button variant="success" onClick={handlePrint}>Download COG</Button>
+          <Button variant="secondary" onClick={closeModal}>Close</Button>
+          <Button variant="primary" onClick={handlePrint}>Download COG</Button>
         </Modal.Footer>
 
+      </Modal>
+
+
+      <Modal show={showModalAlert} onHide={closeShowModalAlert} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Action Required</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          Please click "View" to load the data before printing.
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={closeShowModalAlert}>
+            Close
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      <Modal show={showModalAlertView} onHide={closeShowModalAlertView} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Action Required</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          Please complete all filters (Academic Year, Program, Year Level, Semester) to view schedules.
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={closeShowModalAlertView}>
+            Close
+          </Button>
+        </Modal.Footer>
       </Modal>
     </div>
   );

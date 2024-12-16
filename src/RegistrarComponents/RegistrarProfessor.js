@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { Table, Form, Button, Row, Col, Modal } from 'react-bootstrap';
+import 'bootstrap/dist/css/bootstrap.min.css'; 
 import ProgramModel from '../ReactModels/ProgramModel'; 
 import AcademicYearModel from '../ReactModels/AcademicYearModel';
 import PersonnelModel from '../ReactModels/PersonnelModel';
-import CourseModel from '../ReactModels/CourseModel';
 import SectionModel from '../ReactModels/SectionModel';
 import ScheduleModel from '../ReactModels/ScheduleModel';
 import SubmissionModel from '../ReactModels/SubmissionModel';
@@ -14,37 +14,20 @@ export default function RegistrarProfessor() {
   const { user } = useContext(UserContext);
   const [academicYears, setAcademicYears] = useState([]);
   const [programs, setPrograms] = useState([]);
-  const [selectedSchedule, setSelectedSchedule] = useState({
-    courseCode: '',
-    courseDescription: '',
-    personnelNumber: '',
-    personnelName: '',
-    date: '',
-    time: '',
-    status: '',
-    submittedOn: '',
-  });
-
   const [selectedAcademicYear, setSelectedAcademicYear] = useState('');
   const [selectedProgram, setSelectedProgram] = useState('');
   const [selectedYearLevel, setSelectedYearLevel] = useState('');
   const [selectedSemester, setSelectedSemester] = useState('First');
   const [selectedSection, setSelectedSection] = useState('A'); // Default to Section A
-  
-
+  const [showModalAlertView, setShowModalAlertView] =useState(false);
   const [currentAcademicYear, setCurrentAcadYear] = useState([]);
-  const [courses, setCourses] = useState([]);
   const [mappedData, setMappedData] = useState([]);
-
   const [sections, setSections] = useState(['A']);
-
   const [schedules, setSchedules] = useState([]);
   const [professors, setProfessors] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [editableData, setEditableData] = useState(null);
-  const [status, setStatus] = useState("Pending");  
-  const [date, setDate] = useState([]);
-  const [time, setTime] = useState([]);
+
 
 
   const handleCloseModal = () => {
@@ -55,6 +38,11 @@ export default function RegistrarProfessor() {
       setEditableData(rowData);
       setShowModal(true);
     };
+
+  
+    const closeShowModalAlertView = () => {
+      setShowModalAlertView(false);
+    }
     
   const fetchAcademicYearsAndPrograms = async () => {
     try {
@@ -123,8 +111,6 @@ export default function RegistrarProfessor() {
     fetchAcademicYearsAndPrograms();
   }, [user.programNumber]);
 
-
-  
   const fetchPersonnelList = async () =>{
     try {
       const personnelData = await PersonnelModel.getProfessorsbyProgram(user.programNumber, selectedAcademicYear);
@@ -132,33 +118,6 @@ export default function RegistrarProfessor() {
       setProfessors(personnelData);
     } catch (error) {
       console.error('Error fetching personnel list:', error);
-    }
-  };
-
-  const fetchCourses = async () => {
-    try {
-      const program = programs.find(
-        (p) => p.academicYear === selectedAcademicYear && p.programName === selectedProgram
-      );
-
-      const selectedProgramNumber = program ? program.programNumber : null;
-      
-
-      if (selectedProgramNumber){
-        
-        const courseData = await CourseModel.getCoursesbyProgram(
-          selectedAcademicYear,
-          selectedYearLevel,
-          selectedSemester,
-          selectedProgramNumber);
-
-          
-        if(courseData){
-          setCourses(courseData); // Update the courses state with fetched data
-        }
-      }
-    } catch (error) {
-      console.error("Error fetching courses:", error);
     }
   };
 
@@ -410,8 +369,9 @@ const handleAddSubmission = async (scheduleData) => {
   const handleView = () => {
     if (selectedAcademicYear && selectedProgram && selectedYearLevel && selectedSemester && selectedSection) {
       fetchSchedules();
+      
     } else {
-      alert("Please complete all filters (Academic Year, Program, Year Level, Semester, Section) to view schedules.");
+      setShowModalAlertView(true);
     }
   };
 
@@ -484,255 +444,276 @@ const handleAddSubmission = async (scheduleData) => {
 
 
   return (
-    <section className="container-fluid ms-0">
+    <section>
       <h2 className="custom-font custom-color-green-font my-3">Grade Submission Status</h2>
-      <Row className="bg-white rounded p-3 mb-3">
-        <Col xs={12} sm={6} md={4} lg={2} className='mb-3'>
-          <Form.Group controlId="academicYear">
-            <Form.Label>Academic Year</Form.Label>
-            <Form.Control as="select" value={selectedAcademicYear} onChange={handleAcademicYearChange}>
-              <option value="">Select Academic Year</option>
-              {academicYears.sort((a, b) => {
-                let yearA = parseInt(a.academicYear.split('-')[0]);
-                let yearB = parseInt(b.academicYear.split('-')[0]);
-                return yearB - yearA; // Sorting in descending order
-              })
-              .map((program) => (
-                <option key={program.academicYear} value={program.academicYear}>
-                  {program.academicYear}
-                </option>
-              ))}
-            </Form.Control>
-          </Form.Group>
-        </Col>
-        <Col  xs={12} sm={6} md={4} lg={2} className='mb-3'>
-          <Form.Group controlId="program">
-            <Form.Label>Program</Form.Label>
-            <Form.Control as="select" value={selectedProgram} onChange={handleProgramChange}
-              disabled={!selectedAcademicYear}>
-            <option value="">Select Program</option>
-              {mappedData
-                ?.filter(p => p.academicYear === selectedAcademicYear)
-                ?.flatMap(p => p.programs)
+      <Form className="p-3 mb-4 bg-white border border-success rounded">
+        <Row className="align-items-center">
+          <Col xs={12} sm={6} md={4} lg={2} className='mb-3'>
+            <Form.Group controlId="academicYear">
+              <Form.Label className="custom-color-green-font custom-font">Academic Year</Form.Label>
+              <Form.Select value={selectedAcademicYear} onChange={handleAcademicYearChange} className="border-success">
+                <option value="">Select Academic Year</option>
+                {academicYears.sort((a, b) => {
+                  let yearA = parseInt(a.academicYear.split('-')[0]);
+                  let yearB = parseInt(b.academicYear.split('-')[0]);
+                  return yearB - yearA; // Sorting in descending order
+                })
                 .map((program) => (
-                  <option key={program.programNumber} value={program.programNumber}>
-                    {program.programName}
+                  <option key={program.academicYear} value={program.academicYear}>
+                    {program.academicYear}
                   </option>
-              ))}
-            </Form.Control>
-          </Form.Group>
-        </Col>
-        <Col xs={12} sm={6} md={4} lg={2} className='mb-3'>
-          <Form.Group controlId="yearLevel">
-            <Form.Label>Year Level</Form.Label>
-            <Form.Control as="select" value={selectedYearLevel} onChange={handleYearLevelChange}
-              disabled={!selectedAcademicYear || !selectedProgram}>
-              <option value="">Select Year Level</option>
-              {selectedProgramData // Get year levels for selected academic year
-                ?.map(level => (
-                  <option key={level.yearLevel} value={level.yearLevel}>
-                    Year {level.yearLevel}
-                  </option>
-              ))}
-            </Form.Control>
-          </Form.Group>
-        </Col>
-        <Col xs={12} sm={6} md={4} lg={2} className='mb-3'>
-          <Form.Group controlId="semester">
-            <Form.Label>Semester</Form.Label>
-            <Form.Control as="select" value={selectedSemester} onChange={handleSemesterChange}
-              disabled={!selectedYearLevel || !selectedAcademicYear || !selectedProgram}>
-            <option value="">Select Semester</option>
-              {selectedYearData
-                ?.map((sem, index) => (
-                  <option key={index} value={sem}>
-                    {getSemesterText(sem)}
-                  </option>
-              ))}
-            </Form.Control>
-          </Form.Group>
-        </Col>
-        <Col xs={12} sm={6} md={4} lg={2} className='mb-3'>
-          <Form.Group controlId="section">
-            <Form.Label>Section</Form.Label>
-            <Form.Control as="select" value={selectedSection} onChange={handleSectionChange}
-              disabled={!selectedYearLevel || !selectedAcademicYear || !selectedSemester || !selectedProgram}>
-                <option value="">Select Section</option>
-                {sections
-                  ?.map((section, index) => (
-                    <option key={index} value={section.sectionNumber}>
-                      {section.sectionNumber}
+                ))}
+              </Form.Select>
+            </Form.Group>
+          </Col>
+          <Col  xs={12} sm={6} md={4} lg={2} className='mb-3'>
+            <Form.Group controlId="program">
+              <Form.Label className="custom-color-green-font custom-font">Program</Form.Label>
+              <Form.Select value={selectedProgram} onChange={handleProgramChange} className="border-success"
+                disabled={!selectedAcademicYear}>
+              <option value="">Select Program</option>
+                {mappedData
+                  ?.filter(p => p.academicYear === selectedAcademicYear)
+                  ?.flatMap(p => p.programs)
+                  .map((program) => (
+                    <option key={program.programNumber} value={program.programNumber}>
+                      {program.programName}
                     </option>
                 ))}
-            </Form.Control>
-          </Form.Group>
-        </Col>
-        <Col xs={12} sm={6} md={4} lg={2} className='col-2 d-flex justify-align-items align-items-center mb-3'>
-          <Button className='btn btn-success mt-4 w-100' onClick={handleView}>View</Button>
-        </Col>
-      </Row>
+              </Form.Select>
+            </Form.Group>
+          </Col>
+          <Col xs={12} sm={6} md={4} lg={2} className='mb-3'>
+            <Form.Group controlId="yearLevel">
+              <Form.Label className="custom-color-green-font custom-font">Year Level</Form.Label>
+              <Form.Select value={selectedYearLevel} onChange={handleYearLevelChange} className="border-success"
+                disabled={!selectedAcademicYear || !selectedProgram}>
+                <option value="">Select Year Level</option>
+                {selectedProgramData // Get year levels for selected academic year
+                  ?.map(level => (
+                    <option key={level.yearLevel} value={level.yearLevel}>
+                      Year {level.yearLevel}
+                    </option>
+                ))}
+              </Form.Select>
+            </Form.Group>
+          </Col>
+          <Col xs={12} sm={6} md={4} lg={2} className='mb-3'>
+            <Form.Group controlId="semester">
+              <Form.Label className="custom-color-green-font custom-font">Semester</Form.Label>
+              <Form.Select value={selectedSemester} onChange={handleSemesterChange} className="border-success"
+                disabled={!selectedYearLevel || !selectedAcademicYear || !selectedProgram}>
+              <option value="">Select Semester</option>
+                {selectedYearData
+                  ?.map((sem, index) => (
+                    <option key={index} value={sem}>
+                      {getSemesterText(sem)}
+                    </option>
+                ))}
+              </Form.Select>
+            </Form.Group>
+          </Col>
+          <Col xs={12} sm={6} md={4} lg={2} className='mb-3'>
+            <Form.Group controlId="section">
+              <Form.Label className="custom-color-green-font custom-font">Section</Form.Label>
+              <Form.Select value={selectedSection} onChange={handleSectionChange} className="border-success"
+                disabled={!selectedYearLevel || !selectedAcademicYear || !selectedSemester || !selectedProgram}>
+                  <option value="">Select Section</option>
+                  {sections
+                    ?.map((section, index) => (
+                      <option key={index} value={section.sectionNumber}>
+                        {section.sectionNumber}
+                      </option>
+                  ))}
+              </Form.Select>
+            </Form.Group>
+          </Col>
+          <Col xs={12} sm={6} md={4} lg={2} className='mb-3'>
+            <Form.Group controlId="viewButton">
+              <Form.Label className="custom-color-green-font custom-font">Action</Form.Label>
+                <Button className='btn btn-success w-100' onClick={handleView}>View</Button>
+            </Form.Group>
+          </Col>
+        </Row>
+      </Form>
 
       {/* Table */}
-      <Row>
-        <div className="card mb-4 bg-white rounded p-3">
-          <div className="card-body table-responsive">
-            <Table bordered hover>
-              <thead className='table-success text-center'>
+  
+      <div className="card mb-4 bg-white rounded p-3">
+        <div className="card-body table-responsive">
+          <Table bordered hover>
+            <thead className='table-success text-center'>
+              <tr>
+                <th className="custom-color-green-font">Schedule Number</th>
+                <th className="custom-color-green-font">Course</th>
+                <th className="custom-color-green-font">Faculty</th>
+                <th className="custom-color-green-font">Date</th>
+                <th className="custom-color-green-font">Time</th>
+                <th className="custom-color-green-font">Status</th>
+                <th className="custom-color-green-font">Submitted On</th>
+                <th className="custom-color-green-font">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {schedules.length > 0 ? (
+                schedules.map((schedule, index) => (
+                  <tr key={index}>
+                    <td>{schedule.scheduleNumber}</td>
+                    <td>{schedule.courseCode}</td>
+                    <td>{schedule.personnelNumber}</td>
+
+                    {/* Date Input */}
+                    <td>
+                      <Form.Group className="mb-3" controlId={`date-${index}`}>
+                        <Form.Control
+                          type="date"
+                          value={schedule.date || ""}
+                          onChange={(e) => handleDateChange(index, e.target.value)}
+                          className="w-100"
+                        />
+                      </Form.Group>
+                    </td>
+
+                    {/* Time Input */}
+                    <td>
+                      <Form.Group className="mb-3" controlId={`time-${index}`}>
+                        <Form.Control
+                          type="time"
+                          value={schedule.time || ""}
+                          onChange={(e) => handleTimeChange(index, e.target.value)}
+                          className="w-100"
+                        />
+                      </Form.Group>
+                    </td>
+
+                    {/* Submission Status Dropdown */}
+                    <td>
+                      <Form.Group className="mb-3" controlId={`status-${index}`}>
+                        <Form.Select
+                          aria-label="Submission Status"
+                          value={schedule.submissionStatus || "Pending"}
+                          onChange={(e) => handleStatusChange(index, e.target.value)}
+                          className="w-100"
+                        >
+                          <option value="Submitted">Submitted</option>
+                          <option value="Pending">Pending</option>
+                          <option value="Overdue">Overdue</option>
+                        </Form.Select>
+                      </Form.Group>
+                    </td>
+
+                    <td></td>
+                    {/* Edit Button */}
+                    <td>
+                      <Button className="btn-warning w-100" onClick={() => handleEdit(schedule)}>
+                        Edit
+                      </Button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
                 <tr>
-                  <th className="custom-color-green-font">Schedule Number</th>
-                  <th className="custom-color-green-font">Course</th>
-                  <th className="custom-color-green-font">Faculty</th>
-                  <th className="custom-color-green-font">Date</th>
-                  <th className="custom-color-green-font">Time</th>
-                  <th className="custom-color-green-font">Status</th>
-                  <th className="custom-color-green-font">Submitted On</th>
-                  <th className="custom-color-green-font">Actions</th>
+                  <td colSpan="8" className="text-center">
+                    No Schedules Available
+                  </td>
                 </tr>
-              </thead>
-                <tbody>
-                  {schedules.length > 0 ? (
-                    schedules.map((schedule, index) => (
-                      <tr key={index}>
-                        <td>{schedule.scheduleNumber}</td>
-                        <td>{schedule.courseCode}</td>
-                        <td>{schedule.personnelNumber}</td>
+              )}
+            </tbody>
+          </Table>
 
-                        {/* Date Input */}
-                        <td>
-                          <Form.Group className="mb-3" controlId={`date-${index}`}>
-                            <Form.Control
-                              type="date"
-                              value={schedule.date || ""}
-                              onChange={(e) => handleDateChange(index, e.target.value)}
-                            />
-                          </Form.Group>
-                        </td>
-
-                        {/* Time Input */}
-                        <td>
-                          <Form.Group className="mb-3" controlId={`time-${index}`}>
-                            <Form.Control
-                              type="time"
-                              value={schedule.time || ""}
-                              onChange={(e) => handleTimeChange(index, e.target.value)}
-                            />
-                          </Form.Group>
-                        </td>
-
-                        {/* Submission Status Dropdown */}
-                        <td>
-                          <Form.Group className="mb-3" controlId={`status-${index}`}>
-                            <Form.Select
-                              aria-label="Submission Status"
-                              value={schedule.submissionStatus || "Pending"}
-                              onChange={(e) => handleStatusChange(index, e.target.value)}
-                            >
-                              <option value="Submitted">Submitted</option>
-                              <option value="Pending">Pending</option>
-                              <option value="Overdue">Overdue</option>
-                            </Form.Select>
-                          </Form.Group>
-                        </td>
-                        
-                        <td></td>
-                        {/* Edit Button */}
-                        <td>
-                          <Button className="btn-warning" onClick={() => handleEdit(schedule)}>
-                            Edit
-                          </Button>
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan="8" className="text-center">
-                        No Schedules Available
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-
-            </Table>
-       
-            <Button className='btn-success' onClick={() => handleAddSubmission(schedules)}>Save</Button>
-
-          </div>
-          
+          <Button className='btn-success' onClick={() => handleAddSubmission(schedules)}>
+            Save
+          </Button>
         </div>
-      </Row>
+      </div>
+
 
       <Modal show={showModal} onHide={handleCloseModal}>
-  <Modal.Header closeButton>
-    <Modal.Title>Edit Schedule</Modal.Title>
-  </Modal.Header>
-  <Modal.Body>
-    {editableData ? (
-      <>
-        <Form.Group controlId="courseCode">
-          <Form.Label>Course Code</Form.Label>
-          <Form.Control
-            type="text"
-            disabled
-            value={editableData.courseCode}
-            onChange={(e) => setEditableData({ ...editableData, courseCode: e.target.value })}
-          />
-        </Form.Group>
-        <Form.Group className="mt-2" controlId="personnelNumber">
-          <Form.Label>Personnel Number</Form.Label>
-          <Form.Control
-            type="text"
-            disabled
-            value={editableData.personnelNumber}
-            onChange={(e) => setEditableData({ ...editableData, personnelNumber: e.target.value })}
-          />
-        </Form.Group>
-        {/*<Form.Group controlId="personnelName">
-                  <Form.Label>Personnel Name</Form.Label>
-                  <Form.Control
-                    type="text"
-                    disabled
-                    value={editableData.personnelName}
-                    onChange={(e) => setEditableData({ ...editableData, personnelName: e.target.value })}
-                  /></Form.Group>*/}
-        <Form.Group className="mt-2" controlId="time">
-          <Form.Label>Time</Form.Label>
-          <Form.Control
-            type="text"
-            value={editableData.time}
-            onChange={(e) => setEditableData({ ...editableData, time: e.target.value })}
-          />
-        </Form.Group>
-        <Form.Group className="mt-2" controlId="day">
-          <Form.Label>Day</Form.Label>
-          <Form.Control
-            type="text"
-            value={editableData.date}
-            onChange={(e) => setEditableData({ ...editableData, date: e.target.value })}
-          />
-        </Form.Group>
-        <Form.Group className="mt-2" controlId="status">
-          <Form.Label>Status</Form.Label>
-          <Form.Control
-            type="text"
-            disabled
-            value={editableData.submissionStatus}
-            onChange={(e) => setEditableData({ ...editableData, submissionStatus: e.target.value })}
-          />
-        </Form.Group>
-      </>
-    ) : (
-      <p>No data available</p>
-    )}
-  </Modal.Body>
-  <Modal.Footer>
-    <Button variant="secondary" onClick={handleCloseModal}>
-      Close
-    </Button>
-    <Button variant="primary">
-      Save Changes
-    </Button>
-  </Modal.Footer>
-</Modal>
+        <Modal.Header closeButton>
+          <Modal.Title>Edit Schedule</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {editableData ? (
+            <>
+              <Form.Group controlId="courseCode">
+                <Form.Label>Course Code</Form.Label>
+                <Form.Control
+                  type="text"
+                  disabled
+                  value={editableData.courseCode}
+                  onChange={(e) => setEditableData({ ...editableData, courseCode: e.target.value })}
+                />
+              </Form.Group>
+              <Form.Group className="mt-2" controlId="personnelNumber">
+                <Form.Label>Personnel Number</Form.Label>
+                <Form.Control
+                  type="text"
+                  disabled
+                  value={editableData.personnelNumber}
+                  onChange={(e) => setEditableData({ ...editableData, personnelNumber: e.target.value })}
+                />
+              </Form.Group>
+              {/*<Form.Group controlId="personnelName">
+                        <Form.Label>Personnel Name</Form.Label>
+                        <Form.Control
+                          type="text"
+                          disabled
+                          value={editableData.personnelName}
+                          onChange={(e) => setEditableData({ ...editableData, personnelName: e.target.value })}
+                        /></Form.Group>*/}
+              <Form.Group className="mt-2" controlId="time">
+                <Form.Label>Time</Form.Label>
+                <Form.Control
+                  type="text"
+                  value={editableData.time}
+                  onChange={(e) => setEditableData({ ...editableData, time: e.target.value })}
+                />
+              </Form.Group>
+              <Form.Group className="mt-2" controlId="day">
+                <Form.Label>Day</Form.Label>
+                <Form.Control
+                  type="text"
+                  value={editableData.date}
+                  onChange={(e) => setEditableData({ ...editableData, date: e.target.value })}
+                />
+              </Form.Group>
+              <Form.Group className="mt-2" controlId="status">
+                <Form.Label>Status</Form.Label>
+                <Form.Control
+                  type="text"
+                  disabled
+                  value={editableData.submissionStatus}
+                  onChange={(e) => setEditableData({ ...editableData, submissionStatus: e.target.value })}
+                />
+              </Form.Group>
+            </>
+          ) : (
+            <p>No data available</p>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleCloseModal}>
+            Close
+          </Button>
+          <Button variant="primary">
+            Save Changes
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      <Modal show={showModalAlertView} onHide={closeShowModalAlertView} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Action Required</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+            Please complete all filters (Academic Year, Program, Year Level, Semester, Section) to view schedules.
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={closeShowModalAlertView}>
+            Close
+          </Button>
+        </Modal.Footer>
+      </Modal>
 
 
     </section>

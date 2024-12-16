@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { Table, Form, Button, Row, Col, Modal } from 'react-bootstrap';
+import 'bootstrap/dist/css/bootstrap.min.css'; 
 import AcademicYearModel from '../ReactModels/AcademicYearModel';
 import ProgramModel from '../ReactModels/ProgramModel';
 import CourseModel from '../ReactModels/CourseModel';
@@ -19,31 +20,21 @@ const Sections = () => {
   const [selectedSemester, setSelectedSemester] = useState('');
   const [selectedSection, setSelectedSection] = useState('');
   const [students, setStudents] = useState('');
-
   const [academicYears, setAcademicYears] = useState([]);
   const [mappedData, setMappedData] = useState([]);
-  
   const [newSection, setNewSection] = useState(null);
-  
   const [currentAcademicYear, setCurrentAcadYear] = useState([]);
-  
   const [programs, setPrograms] = useState([]);
   const [courses, setCourses] = useState([]);
   const [sections, setSections] = useState([]);
   const [schedules, setSchedules] = useState([]);
   const [professors, setProfessors] = useState([]);
   const [sectionStatus, setSectionStatus] = useState('Pending');
-
   const [functionCalled, setFunctionCalled] = useState(false); // Trigger state
-
   const [showTable, setShowTable] = useState(false);
   const [showModal, setShowModal] = useState(false);
-
-  const [modalYearLevel, setModalYearLevel] = useState('');
-  const [modalSemester, setModalSemester] = useState(''); // Default to "First" semester
-
-  const [selectedProfessor, setSelectedProfessor] = useState('Prof. John Doe');
-
+  const [showModalAlertView, setShowModalAlertView] =useState(false);
+  const [showModalAlert, setShowModalAlert] =useState(false);
 
   const fetchAcademicYearsAndPrograms = async () => {
     try {
@@ -219,8 +210,14 @@ const Sections = () => {
     if (selectedAcademicYear && selectedYearLevel && selectedSemester && selectedSection) {
       setShowTable(true); 
       fetchAndCombineData()
+    } else {
+      setShowModalAlertView(true);
     }
   };
+
+  const closeShowModalAlertView = () => {
+    setShowModalAlertView(false);
+  }
 
   //students
   const fetchAndCombineData = async () => {
@@ -342,31 +339,42 @@ const Sections = () => {
   };
 
   const addSection = () => {
-    let nextSection;
 
-    console.log(sections);
-    if (sections.length === 0) {
-        // Start with "A" if there are no sections
-        nextSection = `${generateNextSectionNumber()}A`;
+    if (selectedAcademicYear && selectedProgram && selectedYearLevel && selectedSemester) {
+        let nextSection;
+
+        console.log(sections);
+        if (sections.length === 0) {
+            // Start with "A" if there are no sections
+            nextSection = `${generateNextSectionNumber()}A`;
+        } else {
+            const lastSection = sections[sections.length - 1];
+
+            console.log(lastSection);
+            const lastCharacter = lastSection?.sectionNumber.charAt(lastSection.sectionNumber.length - 1);
+
+            console.log(lastCharacter);
+            const lastCharacterCode = lastCharacter?.charCodeAt(0);
+            console.log(lastCharacterCode);
+
+            // Check if the last character is 'Z' (ASCII 90) to avoid overflow
+            const nextCharacterCode = lastCharacterCode === 90 ? 65 : lastCharacterCode + 1; // Wrap around after 'Z'
+            const nextLetter = String.fromCharCode(nextCharacterCode);
+
+            nextSection = `${generateNextSectionNumber()}${nextLetter}`;
+        }
+        setNewSection(nextSection); // Automatically fill the next section
+        setShowModal(true); // Show the modal for adding the section       
     } else {
-        const lastSection = sections[sections.length - 1];
-
-        console.log(lastSection);
-        const lastCharacter = lastSection?.sectionNumber.charAt(lastSection.sectionNumber.length - 1);
-
-        console.log(lastCharacter);
-        const lastCharacterCode = lastCharacter?.charCodeAt(0);
-        console.log(lastCharacterCode);
-
-        // Check if the last character is 'Z' (ASCII 90) to avoid overflow
-        const nextCharacterCode = lastCharacterCode === 90 ? 65 : lastCharacterCode + 1; // Wrap around after 'Z'
-        const nextLetter = String.fromCharCode(nextCharacterCode);
-
-        nextSection = `${generateNextSectionNumber()}${nextLetter}`;
+      setShowModalAlert(true);
+      return;
     }
-    setNewSection(nextSection); // Automatically fill the next section
-    setShowModal(true); // Show the modal for adding the section
+    
   };
+
+  const closeShowModalAlert = () => {
+    setShowModalAlert(false);
+  }
 
 
 
@@ -455,109 +463,114 @@ const Sections = () => {
  
 
       {/* Second Row for Program, Year Level, Semester, Section, and Add Section */}
-      <Row className="mb-3 bg-white rounded p-3 m-1">
-      <Col>
-          <Form.Group controlId="academicYear">
-            <Form.Label>Academic Year</Form.Label>
-            <Form.Control as="select" value={selectedAcademicYear} onChange={handleAcademicYearChange}>
-              <option value="">Select Academic Year</option>
-              {academicYears.sort((a, b) => {
-                let yearA = parseInt(a.academicYear.split('-')[0]);
-                let yearB = parseInt(b.academicYear.split('-')[0]);
-                return yearB - yearA; // Sorting in descending order
-              })
-              .map((program) => (
-                <option key={program.academicYear} value={program.academicYear}>
-                  {program.academicYear}
-                </option>
-              ))}
-            </Form.Control>
-          </Form.Group>
-        </Col>
-        <Col>
-          <Form.Group controlId="program">
-            <Form.Label>Program</Form.Label>
-            <Form.Control as="select" value={selectedProgram} onChange={handleProgramChange}
-              disabled={!selectedAcademicYear}>
-              <option value="">Select Program</option>
-              {mappedData
-                ?.filter(p => p.academicYear === selectedAcademicYear)
-                ?.flatMap(p => p.programs)
+      <Form className="p-3 mb-4 bg-white border border-success rounded">
+        <Row className="align-items-center">
+        <Col xs={12} sm={6} md={4} lg={2} className='mb-3'>
+            <Form.Group controlId="academicYear">
+              <Form.Label>Academic Year</Form.Label>
+              <Form.Select value={selectedAcademicYear} onChange={handleAcademicYearChange} className="border-success">
+                <option value="">Select Academic Year</option>
+                {academicYears.sort((a, b) => {
+                  let yearA = parseInt(a.academicYear.split('-')[0]);
+                  let yearB = parseInt(b.academicYear.split('-')[0]);
+                  return yearB - yearA; // Sorting in descending order
+                })
                 .map((program) => (
-                  <option key={program.programNumber} value={program.programNumber}>
-                    {program.programName}
+                  <option key={program.academicYear} value={program.academicYear}>
+                    {program.academicYear}
                   </option>
-              ))}
-            </Form.Control>
-          </Form.Group>
-        </Col>
-        <Col>
-          <Form.Group controlId="yearLevel">
-            <Form.Label>Year Level</Form.Label>
-            <Form.Control as="select" value={selectedYearLevel} onChange={handleYearLevelChange}
-            disabled={!selectedAcademicYear || !selectedProgram}>
-              <option value="">Select Year Level</option>
-              {selectedProgramData // Get year levels for selected academic year
-                ?.map(level => (
-                  <option key={level.yearLevel} value={level.yearLevel}>
-                    Year {level.yearLevel}
-                  </option>
-              ))}
-            </Form.Control>
-          </Form.Group>
-        </Col>
-        <Col>
-          <Form.Group controlId="semester">
-            <Form.Label>Semester</Form.Label>
-            <Form.Control as="select" value={selectedSemester} onChange={handleSemesterChange}
-              disabled={!selectedYearLevel || !selectedAcademicYear || !selectedProgram}>
-              <option value="">Select Semester</option>
-              {selectedYearData
-                ?.map((sem, index) => (
-                  <option key={index} value={sem}>
-                    {getSemesterText(sem)}
-                  </option>
-              ))}
-            </Form.Control>
-          </Form.Group>
-        </Col>
-        
-        {/* Section Selection */}
-        <Col>
-          <Form.Group controlId="section">
-            <Form.Label>Section</Form.Label>
-            <Form.Control as="select" value={selectedSection} onChange={handleSectionChange}
-              disabled={!selectedYearLevel || !selectedAcademicYear || !selectedSemester || !selectedProgram}>
-                <option value="">Select Section</option>
-                {sections
-                  ?.map((section, index) => (
-                    <option key={index} value={section.sectionNumber}>
-                      {section.sectionNumber}
+                ))}
+              </Form.Select>
+            </Form.Group>
+          </Col>
+          <Col xs={12} sm={6} md={4} lg={2} className='mb-3'>
+            <Form.Group controlId="program">
+              <Form.Label>Program</Form.Label>
+              <Form.Select value={selectedProgram} onChange={handleProgramChange} className="border-success"
+                disabled={!selectedAcademicYear}>
+                <option value="">Select Program</option>
+                {mappedData
+                  ?.filter(p => p.academicYear === selectedAcademicYear)
+                  ?.flatMap(p => p.programs)
+                  .map((program) => (
+                    <option key={program.programNumber} value={program.programNumber}>
+                      {program.programName}
                     </option>
                 ))}
-            </Form.Control>
-          </Form.Group>
-        </Col>
-        <Col className="d-flex flex-column align-items-end">
-        
-          <Button className="btn-success w-100 mb-2" onClick={handleView}>View</Button>
-          { selectedAcademicYear && selectedProgram && selectedYearLevel && selectedSemester && 
-            (selectedAcademicYear === currentAcademicYear[0].academicYear) && (
-            <>
-              <Button className="btn-success w-100" onClick={addSection}>Add Section</Button>
-            </>
-          )}
-        </Col>
-        
-      </Row>
+              </Form.Select>
+            </Form.Group>
+          </Col>
+          <Col xs={12} sm={6} md={4} lg={2} className='mb-3'>
+            <Form.Group controlId="yearLevel">
+              <Form.Label>Year Level</Form.Label>
+              <Form.Select value={selectedYearLevel} onChange={handleYearLevelChange} className="border-success"
+              disabled={!selectedAcademicYear || !selectedProgram}>
+                <option value="">Select Year Level</option>
+                {selectedProgramData // Get year levels for selected academic year
+                  ?.map(level => (
+                    <option key={level.yearLevel} value={level.yearLevel}>
+                      Year {level.yearLevel}
+                    </option>
+                ))}
+              </Form.Select>
+            </Form.Group>
+          </Col>
+          <Col xs={12} sm={6} md={4} lg={2} className='mb-3'>
+            <Form.Group controlId="semester">
+              <Form.Label>Semester</Form.Label>
+              <Form.Select value={selectedSemester} onChange={handleSemesterChange} className="border-success"
+                disabled={!selectedYearLevel || !selectedAcademicYear || !selectedProgram}>
+                <option value="">Select Semester</option>
+                {selectedYearData
+                  ?.map((sem, index) => (
+                    <option key={index} value={sem}>
+                      {getSemesterText(sem)}
+                    </option>
+                ))}
+              </Form.Select>
+            </Form.Group>
+          </Col>
+          
+          {/* Section Selection */}
+          <Col xs={12} sm={6} md={4} lg={2} className='mb-3'>
+            <Form.Group controlId="section">
+              <Form.Label>Section</Form.Label>
+              <Form.Select value={selectedSection} onChange={handleSectionChange} className="border-success"
+                disabled={!selectedYearLevel || !selectedAcademicYear || !selectedSemester || !selectedProgram}>
+                  <option value="">Select Section</option>
+                  {sections
+                    ?.map((section, index) => (
+                      <option key={index} value={section.sectionNumber}>
+                        {section.sectionNumber}
+                      </option>
+                  ))}
+              </Form.Select>
+            </Form.Group>
+          </Col>
+          <Col xs={12} sm={6} md={4} lg={2} className='mb-3'>
+          <Form.Group controlId="viewButton">
+            <Form.Label className="custom-color-green-font custom-font">Action</Form.Label>
+              <div className='d-flex'>
+              <Button className="btn-success w-50 me-2" onClick={handleView}>View</Button>        
+              <Button className="bg-white custom-color-green-font btn-outline-success w-50" onClick={addSection}>Add Section</Button>
+            </div>
+            </Form.Group>
+          </Col>
+          
+        </Row>
+      </Form>
 
-      {showTable && (
-        <Row className="mb-3 m-1">
-          <div className='card bg-white rounded'>
-              <div className="card-header bg-white pt-4">
-                <h5>Section {selectedSection} <span className="text-muted">[Status: {sectionStatus}]</span></h5>
-              </div>
-              <div className="card-body mt-2 mx-1 mb-1">
+      <div className='card bg-white rounded px-3 pb-3 '>
+          
+        {showTable ? (
+          selectedSection && schedules.length > 0 ? (
+            <Row>
+            <div className="card-header bg-white pt-4">
+              <h5>Section {selectedSection} <span className="text-muted">[Status: {sectionStatus}]</span></h5>
+            </div>
+         
+                <div className="card-body mt-2 mx-1 mb-1">
+                  {/* Schedules Table */}
                   <div className='mb-3 table-responsive'>
                     <Table bordered hover className="text-center">
                       <thead className="table-success">
@@ -571,88 +584,101 @@ const Sections = () => {
                         </tr>
                       </thead>
                       <tbody>
-                      {schedules.map((schedule, index) => {
-                          // Find the matching course based on courseCode
+                        {schedules.map((schedule, index) => {
                           const courseDetails = courses?.find(course => course.courseCode === schedule.courseCode);
-                          // If courseDetails exist, render the row
                           return (
-                        <tr key={index}>
-                          <td>{schedule.courseCode}</td>
-                          <td>{courseDetails?.courseDescriptiveTitle || 'N/A'}</td>
-                          <td>{courseDetails?.courseLecture || 'N/A'}</td>
-                          <td>{courseDetails?.courseLaboratory || 'N/A'}</td>
-                          <td>
-                            {/* Schedule Inputs aligned in a single line */}
-                            <div className="d-flex justify-content-start align-items-center">
-                              {/* Example schedule inputs */}
-                              <Form.Control
-                                as="text"
-                                readOnly
-                                className="mr-2">
-                                  {schedule.scheduleDay || 'N/A'}
-                              </Form.Control>
-                              <Form.Control
-                                type="time"
-                                value={schedule.startTime || ''}
-                                readOnly
-                                className="mr-2"/>
-                              <Form.Control
-                                type="time"
-                                value={schedule.endTime || ''}
-                                readOnly
-                                className="mr-2"/>
-                            </div>
-                          </td>
-                          <td>
-                            <Form.Control
-                              as="input"
-                              type="text"
-                              value={
-                                schedule.personnelNumber
-                                ? `${professors.find((prof) => prof.personnelNumber === schedule.personnelNumber)?.personnelNameFirst || ''} ${
-                                    professors.find((prof) => prof.personnelNumber === schedule.personnelNumber)?.personnelNameLast || ''}` : 'No Professor'}
-                              readOnly
-                              className="mr-2"
-                            />
-                          </td>
-                        </tr>);
+                            <tr key={index}>
+                              <td>{schedule.courseCode}</td>
+                              <td>{courseDetails?.courseDescriptiveTitle || 'N/A'}</td>
+                              <td>{courseDetails?.courseLecture || 'N/A'}</td>
+                              <td>{courseDetails?.courseLaboratory || 'N/A'}</td>
+                              <td>
+                                <div className="d-flex justify-content-start align-items-center">
+                                  <Form.Control
+                                    as="text"
+                                    readOnly
+                                    className="mr-2">
+                                      {schedule.scheduleDay || 'N/A'}
+                                  </Form.Control>
+                                  <Form.Control
+                                    type="time"
+                                    value={schedule.startTime || ''}
+                                    readOnly
+                                    className="mr-2"/>
+                                  <Form.Control
+                                    type="time"
+                                    value={schedule.endTime || ''}
+                                    readOnly
+                                    className="mr-2"/>
+                                </div>
+                              </td>
+                              <td>
+                                <Form.Control
+                                  as="input"
+                                  type="text"
+                                  value={
+                                    schedule.personnelNumber
+                                      ? `${professors.find((prof) => prof.personnelNumber === schedule.personnelNumber)?.personnelNameFirst || ''} ${
+                                          professors.find((prof) => prof.personnelNumber === schedule.personnelNumber)?.personnelNameLast || ''}` : 'No Professor'}
+                                  readOnly
+                                  className="mr-2"
+                                />
+                              </td>
+                            </tr>
+                          );
                         })}
                       </tbody>
                     </Table>
                   </div>
+
+                  {/* Students Table */}
                   <div className='mt-2 table-responsive'>
-                  {students.length > 0 ? (
-                    <Table bordered hover className="text-center">
-                      <thead className="table-info">
-                        <tr>
-                          <th>Student Number</th>
-                          <th>Student Name</th>
-                          <th>Contact Number</th>
-                          <th>PCC Email</th>
-                          <th>Address</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                      {students.map((studentData, index) => (
-                      <tr key={index}>
-                        <td>{studentData.StudentNumber}</td>
-                        <td>{studentData.StudentName}</td>
-                        <td>{studentData.ContactNumber}</td>
-                        <td>{studentData.PCCEmail}</td>
-                        <td>{studentData.Address}</td>
-                      </tr>
-                    ))}
-                      </tbody>
-                    </Table>
-                  ) : (
-                    <div>No students found for the selected criteria.</div>
-                  )}
-              </div>
-              
-              </div>
+                    {students.length > 0 ? (
+                      <Table bordered hover className="text-center">
+                        <thead className="table-info">
+                          <tr>
+                            <th>Student Number</th>
+                            <th>Student Name</th>
+                            <th>Contact Number</th>
+                            <th>PCC Email</th>
+                            <th>Address</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {students.map((studentData, index) => (
+                            <tr key={index}>
+                              <td>{studentData.StudentNumber}</td>
+                              <td>{studentData.StudentName}</td>
+                              <td>{studentData.ContactNumber}</td>
+                              <td>{studentData.PCCEmail}</td>
+                              <td>{studentData.Address}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </Table>
+                    ) : (
+                      <div>No students found for the selected criteria.</div>
+                    )}
+                  </div>
+
+                </div>
+
+            </Row>
+            
+            
+          
+          ) : (
+            <div className="text-center">No data available. Please select a section.</div>
+          )
+        ) : (
+          <div className="text-center">
+            <h5 className='custom-color-green-font fs-5 pt-5'>No Data Available</h5>
+            <p className='fs-6'>Please ensure that all filters are applied or data is available to display.</p>
           </div>
-        </Row>
-      )}
+        )}
+      </div>
+
+      
 
       {/* Add Section Modal */}
       <Modal show={showModal} onHide={closeModal}>
@@ -695,6 +721,35 @@ const Sections = () => {
           <Button variant="primary" onClick={handleAddSection}>Add Section</Button>
         </Modal.Footer>
       </Modal>
+
+      <Modal show={showModalAlertView} onHide={closeShowModalAlertView} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Action Required</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          Please complete all filters (Academic Year, Program, Year Level, Semester, Sections) to view Sections.
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={closeShowModalAlertView}>
+            Close
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      <Modal show={showModalAlert} onHide={closeShowModalAlert} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Action Required</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+         Please complete all filters (Academic Year, Program, Year Level, Semester) to add new Sections.
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={closeShowModalAlert}>
+            Close
+          </Button>
+        </Modal.Footer>
+      </Modal>
+  
     </div>
   );
 };
