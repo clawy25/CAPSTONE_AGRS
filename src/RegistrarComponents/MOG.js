@@ -96,13 +96,6 @@ function ProgramFilter({ onView }) {
     XLSX.writeFile(workbook, `${programName || "Masterlist"}_Grades.xlsx`);
   };
 
-  const handlePrintModal = () => {
-    const table = document.querySelector('.table-success'); // Select the table to copy
-    if (table) {
-      setTableContent(table.outerHTML); // Copy table's HTML content
-      setShowPrintModal(true);
-    }
-  };
 
   return (
     <Form className="p-3 bg-white border border-success rounded">
@@ -160,42 +153,11 @@ function ProgramFilter({ onView }) {
             <Form.Label className="custom-color-green-font custom-font">Action</Form.Label>
             <div className="d-flex">
               <Button className="w-25 btn-success me-2" onClick={handleView}>View</Button>
-              <Button className="w-50 btn-success me-2" onClick={downloadExcel}>Download Excel</Button>
-              <Button className="w-25 btn-success me-2" onClick={handlePrintModal}>Print</Button>
+              <Button className="w-75 btn-success me-2" onClick={downloadExcel}>Download Excel</Button>
             </div>
           </Form.Group>
         </Col>
       </Row>
-
-      {/* Print Modal */}
-      <Modal
-        show={showPrintModal}
-        onHide={() => setShowPrintModal(false)}
-        size="xl"
-      >
-        <Modal.Header closeButton>
-          <Modal.Title>Print Preview</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <div style={{ overflowX: 'auto' }}>
-            {/* Render the copied table */}
-            <div dangerouslySetInnerHTML={{ __html: tableContent }} />
-          </div>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowPrintModal(false)}>
-            Close
-          </Button>
-          <Button
-            variant="success"
-            onClick={() => {
-              window.print();
-            }}
-          >
-            Print
-          </Button>
-        </Modal.Footer>
-      </Modal>
     </Form>
   );
 }

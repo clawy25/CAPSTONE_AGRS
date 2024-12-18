@@ -403,7 +403,7 @@ const MasterlistOfGradesTable = () => {
       <style>
         @media print {
           @page {
-            size: letter landscape; /* Set Legal size and Landscape orientation */
+            size: legal landscape; /* Set Legal size and Landscape orientation */
             margin: 0;
             /* Ensure background graphics are included */
             background: #fff;
@@ -419,12 +419,15 @@ const MasterlistOfGradesTable = () => {
             border-collapse: collapse;
             page-break-before: auto;
           }
+
   
           th, td {
             border: 1px solid black;
             padding: 8px;
             text-align: center;
+            width: 500px;
           }
+
   
           td {
             background-color: white;
@@ -534,7 +537,7 @@ const MasterlistOfGradesTable = () => {
           }
   
           .separator {
-            border: 0;
+            border: 10;
             border-top: 2px solid green;
             width: 80%;
             margin: 20px auto;
@@ -882,92 +885,127 @@ const MasterlistOfGradesTable = () => {
       
 
      
-        <div id="printableTable" className='bg-white rounded pt-5 px-3 pb-3 table-responsive' >
-          {/*<h5 className="text-center">{program}</h5>*/}
-          {Object.keys(groupedData).length === 0 || combinedData.length === 0 ? (
-            <div className="text-center py-5">
-              <h5 className='custom-color-green-font fs-5'>No Data Available</h5>
-              <p className='fs-6'>Please ensure that all filters are applied or data is available to display.</p>
-            </div>
-          ) : (Object.entries(groupedData).sort(([sectionNumberA], [sectionNumberB]) => sectionNumberA.localeCompare(sectionNumberB))
+      <div id="printableTable" className="bg-white rounded pt-5 px-3 pb-3 table-responsive">
+        <style>
+          {`
+            table {
+              table-layout: fixed; /* Fixes column widths */
+              width: 120%;
+              border-collapse: collapse; /* Clean table borders */
+            }
+            th, td {
+              border: 1px solid #ddd; /* Light borders for clarity */
+              word-wrap: break-word; /* Prevent content overflow */
+            }
+            th {
+              background-color: #d1e7dd; /* Green header background */
+            }
+            .student-name {
+              width: 250px; /* Extra width for Student Name column */
+            }
+            .fixed-width {
+              width: 150px; /* Fixed width for all other columns */
+            }
+            .no-data-row {
+              text-align: center;
+              font-style: italic;
+              color: #999;
+              background-color: white !important;
+            }
+          `}
+        </style>
+
+        {Object.keys(groupedData).length === 0 || combinedData.length === 0 ? (
+          <div className="text-center py-5">
+            <h5 className="custom-color-green-font fs-5">No Data Available</h5>
+            <p className="fs-6">
+              Please ensure that all filters are applied or data is available to display.
+            </p>
+          </div>
+        ) : (
+          Object.entries(groupedData)
+            .sort(([sectionNumberA], [sectionNumberB]) =>
+              sectionNumberA.localeCompare(sectionNumberB)
+            )
             .map(([sectionNumber, sectionData], sectionIndex) => (
               <Table bordered hover key={sectionIndex} className="text-center mb-3">
+                {/* Table Header */}
                 <thead className="table-success">
                   <tr>
-                    <th colSpan="3" className="custom-color-green-font">
-                      {`${sectionNumber}`}
-                    </th>
-                    {sectionData.personnelNames.map((personnelNames, index) => (
-                      <th key={`personnel-${index}`} className="bg-success text-white">
-                        {personnelNames}
+                    <th colSpan="3" className="custom-color-green-font fixed-width">{sectionNumber}</th>
+                    {sectionData.personnelNames.map((personnelName, index) => (
+                      <th key={`personnel-${index}`} className="bg-success text-white fixed-width">
+                        {personnelName}
                       </th>
                     ))}
-                    <th
-                      colSpan={sectionData.courseCodes.length + 1}
-                      className="custom-color-green-font"
-                    >
+                    <th colSpan={sectionData.courseCodes.length + 1} className="custom-color-green-font fixed-width">
                       WEIGHTED GRADE AVERAGE
                     </th>
-                    <th rowSpan={2} className="custom-color-green-font">
-                      Certificate of Grades (COG)
-                    </th>
+                    <th rowSpan={2} className="custom-color-green-font fixed-width">Certificate of Grades (COG)</th>
                   </tr>
                   <tr>
-                    <th className="bg-success text-white">ITEM</th>
-                    <th className="bg-success text-white">SNUMBER</th>
-                    <th className="bg-success text-white">STUDENT NAME</th>
+                    <th className="bg-success text-white fixed-width">ITEM</th>
+                    <th className="bg-success text-white fixed-width">SNUMBER</th>
+                    <th className="bg-success text-white student-name">STUDENT NAME</th>
                     {sectionData.courseCodes.map((courseCode, index) => (
-                      <th key={`course-${index}`} className="bg-success text-white">
+                      <th key={`course-${index}`} className="bg-success text-white fixed-width">
                         {courseCode}
                       </th>
                     ))}
                     {sectionData.courseCodes.map((courseCode, index) => (
-                      <th key={`course-${index}`} className="bg-success text-white">
+                      <th key={`course-grade-${index}`} className="bg-success text-white fixed-width">
                         {courseCode}
                       </th>
                     ))}
-                    <th className="bg-success text-white">WGA</th>
+                    <th className="bg-success text-white fixed-width">WGA</th>
                   </tr>
                 </thead>
 
+                {/* Table Body */}
                 <tbody className="table-success">
-                  {combinedData
-                    .filter((studentData) => studentData.sectionNumber === sectionNumber) // Filter for students in the current section
-                    .map((studentData, rowIndex) => (
-                      <tr key={rowIndex}>
-                        <td className="bg-white">{rowIndex + 1}</td>
-                        <td className="bg-white">{studentData.studentNumber}</td>
-                        <td className="bg-white">{studentData.studentName}</td>
+                  {/* Check if there’s no student data for this section */}
+                  {combinedData.filter((data) => data.sectionNumber === sectionNumber).length === 0 ? (
+                    <tr>
+                      <td colSpan={3 + sectionData.courseCodes.length * 2 + 2} className="no-data-row">
+                        No Student Data Available
+                      </td>
+                    </tr>
+                  ) : (
+                    combinedData
+                      .filter((studentData) => studentData.sectionNumber === sectionNumber)
+                      .map((studentData, rowIndex) => (
+                        <tr key={rowIndex}>
+                          <td className="bg-white fixed-width">{rowIndex + 1}</td>
+                          <td className="bg-white fixed-width">{studentData.studentNumber}</td>
+                          <td className="bg-white student-name">{studentData.studentName}</td>
 
-                        {/* Render empty cells for course data */}
-                        {sectionData.courseCodes.map((courseCode, courseIndex) => (
-                          <td key={`course-${courseIndex}`} className="bg-white">
-                            -
+                          {/* Render empty cells for course codes */}
+                          {sectionData.courseCodes.map((courseCode, courseIndex) => (
+                            <td key={`course-${courseIndex}`} className="bg-white fixed-width">-</td>
+                          ))}
+
+                          {/* Render 0.0 for course grades */}
+                          {sectionData.courseCodes.map((courseCode, courseIndex) => (
+                            <td key={`course-grade-${courseIndex}`} className="bg-white fixed-width">0.0</td>
+                          ))}
+
+                          {/* Weighted Grade Average */}
+                          <td className="bg-white fixed-width">0.0</td>
+
+                          {/* COG Button */}
+                          <td className="bg-white fixed-width">
+                            <Button variant="success" className="w-100" onClick={() => openModal(studentData)}>
+                              COG
+                            </Button>
                           </td>
-                        ))}
-
-                        {/* Render empty cells for course grades */}
-                        {sectionData.courseCodes.map((courseCode, courseIndex) => (
-                          <td key={`course-${courseIndex}`} className="bg-white">
-                            0.0
-                          </td>
-                        ))}
-
-                        {/* Weighted Grade Average (WGA) */}
-                        <td className="bg-white">0.0</td>
-
-                        {/* COG Button */}
-                        <td>
-                          <Button variant="success" className="w-100" onClick={() => openModal(studentData)}>
-                            COG
-                          </Button>
-                        </td>
-                      </tr>
-                    ))}
+                        </tr>
+                      ))
+                  )}
                 </tbody>
               </Table>
-            ))) }
-        </div>
+            ))
+        )}
+      </div>
   
 
        {/* Modal for COG */}

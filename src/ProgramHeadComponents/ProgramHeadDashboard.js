@@ -216,12 +216,6 @@ export default function ProgramHeadDashboard() {
               </Link>
             </div>
           )}
-  <div
-      className={`menu-item d-flex align-items-center mb-2 ${selectedSection === SECTIONS.HRIS ? 'active' : ''}`} 
-    >
-      <FontAwesomeIcon icon={faUser} className="me-2" />
-      HRIS  
-    </div>
         </nav>
       </div>
 
