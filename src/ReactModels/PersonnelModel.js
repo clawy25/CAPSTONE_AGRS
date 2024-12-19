@@ -25,7 +25,7 @@ export default class PersonnelModel {
   // Add this function to fetch a professor by personnel number
   static async getProfessorByPersonnelNumber(personnelNumber) {
     try {
-      const response = await fetch(`http://localhost:5000/personnel/${personnelNumber}`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/personnel/${personnelNumber}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

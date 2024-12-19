@@ -7,6 +7,8 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const app = express();
 const port = process.env.PORT; // Use the PORT from .env
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://your-backend-url.com';
+
 app.use(cors({
     origin: 'https://paranaquecitycollege.onrender.com', // Adjust this for your frontend URL
 }));
