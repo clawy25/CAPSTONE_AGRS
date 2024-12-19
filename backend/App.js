@@ -24,12 +24,6 @@ const authenticateToken = (req, res, next) => {
   };
 
 
-
-// Redirect root URL to /faculty
-app.get('/', (req, res) => {
-    res.redirect('/student');
-});
-
 app.get('/protected-route', authenticateToken, (req, res) => {
   res.json({ message: 'This is a protected route', user: req.user });
 });
