@@ -1,30 +1,58 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Form, Row, Col, Button, Modal, Table } from 'react-bootstrap';
 import * as XLSX from 'sheetjs-style'; // Use sheetjs-style for formatting
 import ProgramModel from '../ReactModels/ProgramModel'; // Ensure this path is correct
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
+import StudentModel from '../ReactModels/StudentModel';
+import EnrollmentModel from '../ReactModels/EnrollmentModel';
+import ScheduleModel from '../ReactModels/ScheduleModel';
+import CourseModel from '../ReactModels/CourseModel';
+import { UserContext } from '../Context/UserContext'; 
+import '../App.css'
 
-function ProgramFilter({ onView }) {
+// MasterlistOfGradesTable Component
+function MasterlistOfGradesTable() {
+  const [showModal, setShowModal] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState(null);
   const [programs, setPrograms] = useState([]);
   const [programName, setProgramName] = useState("");
   const [programCode, setProgramCode] = useState("");
   const [batchYear, setBatchYear] = useState("");
-
   const [showPrintModal, setShowPrintModal] = useState(false);
   const [tableContent, setTableContent] = useState("");
+  const { user } = useContext(UserContext);
+  const [admissionYears, setAdmissionYears] = useState([]);
+  const [students, setStudents] = useState([]);
+  const [semestersData, setSemestersData] = useState([]);
+  const [academicYears, setAcademicYears] = useState([]);
 
+ 
   useEffect(() => {
     const fetchPrograms = async () => {
       try {
-        const allPrograms = await ProgramModel.fetchAllPrograms();
+        const allPrograms = await ProgramModel.fetchAllPrograms(user.programNumber);
         setPrograms(allPrograms);
       } catch (error) {
         console.error("Error fetching programs:", error);
       }
     };
+
+    const fetchAdmissionYears = async () => {
+      try {
+        const allAdmissionYear = await StudentModel.fetchExistingStudents();
+        const admissionYr = allAdmissionYear.map((admission) => admission.studentAdmissionYr);
+        const distinctAdmissionYr = [...new Set(admissionYr)];
+        const sortedAdmissionYears = distinctAdmissionYr.sort((a, b) => b - a);
+        setAdmissionYears(distinctAdmissionYr);
+      }catch(error){
+        console.error("Error fetching admission years:", error);
+      }
+    }
     fetchPrograms();
-  }, []);
+    fetchAdmissionYears()
+    fetchStudentData();
+  }, [user.programNumber]);
 
   const handleProgramNameChange = (e) => {
     const selectedProgramName = e.target.value;
@@ -34,9 +62,133 @@ function ProgramFilter({ onView }) {
     setProgramCode(selectedProgram ? selectedProgram.programNumber : "");
   };
 
-  const handleView = () => {
-    onView(programName, programCode, batchYear);
+  const fetchStudentData = async (programNumber, batchYear) => {
+    try {
+      // Fetch necessary data from models
+      const [studentsData, enrolledStudents, scheduleData] = await Promise.all([
+        StudentModel.fetchExistingStudents(),
+        EnrollmentModel.fetchAllEnrollment(),
+        ScheduleModel.fetchAllSchedules(),
+      ]);
+  
+      console.log('Students Data:', studentsData);
+  
+      // Combine data from students, enrollment, and schedules
+      const combinedData = enrolledStudents.map((enrollment) => {
+        const student = studentsData.find(
+          (student) => student.studentNumber === enrollment.studentNumber
+        );
+        const schedule = scheduleData.find(
+          (schedule) => schedule.scheduleNumber === enrollment.scheduleNumber
+        );
+  
+        return {
+          studentAdmissionYear: student?.studentAdmissionYr || '',
+          studentProgramNumber: student?.studentProgramNumber || '',
+          studentNumber: enrollment.studentNumber,
+          studentName: student
+            ? `${student.studentNameFirst} ${student.studentNameMiddle || ''} ${student.studentNameLast}`
+            : 'Unknown',
+          scheduleNumber: enrollment.scheduleNumber,
+          studentGender: student.studentSex,
+          studentAddress: student.studentAddress,
+          studentBirthDate: student.studentBirthDate,
+          studentProgramNumber: student.studentProgramNumber,
+
+        };
+      });
+  
+      // Remove duplicates by studentNumber
+      const distinctData = combinedData.filter(
+        (value, index, self) =>
+          index === self.findIndex((t) => t.studentNumber === value.studentNumber)
+      );
+  
+      console.log('Distinct Data:', distinctData);
+  
+      // Normalize values for filtering
+      const normalizedProgramNumber = String(programNumber);
+      const normalizedBatchYear = String(batchYear);
+  
+      // Filter based on selected program and batch year
+      const filteredData = distinctData.filter(
+        (student) =>
+          String(student.studentProgramNumber) === normalizedProgramNumber &&
+          String(student.studentAdmissionYear) === normalizedBatchYear
+      );
+  
+      console.log('Filtered Student Data:', filteredData);
+  
+      return filteredData;
+    } catch (error) {
+      console.error('Failed to fetch and filter student data:', error);
+      return [];
+    }
   };
+  
+  const fetchCurriculum = async (programNumber, batchYear) => {
+    try {
+      // Fetch all courses
+      const curricullumCourse = await CourseModel.fetchAllCourses();
+      console.log("Courses:", curricullumCourse);
+  
+      // Filter courses by selected programNumber
+      const filteredCourses = curricullumCourse.filter(
+        (course) => String(course.programNumber) === String(programNumber)
+      );
+  
+      console.log("Filtered Courses for Program:", filteredCourses);
+  
+      // Group courses by year level and semester
+      const groupedCourses = filteredCourses.reduce((acc, course) => {
+        const { courseYearLevel, courseSemester, courseCode } = course;
+  
+        if (!acc[courseYearLevel]) {
+          acc[courseYearLevel] = {};
+        }
+  
+        if (!acc[courseYearLevel][courseSemester]) {
+          acc[courseYearLevel][courseSemester] = [];
+        }
+  
+        acc[courseYearLevel][courseSemester].push(courseCode);
+        return acc;
+      }, {});
+  
+      console.log("Grouped Courses by Year and Semester:", groupedCourses);
+  
+      // Dynamically generate academic years starting from the batchYear
+      const academicYears = [];
+      for (let i = 0; i < 4; i++) { // Assume a 4-year program
+        const startYear = batchYear + i;
+        const endYear = startYear + 1;
+        academicYears.push(`${startYear}-${endYear}`);
+      }
+  
+      console.log("Academic Years:", academicYears);
+  
+      return { groupedCourses, academicYears }; // Return both grouped courses and academic years
+    } catch (error) {
+      console.error("Failed to fetch Curriculum data:", error);
+      return {};
+    }
+  };
+  
+  const handleView = async () => {
+    if (programCode && batchYear) {
+      const { groupedCourses, academicYears } = await fetchCurriculum(programCode, batchYear);
+      const filteredStudents = await fetchStudentData(programCode, batchYear);
+  
+      setSemestersData(groupedCourses); // Update semestersData for table rendering
+      setStudents(filteredStudents); // Update students data
+      setAcademicYears(academicYears); // Update academic years for table header
+      getAcademicYear();
+    } else {
+      alert("Please select a program and batch year");
+    }
+  };
+  
+
 
   const downloadExcel = () => {
     const table = document.querySelector('.table-success');
@@ -116,8 +268,6 @@ function ProgramFilter({ onView }) {
     XLSX.writeFile(workbook, `${programName || "Masterlist"}_Grades.xlsx`);
 };
 
-
-
 const downloadPDF = () => {
   const table = document.querySelector('.table-success');
 
@@ -152,152 +302,22 @@ const downloadPDF = () => {
   });
 };
 
-
-
-
-
-  return (
-    <Form className="p-3 bg-white border border-success rounded">
-      <Row className="align-items-center">
-        <Col md={3}>
-          <Form.Group controlId="programName">
-            <Form.Label className="custom-color-green-font custom-font">Program Name</Form.Label>
-            <Form.Select 
-              value={programName} 
-              onChange={handleProgramNameChange} 
-              className="border-success"
-            >
-              <option value="">Select Program Name</option>
-              {programs.map((program) => (
-                <option key={program.id} value={program.programName}>
-                  {program.programName}
-                </option>
-              ))}
-            </Form.Select>
-          </Form.Group>
-        </Col>
-
-        <Col md={3}>
-          <Form.Group controlId="programCode">
-            <Form.Label className="custom-color-green-font custom-font">Program Code</Form.Label>
-            <Form.Control 
-              type="text"
-              value={programCode}
-              readOnly
-              className="border-success bg-white"
-              placeholder="Select Program Name first"
-            />
-          </Form.Group>
-        </Col>
-
-        <Col md={3}>
-          <Form.Group controlId="batchYear">
-            <Form.Label className="custom-color-green-font custom-font">Batch Year</Form.Label>
-            <Form.Select 
-              value={batchYear} 
-              onChange={(e) => setBatchYear(e.target.value)} 
-              className="border-success"
-            >
-              <option value="">Select Batch Year</option>
-              <option>2021</option>
-              <option>2022</option>
-              <option>2023</option>
-              <option>2024</option>
-            </Form.Select>
-          </Form.Group>
-        </Col>
-
-        <Col md={3}>
-          <Form.Group controlId="viewButton">
-            <Form.Label className="custom-color-green-font custom-font">Action</Form.Label>
-            <div className="d-flex">
-              <Button className="w-25 btn-success me-2" onClick={handleView}>View</Button>
-              <Button className="w-75 btn-success me-2" onClick={downloadExcel}>Download Excel</Button>
-              <Button className="w-75 btn-success" onClick={downloadPDF}>Download PDF</Button>
-            </div>
-          </Form.Group>
-        </Col>
-      </Row>
-    </Form>
-  );
-}
-
-
-
-
-
-
-// MasterlistOfGradesTable Component
-// MasterlistOfGradesTable Component
-function MasterlistOfGradesTable() {
-  const [filters, setFilters] = useState({ programName: "", programCode: "", batchYear: "" });
-  const [showModal, setShowModal] = useState(false);
-  const [selectedStudent, setSelectedStudent] = useState(null);
-
-  const handleView = (programName, programCode, batchYear) => {
-    setFilters({ programName, programCode, batchYear });
-  };
-
-  const handleTORClick = (student) => {
-    setSelectedStudent(student);
+  const handleTORClick = (students) => {
+    setSelectedStudent(students);
     setShowModal(true);
   };
 
   const handleCloseModal = () => setShowModal(false);
 
-
-
-  // Define your semesters data structure
-  const semestersData = {
-    "First Year": {
-      "1st Semester A.Y. 2023-2024": ["ENG101", "FIL101", "MATH101", "SS101", "NSTP101", "PE11", "PIZAL"],
-      "2nd Semester A.Y. 2023-2024": ["PAN101", "HUM101", "STS101", "VE101", "NSTP102", "PE12"],
-    },
-    "Second Year": {
-      "1st Semester A.Y. 2024-2025": ["FIL102", "SS102", "CB101", "CBMEC1", "ENTREP1", "3NTREP2", "ENTREP3", "ENTREP TRACK1", "PE21"],
-      "2nd Semester A.Y. 2024-2025": ["VE102", "CBMEC2", "ENTREP5", "ENTREP6", "ENTREP7", "ENTREP8", "PE22", "PCC12", "ENTREP9", "ENTREP10"],
-    },
-    "Third Year": {
-      "1st Semester A.Y. 2025-2026": ["ENTREP11", "ENTREP ELEC1", "ENTREP ELEC2", "ACC101", "ENTREP TRACK2", "ENTREP12"],
-      "2nd Semester A.Y. 2025-2026": ["ENTREP13", "ENTREP ELEC3", "ENTREP ELEC4", "ACC102", "ENTREP14"],
-    },
-    "Fourth Year": {
-      "1st Semester A.Y. 2026-2027": ["ENTREP15", "ENTREP ELECK4"],
-      "2nd Semester A.Y. 2026-2027": ["ENTREP16"],
-    }
-  };
-
   // Example students data
-  const students = [
-    { sNumber: '2023001', name: 'Alice Johnson' },
-    { sNumber: '2023002', name: 'Bob Smith' },
-    { sNumber: '2023003', name: 'Charlie Brown' },
-    { sNumber: '2023004', name: 'David Wilson' },
-    { sNumber: '2023005', name: 'Eve Davis' },
-    { sNumber: '2023006', name: 'Frank Miller' },
-    { sNumber: '2023007', name: 'Grace Lee' },
-    { sNumber: '2023008', name: 'Hannah Clark' },
-    { sNumber: '2023009', name: 'Ivy Harris' },
-    { sNumber: '2023010', name: 'Jack Turner' },
-    { sNumber: '2023011', name: 'Katherine Taylor' },
-    { sNumber: '2023012', name: 'Liam Martinez' },
-    { sNumber: '2023013', name: 'Mia Anderson' },
-    { sNumber: '2023014', name: 'Noah Thomas' },
-    { sNumber: '2023015', name: 'Olivia Jackson' },
-    { sNumber: '2023016', name: 'Paul Robinson' },
-    { sNumber: '2023017', name: 'Quinn White' },
-    { sNumber: '2023018', name: 'Rachel Lewis' },
-    { sNumber: '2023019', name: 'Samuel Walker' },
-    { sNumber: '2023020', name: 'Tina Hall' },
-    { sNumber: '2023021', name: 'Ursula Young' },
-    { sNumber: '2023022', name: 'Victor Scott' },
-    { sNumber: '2023023', name: 'Wendy Green' },
-    { sNumber: '2023024', name: 'Xander King' },
-    { sNumber: '2023025', name: 'Yvonne Wright' },
-    { sNumber: '2023026', name: 'Zachary Adams' },
-  ];
+  const getAcademicYear = (batchYear, yearLevel) => {
+    // Ensure both batchYear and yearLevel are integers using unary `+`
+    const startYear = (+batchYear) + (+yearLevel) - 1;  // Corrects the start year
+    const endYear = startYear + 1;  // End year will always be one year ahead of start year
+    return `${startYear}-${endYear}`; // Correct academic year format
+  };
   
-
+  
   
   const handlePrint = () => {
     const contentElement = document.getElementById('modalContent');
@@ -446,84 +466,159 @@ function MasterlistOfGradesTable() {
     printWindow.document.close();
   };
   
-  
-  
-  
-  
-  
-  
-  
-
   return (
     <div className='container-fluid'>
       {/* Program Filter Component */}
-      <ProgramFilter onView={handleView} />
+      <Form className="p-3 bg-white border border-success rounded">
+      <Row className="align-items-center">
+        <Col xs={12} sm={6} md={2} lg={2}>
+          <Form.Group controlId="programName">
+            <Form.Label className="custom-color-green-font custom-font">Program Name</Form.Label>
+            <Form.Select 
+              value={programName} 
+              onChange={handleProgramNameChange} 
+              className="border-success"
+            >
+              <option value="">Select Program Name</option>
+              {programs.map((program) => (
+                <option key={program.id} value={program.programName}>
+                  {program.programName}
+                </option>
+              ))}
+            </Form.Select>
+          </Form.Group>
+        </Col>
 
-      {/* Display Selected Filters */}
-      <Row className="bg-success text-white py-2 mt-2 rounded">
-        <Col md={4}>
-          <strong>PROGRAM:</strong> {filters.programName || "Select Program"}
+        <Col xs={12} sm={6} md={2} lg={2}>
+          <Form.Group controlId="programCode">
+            <Form.Label className="custom-color-green-font custom-font">Program Code</Form.Label>
+            <Form.Control 
+              type="text"
+              value={programCode}
+              readOnly
+              className="border-success bg-white"
+              placeholder="Select Program Name first"
+            />
+          </Form.Group>
         </Col>
-        <Col md={4}>
-          <strong>PROGRAM CODE:</strong> {filters.programCode || "Select Code"}
+
+        <Col xs={12} sm={6} md={2} lg={2}>
+          <Form.Group controlId="batchYear">
+            <Form.Label className="custom-color-green-font custom-font">
+              Batch Year
+            </Form.Label>
+            <Form.Select
+              value={batchYear}
+              onChange={(e) => setBatchYear(e.target.value)}
+              className="border-success"
+            >
+              <option value="">Select Batch Year</option>
+              {admissionYears.map((year) => (
+                <option key={year} value={year}>
+                  {year}
+                </option>
+              ))}
+            </Form.Select>
+          </Form.Group>
         </Col>
-        <Col md={4}>
-          <strong>BATCH/YEAR:</strong> {filters.batchYear || "Select Batch Year"}
+
+        <Col xs={12} sm={6} md={6} lg={6}>
+          <Form.Group>
+            <Form.Label className="custom-color-green-font custom-font">Action</Form.Label>
+            <div className="d-flex">
+              <Button className="w-50 btn-success me-2" onClick={handleView}>View</Button>
+              <Button className="bg-white custom-color-green-font btn-outline-success w-50 me-2" onClick={downloadExcel}>Download Excel</Button>
+              <Button className="bg-white custom-color-green-font btn-outline-success w-50" onClick={downloadPDF}>Download PDF</Button>
+            </div>
+          </Form.Group>
         </Col>
       </Row>
+    </Form>
 
+
+   
       {/* Grades Table */}
-      <Table bordered responsive className="table-success my-4">
-        <thead className='table-success'>
-          {/* Year Level Header */}
-          <tr>
-            <th rowSpan="3" className="align-middle text-center custom-color-green-font custom-font bg-white">Item</th>
-            <th rowSpan="3" className="align-middle text-center custom-color-green-font custom-font bg-white">SNumber</th>
-            <th rowSpan="3" className="align-middle text-center custom-color-green-font custom-font bg-white">Student Name</th>
-            {Object.keys(semestersData).map((year, idx) => (
+      <Table bordered responsive hover className="table-success my-4">
+      <thead className="table-success">
+        {/* Row for Year Levels */}
+        <tr>
+          <th className="custom-color-green-font custom-font">PROGRAM</th>
+          <th className="text-center custom-color-green-font custom-font" colSpan={2}>{programName}</th>
+          {Object.keys(semestersData).map((year, idx) => {
+            // Calculate academic year for this year level
+            const academicYear = getAcademicYear(batchYear, idx + 1);
+            return (
               <th
-                key={idx}
+                key={year}
                 colSpan={Object.values(semestersData[year]).flat().length}
                 className="text-center custom-color-green-font custom-font"
               >
-                {year}
+                {`${year} YEAR A.Y. ${academicYear}`}
               </th>
-            ))}
-            <th rowSpan="3" className="align-middle text-center custom-color-green-font custom-font bg-white">Transcription of Records (TOR)</th>
-          </tr>
-          {/* Semester Header */}
-          <tr>
-            {Object.keys(semestersData).map((year) =>
-              Object.keys(semestersData[year]).map((semester, semIdx) => (
+            );
+          })}
+          <th rowSpan="4" className="align-middle text-center bg-white custom-color-green-font custom-font">Transcript of Records(TOR)</th>
+        </tr>
+
+        {/* Row for Program Code */}
+        <tr>
+          <th className="custom-color-green-font custom-font">PROGRAM CODE</th>
+          <th className="text-center custom-color-green-font custom-font" colSpan={2}>{programCode}</th>
+          {Object.keys(semestersData).map((year) =>
+            Object.keys(semestersData[year]).map((semester) => {
+              // Calculate academic year for the semester
+              const academicYear = getAcademicYear(batchYear, Object.keys(semestersData).indexOf(year) + 1);
+              return (
                 <th
+                  key={`${year}-${semester}`}
                   colSpan={semestersData[year][semester].length}
-                  key={`${year}-${semIdx}`}
-                  className="text-center custom-color-green-font custom-font bg-white"
+                  className="text-center bg-white custom-color-green-font custom-font"
                 >
-                  {semester}
+                  {`${semester.toUpperCase()} SEMESTER A.Y. ${academicYear}`}
+                </th>
+              );
+            })
+          )}
+        </tr>
+
+        {/* Row for Batch / Year */}
+        <tr>
+          <th className="custom-color-green-font custom-font">BATCH / YEAR</th>
+          <th className="text-center custom-color-green-font custom-font" colSpan={2}>({Object.keys(semestersData).length}) {batchYear}</th>
+          {Object.keys(semestersData).map((year) =>
+            Object.keys(semestersData[year]).map((semester) =>
+              semestersData[year][semester].map((subject, idx) => (
+                <th key={`${year}-${semester}-${idx}`} className="text-center custom-color-green-font bg-white custom-font" rowSpan={2}>
+                  {subject}
                 </th>
               ))
-            )}
-          </tr>
-          {/* Subjects Header */}
+            )
+          )}
+        </tr>
+
+        {/* Row for Item, SNumber, and Student Name */}
+        <tr>
+          <th rowSpan="3" className="align-middle custom-color-green-font text-center bg-white custom-font">Item</th>
+          <th rowSpan="3" className="align-middle custom-color-green-font text-center bg-white custom-font">SNumber</th>
+          <th rowSpan="3" className="align-middle custom-color-green-font text-center bg-white custom-font">Student Name</th>
+        </tr>
+      </thead>
+      <tbody>
+        {students.length === 0 ? (
           <tr>
-            {Object.keys(semestersData).map((year) =>
-              Object.keys(semestersData[year]).map((semester) =>
-                semestersData[year][semester].map((subject, subIdx) => (
-                  <th key={`${year}-${semester}-${subIdx}`} className="text-center custom-color-green-font custom-font bg-white">
-                    {subject}
-                  </th>
-                ))
-              )
-            )}
+            {/* Dynamically set colSpan to cover all columns */}
+            <td colSpan={3 + Object.keys(semestersData).reduce((acc, year) => acc + Object.keys(semestersData[year]).reduce((acc2, semester) => acc2 + semestersData[year][semester].length, 0), 0) + 1} className="text-center">
+              No data fetched
+            </td>
           </tr>
-        </thead>
-        <tbody>
-          {students.map((student, rowIdx) => (
+        ) : (
+          students.map((student, rowIdx) => (
             <tr key={rowIdx}>
               <td className="text-center bg-white">{rowIdx + 1}</td>
-              <td className="text-center bg-white">{student.sNumber}</td>
-              <td className="bg-white">{student.name}</td>
+              <td className="text-center bg-white">{student.studentNumber}</td>
+              <td className="bg-white">{student.studentName}</td>
+              
+              {/* Loop through semestersData to generate columns for each student */}
               {Object.keys(semestersData).map((year) =>
                 Object.keys(semestersData[year]).map((semester) =>
                   semestersData[year][semester].map((_, gradeIdx) => (
@@ -531,24 +626,31 @@ function MasterlistOfGradesTable() {
                   ))
                 )
               )}
-              <td className='bg-white'>
-                <Button 
-                  variant="success" 
-                  className='w-100' 
+
+              {/* TOR Button */}
+              <td className="bg-white">
+                <Button
+                  variant="success"
+                  className="w-100"
                   onClick={() => handleTORClick(student)}
                 >
                   TOR
                 </Button>
               </td>
             </tr>
-          ))}
-        </tbody>
-      </Table>
+          ))
+        )}
+      </tbody>
+    </Table>
+
+
+    
+
 
       {/* Modal for displaying student's TOR */}
       <Modal show={showModal} onHide={handleCloseModal} size="xl"  className="custom-modal-width">
         <Modal.Header closeButton>
-          <Modal.Title className="custom-color-green-font">Transcription of Records (TOR) - {selectedStudent?.name}</Modal.Title>
+          <Modal.Title className="custom-color-green-font">Transcription of Records (TOR) - {selectedStudent?.studentName}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           {/* Your modal content goes here */}
@@ -593,20 +695,20 @@ function MasterlistOfGradesTable() {
             </p>
           </td>
             <td><p style={{ fontSize: '0.7rem' }}>STUDENT NUMBER: </p></td>
-            <td><p style={{ fontSize: '0.7rem' }}>(STUDENT NUMBER)</p></td>
+            <td><p style={{ fontSize: '0.7rem' }}>{selectedStudent?.studentNumber}</p></td>
           </tr>
         </thead>
         <tbody className="no-border">
           <tr>
             <td><p style={{ fontSize: '0.7rem' }}>NAME</p></td>
-            <td><p style={{ fontSize: '0.7rem' }}>(NAME)</p></td>
+            <td><p style={{ fontSize: '0.7rem' }}>{selectedStudent?.studentName}</p></td>
 
             <td><p style={{ fontSize: '0.7rem' }}>SEX:</p></td>
-            <td><p style={{ fontSize: '0.7rem' }}>(FEMALE?)</p></td>
+            <td><p style={{ fontSize: '0.7rem' }}>{selectedStudent?.studentGender}</p></td>
           </tr>
           <tr>
             <td rowSpan={2}><p style={{ fontSize: '0.7rem' }}>PERMANENT ADDRESS:</p></td>
-            <td rowSpan={2}><p style={{ fontSize: '0.7rem' }}>(PERMANENT ADDRESS)</p></td>
+            <td rowSpan={2}><p style={{ fontSize: '0.7rem' }}>{selectedStudent?.studentAddress}</p></td>
             <td><p style={{ fontSize: '0.7rem' }}>GR NO.:</p></td>
             <td><p style={{ fontSize: '0.7rem' }}>(COPC-032 s. 2023 CRO)</p></td>
           </tr>
@@ -616,9 +718,9 @@ function MasterlistOfGradesTable() {
           </tr>
           <tr>
             <td><p style={{ fontSize: '0.7rem' }}>DATE OF BIRTH</p></td>
-            <td><p style={{ fontSize: '0.7rem' }}>(BIRTHDAY)</p></td>
+            <td><p style={{ fontSize: '0.7rem' }}>{selectedStudent?.studentBirthDate}</p></td>
             <td><p style={{ fontSize: '0.7rem' }}>ACADEMIC PROGRAM:</p></td>
-            <td><p style={{ fontSize: '0.7rem' }}>(BACHELOR OF SCIENCE IN ENTREPRENEURSHIP?)</p></td>
+            <td><p style={{ fontSize: '0.7rem' }}>{programName}</p></td>
           </tr>
           <tr>
             <td><p style={{ fontSize: '0.7rem' }}>PLACE OF BIRTH</p></td>
@@ -662,7 +764,7 @@ function MasterlistOfGradesTable() {
         <tbody className="no-border">
           <tr>
             <td><p style={{ fontSize: '0.7rem' }}>DATE GRADUATED/LAST ATTENDED:</p></td>
-            <td><p style={{ fontSize: '0.7rem' }}>(2019)</p></td>
+            <td><p style={{ fontSize: '0.7rem' }}>{batchYear}</p></td>
             <td><p style={{ fontSize: '0.7rem' }}>SCHOOL LAST ATTENDED:</p></td>
             <td><p style={{ fontSize: '0.7rem' }}>(COLLEGE NAME)</p></td>
             <td></td>
