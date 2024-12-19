@@ -67,7 +67,7 @@ export default class PersonnelModel {
   // Fetch specific personnel's credentials
   static async LoginPersonnelData(personnelNumber, password) {
     try {
-      const response = await fetch('http://localhost:5000/personnel/login', {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}$personnel/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
