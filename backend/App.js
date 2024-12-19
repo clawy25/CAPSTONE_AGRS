@@ -11,6 +11,7 @@ app.use(cors({
     origin: 'https://paranaquecitycollege.onrender.com', // Adjust this for your frontend URL
 }));
 app.use(express.json());
+app.use(express.static(path.join(__dirname, 'build')));
 
 const authenticateToken = (req, res, next) => {
     const token = req.headers['authorization']?.split(' ')[1]; // Extract token from Bearer header
@@ -26,7 +27,7 @@ const authenticateToken = (req, res, next) => {
 
 
 
-// Redirect root URL to /faculty
+
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'frontend', 'build', 'index.html'))
 });
