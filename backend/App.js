@@ -12,10 +12,10 @@ app.use(cors({
 }));
 app.use(express.json());
 
-app.use(express.static(path.join(__dirname, 'frontend', 'build'))); // Make sure 'frontend' is correct directory
+app.use(express.static(path.join(__dirname, 'build'))); // Make sure 'frontend' is correct directory
 
 app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'frontend', 'build', 'index.html'))
+    res.sendFile(path.join(__dirname, 'build', 'index.html'))
 });
 
 
@@ -31,7 +31,7 @@ const authenticateToken = (req, res, next) => {
     });
   };
 
-  
+
 app.get('/protected-route', authenticateToken, (req, res) => {
   res.json({ message: 'This is a protected route', user: req.user });
 });
