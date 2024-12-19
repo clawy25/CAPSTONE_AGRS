@@ -1,6 +1,7 @@
 require('dotenv').config({ path: './backend/.env' }); // Added path to specify .env
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const supabase = require('./supabaseServer');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
