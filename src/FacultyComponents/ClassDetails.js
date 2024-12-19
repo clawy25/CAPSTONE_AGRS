@@ -13,6 +13,9 @@ import SubmissionModel from '../ReactModels/SubmissionModel.js';
 import GradeModel from '../ReactModels/GradeModel.js';
 import AttendanceModel from '../ReactModels/AttendanceModel.js';
 import QuizModel from '../ReactModels/QuizModel.js';
+import PBAModel from '../ReactModels/PBAModel.js';
+import ExamModel from '../ReactModels/ExamModel.js';
+import ComponentModel from '../ReactModels/ComponentModel.js';
 import { Modal, Button } from 'react-bootstrap';
 import * as XLSX from 'xlsx';
 
@@ -26,6 +29,13 @@ const ClassDetails = ({classList , classDetails}) => {
   const [classGradeData, setClassGradeData] = useState([]);
   const [attendanceLabelData, setAttendanceLabelData] = useState([]);
   const [quizMaxData, setQuizMaxData] = useState([]);
+  const [pbaLabelData, setPbaLabelData] = useState([]);
+  const [examMaxData, setExamMaxData] = useState([]);
+  const [componentWeightData, setComponentWeightData] = useState([]);
+
+  const [midtermComponentWeights , setMidtermComponentWeights] = useState([]);
+  const [finalsComponentWeights , setFinalsComponentWeights] = useState([]);
+  
 
   const [showModal, setShowModal] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
@@ -65,14 +75,29 @@ const ClassDetails = ({classList , classDetails}) => {
     try {
       const myClass = classInfo.scheduleNumber;
       const grade = await GradeModel.fetchGradeData(myClass);
-
       const attendanceDates = await AttendanceModel.fetchAttendanceData(myClass);
+      const quizMax = await QuizModel.fetchQuizData(myClass);
+      const pbaLabels = await PBAModel.fetchPBAData(myClass);
+      const examMax = await ExamModel.fetchExamData(myClass);
+      const componentWeights = await ComponentModel.fetchComponentData(myClass);
+
       const midtermAttendanceDates = attendanceDates.filter(item => item.period === 1); // Midterm (Period 1)
       const finalAttendanceDates = attendanceDates.filter(item => item.period === 2); // Finals (Period 2)
 
-      const quizMax = await QuizModel.fetchQuizData(myClass);
       const midtermQuizMax = quizMax.filter(item => item.period === 1);
       const finalQuizMax = quizMax.filter(item => item.period === 2);
+
+      const midtermPbaLabels = pbaLabels.filter(item => item.period === 1);
+      const finalPbaLabels = pbaLabels.filter(item => item.period === 2);
+
+      const midtermExamMax = examMax.filter(item => item.period === 1);
+      const finalExamMax = examMax.filter(item => item.period === 2);
+
+      const midtermComponents = componentWeights.filter(item => item.period === 1);
+      const finalComponents = componentWeights.filter(item => item.period === 2);
+
+      console.log(midtermComponents);
+      console.log(finalComponents);
 
       const studentNumbers = students.map(student => student.studentNumber);
 
@@ -138,6 +163,18 @@ const ClassDetails = ({classList , classDetails}) => {
 
         setmidtermRecitation(groupedGrades.midterm?.Recitation);
         setfinalRecitation(groupedGrades.finals?.Recitation);
+
+        setmidtermPBA(groupedGrades.midterm?.PBA);
+        setmidtermPBALabels(midtermPbaLabels);
+
+        setfinalPBA(groupedGrades.finals?.PBA);
+        setfinalPBALabels(finalPbaLabels);
+
+        setmidtermExam(groupedGrades.midterm?.Exam);
+        setmidtermExamMax(midtermExamMax);
+
+        setfinalExam(groupedGrades.finals?.Exam);
+        setfinalExamMax(finalExamMax);
         
 
         //TRANSFORMING ATTENDANCE RECORDS FOR RENDERING IN TABLE
@@ -176,10 +213,33 @@ const ClassDetails = ({classList , classDetails}) => {
         const ToFinalRecitationColumns = transfromComponentData(
           groupedGrades.finals?.Recitation ? groupedGrades.finals.Recitation : []
         );
+
+        const ToMidtermPBAColumns = transformPbaData(
+          groupedGrades.midterm?.PBA ? groupedGrades.midterm.PBA : [],
+          midtermPbaLabels ? midtermPbaLabels : []
+        );
+
+        const ToFinalPBAColumns = transformPbaData(
+          groupedGrades.finals?.PBA ? groupedGrades.finals.PBA : [],
+          finalPbaLabels ? finalPbaLabels : []
+        );
         
+        const ToMidtermExamColumns = transformQuizData(
+          groupedGrades.midterm?.Exam ? groupedGrades.midterm.Exam : [],
+          midtermExamMax ? midtermExamMax : []
+        );
+
+        const ToFinalExamColumns = transformQuizData(
+          groupedGrades.finals?.Exam ? groupedGrades.finals.Exam : [],
+          finalExamMax ? finalExamMax : []
+        );
+
+        console.log(ToFinalExamColumns);
 
         if(ToMidtermAttendanceColumns[0]?.grade){// Initializing midtermAttendanceColumns and midtermAttendanceData
           
+          ToMidtermAttendanceColumns.sort((a, b) => a.id - b.id);
+
           //Sorting them to match the indexes from student ClassList
           ToMidtermAttendanceColumns[0].grade.sort((a, b) => {
             return studentNumbers.indexOf(a.studentNumber) - studentNumbers.indexOf(b.studentNumber);
@@ -201,6 +261,8 @@ const ClassDetails = ({classList , classDetails}) => {
   
         if(ToFinalAttendanceColumns[0]?.grade){// Initializing finalsAttendanceColumns and finalsAttendanceData
           
+          ToFinalAttendanceColumns.sort((a, b) => a.id - b.id);
+
           //Sorting them to match the indexes from student ClassList
           ToFinalAttendanceColumns[0].grade.sort((a, b) => {
             return studentNumbers.indexOf(a.studentNumber) - studentNumbers.indexOf(b.studentNumber);
@@ -222,6 +284,8 @@ const ClassDetails = ({classList , classDetails}) => {
 
         if(ToMidtermAssignmentColumns[0]?.grade){// Initializing midtermAssignmentColumns and midtermAssignmentScores
           
+          ToMidtermAssignmentColumns.sort((a, b) => a.id - b.id);
+
           //Sorting them to match the indexes from student ClassList
           ToMidtermAssignmentColumns[0].grade.sort((a, b) => {
             return studentNumbers.indexOf(a.studentNumber) - studentNumbers.indexOf(b.studentNumber);
@@ -242,6 +306,8 @@ const ClassDetails = ({classList , classDetails}) => {
 
         if(ToFinalAssignmentColumns[0]?.grade){// Initializing finalsAssignmentColumns and finalsAssignmentScores
           
+          ToFinalAssignmentColumns.sort((a, b) => a.id - b.id);
+
           //Sorting them to match the indexes from student ClassList
           ToFinalAssignmentColumns[0].grade.sort((a, b) => {
             return studentNumbers.indexOf(a.studentNumber) - studentNumbers.indexOf(b.studentNumber);
@@ -261,6 +327,9 @@ const ClassDetails = ({classList , classDetails}) => {
         }
 
         if(ToMidtermQuizColumns[0]?.grade){// Initializing midtermQuizColumns, midtermQuizScores and midtermQuizMaxScores
+          
+          ToMidtermQuizColumns.sort((a, b) => a.id - b.id);
+
           //Sorting them to match the indexes from student ClassList
           ToMidtermQuizColumns[0].grade.sort((a, b) => {
             return studentNumbers.indexOf(a.studentNumber) - studentNumbers.indexOf(b.studentNumber);
@@ -283,6 +352,9 @@ const ClassDetails = ({classList , classDetails}) => {
         }
 
         if(ToFinalQuizColumns[0]?.grade){// Initializing finalsQuizColumns, finalsQuizScores and finalQuizMaxScores
+          
+          ToFinalQuizColumns.sort((a, b) => a.id - b.id);
+
           //Sorting them to match the indexes from student ClassList
           ToFinalQuizColumns[0].grade.sort((a, b) => {
             return studentNumbers.indexOf(a.studentNumber) - studentNumbers.indexOf(b.studentNumber);
@@ -306,6 +378,8 @@ const ClassDetails = ({classList , classDetails}) => {
 
         if(ToMidtermRecitationColumns[0]?.grade){// Initializing midtermRecitationColumns and midtermRecitationScores
           
+          ToMidtermRecitationColumns.sort((a, b) => a.id - b.id);
+
           //Sorting them to match the indexes from student ClassList
           ToMidtermRecitationColumns[0].grade.sort((a, b) => {
             return studentNumbers.indexOf(a.studentNumber) - studentNumbers.indexOf(b.studentNumber);
@@ -326,6 +400,8 @@ const ClassDetails = ({classList , classDetails}) => {
 
         if(ToFinalRecitationColumns[0]?.grade){// Initializing finalsRecitationColumns and finalsRecitationScores
           
+          ToFinalRecitationColumns.sort((a, b) => a.id - b.id);
+
           //Sorting them to match the indexes from student ClassList
           ToFinalRecitationColumns[0].grade.sort((a, b) => {
             return studentNumbers.indexOf(a.studentNumber) - studentNumbers.indexOf(b.studentNumber);
@@ -344,9 +420,100 @@ const ClassDetails = ({classList , classDetails}) => {
           setfinalsRecitationScores(initialData);//Initialize finalsRecitationScores
         }
 
+        if(ToMidtermPBAColumns[0]?.grade){// Initializing midtermPBAColumns and midtermPBAGradeScores
+          
+          ToMidtermPBAColumns.sort((a, b) => a.id - b.id); //Sorting by instanceNumber (id)
+
+          //Sorting them to match the indexes from student ClassList
+          ToMidtermPBAColumns[0].grade.sort((a, b) => {
+            return studentNumbers.indexOf(a.studentNumber) - studentNumbers.indexOf(b.studentNumber);
+          });
+          setmidtermPBAColumns(ToMidtermPBAColumns); //Initialize midtermPBAColumns
+  
+          const initialData = ToMidtermPBAColumns.reduce((acc, column, pbaIndex) => {
+            column.grade.forEach((entry, studentIndex) => {
+              if (!acc[studentIndex]) acc[studentIndex] = []; // Ensure each student has their own array
+              acc[studentIndex][pbaIndex] = entry.score;
+            });
+            return acc;
+          }, {});
+          setmidtermPBAGradeScores(initialData);//Initialize midtermPBAGradeScores
+        }
+
+        if(ToFinalPBAColumns[0]?.grade){// Initializing finalsPBAColumns and finalsPBAGradeScores
+
+          ToFinalPBAColumns.sort((a, b) => a.id - b.id); //Sorting by instanceNumber (id)
+          
+          //Sorting them to match the indexes from student ClassList
+          ToFinalPBAColumns[0].grade.sort((a, b) => {
+            return studentNumbers.indexOf(a.studentNumber) - studentNumbers.indexOf(b.studentNumber);
+          });
+          setfinalsPBAColumns(ToFinalPBAColumns); //Initialize finalsPBAColumns
+  
+          const initialData = ToFinalPBAColumns.reduce((acc, column, pbaIndex) => {
+            column.grade.forEach((entry, studentIndex) => {
+              if (!acc[studentIndex]) acc[studentIndex] = []; // Ensure each student has their own array
+              acc[studentIndex][pbaIndex] = entry.score;
+            });
+            return acc;
+          }, {});
+          setfinalsPBAGradeScores(initialData);//Initialize finalsPBAGradeScores
+        }
+
+        if(ToMidtermExamColumns[0]?.grade){// Initializing midtermExamScores and midtermTotalItems
+          
+          ToMidtermExamColumns.sort((a, b) => a.id - b.id);
+
+          //Sorting them to match the indexes from student ClassList
+          ToMidtermExamColumns[0].grade.sort((a, b) => {
+            return studentNumbers.indexOf(a.studentNumber) - studentNumbers.indexOf(b.studentNumber);
+          });
+
+          const initialData = {};
+          const grades = ToMidtermExamColumns[0].grade;
+
+          grades.forEach((grade, index) => {
+            initialData[index] = {
+              score: grade.score,
+              studentNumber: grade.studentNumber
+            };
+          });
+          
+          setMidtermExamScores(initialData);
+          
+          const maxExamScore = midtermExamMax[0].maxScore;
+          setmidtermTotalItems(maxExamScore);
+
+        }
+
+        if(ToFinalExamColumns[0]?.grade){// Initializing finalsExamScores and finalsTotalItems
+          
+          ToFinalExamColumns.sort((a, b) => a.id - b.id);
+
+          //Sorting them to match the indexes from student ClassList
+          ToFinalExamColumns[0].grade.sort((a, b) => {
+            return studentNumbers.indexOf(a.studentNumber) - studentNumbers.indexOf(b.studentNumber);
+          });
+
+          const initialData = {};
+          const grades = ToFinalExamColumns[0].grade;
+
+          grades.forEach((grade, index) => {
+            initialData[index] = {
+              score: grade.score,
+              studentNumber: grade.studentNumber
+            };
+          });
+          
+          setfinalsExamScores(initialData);
+          
+          const maxExamScore = finalExamMax[0].maxScore;
+          setfinalsTotalItems(maxExamScore);
+
+        }
       }
     } catch (error) {
-      console.error("Error submitting class record:", error);
+      console.error("Error fetching class records:", error);
     }
   };
   const transformAttendanceData = (groupedAttendance, attendanceDates) => {
@@ -366,7 +533,7 @@ const ClassDetails = ({classList , classDetails}) => {
       const studentGrades = attendanceByInstance[instanceNumber] || [];
   
       return {
-        id,
+        id: instanceNumber,
         date: new Date(attendanceLabel).toLocaleDateString('en-CA'), // convert date to ISO format
         grade: studentGrades
       };
@@ -411,19 +578,47 @@ const ClassDetails = ({classList , classDetails}) => {
   
     // Step 2: Structure the final output
     const result = quizMax.map((quiz) => {
-      const { id, instanceNumber, maxScore } = quiz;
+      const { instanceNumber, maxScore } = quiz;
 
       // Get the student grades for this instanceNumber
       const studentGrades = quizByInstance[instanceNumber] || [];
 
       return {
-        id, // Use the id from quizMax
+        id: instanceNumber, // Use the id from quizMax
         max: maxScore, // Use the maxScore from quizMax
         grade: studentGrades
       };
   });
 
   return result;
+  };
+
+  const transformPbaData = (groupedPba, pbaLabels) => {//ISSUE, NOT SORTED BY INSTANCE NUMBER
+    // Step 1: Group attendance by instanceNumber
+    const pbaByInstance = groupedPba.reduce((acc, item) => {
+
+      const instanceId = item.instanceNumber
+      const { instanceNumber, studentNumber, value } = item;
+      if (!acc[instanceNumber]) acc[instanceNumber] = [];
+      acc[instanceNumber].push({ studentNumber, score: parseInt(value) });
+      return acc;
+    }, {});
+  
+    // Step 2: Match with pbaLabels and structure the final output
+    const result = pbaLabels.map((date) => {
+      const { pbaLabel, instanceNumber } = date;
+  
+      // Get the student attendance for this instanceNumber
+      const studentGrades = pbaByInstance[instanceNumber] || [];
+  
+      return {
+        id: instanceNumber, //Set to instanceNumber frome PBAbyInstance
+        label: String(pbaLabel), // convert date to ISO format
+        grade: studentGrades
+      };
+    });
+  
+    return result;
   };
   
   const handleSubmit = async () => {
@@ -455,13 +650,16 @@ const ClassDetails = ({classList , classDetails}) => {
 
   const handleSave = async () => {
     try{
-      const [grade, attendance, quiz] = await Promise.all([
+      const [grade, attendance, quiz, pba, exam, weight] = await Promise.all([
         GradeModel.updateGradeData(classGradeData),
         AttendanceModel.updateAttendanceData(attendanceLabelData),
-        QuizModel.updateQuizData(quizMaxData)
+        QuizModel.updateQuizData(quizMaxData),
+        PBAModel.updatePBAData(pbaLabelData),
+        ExamModel.updateExamData(examMaxData),
+        ComponentModel.updateComponentData(componentWeightData)
       ]);
 
-      if (grade && attendance && quiz){
+      if (grade && attendance && quiz && pba && exam && weight){
         handleModalShow('saved');
       }
     } catch (error){
@@ -657,6 +855,7 @@ const handlePrint = () => {
   const [midtermAttendanceData, setmidtermAttendanceData] = useState([]); //Storing raw values (PLEA) for calculations
   //console.log("Midterm Attendance Data: ", midtermAttendanceData);
   const [midtermAttendancePercentage, setmidtermAttendancePercentage] = useState();
+  console.log(midtermAttendancePercentage);
   const [midtermAttendance, setmidtermAttendance] = useState([]); //Storing raw values (PLEA) for db upsertion
   const [midtermAttendanceLabels, setmidtermAttendanceLabels] = useState([]); //Storing attendance column dates for db upsertion
 
@@ -693,15 +892,23 @@ const handlePrint = () => {
 
    // PBA Declaration
    const [midtermPBAColumns, setmidtermPBAColumns] = useState([{ id: 1, grade:[] }]);
+   //console.log("Midterm PBA Columns: ", midtermPBAColumns);
    const [midtermPBAGradeScores, setmidtermPBAGradeScores] = useState([]);  // Store scores for each PBA column per student
+   //console.log("Midterm PBA Scores: ", midtermPBAGradeScores);
    const [midtermPBAGradePercentage, setmidtermPBAGradePercentage] = useState();
    const [invalidPBAScores, setInvalidPBAScores] = useState([]);
+   const [midtermPBA, setmidtermPBA] = useState([]);
+   const [midtermPBALabels, setmidtermPBALabels] = useState([]);
+   
 
-  // MIDTERM EXAM DECLARATION
+   // MIDTERM EXAM DECLARATION
   const [midtermExamScores, setMidtermExamScores] = useState({});
+  //console.log("Midterm Exam Scores: ",midtermExamScores);
   const [midtermExamPercentage, setMidtermExamPercentage] = useState();
   const [midtermTotalItems, setmidtermTotalItems] = useState(); // Default total number of items is 100
-
+  //console.log("Midterm Total Items: ",midtermTotalItems);
+  const [midtermExam, setmidtermExam] = useState([]);
+  const [midtermExamMax, setmidtermExamMax] = useState([]);
   //REMARKS
   const [remarks, setRemarks] = useState({});
 
@@ -709,6 +916,7 @@ const handlePrint = () => {
 
   {/* ATTENDANCE DECLARATION */}
   const [finalsAttendanceColumns, setfinalsAttendanceColumns] = useState([{ id: 1, grade:[] }]);
+  console.log(finalsAttendanceColumns);
   const [finalsTotalAttendanceDays, setfinalsTotalAttendanceDays] = useState(0);
   const [finalsAttendanceData, setfinalsAttendanceData] = useState([]);
   const [finalsAttendancePercentage, setfinalsAttendancePercentage] = useState(); // Default value of 0
@@ -742,15 +950,21 @@ const handlePrint = () => {
   
   {/* PBA DECLARATION */}
   const [finalsPBAColumns, setfinalsPBAColumns] = useState([{ id: 1, grade:[] }]);
+  //console.log(finalsPBAColumns);
   const [finalsPBAGradeScores, setfinalsPBAGradeScores] = useState([]);
   const [finalsPBAGradePercentage, setfinalsPBAGradePercentage] = useState();
   const [finalsinvalidPBAScores, setfinalsInvalidPBAScores] = useState([]);
+  const [finalPBA, setfinalPBA] = useState([]);
+  const [finalPBALabels, setfinalPBALabels] = useState([]);
 
   {/* FINAL EXAM DECLARATION */}
   const [finalsExamScores, setfinalsExamScores] = useState([]);
+  console.log("Final Exam Scores: ",finalsExamScores);
   const [finalsExamPercentage, setfinalsExamPercentage] = useState();
   const [finalsTotalItems, setfinalsTotalItems] = useState();
-
+  console.log("Final Exam Max Score: ",finalsTotalItems);
+  const [finalExam, setfinalExam] = useState([]);
+  const [finalExamMax, setfinalExamMax] = useState([]);
 
 
   // // Fetch existing students from StudentModel
@@ -833,6 +1047,129 @@ const removeAssignmentColumn = (index, setColumns, setAssignmentScores) => {
     setSearchTerm(event.target.value);
   };
 
+  useEffect(() => { //Combine the records for bulk insert in database
+    const combinedClassGradeData = [
+      ...(midtermAttendance?.length ? midtermAttendance : []), 
+      ...(finalAttendance?.length ? finalAttendance : []),
+      ...(midtermAssignment?.length ? midtermAssignment : []),
+      ...(finalAssignment?.length ? finalAssignment : []),
+      ...(midtermQuiz?.length ? midtermQuiz : []),
+      ...(finalQuiz?.length ? finalQuiz : []),
+      ...(midtermRecitation?.length ? midtermRecitation : []),
+      ...(finalRecitation?.length ? finalRecitation : []),
+      ...(midtermPBA?.length ? midtermPBA : []),
+      ...(finalPBA?.length ? finalPBA : []),
+      ...(midtermExam?.length ? midtermExam : []),
+      ...(finalExam?.length ? finalExam : [])
+    ];
+    const combinedAttendanceLabelData = [
+      ...(midtermAttendanceLabels?.length ? midtermAttendanceLabels : []),
+      ...(finalAttendanceLabels?.length ? finalAttendanceLabels : [])
+    ];
+    const combinedQuizMaxData = [
+      ...(midtermQuizMax?.length ? midtermQuizMax : []),
+      ...(finalQuizMax?.length ? finalQuizMax : [])
+    ];
+
+    const combinedPBALabelData = [
+      ...(midtermPBALabels?.length ? midtermPBALabels : []),
+      ...(finalPBALabels?.length ? finalPBALabels : [])
+    ];
+
+    const combinedExamMaxData = [
+      ...(midtermExamMax?.length ? midtermExamMax : []),
+      ...(finalExamMax?.length ? finalExamMax : [])
+    ];
+
+    const combinedComponentWeightData = [
+      ...(midtermComponentWeights?.length ? midtermComponentWeights : []),
+      ...(finalsComponentWeights?.length ? finalsComponentWeights : [])
+    ];
+
+    setClassGradeData(combinedClassGradeData);
+    setAttendanceLabelData(combinedAttendanceLabelData);
+    setQuizMaxData(combinedQuizMaxData);
+    setPbaLabelData(combinedPBALabelData);
+    setExamMaxData(combinedExamMaxData);
+    setComponentWeightData(combinedComponentWeightData);
+  }, [midtermAttendance, finalAttendance,
+      midtermAttendanceLabels, finalAttendanceLabels,
+      midtermAssignment, finalAssignment,
+      midtermQuiz, finalQuiz,
+      midtermQuizMax, finalQuizMax,
+      midtermRecitation, finalRecitation,
+      midtermPBA, finalPBA,
+      midtermPBALabels, finalPBALabels,
+      midtermExam, finalExam,
+      midtermExamMax, finalExamMax,
+      midtermComponentWeights, finalsComponentWeights
+    ]);
+
+  useEffect(() => { //Combine the percentages for validation and prep for bulk insert in database
+    if(midtermAttendancePercentage && midtermAssignmentPercentage && midtermQuizPercentage && midtermRecitationPercentage && midtermPBAGradePercentage && midtermExamPercentage){
+      const totalMidtermPercentage = parseInt(midtermAttendancePercentage ? midtermAttendancePercentage : 0)
+                                 + parseInt(midtermAssignmentPercentage ? midtermAssignmentPercentage : 0)
+                                 + parseInt(midtermQuizPercentage ? midtermQuizPercentage : 0)
+                                 + parseInt(midtermRecitationPercentage ? midtermRecitationPercentage : 0)
+                                 + parseInt(midtermPBAGradePercentage ? midtermPBAGradePercentage : 0)
+                                 + parseInt(midtermExamPercentage ? midtermExamPercentage : 0);
+
+      console.log(totalMidtermPercentage);
+      if(totalMidtermPercentage !== 100){
+        toast.error('Total percentage of the components for Midterm is not 100%!');
+      } else {
+        const componentWeights = [midtermAttendancePercentage, midtermAssignmentPercentage, midtermQuizPercentage, midtermRecitationPercentage, midtermPBAGradePercentage, midtermExamPercentage];
+        const weightData = [];
+
+        componentWeights.forEach((weight, index) => {
+          weightData.push({
+            scheduleNumber: classInfo.scheduleNumber,
+            period: 1,
+            componentNumber: index + 1,
+            weight: parseInt(weight)
+          });
+        });
+
+        console.log(weightData);
+        setMidtermComponentWeights(weightData);
+      };
+    };
+    if(finalsAttendancePercentage && finalsAssignmentPercentage && finalsQuizPercentage && finalsRecitationPercentage && finalsPBAGradePercentage && finalsExamPercentage){
+      const totalMidtermPercentage = parseInt(finalsAttendancePercentage ? finalsAttendancePercentage : 0)
+                                 + parseInt(finalsAssignmentPercentage ? finalsAssignmentPercentage : 0)
+                                 + parseInt(finalsQuizPercentage ? finalsQuizPercentage : 0)
+                                 + parseInt(finalsRecitationPercentage ? finalsRecitationPercentage : 0)
+                                 + parseInt(finalsPBAGradePercentage ? finalsPBAGradePercentage : 0)
+                                 + parseInt(finalsExamPercentage ? finalsExamPercentage : 0);
+
+      console.log(totalMidtermPercentage);
+      if(totalMidtermPercentage !== 100){
+        toast.error('Total percentage of the components for Midterm is not 100%!');
+      } else {
+        const componentWeights = [finalsAttendancePercentage, finalsAssignmentPercentage, finalsQuizPercentage, finalsRecitationPercentage, finalsPBAGradePercentage, finalsExamPercentage];
+        const weightData = [];
+
+        componentWeights.forEach((weight, index) => {
+          weightData.push({
+            scheduleNumber: classInfo.scheduleNumber,
+            period: 2,
+            componentNumber: index + 1,
+            weight: parseInt(weight)
+          });
+        });
+
+        console.log(weightData);
+        setFinalsComponentWeights(weightData);
+      };
+    };
+  },[ midtermAttendancePercentage, finalsAttendancePercentage,
+      midtermAssignmentPercentage, finalsAssignmentPercentage,
+      midtermQuizPercentage, finalsQuizPercentage,
+      midtermRecitationPercentage, finalsRecitationPercentage,
+      midtermPBAGradePercentage, finalsPBAGradePercentage,
+      midtermExamPercentage, finalsExamPercentage
+  ]);
+
   {/*ATTENDANCE CHANGE HANDLER FOR BOTH PERIOD (COMPLETE)*/}
   const handleMidtermAttendanceChange = (studentId, studentNumber, dateIndex, status) => {
     setmidtermAttendanceData((prevData) => {
@@ -903,12 +1240,10 @@ const removeAssignmentColumn = (index, setColumns, setAssignmentScores) => {
         });
       });
     });
-  
-    const filteredAttendance = AttendanceData.filter(attendance => attendance.value !== "Select");
     
-    console.log("Rows for Database:",filteredAttendance);
+    console.log("Rows for Database:",AttendanceData);
     //console.log("List of Dates:", AttendanceColumns);
-    setmidtermAttendance(filteredAttendance); //Storing raw values
+    setmidtermAttendance(AttendanceData); //Storing raw values
     setmidtermAttendanceLabels(AttendanceColumns);
   }, [midtermAttendanceColumns, classInfo]);
 
@@ -980,47 +1315,12 @@ const removeAssignmentColumn = (index, setColumns, setAssignmentScores) => {
         });
       });
     });
-  
-    const filteredAttendance = AttendanceData.filter(attendance => attendance.value !== "Select");
     
-    console.log("Rows for Database:",filteredAttendance);
+    console.log("Rows for Database:",AttendanceData);
     console.log("List of Dates:", AttendanceColumns);
-    setfinalAttendance(filteredAttendance); //Storing raw values
+    setfinalAttendance(AttendanceData); //Storing raw values
     setfinalAttendanceLabels(AttendanceColumns);
   }, [finalsAttendanceColumns, classInfo]);
-
-  useEffect(() => {
-    const combinedClassGradeData = [
-      ...(midtermAttendance?.length ? midtermAttendance : []), 
-      ...(finalAttendance?.length ? finalAttendance : []),
-      ...(midtermAssignment?.length ? midtermAssignment : []),
-      ...(finalAssignment?.length ? finalAssignment : []),
-      ...(midtermQuiz?.length ? midtermQuiz : []),
-      ...(finalQuiz?.length ? finalQuiz : []),
-      ...(midtermRecitation?.length ? midtermRecitation : []),
-      ...(finalRecitation?.length ? finalRecitation : []),
-      //ADD MORE 
-    ];
-    const combinedAttendanceLabelData = [
-      ...(midtermAttendanceLabels?.length ? midtermAttendanceLabels : []),
-      ...(finalAttendanceLabels?.length ? finalAttendanceLabels : [])
-    ];
-    const combinedQuizMaxData = [
-      ...(midtermQuizMax?.length ? midtermQuizMax : []),
-      ...(finalQuizMax?.length ? finalQuizMax : []),
-    ];
-  
-    setClassGradeData(combinedClassGradeData);
-    setAttendanceLabelData(combinedAttendanceLabelData);
-    setQuizMaxData(combinedQuizMaxData);
-  }, [midtermAttendance, finalAttendance,
-      midtermAttendanceLabels, finalAttendanceLabels,
-      midtermAssignment, finalAssignment,
-      midtermQuiz, finalQuiz,
-      midtermQuizMax, finalQuizMax,
-      midtermRecitation, finalRecitation,
-
-    ]);
   
 
   {/*ATTENDANCE TOTALS FOR BOTH PERIOD (COMPLETE)*/}
@@ -1153,7 +1453,7 @@ const removeAssignmentColumn = (index, setColumns, setAssignmentScores) => {
       });
     });
 
-    const filteredAssignment = AssignmentData.filter(assignment => assignment.value <= 100 && assignment.value >= 50);
+    const filteredAssignment = AssignmentData.filter(assignment => (assignment.value <= 100 && assignment.value >= 50) || assignment.value === null);
     
     console.log("Rows for Database:",filteredAssignment);
     setmidtermAssignment(filteredAssignment); //Storing raw values
@@ -1233,7 +1533,7 @@ const removeAssignmentColumn = (index, setColumns, setAssignmentScores) => {
       });
     });
 
-    const filteredAssignment = AssignmentData.filter(assignment => assignment.value <= 100 && assignment.value >= 50);
+    const filteredAssignment = AssignmentData.filter(assignment => (assignment.value <= 100 && assignment.value >= 50) || assignment.value === null);
     
     console.log("Rows for Database:",filteredAssignment);
     setfinalAssignment(filteredAssignment); //Storing raw values
@@ -1435,11 +1735,11 @@ const removeAssignmentColumn = (index, setColumns, setAssignmentScores) => {
       });
     });
   
-    //const filteredAttendance = QuizData.filter(quiz => quiz.value !== 0); NO NEED?
+    const filteredQuiz = QuizData.filter(quiz => quiz.value > 0);
     
-    console.log("Rows for Database:",QuizData);
+    console.log("Rows for Database:",filteredQuiz);
     console.log("List of Max Scores:", QuizColumns);
-    setmidtermQuiz(QuizData); //Storing raw values
+    setmidtermQuiz(filteredQuiz); //Storing raw values
     setmidtermQuizMax(QuizColumns);
   }, [midtermQuizColumns, classInfo]);
 
@@ -1525,11 +1825,11 @@ const removeAssignmentColumn = (index, setColumns, setAssignmentScores) => {
       });
     });
   
-    //const filteredAttendance = QuizData.filter(quiz => quiz.value !== 0); NO NEED?
+    const filteredQuiz = QuizData.filter(quiz => quiz.value > 0);
     
-    console.log("Rows for Database:",QuizData);
+    console.log("Rows for Database:",filteredQuiz);
     console.log("List of Max Scores:", QuizColumns);
-    setfinalQuiz(QuizData); //Storing raw values
+    setfinalQuiz(filteredQuiz); //Storing raw values
     setfinalQuizMax(QuizColumns);
   }, [finalsQuizColumns, classInfo]);
 
@@ -1671,7 +1971,7 @@ const removeAssignmentColumn = (index, setColumns, setAssignmentScores) => {
       });
     });
 
-    const filteredRecitation = RecitationData.filter(assignment => assignment.value <= 100 && assignment.value >= 50);
+    const filteredRecitation = RecitationData.filter(assignment => (assignment.value <= 100 && assignment.value >= 50) || assignment.value === null);
     
     console.log("Rows for Database:",filteredRecitation);
     setmidtermRecitation(filteredRecitation); //Storing raw values
@@ -1689,7 +1989,7 @@ const removeAssignmentColumn = (index, setColumns, setAssignmentScores) => {
       };
     });
     // Real-time validation for red border
-    setInvalidRecitationScores((prevInvalid) => {
+    setfinalsInvalidRecitationScores((prevInvalid) => {
       const studentInvalid = prevInvalid[studentId] || {};
       const updatedInvalid = { ...studentInvalid, [recitationIndex]: score < 50 || score > 100 };
       return {
@@ -1750,7 +2050,7 @@ const removeAssignmentColumn = (index, setColumns, setAssignmentScores) => {
       });
     });
 
-    const filteredRecitation = RecitationData.filter(assignment => assignment.value <= 100 && assignment.value >= 50);
+    const filteredRecitation = RecitationData.filter(assignment => (assignment.value <= 100 && assignment.value >= 50) || assignment.value === null);
     
     console.log("Rows for Database:",filteredRecitation);
     setfinalRecitation(filteredRecitation); //Storing raw values
@@ -1905,7 +2205,7 @@ const calculateTotalMidtermCSPercentage = () => {
     const recitationScore = calculateFinalsRecitationComponentScore(studentIndex, finalsRecitationPercentage) || 0;
   
     // Debug: Log the individual scores
-    console.log('Attendance:', attendanceScore, 'Assignment:', assignmentScore, 'Quiz:', quizScore, 'Recitation:', recitationScore);
+    //console.log('Attendance:', attendanceScore, 'Assignment:', assignmentScore, 'Quiz:', quizScore, 'Recitation:', recitationScore);
   
     // Total CS Grade: Only add components that are greater than 0
     let totalCSGrade = 0;
@@ -1924,7 +2224,7 @@ const calculateTotalMidtermCSPercentage = () => {
     }
   
     // Debug: Log the totalCSGrade before returning
-    console.log('Total CS Grade:', totalCSGrade);
+    //console.log('Total CS Grade:', totalCSGrade);
   
     // Return formatted total CS grade or 0.00% if no components are valid
     return totalCSGrade > 0 ? totalCSGrade.toFixed(2) : '0.00'; // Ensure the grade is formatted
@@ -1947,52 +2247,174 @@ const calculateTotalMidtermCSPercentage = () => {
   
     {/* PBA */}
       // Handle PBA score change with validation for scores between 50-100
-      const handleMidtermPBAScoreChange = (studentIndex, pbaIndex, score) => {
-
-        
-        // Update the PBA scores
-        setmidtermPBAGradeScores((prevScores) => {
-          const updatedScores = [...prevScores];
-          if (!updatedScores[studentIndex]) {
-            updatedScores[studentIndex] = [];
-          }
-          updatedScores[studentIndex][pbaIndex] = score;
-          return updatedScores;
+      const handleMidtermPBAScoreChange = (studentId, studentNumber, pbaIndex, score) => {
+        setmidtermPBAGradeScores((prevData) => {
+          const studentScores = prevData[studentId] || [];
+          const updatedScores = [...studentScores];
+          updatedScores[pbaIndex] = score;
+          return {
+            ...prevData,
+            [studentId]: updatedScores,
+          };
         });
-      
-        // Real-time validation for red border
         setInvalidPBAScores((prevInvalid) => {
-          const updatedInvalid = [...prevInvalid];
-          if (!updatedInvalid[studentIndex]) {
-            updatedInvalid[studentIndex] = {};
-          }
-          updatedInvalid[studentIndex][pbaIndex] = score < 50 || score > 100; // Mark as invalid if out of range
-          return updatedInvalid;
+          const studentInvalid = prevInvalid[studentId] || {};
+          const updatedInvalid = { ...studentInvalid, [pbaIndex]: score < 50 || score > 100 };
+          return {
+            ...prevInvalid,
+            [studentId]: updatedInvalid,
+          };
         });
+        setmidtermPBAColumns((prevColumns) => 
+          prevColumns.map((column, index) => {
+            if (index !== pbaIndex) return column;
+            
+            if (index === pbaIndex) { 
+              // Create a new grade array (don't mutate the original array)
+              const updatedGrade = [...column.grade];
+              
+              // Find the student in the grade array
+              const studentIndex = updatedGrade.findIndex((entry) => entry.studentNumber === studentNumber);
+          
+              if (studentIndex !== -1) {
+                // Update existing student's status
+                updatedGrade[studentIndex] = { 
+                  ...updatedGrade[studentIndex], 
+                  score 
+                };
+              } else {
+                // Add new student entry to grade array
+                updatedGrade.push({
+                  studentNumber: studentNumber,
+                  score
+                });
+              }
+          
+              // Return the updated column with the updated grade array
+              return {
+                ...column,
+                grade: updatedGrade
+              };
+            } 
+            return column; // If this is not the correct column, return it unchanged
+          })
+        );
       };
+
+      useEffect(() => {//Automatic Generation of objects for database storage (PBA: Midterm)
+        const PBAData = []; //For Database: gradeData
+        const PBAColumns = []; //For Database: attendanceData
+    
+        midtermPBAColumns?.forEach((column, index) => {
+          PBAColumns.push({
+              scheduleNumber: classInfo.scheduleNumber,
+              period: 1,
+              instanceNumber: index + 1,
+              pbaLabel: column.label
+          });
+          column.grade?.forEach((student) => {
+            
+            PBAData.push({
+              scheduleNumber: classInfo.scheduleNumber, 
+              studentNumber: student.studentNumber, 
+              componentNumber: 5, 
+              instanceNumber: index + 1, 
+              period: 1, 
+              value: student.score
+            });
+          });
+        });
+        
+        console.log("Rows for Database:",PBAData);
+        console.log("List of PBA Labels:", PBAColumns);
+        setmidtermPBA(PBAData); //Storing raw values
+        setmidtermPBALabels(PBAColumns);
+      }, [midtermPBAColumns, classInfo]);
       
       // Handle PBA score change with validation for scores between 50-100
-      const handleFinalsPBAScoreChange = (studentIndex, pbaIndex, score) => {
-        // Update the PBA scores
-        setfinalsPBAGradeScores((prevScores) => {
-          const updatedScores = [...prevScores];
-          if (!updatedScores[studentIndex]) {
-            updatedScores[studentIndex] = [];
-          }
-          updatedScores[studentIndex][pbaIndex] = score;
-          return updatedScores;
+      const handleFinalsPBAScoreChange = (studentId, studentNumber, pbaIndex, score) => {
+        setfinalsPBAGradeScores((prevData) => {
+          const studentScores = prevData[studentId] || [];
+          const updatedScores = [...studentScores];
+          updatedScores[pbaIndex] = score;
+          return {
+            ...prevData,
+            [studentId]: updatedScores,
+          };
         });
-      
-        // Real-time validation for red border
         setfinalsInvalidPBAScores((prevInvalid) => {
-          const updatedInvalid = [...prevInvalid];
-          if (!updatedInvalid[studentIndex]) {
-            updatedInvalid[studentIndex] = {};
-          }
-          updatedInvalid[studentIndex][pbaIndex] = score < 50 || score > 100; // Mark as invalid if out of range
-          return updatedInvalid;
+          const studentInvalid = prevInvalid[studentId] || {};
+          const updatedInvalid = { ...studentInvalid, [pbaIndex]: score < 50 || score > 100 };
+          return {
+            ...prevInvalid,
+            [studentId]: updatedInvalid,
+          };
         });
+        setfinalsPBAColumns((prevColumns) => 
+          prevColumns.map((column, index) => {
+            if (index !== pbaIndex) return column;
+            
+            if (index === pbaIndex) { 
+              // Create a new grade array (don't mutate the original array)
+              const updatedGrade = [...column.grade];
+              
+              // Find the student in the grade array
+              const studentIndex = updatedGrade.findIndex((entry) => entry.studentNumber === studentNumber);
+          
+              if (studentIndex !== -1) {
+                // Update existing student's status
+                updatedGrade[studentIndex] = { 
+                  ...updatedGrade[studentIndex], 
+                  score 
+                };
+              } else {
+                // Add new student entry to grade array
+                updatedGrade.push({
+                  studentNumber: studentNumber,
+                  score
+                });
+              }
+          
+              // Return the updated column with the updated grade array
+              return {
+                ...column,
+                grade: updatedGrade
+              };
+            } 
+            return column; // If this is not the correct column, return it unchanged
+          })
+        );
       };
+  
+      useEffect(() => {//Automatic Generation of objects for database storage (PBA: Finals)
+        const PBAData = []; //For Database: gradeData
+        const PBAColumns = []; //For Database: attendanceData
+    
+        finalsPBAColumns?.forEach((column, index) => {
+          PBAColumns.push({
+              scheduleNumber: classInfo.scheduleNumber,
+              period: 2,
+              instanceNumber: index + 1,
+              pbaLabel: column.label
+          });
+          column.grade?.forEach((student) => {
+            
+            PBAData.push({
+              scheduleNumber: classInfo.scheduleNumber, 
+              studentNumber: student.studentNumber, 
+              componentNumber: 5, 
+              instanceNumber: index + 1, 
+              period: 2, 
+              value: student.score
+            });
+          });
+        });
+        
+        console.log("Rows for Database:",PBAData);
+        console.log("List of PBA Labels:", PBAColumns);
+        setfinalPBA(PBAData); //Storing raw values
+        setfinalPBALabels(PBAColumns);
+      }, [finalsPBAColumns, classInfo]);
 
   {/* PBA CALCULATION FOR BOTH PERIOD (COMPLETE)*/}
   const calculateTotalsAndPBA = (studentScores = [], PBAGradePercentage) => {
@@ -2014,38 +2436,104 @@ const calculateTotalMidtermCSPercentage = () => {
    {/* SEMESTRAL EXAM */}
    
    {/* EXAM SCORE CHANGE HANDLER FOR BOTH PERIOD (COMPLETE)*/}
-   const handleMidtermExamScoreChange = (studentId, score) => {
+  const handleMidtermExamScoreChange = (studentId, studentNumber, score) => {
     // Validate that the score does not exceed the maximum items
     if (score > midtermTotalItems) {
       toast.error(`Score cannot exceed the total items (${midtermTotalItems}) for the Midterm Exam.`);
       return; // Do not update if validation fails
     }
-  
     // Update the score if valid
     setMidtermExamScores((prevScores) => ({
       ...prevScores,
-      [studentId]: score,
+      [studentId]: {score: score, studentNumber: studentNumber}
     }));
   };
-  
-  const handleFinalsExamScoreChange = (studentId, score) => {
-    if (score > finalsTotalItems) {
-      toast.error(`Score cannot exceed the total items ${finalsTotalItems} for the Finals Exam.`, {
-        position: "top-right",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
+
+  useEffect(() => {//Automatic Generation of objects for database storage (Exam: Midterm)
+    const examData = []; //For Database: gradeData
+    //For Database: examMaxScore
+
+    Object.entries(midtermExamScores).forEach?.(([ , { score, studentNumber }]) => {
+      examData.push({
+        scheduleNumber: classInfo.scheduleNumber, 
+        studentNumber: studentNumber, 
+        componentNumber: 6, 
+        instanceNumber: 1,
+        period: 1,
+        value: score
       });
+    });
+
+    const examColumns = {
+      scheduleNumber: classInfo.scheduleNumber,
+      period: 1,
+      instanceNumber: 1,
+      maxScore: midtermTotalItems ? midtermTotalItems : 0
+    };
+  
+    const filteredExam = examData.filter(exam => exam.value > 0);
+    
+    console.log("Rows for Database:",filteredExam);
+    console.log("Midterm Exam Max Score:", examColumns);
+    setmidtermExam(filteredExam); //Storing raw values
+    setmidtermExamMax([examColumns]);
+  }, [midtermExamScores, midtermTotalItems, classInfo]);
+
+
+
+
+
+  
+  const handleFinalsExamScoreChange = (studentId, studentNumber, score) => {
+    if (score > finalsTotalItems) {
+      toast.error(`Score cannot exceed the total items ${finalsTotalItems} for the Finals Exam.`
+        // , {
+        // position: "top-right",
+        // autoClose: 3000,
+        // hideProgressBar: false,
+        // closeOnClick: true,
+        // pauseOnHover: true,
+        // draggable: true,
+        // progress: undefined,
+        // }
+      );
       return;
     }
     setfinalsExamScores((prevScores) => ({
       ...prevScores,
-      [studentId]: score,
+      [studentId]: {score: score, studentNumber: studentNumber}
     }));
   };
+
+  
+  useEffect(() => {//Automatic Generation of objects for database storage (Exam: Finals)
+    const examData = []; //For Database: gradeData
+    
+    Object.entries(finalsExamScores).forEach?.(([ , { score, studentNumber }]) => {
+      examData.push({
+        scheduleNumber: classInfo.scheduleNumber, 
+        studentNumber: studentNumber, 
+        componentNumber: 6, 
+        instanceNumber: 1,
+        period: 2,
+        value: score
+      });
+    });
+
+    const examColumns = {
+      scheduleNumber: classInfo.scheduleNumber,
+      period: 2,
+      instanceNumber: 1,
+      maxScore: finalsTotalItems ? finalsTotalItems : 0
+    };
+  
+    const filteredExam = examData.filter(exam => exam.value > 0);
+    
+    console.log("Rows for Database:",filteredExam);
+    console.log("Final Exam Max Score:", examColumns);
+    setfinalExam(filteredExam); //Storing raw values
+    setfinalExamMax([examColumns]);
+  }, [finalsExamScores, finalsTotalItems, classInfo]);
   
 
   // Computation functions
@@ -2070,7 +2558,7 @@ const calculateTotalMidtermCSPercentage = () => {
       (midtermAssignmentScores[studentIndex] || []).some(score => score) ||
       (midtermQuizScores[studentIndex] || []).some(score => score) ||
       (midtermRecitationScores[studentIndex] || []).some(score => score) ||
-      midtermExamScores[students[studentIndex].id] !== undefined;
+      midtermExamScores[students[studentIndex].id]?.score !== undefined;
   
     if (!hasScores) {
       return "Select"; // If no scores inputted, default to "Select"
@@ -2084,7 +2572,7 @@ const calculateTotalMidtermCSPercentage = () => {
     const { pbaGrade } = calculateTotalsAndPBA(pbaScores, midtermPBAGradePercentage);
   
     // Retrieve Midterm Exam Score
-    const midtermExamScore = midtermExamScores[students[studentIndex].id];
+    const midtermExamScore = midtermExamScores[students[studentIndex].id]?.score;
   
     // Check for incomplete components
     const isMidtermExamIncomplete = midtermExamScore === undefined;
@@ -2111,7 +2599,7 @@ const calculateTotalMidtermCSPercentage = () => {
       (finalsAssignmentScores[studentIndex] || []).some(score => score) ||
       (finalsQuizScores[studentIndex] || []).some(score => score) ||
       (finalsRecitationScores[studentIndex] || []).some(score => score) ||
-      finalsExamScores[students[studentIndex].id] !== undefined;
+      finalsExamScores[students[studentIndex].id]?.score !== undefined;
   
     if (!hasScores) {
       return "Select"; // If no scores inputted, default to "Select"
@@ -2125,7 +2613,7 @@ const calculateTotalMidtermCSPercentage = () => {
     const { pbaGrade } = calculateTotalsAndPBA(pbaScores, finalsPBAGradePercentage);
   
     // Retrieve Midterm Exam Score
-    const finalsExamScore = finalsExamScores[students[studentIndex].id];
+    const finalsExamScore = finalsExamScores[students[studentIndex].id]?.score;
   
     // Check for incomplete components
     const isFinalsExamIncomplete = finalsExamScore === undefined;
@@ -2214,7 +2702,7 @@ const calculateTotalMidtermCSPercentage = () => {
     const isRecitationIncomplete = midtermRecitationScores[studentIndex]?.some(score => score === "" || score === null || score === undefined);
   
     // Check for blank exam scores
-    const isMidtermExamIncomplete = midtermExamScores[students[studentIndex].id] === "" || midtermExamScores[students[studentIndex].id] === null || midtermExamScores[students[studentIndex].id] === undefined;
+    const isMidtermExamIncomplete = midtermExamScores[students[studentIndex].id]?.score === "" || midtermExamScores[students[studentIndex].id]?.score === null || midtermExamScores[students[studentIndex].id]?.score === undefined;
   
     // If any component has blank scores, return true
     return isAttendanceIncomplete || isAssignmentIncomplete || isQuizIncomplete || isRecitationIncomplete || isMidtermExamIncomplete;
@@ -2235,10 +2723,10 @@ const calculateTotalMidtermCSPercentage = () => {
     const isRecitationIncomplete = finalsRecitationScores[studentIndex]?.some(score => score === "" || score === null || score === undefined);
   
     // Check for blank exam scores
-    const isMidtermExamIncomplete = finalsExamScores[students[studentIndex].id] === "" || midtermExamScores[students[studentIndex].id] === null || midtermExamScores[students[studentIndex].id] === undefined;
+    const isFinalExamIncomplete = finalsExamScores[students[studentIndex].id]?.score === "" || finalsExamScores[students[studentIndex].id]?.score === null || finalsExamScores[students[studentIndex].id]?.score === undefined;
   
     // If any component has blank scores, return true
-    return isAttendanceIncomplete || isAssignmentIncomplete || isQuizIncomplete || isRecitationIncomplete || isMidtermExamIncomplete;
+    return isAttendanceIncomplete || isAssignmentIncomplete || isQuizIncomplete || isRecitationIncomplete || isFinalExamIncomplete;
   };
   
 
@@ -2349,6 +2837,7 @@ const handlePercentageChange = (setter, value) => {
                   <div style={{ display: 'flex', alignItems: 'center' }}>
                   {index === midtermAttendanceColumns.length - 1 && ( // Show button only for the last column
                     <button
+                      disabled = {midtermAttendanceColumns.length === 1}
                       onClick={() => removeAttendanceColumn(index, setmidtermAttendanceColumns, setmidtermAttendanceData)}
                       style={{ background: 'none', border: 'none', marginRight: '10px' }}
                     >
@@ -2370,7 +2859,8 @@ const handlePercentageChange = (setter, value) => {
 
 
               <th rowSpan="3" style={{ background: '#d1e7dd', position: 'sticky',left: 0,top: 42,padding: '0px',zIndex: 1,boxShadow: '1px 0 0 rgba(0, 0, 0, 0.1)', }}>
-                <button onClick={() => addColumn(setmidtermAttendanceColumns)} style={{background: 'none', border: 'none'}}>
+                <button disabled={midtermAttendanceColumns[midtermAttendanceColumns.length - 1]?.grade.length === 0}
+                        onClick={() => addColumn(setmidtermAttendanceColumns)} style={{background: 'none', border: 'none'}}>
                   <FontAwesomeIcon icon={faPlus} />
                 </button>
               </th>
@@ -2442,13 +2932,39 @@ const handlePercentageChange = (setter, value) => {
                     %</th>
     
                   {/* PBA Columns */}
-                  {midtermPBAColumns.map((_, index) => (
-                    <th key={index} className='sticky-top-left-offset'>
-                      PBA {index + 1}
-                      <button onClick={() => removeColumn(index, setmidtermPBAColumns)} style={{ background: 'none', border: 'none' }}>
-                        <FontAwesomeIcon icon={faMinus} />
-                      </button>
-                    </th>
+                  {midtermPBAColumns.map((column, index) => (
+                    <th key={index} rowSpan={2} className='sticky-top-left-offset'>
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                      {index === midtermPBAColumns.length - 1 && (
+                        <button 
+                          onClick={() => removeColumn(index, setmidtermPBAColumns)} 
+                          style={{ background: 'none', border: 'none', marginRight: '8px' }} // Adjust margin as needed
+                        >
+                          <FontAwesomeIcon icon={faMinus} />
+                        </button>
+                      )}
+                      <span>Performance {index + 1}</span> 
+                    </div>
+                  
+                    <select
+                      style={{ marginTop: '20px' }}
+                      value={column.label || "Select"}
+                      onChange={(e) => { 
+                        const PBA = e.target.value; 
+                        setmidtermPBAColumns((prevColumns) =>
+                          prevColumns.map((col, i) => (i === index ? { ...col, label: PBA } : col))
+                        )
+                      }}
+                    >
+                      <option value="Select">Select</option>
+                      <option value="Project">Project</option>
+                      <option value="Reports">Reports</option>
+                      <option value="Reflection">Reflection</option>
+                      <option value="Portfolio">Portfolio</option>
+                      <option value="Research">Research</option>
+                      <option value="Laboratory">Laboratory</option>
+                    </select>
+                  </th>
                   ))}
                   <th rowSpan={2} style={{ background: '#d1e7dd', position: 'sticky',left: 0,top: 105,padding: '0px',zIndex: 1,boxShadow: '1px 0 0 rgba(0, 0, 0, 0.1)', }}>
                     <button onClick={() => addColumn(setmidtermPBAColumns)} style={{ background: 'none', border: 'none' }}>
@@ -2536,26 +3052,15 @@ const handlePercentageChange = (setter, value) => {
               />
                 %</th>
                 <th className='sticky-top-left-offset-168'>{calculateTotalMidtermCSPercentage()}%</th>
-    
-                {midtermPBAColumns.map((_, index) => (
-                  <th key={index} className='sticky-top-left-offset-168'>
-                    <select>
-                      <option value="Project">Select</option>
-                      <option value="Project">Project</option>
-                      <option value="Reports">Reports</option>
-                      <option value="Reflection">Reflection</option>
-                      <option value="Portfolio">Portfolio</option>
-                      <option value="Research">Research</option>
-                      <option value="Laboratory">Laboratory</option>
-                    </select>
-                  </th>
-                ))}
+
+
+                
     
                 <th className='sticky-top-left-offset-168'>
                   <input
                     type="number"
                     value={midtermPBAGradePercentage}
-                    onChange={(e) => setmidtermPBAGradePercentage(parseFloat(e.target.value) || 0)}
+                    onChange={(e) => setmidtermPBAGradePercentage(e.target.value)}
                     style={{ width: '60px' }}
                     min="0"
                     max="100"
@@ -2565,11 +3070,12 @@ const handlePercentageChange = (setter, value) => {
                 <th className='sticky-top-left-offset-168'>
                 <input
                   type="number"
-                  value={midtermTotalItems}
+                  value={midtermTotalItems || ''}
                   onChange={(e) => setmidtermTotalItems(parseInt(e.target.value) || 0)} // Update total items
                   style={{ width: '60px' }}
                   placeholder="Items"
-                />                       </th>
+                />                       
+                </th>
                   <th colSpan="2" className='sticky-top-left-offset-168'>
                     <input
                       type="number"
@@ -2590,7 +3096,7 @@ const handlePercentageChange = (setter, value) => {
                 const studentScores = midtermPBAGradeScores[studentIndex] || [];
        
                 const { total, pbaGrade } = calculateTotalsAndPBA(studentScores, midtermPBAGradePercentage);
-                const score = midtermExamScores[student.id] || 0;
+                const score = midtermExamScores[student.id]?.score || 0;
                 const percentage = calculateMidtermPercentage(score);
                 const weightedScore = calculateMidtermWeightedScore(percentage).toFixed(2);
                 const { Atotals, points } = getMidtermAttendanceTotals(student.id);
@@ -2805,56 +3311,41 @@ const handlePercentageChange = (setter, value) => {
                     })()}
                   </td>
 
-                  {midtermPBAColumns.map((_, pbaIndex) => (
-                  <td key={pbaIndex}>
-                    <input
-                      type="number"
-                      style={{
-                        width: '70px',
-                        borderColor:
-                          invalidPBAScores[studentIndex]?.[pbaIndex] ? 'red' : 'initial',
-                        borderWidth:
-                          invalidPBAScores[studentIndex]?.[pbaIndex] ? '2px' : '1px',
-                      }}
-                      placeholder="Score"
-                      value={midtermPBAGradeScores[studentIndex]?.[pbaIndex] || ''}
-                      onChange={(e) => {
-                        const inputScore = e.target.value === '' ? null : parseFloat(e.target.value); // Treat empty input as null
-                        handleMidtermPBAScoreChange(studentIndex, pbaIndex, inputScore);
-
-                        // Show the red border in real-time
-                        if (inputScore !== null && (inputScore < 50 || inputScore > 100)) {
-                          setInvalidPBAScores((prevInvalid) => {
-                            const updatedInvalid = [...prevInvalid];
-                            if (!updatedInvalid[studentIndex]) {
-                              updatedInvalid[studentIndex] = {};
+                  {midtermPBAColumns.map((PBAColumn, PBAIndex) => (
+                      <td key={PBAColumn.id}>
+                        <input
+                          disabled ={!PBAColumn.label}
+                          type="number"
+                          style={{
+                            width: '70px',
+                            borderColor: invalidPBAScores[student.id]?.[PBAIndex] ? 'red' : 'initial',
+                            borderWidth: invalidPBAScores[student.id]?.[PBAIndex] ? '2px' : '1px',
+                          }}
+                          placeholder="Score"
+                          value={PBAColumn?.grade?.find((entry) => entry.studentNumber === student.studentNumber)?.score || ''}
+                          onChange={(e) => {
+                            const inputScore = e.target.value === '' ? null : parseFloat(e.target.value); 
+                            handleMidtermPBAScoreChange(student.id, student.studentNumber, PBAIndex, inputScore);
+                          }}
+                          onBlur={(e) => {
+                            const inputScore = parseFloat(e.target.value);
+                            if (!isNaN(inputScore) && (inputScore < 50 || inputScore > 100)) {
+                              toast.error(`Score must be between 50 and 100 for ${student.studentLastName} at Performance No.${PBAIndex + 1}`);
                             }
-                            updatedInvalid[studentIndex][pbaIndex] = true; // Mark as invalid
-                            return updatedInvalid;
-                          });
-                        }
-                      }}
-                      onBlur={(e) => {
-                        const inputScore = parseFloat(e.target.value);
-
-                        // Trigger toast only when input is invalid and not empty
-                        if (inputScore !== null && (inputScore < 50 || inputScore > 100)) {
-                          toast.error(`Score must be between 50 and 100 for PBA ${pbaIndex + 1}`);
-                        }
-                      }}
-                    />
-                  </td>
-                ))}
+                          }}
+                        />
+                      </td>
+                  ))}
 
                   <td></td>
-                  <td>{total.toFixed(2)}</td> {/* This should display the correct average */}
+                  <td>{total.toFixed(2)}%</td> {/* This should display the correct average */}
                   <td>
                     {(() => {
                       const formattedPbaGrade = isNaN(Number(pbaGrade)) || pbaGrade === null
                         ? '0.00'
                         : Number(pbaGrade).toFixed(2);
                       return formattedPbaGrade;
-                    })()}
+                    })()}%
                   </td>
 
 
@@ -2866,10 +3357,10 @@ const handlePercentageChange = (setter, value) => {
                       type="number"
                       style={{ width: '70px' }}
                       placeholder="Score"
-                      value={midtermExamScores[student.id] || ''} // Display the current score or empty
+                      value={midtermExamScores[student.id]?.score || ''} // Display the current score or empty
                       onChange={(e) => {
                         const inputScore = parseFloat(e.target.value) || 0;
-                        handleMidtermExamScoreChange(student.id, inputScore);
+                        handleMidtermExamScoreChange(student.id, student.studentNumber, inputScore);
                       }}
                     />
 
@@ -2878,8 +3369,8 @@ const handlePercentageChange = (setter, value) => {
                   <td>{isNaN(percentage) ? '0.00' : percentage.toFixed(2)}%</td>
                   <td>
                     {isNaN(Number(weightedScore)) || weightedScore === null
-                      ? '0.00%'
-                      : `${Number(weightedScore).toFixed(2)}%`}
+                      ? '0.00'
+                      : `${Number(weightedScore).toFixed(2)}`}%
                   </td>
 
 
@@ -3035,13 +3526,39 @@ const handlePercentageChange = (setter, value) => {
                       %</th>
       
                     {/* PBA Columns */}
-                    {finalsPBAColumns.map((_, index) => (
-                      <th key={index} className='sticky-top-left-offset'>
-                        PBA {index + 1}
-                        <button onClick={() => removeColumn(index, setfinalsPBAColumns)} style={{ background: 'none', border: 'none' }}>
+                    {finalsPBAColumns.map((column, index) => (
+                    <th key={index} rowSpan={2} className='sticky-top-left-offset'>
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                      {index === finalsPBAColumns.length - 1 && (
+                        <button 
+                          onClick={() => removeColumn(index, setfinalsPBAColumns)} 
+                          style={{ background: 'none', border: 'none', marginRight: '8px' }} // Adjust margin as needed
+                        >
                           <FontAwesomeIcon icon={faMinus} />
                         </button>
-                      </th>
+                      )}
+                      <span>Performance {index + 1}</span> 
+                    </div>
+                  
+                    <select
+                      style={{ marginTop: '20px' }}
+                      value={column.label || "Select"}
+                      onChange={(e) => { 
+                        const PBA = e.target.value; 
+                        setfinalsPBAColumns((prevColumns) =>
+                          prevColumns.map((col, i) => (i === index ? { ...col, label: PBA } : col))
+                        )
+                      }}
+                    >
+                      <option value="Select">Select</option>
+                      <option value="Project">Project</option>
+                      <option value="Reports">Reports</option>
+                      <option value="Reflection">Reflection</option>
+                      <option value="Portfolio">Portfolio</option>
+                      <option value="Research">Research</option>
+                      <option value="Laboratory">Laboratory</option>
+                    </select>
+                  </th>
                     ))}
                     <th rowSpan={2} style={{ background: '#d1e7dd', position: 'sticky',left: 0,top: 105,padding: '0px',zIndex: 1,boxShadow: '1px 0 0 rgba(0, 0, 0, 0.1)', }}>
                       <button onClick={() => addColumn(setfinalsPBAColumns)} style={{ background: 'none', border: 'none' }}>
@@ -3129,19 +3646,7 @@ const handlePercentageChange = (setter, value) => {
                   %</th>
                   <th className='sticky-top-left-offset-168'>{calculateTotalFinalsCSPercentage()}%</th>
       
-                  {finalsPBAColumns.map((_, index) => (
-                    <th key={index} className='sticky-top-left-offset-168'>
-                      <select>
-                        <option value="Project">Select</option>
-                        <option value="Project">Project</option>
-                        <option value="Reports">Reports</option>
-                        <option value="Reflection">Reflection</option>
-                        <option value="Portfolio">Portfolio</option>
-                        <option value="Research">Research</option>
-                        <option value="Laboratory">Laboratory</option>
-                      </select>
-                    </th>
-                  ))}
+                  
       
                   <th className='sticky-top-left-offset-168'>
                     <input
@@ -3157,12 +3662,12 @@ const handlePercentageChange = (setter, value) => {
                   <th className='sticky-top-left-offset-168'>
                       <input
                         type="number"
-                        value={finalsTotalItems}
-                        onChange={(e) => setfinalsTotalItems(e.target.value)}
+                        value={finalsTotalItems || ''}
+                        onChange={(e) => setfinalsTotalItems(parseInt(e.target.value) || 0)}
                         style={{ width: '70px' }}
                         placeholder="Items"
                       />
-                            </th>
+                  </th>
                     <th colSpan="2" className='sticky-top-left-offset-168'>
                       <input
                         type="number"
@@ -3183,7 +3688,7 @@ const handlePercentageChange = (setter, value) => {
                   const studentScores = finalsPBAGradeScores[studentIndex] || [];
          
                   const { total, pbaGrade } = calculateTotalsAndPBA(studentScores, finalsPBAGradePercentage);
-                  const score = finalsExamScores[student.id] || 0;
+                  const score = finalsExamScores[student.id]?.score || 0;
                   const percentage = calculateFinalPercentage(score);
                   const weightedScore = calculateFinalWeightedScore(percentage).toFixed(2);
                   const { Atotals, points } = getFinalsAttendanceTotals(student.id);
@@ -3333,8 +3838,8 @@ const handlePercentageChange = (setter, value) => {
                           type="number"
                           style={{
                             width: '70px',
-                            borderColor: invalidRecitationScores[student.id]?.[recitationIndex] ? 'red' : 'initial',
-                            borderWidth: invalidRecitationScores[student.id]?.[recitationIndex] ? '2px' : '1px',
+                            borderColor: finalsinvalidRecitationScores[student.id]?.[recitationIndex] ? 'red' : 'initial',
+                            borderWidth: finalsinvalidRecitationScores[student.id]?.[recitationIndex] ? '2px' : '1px',
                           }}
                           placeholder="Score"
                           value={recitationColumn?.grade?.find((entry) => entry.studentNumber === student.studentNumber)?.score || ''}
@@ -3387,66 +3892,53 @@ const handlePercentageChange = (setter, value) => {
                     })()}
                   </td>      
 
-                  {finalsPBAColumns.map((_, pbaIndex) => (
-                  <td key={pbaIndex}>
-                    <input
-                      type="number"
-                      style={{
-                        width: '70px',
-                        borderColor:
-                          finalsinvalidPBAScores[studentIndex]?.[pbaIndex] ? 'red' : 'initial',
-                        borderWidth:
-                          finalsinvalidPBAScores[studentIndex]?.[pbaIndex] ? '2px' : '1px',
-                      }}
-                      placeholder="Score"
-                      value={finalsPBAGradeScores[studentIndex]?.[pbaIndex] || ''}
-                      onChange={(e) => {
-                        const inputScore = e.target.value === '' ? null : parseFloat(e.target.value); // Treat empty input as null
-                        handleFinalsPBAScoreChange(studentIndex, pbaIndex, inputScore);
-
-                      
-                        if (inputScore !== null && (inputScore < 50 || inputScore > 100)) {
-                          setfinalsInvalidPBAScores((prevInvalid) => {
-                            const updatedInvalid = [...prevInvalid];
-                            if (!updatedInvalid[studentIndex]) {
-                              updatedInvalid[studentIndex] = {};
+                  {finalsPBAColumns.map((PBAColumn, PBAIndex) => (
+                      <td key={PBAColumn.id}>
+                        <input
+                          disabled ={!PBAColumn.label}
+                          type="number"
+                          style={{
+                            width: '70px',
+                            borderColor: finalsinvalidPBAScores[student.id]?.[PBAIndex] ? 'red' : 'initial',
+                            borderWidth: finalsinvalidPBAScores[student.id]?.[PBAIndex] ? '2px' : '1px',
+                          }}
+                          placeholder="Score"
+                          value={PBAColumn?.grade?.find((entry) => entry.studentNumber === student.studentNumber)?.score || ''}
+                          onChange={(e) => {
+                            const inputScore = e.target.value === '' ? null : parseFloat(e.target.value); 
+                            handleFinalsPBAScoreChange(student.id, student.studentNumber, PBAIndex, inputScore);
+                          }}
+                          onBlur={(e) => {
+                            const inputScore = parseFloat(e.target.value);
+                            if (!isNaN(inputScore) && (inputScore < 50 || inputScore > 100)) {
+                              toast.error(`Score must be between 50 and 100 for ${student.studentLastName} at Performance No.${PBAIndex + 1}`);
                             }
-                            updatedInvalid[studentIndex][pbaIndex] = true; 
-                            return updatedInvalid;
-                          });
-                        }
-                      }}
-                      onBlur={(e) => {
-                        const inputScore = parseFloat(e.target.value);
-
-                     
-                        if (inputScore !== null && (inputScore < 50 || inputScore > 100)) {
-                          toast.error(`Score must be between 50 and 100 for PBA ${pbaIndex + 1}`);
-                        }
-                      }}
-                    />
-                  </td>
-                ))}
+                          }}
+                        />
+                      </td>
+                  ))}
 
                   <td></td>
-                  <td>{total.toFixed(2)}</td> {/* This should display the correct average */}
+                  <td>{total.toFixed(2)}%</td> {/* This should display the correct average */}
                   <td>
                     {(() => {
                       const formattedPbaGrade = isNaN(Number(pbaGrade)) || pbaGrade === null
                         ? '0.00'
                         : Number(pbaGrade).toFixed(2);
                       return formattedPbaGrade;
-                    })()}
+                    })()}%
                   </td>
 
                     {/*FINALS EXAM COMPONENT*/}
                   <td>
                     <input
                       type="number"
-                      value={score || ''}  // Ensure score is either the current value or an empty string
-                      onChange={(e) => handleFinalsExamScoreChange(student.id, parseFloat(e.target.value) || '')}  // Avoid defaulting to 0
+                      value={finalsExamScores[student.id]?.score || ''}  // Ensure score is either the current value or an empty string
                       style={{ width: '70px' }}
                       placeholder="Score"
+                      onChange={(e) => {
+                        const inputScore = parseFloat(e.target.value) || 0;
+                        handleFinalsExamScoreChange(student.id, student.studentNumber, inputScore)}}  // Avoid defaulting to 0
                     />
 
                   </td>
@@ -3535,10 +4027,10 @@ const handlePercentageChange = (setter, value) => {
                         })()}
                       </td>
                       <td>
-                        {isNaN(Number(calculateMidtermWeightedScore(calculateMidtermPercentage(midtermExamScores[student.id])))) || 
-                        calculateMidtermWeightedScore(calculateMidtermPercentage(midtermExamScores[student.id])) === null
+                        {isNaN(Number(calculateMidtermWeightedScore(calculateMidtermPercentage(midtermExamScores[student.id]?.score)))) || 
+                        calculateMidtermWeightedScore(calculateMidtermPercentage(midtermExamScores[student.id]?.score)) === null
                           ? ''
-                          : `${Number(calculateMidtermWeightedScore(calculateMidtermPercentage(midtermExamScores[student.id]))).toFixed(2)}`}
+                          : `${Number(calculateMidtermWeightedScore(calculateMidtermPercentage(midtermExamScores[student.id]?.score))).toFixed(2)}`}
                       </td>
                       <td>
                         {isNaN(Number(calculateMidtermGrade(studentIndex))) || calculateMidtermGrade(studentIndex) === null || calculateMidtermGrade(studentIndex) === 0
@@ -3557,10 +4049,10 @@ const handlePercentageChange = (setter, value) => {
                         })()}
                       </td>
                       <td>
-                        {isNaN(Number(calculateFinalWeightedScore(calculateFinalPercentage(finalsExamScores[student.id])))) || 
-                        calculateFinalWeightedScore(calculateFinalPercentage(finalsExamScores[student.id])) === null
+                        {isNaN(Number(calculateFinalWeightedScore(calculateFinalPercentage(finalsExamScores[student.id]?.score)))) || 
+                        calculateFinalWeightedScore(calculateFinalPercentage(finalsExamScores[student.id]?.score)) === null
                           ? ''
-                          : `${Number(calculateFinalWeightedScore(calculateFinalPercentage(finalsExamScores[student.id]))).toFixed(2)}`}
+                          : `${Number(calculateFinalWeightedScore(calculateFinalPercentage(finalsExamScores[student.id]?.score))).toFixed(2)}`}
                       </td>
                       <td>
                         {isNaN(Number(calculateFinalsGrade(studentIndex))) || calculateFinalsGrade(studentIndex) === null || calculateFinalsGrade(studentIndex) === 0
