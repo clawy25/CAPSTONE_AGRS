@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Form, Row, Col, Button, Modal, Table } from 'react-bootstrap';
 import * as XLSX from 'sheetjs-style'; // Use sheetjs-style for formatting
 import ProgramModel from '../ReactModels/ProgramModel'; // Ensure this path is correct
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 function ProgramFilter({ onView }) {
   const [programs, setPrograms] = useState([]);
@@ -40,61 +42,118 @@ function ProgramFilter({ onView }) {
     const table = document.querySelector('.table-success');
     const workbook = XLSX.utils.table_to_book(table, { raw: true });
     const ws = workbook.Sheets[workbook.SheetNames[0]];
+
+    // Set sheet protection with a password (basic protection)
+    ws['!protect'] = {
+        password: 'AGRS',  // This is a simple password
+        sheet: true,
+        objects: true,
+        scenarios: true,
+        content: true,  // Prevent content editing
+        formatCells: true,  // Prevent formatting
+        formatColumns: true,  // Prevent column width changes
+        formatRows: true,  // Prevent row height changes
+        insertColumns: false,  // Prevent column insertion
+        insertRows: false,  // Prevent row insertion
+        deleteColumns: false,  // Prevent column deletion
+        deleteRows: false,  // Prevent row deletion
+        sort: false,  // Prevent sorting
+        autoFilter: false,  // Prevent filters
+        pivotTables: false,  // Prevent pivot table modification
+    };
+
+    // Apply styles and formatting (optional)
     const range = XLSX.utils.decode_range(ws['!ref']);
-  
-    // Remove "Transcript of Records" column (assuming it's the last column)
-    const lastColumnIndex = range.e.c;
-    const columnToRemove = lastColumnIndex;
-  
     for (let row = range.s.r; row <= range.e.r; row++) {
-      const cellAddress = { r: row, c: columnToRemove };
-      const cellRef = XLSX.utils.encode_cell(cellAddress);
-      delete ws[cellRef];
-    }
-  
-    // Apply styles to all cells
-    for (let row = range.s.r; row <= range.e.r; row++) {
-      for (let col = range.s.c; col <= range.e.c; col++) {
-        const cellAddress = { r: row, c: col };
-        const cellRef = XLSX.utils.encode_cell(cellAddress);
-        const cell = ws[cellRef];
-  
-        if (cell) {
-          if (!cell.s) cell.s = {};
-  
-          // Apply alignment
-          cell.s.alignment = {
-            horizontal: 'center',
-            vertical: 'center',
-            wrapText: true,
-          };
-  
-          // Apply border
-          cell.s.border = {
-            top: { style: 'thin', color: { rgb: '000000' } },
-            left: { style: 'thin', color: { rgb: '000000' } },
-            bottom: { style: 'thin', color: { rgb: '000000' } },
-            right: { style: 'thin', color: { rgb: '000000' } },
-          };
-  
-          // Apply header styles
-          if (row === range.s.r) { // Header row
-            cell.s.fill = {
-              patternType: 'solid',
-              fgColor: { rgb: '28a745' }, // Green color for header
-            };
-            cell.s.font = {
-              bold: true,
-              color: { rgb: 'FFFFFF' }, // White text for header
-            };
-          }
+        for (let col = range.s.c; col <= range.e.c; col++) {
+            const cellAddress = { r: row, c: col };
+            const cellRef = XLSX.utils.encode_cell(cellAddress);
+            const cell = ws[cellRef];
+
+                // Apply styles to all cells
+                for (let row = range.s.r; row <= range.e.r; row++) {
+                  for (let col = range.s.c; col <= range.e.c; col++) {
+                      const cellAddress = { r: row, c: col };
+                      const cellRef = XLSX.utils.encode_cell(cellAddress);
+                      const cell = ws[cellRef];
+
+                      if (cell) {
+                          if (!cell.s) cell.s = {};
+
+                          // Apply alignment
+                          cell.s.alignment = {
+                              horizontal: 'center',
+                              vertical: 'center',
+                              wrapText: true,
+                          };
+
+                          // Apply border
+                          cell.s.border = {
+                              top: { style: 'thin', color: { rgb: '000000' } },
+                              left: { style: 'thin', color: { rgb: '000000' } },
+                              bottom: { style: 'thin', color: { rgb: '000000' } },
+                              right: { style: 'thin', color: { rgb: '000000' } },
+                          };
+
+                          // Apply header styles
+                          if (row === range.s.r) { // Header row
+                              cell.s.fill = {
+                                  patternType: 'solid',
+                                  fgColor: { rgb: '28a745' }, // Green color for header
+                              };
+                              cell.s.font = {
+                                  bold: true,
+                                  color: { rgb: 'FFFFFF' }, // White text for header
+                              };
+                          }
+                      }
+                  }
+              }
         }
+    }
+
+    // Write the workbook to an Excel file with password protection
+    XLSX.writeFile(workbook, `${programName || "Masterlist"}_Grades.xlsx`);
+};
+
+
+
+const downloadPDF = () => {
+  const table = document.querySelector('.table-success');
+
+  if (!table) {
+    console.error("Table not found.");
+    return;
+  }
+
+  // Temporarily hide the last column
+  const lastColumnIndex = table.rows[0].cells.length - 1;
+  for (let row of table.rows) {
+    if (row.cells[lastColumnIndex]) {
+      row.cells[lastColumnIndex].style.display = "none";
+    }
+  }
+
+  html2canvas(table, { scale: 2 }).then((canvas) => {
+    const imgData = canvas.toDataURL("image/png");
+    const pdf = new jsPDF("l", "mm", "a4"); // Landscape orientation, mm units, A4 size
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+    pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+    pdf.save(`${programName || "Masterlist"}_Grades.pdf`);
+
+    // Restore the visibility of the last column
+    for (let row of table.rows) {
+      if (row.cells[lastColumnIndex]) {
+        row.cells[lastColumnIndex].style.display = "";
       }
     }
-  
-    // Write the workbook to an Excel file
-    XLSX.writeFile(workbook, `${programName || "Masterlist"}_Grades.xlsx`);
-  };
+  });
+};
+
+
+
 
 
   return (
@@ -154,6 +213,7 @@ function ProgramFilter({ onView }) {
             <div className="d-flex">
               <Button className="w-25 btn-success me-2" onClick={handleView}>View</Button>
               <Button className="w-75 btn-success me-2" onClick={downloadExcel}>Download Excel</Button>
+              <Button className="w-75 btn-success" onClick={downloadPDF}>Download PDF</Button>
             </div>
           </Form.Group>
         </Col>
