@@ -11,7 +11,13 @@ app.use(cors({
     origin: 'https://paranaquecitycollege.onrender.com', // Adjust this for your frontend URL
 }));
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'build')));
+
+app.use(express.static(path.join(__dirname, 'frontend', 'build'))); // Make sure 'frontend' is correct directory
+
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'frontend', 'build', 'index.html'))
+});
+
 
 const authenticateToken = (req, res, next) => {
     const token = req.headers['authorization']?.split(' ')[1]; // Extract token from Bearer header
@@ -25,13 +31,7 @@ const authenticateToken = (req, res, next) => {
     });
   };
 
-
-
-
-app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'frontend', 'build', 'index.html'))
-});
-
+  
 app.get('/protected-route', authenticateToken, (req, res) => {
   res.json({ message: 'This is a protected route', user: req.user });
 });
