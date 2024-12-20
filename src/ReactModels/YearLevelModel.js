@@ -34,7 +34,7 @@ export default class YearLevelModel {
         };
 
         try {
-            const response = await fetch(`${apiUrl}/yearlevel/upload`, {
+            const response = await fetch('${apiUrl}/yearlevel/upload', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
