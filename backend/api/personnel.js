@@ -25,7 +25,8 @@ router.post('/login', async (req, res) => {
             .single();
   
         if (personnelError || !personnelData) {
-            return res.status(404).json({ error: 'Personnel not found' });
+            console.error('Error fetching personnel data:', personnelError);
+            return res.status(500).json({ error: personnelError.message || 'Failed to fetch personnel data' });
         }
         // Compare the provided password with the hashed password from the database
         const isMatch = await bcrypt.compare(password, personnelData.personnelPassword);
@@ -34,7 +35,7 @@ router.post('/login', async (req, res) => {
             return res.status(401).json({ error: 'Invalid password' }); // Invalid password response
         }
         // If password is correct, generate a token
-        const token = generatepersonnelToken(personnelData); // Replace this with your token generation logic
+        const token = generateToken(personnelData); // Replace this with your token generation logic
         
         // Set the token in a secure cookie
         res.cookie('token', token, {
