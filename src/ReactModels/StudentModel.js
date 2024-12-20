@@ -35,8 +35,8 @@ export default class StudentModel {
     // Function to fetch student data (Read only)
     static async fetchStudentData(studentNumber, password) {
         try {
-            // Example API call to your backend (Node.js)
-            const response = await fetch(`http://localhost:5000/student/login`,{
+            const apiUrl = process.env.REACT_APP_API_URL;
+            const response = await fetch(`${apiUrl}/student/login`,{
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -77,8 +77,8 @@ export default class StudentModel {
     // Function to fetch all existing students
     static async fetchExistingStudents() {
         try {
-            // Example API call to your backend (Node.js)
-            const response = await fetch(`http://localhost:5000/student`); // Adjust the endpoint if necessary
+            const apiUrl = process.env.REACT_APP_API_URL;
+            const response = await fetch(`${apiUrl}/student/all`); // Adjust the endpoint if necessary
             if (!response.ok) {
                 throw new Error('Error fetching existing students');
             }
@@ -117,8 +117,10 @@ export default class StudentModel {
               studentAddress: student.studentAddress,
               isABMgraduate: student.isABMgraduate
           }));
+
+          const apiUrl = process.env.REACT_APP_API_URL;
   
-          const response = await fetch('http://localhost:5000/student/upload', {
+          const response = await fetch(`${apiUrl}/student/upload`, {
               method: 'POST',
               headers: {
                   'Content-Type': 'application/json',

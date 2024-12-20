@@ -21,11 +21,16 @@ export default class PersonnelModel {
     this.academicYear = academicYear;
   }
 
+  
+
 
   // Add this function to fetch a professor by personnel number
   static async getProfessorByPersonnelNumber(personnelNumber) {
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/personnel/${personnelNumber}`, {
+
+      const apiUrl = process.env.REACT_APP_API_URL;
+
+      const response = await fetch(`${apiUrl}/personnel/${personnelNumber}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -68,8 +73,6 @@ export default class PersonnelModel {
   static async LoginPersonnelData(personnelNumber, password) {
     try {
       const apiUrl = process.env.REACT_APP_API_URL;
-
-      console.log(process.env.REACT_APP_API_URL);
 
       const response = await fetch(`${apiUrl}/personnel/login`, {
         method: 'POST',
@@ -115,7 +118,9 @@ export default class PersonnelModel {
   // Fetch list of professors by program
   static async getProfessorsbyProgram(programNumber, currentAcadYear) {
     try {
-      const response = await fetch(`http://localhost:5000/personnel/byProgram`,{
+      const apiUrl = process.env.REACT_APP_API_URL;
+
+      const response = await fetch(`${apiUrl}/personnel/byProgram`,{
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -153,7 +158,9 @@ export default class PersonnelModel {
 
   static async fetchAllPersonnel(currentAcadYear) {
     try {
-      const response = await fetch('http://localhost:5000/personnel/all',{
+      const apiUrl = process.env.REACT_APP_API_URL;
+
+      const response = await fetch(`${apiUrl}/personnel/all`,{
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -194,8 +201,10 @@ export default class PersonnelModel {
   // Insert personnel (if needed)
 static async insertPersonnel(personnelData) {
   try {
+
+      const apiUrl = process.env.REACT_APP_API_URL;
       // Wrap personnelData in an array
-      const response = await fetch('http://localhost:5000/personnel/upload', {
+      const response = await fetch(`${apiUrl}/personnel/upload`, {
           method: 'POST',
           headers: {
               'Content-Type': 'application/json',
@@ -217,7 +226,10 @@ static async insertPersonnel(personnelData) {
   // Update personnel data
 static async updatePersonnel(personnelNumber, updatedData) {
   try {
-    const response = await fetch(`http://localhost:5000/personnel/${personnelNumber}`, {
+
+    const apiUrl = process.env.REACT_APP_API_URL;
+
+    const response = await fetch(`${apiUrl}/personnel/${personnelNumber}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -239,7 +251,8 @@ static async updatePersonnel(personnelNumber, updatedData) {
 // Delete personnel data
 static async deletePersonnel(personnelNumber) {
   try {
-    const response = await fetch(`http://localhost:5000/personnel/${personnelNumber}`, {
+    const apiUrl = process.env.REACT_APP_API_URL;
+    const response = await fetch(`${apiUrl}/personnel/${personnelNumber}`, {
       method: 'DELETE',
     });
 
