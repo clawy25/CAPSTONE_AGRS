@@ -19,7 +19,8 @@ export default class CourseModel {
     // Fetch all courses by Program
     static async fetchAllCourses() {
       try {
-        const response = await fetch('http://localhost:5000/courses');
+        const apiUrl = process.env.REACT_APP_API_URL;
+        const response = await fetch(`${apiUrl}/course/all`);
         if (!response.ok) {
           throw new Error('Error fetching courses');
         }
@@ -35,7 +36,8 @@ export default class CourseModel {
     // Fetch all courses by Program
     static async getCoursesbyProgram(academicYear, yearLevel, semester, programNumber) {
       try {
-        const response = await fetch('http://localhost:5000/course/byProgram', {
+        const apiUrl = process.env.REACT_APP_API_URL;
+        const response = await fetch(`${apiUrl}/course/byProgram`, {
           method: 'POST',
           headers: {
               'Content-Type': 'application/json',
@@ -57,9 +59,9 @@ export default class CourseModel {
   
     // Create and insert a new course
     static async createAndInsertCourse(newCourse) {
-  
       try {
-        const response = await fetch('http://localhost:5000/course/upload', {
+        const apiUrl = process.env.REACT_APP_API_URL;
+        const response = await fetch(`${apiUrl}/course/upload`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -81,7 +83,8 @@ export default class CourseModel {
   
     static async updateCourse(updatedCourse) {
       try {
-          const response = await fetch(`http://localhost:5000/course/update`, {
+          const apiUrl = process.env.REACT_APP_API_URL;
+          const response = await fetch(`${apiUrl}/course/update`, {
               method: 'PUT',
               headers: {
                   'Content-Type': 'application/json',
@@ -105,7 +108,8 @@ export default class CourseModel {
     
     static async deleteCourse(selectedCourse) {
       try {
-        const response = await fetch(`http://localhost:5000/course/delete`, {
+        const apiUrl = process.env.REACT_APP_API_URL;
+        const response = await fetch(`${apiUrl}/course/delete`, {
           method: 'DELETE',
           headers: {
               'Content-Type': 'application/json',

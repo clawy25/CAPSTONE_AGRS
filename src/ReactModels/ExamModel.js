@@ -9,7 +9,8 @@ export default class ExamModel {
     
   static async fetchExamData(scheduleNumber) {
     try {
-        const response = await fetch('http://localhost:5000/exam', {
+        const apiUrl = process.env.REACT_APP_API_URL;
+        const response = await fetch(`${apiUrl}/exam/all`, {
           method: 'POST',
           headers: {
               'Content-Type': 'application/json',
@@ -37,7 +38,8 @@ export default class ExamModel {
 
   static async updateExamData(examData) {
     try {
-      const response = await fetch(`http://localhost:5000/exam/update`, {
+      const apiUrl = process.env.REACT_APP_API_URL;
+      const response = await fetch(`${apiUrl}/exam/update`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

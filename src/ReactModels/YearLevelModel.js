@@ -8,7 +8,7 @@ export default class YearLevelModel {
     // Function to fetch all year levels
     static async fetchExistingYearLevels() {
         try {
-            const response = await fetch('http://localhost:5000/yearlevel');
+            const response = await fetch('${apiUrl}/yearlevel');
             if (!response.ok) {
                 throw new Error('Error fetching year levels');
             }
@@ -34,7 +34,7 @@ export default class YearLevelModel {
         };
 
         try {
-            const response = await fetch(`http://localhost:5000/yearlevel/upload`, {
+            const response = await fetch(`${apiUrl}/yearlevel/upload`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

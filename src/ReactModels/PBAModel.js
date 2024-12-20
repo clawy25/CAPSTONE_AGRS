@@ -9,7 +9,8 @@ export default class PBAModel {
     
   static async fetchPBAData(scheduleNumber) {
     try {
-        const response = await fetch('http://localhost:5000/pba', {
+        const apiUrl = process.env.REACT_APP_API_URL;
+        const response = await fetch(`${apiUrl}/pba/all`, {
           method: 'POST',
           headers: {
               'Content-Type': 'application/json',
@@ -37,7 +38,8 @@ export default class PBAModel {
 
   static async updatePBAData(pbaData) {
     try {
-      const response = await fetch(`http://localhost:5000/pba/update`, {
+      const apiUrl = process.env.REACT_APP_API_URL;
+      const response = await fetch(`${apiUrl}/pba/update`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

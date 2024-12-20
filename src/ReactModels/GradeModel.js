@@ -12,7 +12,8 @@ export default class GradeModel {
     
   static async fetchGradeData(scheduleNumber) {
     try {
-        const response = await fetch('http://localhost:5000/grade', {
+        const apiUrl = process.env.REACT_APP_API_URL;      
+        const response = await fetch(`${apiUrl}/grade/all`, {
           method: 'POST',
           headers: {
               'Content-Type': 'application/json',
@@ -42,7 +43,8 @@ export default class GradeModel {
 
   static async updateGradeData(updatedGrade) {
     try {
-      const response = await fetch(`http://localhost:5000/grade/update`, {
+      const apiUrl = process.env.REACT_APP_API_URL;
+      const response = await fetch(`${apiUrl}/grade/update`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

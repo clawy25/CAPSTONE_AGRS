@@ -13,8 +13,8 @@ export default class SectionModel {
      // Function to fetch all sections (without filtering)
      static async fetchAllSections() {
         try {
-            // Send a POST request to the server to fetch all sections
-            const response = await fetch('http://localhost:5000/section', {
+            const apiUrl = process.env.REACT_APP_API_URL;
+            const response = await fetch(`${apiUrl}/section/all`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -40,7 +40,8 @@ export default class SectionModel {
     // Function to fetch all sections filtered by ff:
     static async fetchExistingSections(academicYear, yearLevel, semester, programNumber) {
         try {
-            const response = await fetch('http://localhost:5000/section/filter', {
+            const apiUrl = process.env.REACT_APP_API_URL;
+            const response = await fetch(`${apiUrl}/section/filter`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -64,7 +65,8 @@ export default class SectionModel {
     // New method to create and insert a section
     static async createAndInsertSection(sectionData) {
         try {
-            const response = await fetch(`http://localhost:5000/section/upload`, {
+            const apiUrl = process.env.REACT_APP_API_URL;
+            const response = await fetch(`${apiUrl}/section/upload`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

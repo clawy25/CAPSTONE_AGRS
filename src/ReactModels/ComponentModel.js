@@ -9,7 +9,8 @@ export default class ComponentModel {
     
   static async fetchComponentData(scheduleNumber) {
     try {
-        const response = await fetch('http://localhost:5000/component', {
+        const apiUrl = process.env.REACT_APP_API_URL;
+        const response = await fetch(`${apiUrl}/component/all`, {
           method: 'POST',
           headers: {
               'Content-Type': 'application/json',
@@ -37,7 +38,8 @@ export default class ComponentModel {
 
   static async updateComponentData(compData) {
     try {
-      const response = await fetch(`http://localhost:5000/component/update`, {
+      const apiUrl = process.env.REACT_APP_API_URL;
+      const response = await fetch(`${apiUrl}/component/update`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

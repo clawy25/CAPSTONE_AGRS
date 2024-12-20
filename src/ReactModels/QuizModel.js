@@ -9,7 +9,8 @@ export default class QuizModel {
     
   static async fetchQuizData(scheduleNumber) {
     try {
-        const response = await fetch('http://localhost:5000/quiz', {
+        const apiUrl = process.env.REACT_APP_API_URL;
+        const response = await fetch(`${apiUrl}/quiz/all`, {
           method: 'POST',
           headers: {
               'Content-Type': 'application/json',
@@ -37,7 +38,8 @@ export default class QuizModel {
 
   static async updateQuizData(quizData) {
     try {
-      const response = await fetch(`http://localhost:5000/quiz/update`, {
+      const apiUrl = process.env.REACT_APP_API_URL;
+      const response = await fetch(`${apiUrl}/quiz/update`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

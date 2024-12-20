@@ -18,7 +18,8 @@ export default class ScheduleModel {
     
     static async fetchSchedules() {
       try {
-          const response = await fetch('http://localhost:5000/schedule/all');
+          const apiUrl = process.env.REACT_APP_API_URL;
+          const response = await fetch(`${apiUrl}/schedule/all`);
           if (!response.ok) {
               throw new Error('Error fetching schedules');
           }
@@ -35,7 +36,8 @@ export default class ScheduleModel {
     
   static async fetchExistingschedule(section) {
     try {
-        const response = await fetch('http://localhost:5000/schedule/section', {
+        const apiUrl = process.env.REACT_APP_API_URL;
+        const response = await fetch(`${apiUrl}/schedule/section`, {
           method: 'POST',
           headers: {
               'Content-Type': 'application/json',
@@ -57,7 +59,8 @@ export default class ScheduleModel {
 
   static async fetchAllSchedules(academicYear) {
     try {
-        const response = await fetch('http://localhost:5000/schedule', {
+        const apiUrl = process.env.REACT_APP_API_URL;
+        const response = await fetch(`${apiUrl}/schedule/byAcadYear`, {
           method: 'POST',
           headers: {
               'Content-Type': 'application/json',
@@ -76,31 +79,11 @@ export default class ScheduleModel {
         throw error;
     }
   }
-
-  static async deleteSchedule() {//UNUSED
-    try {
-      const response = await fetch(`http://localhost:5000/schedule/delete`, {
-        method: 'DELETE',
-      });
-  
-      console.log('Delete response status:', response.status); // Log response status
-      console.log('Delete response body:', await response.text()); // Log the raw response body
-  
-      if (!response.ok) {
-        throw new Error('Error deleting schedule');
-      }
-  
-      const data = await response.json(); // Attempt to parse JSON
-      return data; // Return response or success message
-    } catch (error) {
-      console.error('Error deleting schedule:', error);
-      throw error;
-    }
-  }
     // Create and insert multiple schedules
   static async createAndInsertSchedules(scheduleData) {
         try {
-            const response = await fetch(`http://localhost:5000/schedule/upload`, {
+            const apiUrl = process.env.REACT_APP_API_URL;
+            const response = await fetch(`${apiUrl}/schedule/upload`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -120,7 +103,8 @@ export default class ScheduleModel {
 
   static async updateSchedules(updatedSchedules) {
     try {
-      const response = await fetch(`http://localhost:5000/schedule/update`, {
+      const apiUrl = process.env.REACT_APP_API_URL;
+      const response = await fetch(`${apiUrl}/schedule/update`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

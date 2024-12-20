@@ -10,7 +10,8 @@ export default class EnrollmentModel {
     // Function to fetch enrollment data by studentNumber
     static async fetchEnrollmentData(studentNumber) {
         try {
-            const response = await fetch(`http://localhost:5000/enrollment/byStudent`, {
+            const apiUrl = process.env.REACT_APP_API_URL;
+            const response = await fetch(`${apiUrl}/enrollment/byStudent`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -32,7 +33,8 @@ export default class EnrollmentModel {
     // Function to fetch all enrollments
     static async fetchAllEnrollment() {
         try {
-            const response = await fetch('http://localhost:5000/enrollment');
+            const apiUrl = process.env.REACT_APP_API_URL;
+            const response = await fetch(`${apiUrl}/enrollment/all`);
             if (!response.ok) {
                 throw new Error('Error fetching enrollments');
             }
@@ -48,10 +50,9 @@ export default class EnrollmentModel {
 
     // New method to create and insert a enrollment
     static async createAndInsertEnrollment(newEnrollmentData) {
-    
-    console.log(newEnrollmentData);
         try {
-            const response = await fetch('http://localhost:5000/enrollment/upload', {
+            const apiUrl = process.env.REACT_APP_API_URL;
+            const response = await fetch(`${apiUrl}/enrollment/upload`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

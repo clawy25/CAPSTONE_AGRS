@@ -9,7 +9,8 @@ export default class AttendanceModel {
     
   static async fetchAttendanceData(scheduleNumber) {
     try {
-        const response = await fetch('http://localhost:5000/attendance', {
+        const apiUrl = process.env.REACT_APP_API_URL;
+        const response = await fetch(`${apiUrl}/attendance/all`, {
           method: 'POST',
           headers: {
               'Content-Type': 'application/json',
@@ -37,7 +38,9 @@ export default class AttendanceModel {
 
   static async updateAttendanceData(attendanceData) {
     try {
-      const response = await fetch(`http://localhost:5000/attendance/update`, {
+      const apiUrl = process.env.REACT_APP_API_URL;
+      
+      const response = await fetch(`${apiUrl}/attendance/update`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

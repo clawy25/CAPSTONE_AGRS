@@ -12,7 +12,8 @@ export default class ProgramModel {
     // Function to fetch program data by programNumber UNUSED???
     static async fetchProgramData(programNumber) {
         try {
-            const response = await fetch(`http://localhost:5000/program/single`, {
+            const apiUrl = process.env.REACT_APP_API_URL;
+            const response = await fetch(`${apiUrl}/program/single`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -42,7 +43,8 @@ export default class ProgramModel {
     // Function to fetch all programs
     static async fetchAllPrograms() {
         try {
-            const response = await fetch('http://localhost:5000/program');
+            const apiUrl = process.env.REACT_APP_API_URL;
+            const response = await fetch(`${apiUrl}/program/all`);
             if (!response.ok) {
                 throw new Error('Error fetching programs');
             }
@@ -65,10 +67,9 @@ export default class ProgramModel {
 
     // New method to create and insert a program
     static async createAndInsertProgram(newProgramsData) {
-    
-    console.log(newProgramsData);
         try {
-            const response = await fetch('http://localhost:5000/program/upload', {
+            const apiUrl = process.env.REACT_APP_API_URL;
+            const response = await fetch(`${apiUrl}/program/upload`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -87,7 +88,9 @@ export default class ProgramModel {
 
     static async deletePrograms(programNumber, academicYear) {
         try {
-          const response = await fetch(`http://localhost:5000/program/${programNumber}?academicYear=${academicYear}`, {
+          const apiUrl = process.env.REACT_APP_API_URL;
+      
+          const response = await fetch(`${apiUrl}/program/${programNumber}?academicYear=${academicYear}`, {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',

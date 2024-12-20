@@ -9,8 +9,8 @@ export default class SubmissionModel {
 
   static async fetchSubmissionBySchedule(scheduleNumber) {
   try {
-      console.log("try...")
-      const response = await fetch('http://localhost:5000/submission/bySchedule', {
+      const apiUrl = process.env.REACT_APP_API_URL;
+      const response = await fetch(`${apiUrl}/submission/bySchedule`, {
           method: 'POST',
           headers: {
               'Content-Type': 'application/json',
@@ -38,11 +38,11 @@ export default class SubmissionModel {
 }
 static async createAndInsertSubmission(newSubmissionData) {
   try {
-    // Wrap submissions in the required API format
+    const apiUrl = process.env.REACT_APP_API_URL;
     const submissionPayload = { data: Array.isArray(newSubmissionData) ? newSubmissionData : [newSubmissionData] };
     console.log('Submitting Data:', submissionPayload);
 
-    const response = await fetch('http://localhost:5000/submission/upload', {
+    const response = await fetch(`${apiUrl}/submission/upload`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -64,7 +64,8 @@ static async createAndInsertSubmission(newSubmissionData) {
 
 static async updateSchedules(updatedSubmission) {
   try {
-    const response = await fetch(`http://localhost:5000/submission/update`, {
+    const apiUrl = process.env.REACT_APP_API_URL;
+    const response = await fetch(`${apiUrl}/submission/update`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',

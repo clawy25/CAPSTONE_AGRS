@@ -16,7 +16,8 @@ export default class TimelineModel {
     // Function to fetch timeline data (Read only)
     static async fetchTimelineData(academicYear, studentNumber) {
         try {
-            const response = await fetch(`http://localhost:5000/timeline`, {
+            const apiUrl = process.env.REACT_APP_API_URL;
+            const response = await fetch(`${apiUrl}/timeline/all`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -50,7 +51,8 @@ export default class TimelineModel {
         };
 
         try {
-            const response = await fetch(`http://localhost:5000/timeline/upload`, {
+            const apiUrl = process.env.REACT_APP_API_URL;
+            const response = await fetch(`${apiUrl}/timeline/upload`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

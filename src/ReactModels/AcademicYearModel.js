@@ -8,7 +8,9 @@ export default class AcademicYearModel {
     // Function to fetch all academic years
     static async fetchExistingAcademicYears() {
         try {
-          const response = await fetch('http://localhost:5000/academicYear');
+          const apiUrl = process.env.REACT_APP_API_URL;
+
+          const response = await fetch(`${apiUrl}/academicYear/all`);
           if (!response.ok) {
             throw new Error('Error fetching academic years');
           }
@@ -22,13 +24,15 @@ export default class AcademicYearModel {
           console.error('Error fetching academic years:', error);
           throw error;
         }
-      }
+    }
       
 
     // Function to insert a new academic year
     static async createAndInsertAcademicYear(academicYearData) {
       try {
-          const response = await fetch('http://localhost:5000/academicYear/upload', {
+          const apiUrl = process.env.REACT_APP_API_URL;
+
+          const response = await fetch(`${apiUrl}/academicYear/upload`, {
               method: 'POST',
               headers: {
                   'Content-Type': 'application/json',
@@ -44,13 +48,15 @@ export default class AcademicYearModel {
           console.error('Error inserting academic year data:', error);
           throw error;
       }
-  }
+    }
   
 
     // Function to update an academic year by ID
     static async updateAcademicYear(id, updatedData) {
         try {
-          const response = await fetch(`http://localhost:5000/academicYear/${id}`, {
+          const apiUrl = process.env.REACT_APP_API_URL;
+
+          const response = await fetch(`${apiUrl}/academicYear/${id}`, {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json',
@@ -68,6 +74,6 @@ export default class AcademicYearModel {
           console.error('Error updating academic year:', error);
           throw error;
         }
-      }
+    }
       
 }
