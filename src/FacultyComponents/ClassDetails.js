@@ -175,7 +175,23 @@ const ClassDetails = ({classList , classDetails}) => {
 
         setfinalExam(groupedGrades.finals?.Exam);
         setfinalExamMax(finalExamMax);
-        
+
+        setMidtermComponentWeights(midtermComponents);
+        setFinalsComponentWeights(finalComponents);
+
+        setmidtermAttendancePercentage(midtermComponents?.find(row => row.componentNumber === 1)?.weight);
+        setmidtermAssignmentPercentage(midtermComponents?.find(row => row.componentNumber === 2)?.weight);
+        setmidtermQuizPercentage(midtermComponents?.find(row => row.componentNumber === 3)?.weight);
+        setmidtermRecitationPercentage(midtermComponents?.find(row => row.componentNumber === 4)?.weight);
+        setmidtermPBAGradePercentage(midtermComponents?.find(row => row.componentNumber === 5)?.weight);
+        setMidtermExamPercentage(midtermComponents?.find(row => row.componentNumber === 6)?.weight);
+
+        setfinalsAttendancePercentage(finalComponents?.find(row => row.componentNumber === 1)?.weight);
+        setfinalsAssignmentPercentage(finalComponents?.find(row => row.componentNumber === 2)?.weight);
+        setfinalsQuizPercentage(finalComponents?.find(row => row.componentNumber === 3)?.weight);
+        setfinalsRecitationPercentage(finalComponents?.find(row => row.componentNumber === 4)?.weight);
+        setfinalsPBAGradePercentage(finalComponents?.find(row => row.componentNumber === 5)?.weight);
+        setfinalsExamPercentage(finalComponents?.find(row => row.componentNumber === 6)?.weight)
 
         //TRANSFORMING ATTENDANCE RECORDS FOR RENDERING IN TABLE
         const ToMidtermAttendanceColumns = transformAttendanceData(
@@ -345,7 +361,9 @@ const ClassDetails = ({classList , classDetails}) => {
           }, []);
           // Initialize midtermQuizScores with the transformed data
           setmidtermQuizScores(initialData);
+
           
+          midtermQuizMax.sort((a, b) => a.instanceNumber - b.instanceNumber);
           const maxQuizScores = midtermQuizMax.map(quiz => quiz.maxScore);
           setmidtermQuizMaxScores(maxQuizScores);
 
@@ -370,7 +388,8 @@ const ClassDetails = ({classList , classDetails}) => {
           }, []);
           // Initialize midtermQuizScores with the transformed data
           setfinalsQuizScores(initialData);
-          
+
+          finalQuizMax.sort((a, b) => a.instanceNumber - b.instanceNumber);
           const maxQuizScores = finalQuizMax.map(quiz => quiz.maxScore);
           setfinalsQuizMaxScores(maxQuizScores);
 
@@ -872,9 +891,9 @@ const handlePrint = () => {
   const [midtermQuizColumns, setmidtermQuizColumns] = useState([{ id: 1, grade:[] }]); // Initialize quiz columns
   //console.log("Midterm Quiz Columns:",midtermQuizColumns);
   const [midtermQuizScores, setmidtermQuizScores] = useState([]); // Scores for each quiz
-  //console.log("Midterm Quiz Scores:",midtermQuizScores);
+  console.log("Midterm Quiz Scores:",midtermQuizScores);
   const [midtermQuizMaxScores, setmidtermQuizMaxScores] = useState([]); // Maximum scores for each quiz
-  //console.log("Midterm Quiz Max:",midtermQuizMaxScores);
+  console.log("Midterm Quiz Max:",midtermQuizMaxScores);
   const [midtermQuizPercentage, setmidtermQuizPercentage] = useState();
   const [midtermQuiz, setmidtermQuiz] = useState([]); //Storing raw values (int) for db upsertion
   const [midtermQuizMax, setmidtermQuizMax] = useState([]); //Storing attendance column dates for db upsertion
@@ -959,10 +978,10 @@ const handlePrint = () => {
 
   {/* FINAL EXAM DECLARATION */}
   const [finalsExamScores, setfinalsExamScores] = useState([]);
-  console.log("Final Exam Scores: ",finalsExamScores);
+  //console.log("Final Exam Scores: ",finalsExamScores);
   const [finalsExamPercentage, setfinalsExamPercentage] = useState();
   const [finalsTotalItems, setfinalsTotalItems] = useState();
-  console.log("Final Exam Max Score: ",finalsTotalItems);
+  //console.log("Final Exam Max Score: ",finalsTotalItems);
   const [finalExam, setfinalExam] = useState([]);
   const [finalExamMax, setfinalExamMax] = useState([]);
 
@@ -1116,7 +1135,7 @@ const removeAssignmentColumn = (index, setColumns, setAssignmentScores) => {
 
       console.log(totalMidtermPercentage);
       if(totalMidtermPercentage !== 100){
-        toast.error('Total percentage of the components for Midterm is not 100%!');
+        toast.error('Total percentage of the components for Midterm is not 100%');
       } else {
         const componentWeights = [midtermAttendancePercentage, midtermAssignmentPercentage, midtermQuizPercentage, midtermRecitationPercentage, midtermPBAGradePercentage, midtermExamPercentage];
         const weightData = [];
@@ -1144,7 +1163,7 @@ const removeAssignmentColumn = (index, setColumns, setAssignmentScores) => {
 
       console.log(totalMidtermPercentage);
       if(totalMidtermPercentage !== 100){
-        toast.error('Total percentage of the components for Midterm is not 100%!');
+        toast.error('Total percentage of the components for Finals is not 100%');
       } else {
         const componentWeights = [finalsAttendancePercentage, finalsAssignmentPercentage, finalsQuizPercentage, finalsRecitationPercentage, finalsPBAGradePercentage, finalsExamPercentage];
         const weightData = [];

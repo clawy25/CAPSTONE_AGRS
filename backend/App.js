@@ -9,7 +9,7 @@ const app = express();
 const port = process.env.PORT || 5000;
 
 // Middleware
-app.use(cors({ origin: 'https://paranaquecitycollege.onrender.com' }));
+app.use(cors({ origin: ['https://paranaquecitycollege.onrender.com', 'http://localhost:3001'] }));
 app.use(express.json());
 
 // Mount routers
