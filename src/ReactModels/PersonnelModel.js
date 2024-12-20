@@ -67,7 +67,7 @@ export default class PersonnelModel {
   // Fetch specific personnel's credentials
   static async LoginPersonnelData(personnelNumber, password) {
     try {
-      const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+      const apiUrl = process.env.REACT_APP_API_URL;
 
       console.log(process.env.REACT_APP_API_URL);
 
