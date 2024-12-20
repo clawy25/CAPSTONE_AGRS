@@ -67,7 +67,9 @@ export default class PersonnelModel {
   // Fetch specific personnel's credentials
   static async LoginPersonnelData(personnelNumber, password) {
     try {
-      const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000'; 
+      const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
+      console.log(process.env.REACT_APP_API_URL);
 
       const response = await fetch(`${apiUrl}/personnel/login`, {
         method: 'POST',
@@ -151,7 +153,7 @@ export default class PersonnelModel {
 
   static async fetchAllPersonnel(currentAcadYear) {
     try {
-      const response = await fetch('http://localhost:5000/personnel',{
+      const response = await fetch('http://localhost:5000/personnel/all',{
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
