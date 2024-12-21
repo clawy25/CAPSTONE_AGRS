@@ -517,8 +517,9 @@ const ProgramHeadClassDesig = () => {
             </Form.Control>
           </Form.Group>
         </Col>
-        <Col className='mt-4'>
+        <Col>
           <Form.Group controlId="section">
+          <Form.Label>Section</Form.Label>
             <Form.Control as="select" value={selectedSection} onChange={handleSectionChange}
               disabled={!selectedYearLevel || !selectedAcademicYear || !selectedSemester || !selectedProgram}>
                 <option value="">Select Section</option>

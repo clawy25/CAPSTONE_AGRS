@@ -8,6 +8,7 @@ import SectionModel from '../ReactModels/SectionModel';
 import ScheduleModel from '../ReactModels/ScheduleModel';
 import SubmissionModel from '../ReactModels/SubmissionModel';
 import { UserContext } from '../Context/UserContext';
+import DeadlineModel from '../ReactModels/DeadlineModel';
 import '../App.css';
 
 export default function RegistrarProfessor() {
@@ -214,6 +215,7 @@ export default function RegistrarProfessor() {
 
             // Set the formatted schedules to the state
             setSchedules(formattedSchedules);
+            
         } else {
             console.warn("No schedules found for the selected filters.");
             setSchedules([]); // Clear schedules if no data matches
@@ -224,7 +226,27 @@ export default function RegistrarProfessor() {
     }
 };
 
+const fetchDeadline = async () => {
+  try {
+      // Map over your schedules to extract scheduleNumber
+      const scheduleNumberDeadline = schedules.map((sched) => sched.scheduleNumber);
+        
+      // Log the array of schedule numbers to verify
+      console.log('scheduleNumberDeadline:', scheduleNumberDeadline);
 
+      // Ensure you are sending an array, not a single schedule number
+      const deadlineData = await DeadlineModel.fetchDeadlinesBySchedule(scheduleNumberDeadline);
+      console.log("Deadlines fetched:", deadlineData);
+  } catch (error) {
+      console.error("Error fetching deadline:", error);
+  }
+};
+
+
+    
+useEffect(()=> {
+  fetchDeadline();
+})  
 
 const handleDateChange = (index, newDate) => {
   setSchedules((prevSchedules) => {
@@ -428,7 +450,7 @@ const handleAddSubmission = async (scheduleData) => {
         return `${sem}`;
     }
   };
-  
+   
   const selectedProgramData = mappedData?.filter(p => p.academicYear === selectedAcademicYear)
                                         ?.flatMap(p => p.programs)
                                         ?.filter(p => p.programName === selectedProgram)
@@ -440,8 +462,6 @@ const handleAddSubmission = async (scheduleData) => {
                                      ?.flatMap(p => p.yearLevels)
                                      ?.filter(p => p.yearLevel === Number(selectedYearLevel))
                                      ?.flatMap(p => p.semesters);
-
-
 
   return (
     <section>
@@ -550,7 +570,6 @@ const handleAddSubmission = async (scheduleData) => {
                 <th className="custom-color-green-font">Date</th>
                 <th className="custom-color-green-font">Time</th>
                 <th className="custom-color-green-font">Status</th>
-                <th className="custom-color-green-font">Submitted On</th>
                 <th className="custom-color-green-font">Actions</th>
               </tr>
             </thead>
@@ -601,8 +620,6 @@ const handleAddSubmission = async (scheduleData) => {
                         </Form.Select>
                       </Form.Group>
                     </td>
-
-                    <td></td>
                     {/* Edit Button */}
                     <td>
                       <Button className="btn-warning w-100" onClick={() => handleEdit(schedule)}>
@@ -618,6 +635,80 @@ const handleAddSubmission = async (scheduleData) => {
                   </td>
                 </tr>
               )}
+            </tbody>
+          </Table>
+
+          <Button className='btn-success' onClick={() => handleAddSubmission(schedules)}>
+            Save
+          </Button>
+        </div>
+
+        <div className="card-body table-responsive">
+          <Table bordered hover>
+            <thead className='table-success text-center'>
+              <tr>
+                <th className="custom-color-green-font">Schedule Number</th>
+                <th className="custom-color-green-font">Course</th>
+                <th className="custom-color-green-font">Faculty</th>
+                <th className="custom-color-green-font">Date</th>
+                <th className="custom-color-green-font">Time</th>
+                <th className="custom-color-green-font">Status</th>
+                <th className="custom-color-green-font">Submitted On</th>
+                <th className="custom-color-green-font">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+                  <tr>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+
+                    {/* Date Input */}
+                    <td>
+                      <Form.Group className="mb-3">
+                        <Form.Control
+                          type="date"
+                        
+                          className="w-100"
+                        />
+                      </Form.Group>
+                    </td>
+
+                    {/* Time Input */}
+                    <td>
+                      <Form.Group className="mb-3" >
+                        <Form.Control
+                          type="time"
+                          
+                         
+                          className="w-100"
+                        />
+                      </Form.Group>
+                    </td>
+
+                    {/* Submission Status Dropdown */}
+                    <td>
+                      <Form.Group className="mb-3">
+                        <Form.Select
+                          aria-label="Submission Status"
+                          className="w-100"
+                        >
+                          <option value="Submitted">Submitted</option>
+                          <option value="Pending">Pending</option>
+                          <option value="Overdue">Overdue</option>
+                        </Form.Select>
+                      </Form.Group>
+                    </td>
+
+                    <td></td>
+                    {/* Edit Button */}
+                    <td>
+                      <Button className="btn-warning w-100" >
+                        Edit
+                      </Button>
+                    </td>
+                  </tr>
+          
             </tbody>
           </Table>
 

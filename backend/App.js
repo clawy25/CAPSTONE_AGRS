@@ -18,6 +18,7 @@ const scheduleRoutes = require('./api/schedule.js');
 const sectionRoutes = require('./api/section.js');
 const submissionRoutes = require('./api/submission.js');
 const timelineRoutes = require('./api/timeline.js');
+const deadlineRoutes = require('./api/deadline.js');
 
 
 const app = express();
@@ -44,6 +45,7 @@ app.use('/schedule', scheduleRoutes);
 app.use('/section', sectionRoutes);
 app.use('/submission', submissionRoutes);
 app.use('/timeline', timelineRoutes);
+app.use('/deadline', deadlineRoutes);
 
 // Start the server
 app.listen(port, () => console.log(`Server running on port ${port}`));

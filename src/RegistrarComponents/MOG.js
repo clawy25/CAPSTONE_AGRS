@@ -26,7 +26,7 @@ function MasterlistOfGradesTable() {
   const [students, setStudents] = useState([]);
   const [semestersData, setSemestersData] = useState([]);
   const [academicYears, setAcademicYears] = useState([]);
-
+  const [showModalAlertView, setShowModalAlertView] =useState(false);
  
   useEffect(() => {
     const fetchPrograms = async () => {
@@ -44,7 +44,8 @@ function MasterlistOfGradesTable() {
         const admissionYr = allAdmissionYear.map((admission) => admission.studentAdmissionYr);
         const distinctAdmissionYr = [...new Set(admissionYr)];
         const sortedAdmissionYears = distinctAdmissionYr.sort((a, b) => b - a);
-        setAdmissionYears(distinctAdmissionYr);
+        setAdmissionYears(sortedAdmissionYears);
+
       }catch(error){
         console.error("Error fetching admission years:", error);
       }
@@ -71,7 +72,7 @@ function MasterlistOfGradesTable() {
         ScheduleModel.fetchAllSchedules(),
       ]);
   
-      console.log('Students Data:', studentsData);
+      //console.log('Students Data:', studentsData);
   
       // Combine data from students, enrollment, and schedules
       const combinedData = enrolledStudents.map((enrollment) => {
@@ -104,7 +105,7 @@ function MasterlistOfGradesTable() {
           index === self.findIndex((t) => t.studentNumber === value.studentNumber)
       );
   
-      console.log('Distinct Data:', distinctData);
+     // console.log('Distinct Data:', distinctData);
   
       // Normalize values for filtering
       const normalizedProgramNumber = String(programNumber);
@@ -137,7 +138,7 @@ function MasterlistOfGradesTable() {
         (course) => String(course.programNumber) === String(programNumber)
       );
   
-      console.log("Filtered Courses for Program:", filteredCourses);
+      //console.log("Filtered Courses for Program:", filteredCourses);
   
       // Group courses by year level and semester
       const groupedCourses = filteredCourses.reduce((acc, course) => {
@@ -155,7 +156,7 @@ function MasterlistOfGradesTable() {
         return acc;
       }, {});
   
-      console.log("Grouped Courses by Year and Semester:", groupedCourses);
+      //console.log("Grouped Courses by Year and Semester:", groupedCourses);
   
       // Dynamically generate academic years starting from the batchYear
       const academicYears = [];
@@ -165,7 +166,7 @@ function MasterlistOfGradesTable() {
         academicYears.push(`${startYear}-${endYear}`);
       }
   
-      console.log("Academic Years:", academicYears);
+     // console.log("Academic Years:", academicYears);
   
       return { groupedCourses, academicYears }; // Return both grouped courses and academic years
     } catch (error) {
@@ -176,20 +177,29 @@ function MasterlistOfGradesTable() {
   
   const handleView = async () => {
     if (programCode && batchYear) {
-      const { groupedCourses, academicYears } = await fetchCurriculum(programCode, batchYear);
-      const filteredStudents = await fetchStudentData(programCode, batchYear);
-  
-      setSemestersData(groupedCourses); // Update semestersData for table rendering
-      setStudents(filteredStudents); // Update students data
-      setAcademicYears(academicYears); // Update academic years for table header
-      getAcademicYear();
+      setSemestersData({});
+      setStudents([]);
+      setAcademicYears([]);
+      try {
+        const { groupedCourses, academicYears } = await fetchCurriculum(programCode, batchYear);
+        const filteredStudents = await fetchStudentData(programCode, batchYear);
+        setSemestersData(groupedCourses); // Update semestersData
+        setStudents(filteredStudents); // Update students data
+        setAcademicYears(academicYears); // Update academic years
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        // Optionally, display an error modal here
+      }
     } else {
-      alert("Please select a program and batch year");
+      setShowModalAlertView(true); // Show alert for missing inputs
     }
   };
   
 
-
+  const closeShowModalAlertView = () => {
+    setShowModalAlertView(false);
+  }
+  
   const downloadExcel = () => {
     const table = document.querySelector('.table-success');
     const workbook = XLSX.utils.table_to_book(table, { raw: true });
@@ -469,8 +479,37 @@ const downloadPDF = () => {
   return (
     <div className='container-fluid'>
       {/* Program Filter Component */}
-      <Form className="p-3 bg-white border border-success rounded">
+      <Form className="p-3 mb-4 bg-white border border-success rounded">
       <Row className="align-items-center">
+
+      <Col xs={12} sm={6} md={2} lg={2}>
+          <Form.Group controlId="batchYear">
+            <Form.Label className="custom-color-green-font custom-font">
+              Batch Year
+            </Form.Label>
+            <Form.Select
+              value={batchYear}
+              onChange={(e) => {
+                setBatchYear(e.target.value);
+                setSemestersData({});
+                setStudents([]);
+                setAcademicYears([]);
+                setProgramName("");
+                setProgramCode("");
+
+              }}
+              className="border-success"
+            >
+              <option value="">Select Batch Year</option>
+              {admissionYears.map((year) => (
+                <option key={year} value={year}>
+                  {year}
+                </option>
+              ))}
+            </Form.Select>
+
+          </Form.Group>
+        </Col>
         <Col xs={12} sm={6} md={2} lg={2}>
           <Form.Group controlId="programName">
             <Form.Label className="custom-color-green-font custom-font">Program Name</Form.Label>
@@ -478,6 +517,7 @@ const downloadPDF = () => {
               value={programName} 
               onChange={handleProgramNameChange} 
               className="border-success"
+              disabled={!batchYear}
             >
               <option value="">Select Program Name</option>
               {programs.map((program) => (
@@ -490,37 +530,19 @@ const downloadPDF = () => {
         </Col>
 
         <Col xs={12} sm={6} md={2} lg={2}>
-          <Form.Group controlId="programCode">
-            <Form.Label className="custom-color-green-font custom-font">Program Code</Form.Label>
-            <Form.Control 
-              type="text"
-              value={programCode}
-              readOnly
-              className="border-success bg-white"
-              placeholder="Select Program Name first"
-            />
-          </Form.Group>
-        </Col>
+        <Form.Group controlId="programCode">
+          <Form.Label className="custom-color-green-font custom-font">Program Code</Form.Label>
+          <Form.Control 
+            type="text"
+            value={programCode}
+            readOnly
+            disabled
+            className="border-success bg-white"
+            placeholder="Select Program Name first"
+          />
+        </Form.Group>
+      </Col>
 
-        <Col xs={12} sm={6} md={2} lg={2}>
-          <Form.Group controlId="batchYear">
-            <Form.Label className="custom-color-green-font custom-font">
-              Batch Year
-            </Form.Label>
-            <Form.Select
-              value={batchYear}
-              onChange={(e) => setBatchYear(e.target.value)}
-              className="border-success"
-            >
-              <option value="">Select Batch Year</option>
-              {admissionYears.map((year) => (
-                <option key={year} value={year}>
-                  {year}
-                </option>
-              ))}
-            </Form.Select>
-          </Form.Group>
-        </Col>
 
         <Col xs={12} sm={6} md={6} lg={6}>
           <Form.Group>
@@ -538,114 +560,143 @@ const downloadPDF = () => {
 
    
       {/* Grades Table */}
-      <Table bordered responsive hover className="table-success my-4">
-      <thead className="table-success">
-        {/* Row for Year Levels */}
-        <tr>
-          <th className="custom-color-green-font custom-font">PROGRAM</th>
-          <th className="text-center custom-color-green-font custom-font" colSpan={2}>{programName}</th>
-          {Object.keys(semestersData).map((year, idx) => {
-            // Calculate academic year for this year level
-            const academicYear = getAcademicYear(batchYear, idx + 1);
-            return (
-              <th
-                key={year}
-                colSpan={Object.values(semestersData[year]).flat().length}
-                className="text-center custom-color-green-font custom-font"
-              >
-                {`${year} YEAR A.Y. ${academicYear}`}
-              </th>
-            );
-          })}
-          <th rowSpan="4" className="align-middle text-center bg-white custom-color-green-font custom-font">Transcript of Records(TOR)</th>
-        </tr>
 
-        {/* Row for Program Code */}
-        <tr>
-          <th className="custom-color-green-font custom-font">PROGRAM CODE</th>
-          <th className="text-center custom-color-green-font custom-font" colSpan={2}>{programCode}</th>
-          {Object.keys(semestersData).map((year) =>
-            Object.keys(semestersData[year]).map((semester) => {
-              // Calculate academic year for the semester
-              const academicYear = getAcademicYear(batchYear, Object.keys(semestersData).indexOf(year) + 1);
-              return (
-                <th
-                  key={`${year}-${semester}`}
-                  colSpan={semestersData[year][semester].length}
-                  className="text-center bg-white custom-color-green-font custom-font"
-                >
-                  {`${semester.toUpperCase()} SEMESTER A.Y. ${academicYear}`}
-                </th>
-              );
-            })
-          )}
-        </tr>
+      {Object.keys(semestersData).length === 0 && students.length === 0 ? (
+  <div className="text-center py-5 bg-white rounded pt-5 px-4 pb-5">
+    <h5 className="custom-color-green-font mt-5 fs-5">No Data Available</h5>
+    <p className="fs-6 mb-4">
+      Please ensure that all filters are applied then click "View" to display the data.
+    </p>
+  </div>
+) : (
+  <Table bordered responsive hover className="table-success mt-2 mb-4">
+    <thead className="table-success">
+      {/* Row for Year Levels */}
+      <tr>
+        <th className="custom-color-green-font custom-font">PROGRAM</th>
+        <th className="text-center custom-color-green-font custom-font" colSpan={2}>
+          {programName}
+        </th>
+        {Object.keys(semestersData).map((year, idx) => {
+          // Calculate academic year for this year level
+          const academicYear = getAcademicYear(batchYear, idx + 1);
+          return (
+            <th
+              key={year}
+              colSpan={Object.values(semestersData[year]).flat().length}
+              className="text-center custom-color-green-font custom-font"
+            >
+              {`${year} YEAR A.Y. ${academicYear}`}
+            </th>
+          );
+        })}
+        <th
+          rowSpan="4"
+          className="align-middle text-center bg-white custom-color-green-font custom-font"
+        >
+          Transcript of Records(TOR)
+        </th>
+      </tr>
 
-        {/* Row for Batch / Year */}
-        <tr>
-          <th className="custom-color-green-font custom-font">BATCH / YEAR</th>
-          <th className="text-center custom-color-green-font custom-font" colSpan={2}>({Object.keys(semestersData).length}) {batchYear}</th>
-          {Object.keys(semestersData).map((year) =>
-            Object.keys(semestersData[year]).map((semester) =>
-              semestersData[year][semester].map((subject, idx) => (
-                <th key={`${year}-${semester}-${idx}`} className="text-center custom-color-green-font bg-white custom-font" rowSpan={2}>
-                  {subject}
-                </th>
-              ))
-            )
-          )}
-        </tr>
-
-        {/* Row for Item, SNumber, and Student Name */}
-        <tr>
-          <th rowSpan="3" className="align-middle custom-color-green-font text-center bg-white custom-font">Item</th>
-          <th rowSpan="3" className="align-middle custom-color-green-font text-center bg-white custom-font">SNumber</th>
-          <th rowSpan="3" className="align-middle custom-color-green-font text-center bg-white custom-font">Student Name</th>
-        </tr>
-      </thead>
-      <tbody>
-        {students.length === 0 ? (
-          <tr>
-            {/* Dynamically set colSpan to cover all columns */}
-            <td colSpan={3 + Object.keys(semestersData).reduce((acc, year) => acc + Object.keys(semestersData[year]).reduce((acc2, semester) => acc2 + semestersData[year][semester].length, 0), 0) + 1} className="text-center">
-              No data fetched
-            </td>
-          </tr>
-        ) : (
-          students.map((student, rowIdx) => (
-            <tr key={rowIdx}>
-              <td className="text-center bg-white">{rowIdx + 1}</td>
-              <td className="text-center bg-white">{student.studentNumber}</td>
-              <td className="bg-white">{student.studentName}</td>
-              
-              {/* Loop through semestersData to generate columns for each student */}
-              {Object.keys(semestersData).map((year) =>
-                Object.keys(semestersData[year]).map((semester) =>
-                  semestersData[year][semester].map((_, gradeIdx) => (
-                    <td key={`${year}-${semester}-${gradeIdx}`} className="text-center bg-white"></td>
-                  ))
-                )
-              )}
-
-              {/* TOR Button */}
-              <td className="bg-white">
-                <Button
-                  variant="success"
-                  className="w-100"
-                  onClick={() => handleTORClick(student)}
-                >
-                  TOR
-                </Button>
-              </td>
-            </tr>
+      {/* Row for Program Code */}
+      <tr>
+        <th className="custom-color-green-font custom-font">PROGRAM CODE</th>
+        <th className="text-center custom-color-green-font custom-font" colSpan={2}>
+          {programCode}
+        </th>
+        {Object.keys(semestersData).map((year) =>
+          Object.keys(semestersData[year]).map((semester) => (
+            <th
+              key={`${year}-${semester}`}
+              colSpan={semestersData[year][semester].length}
+              className="text-center bg-white custom-color-green-font custom-font"
+            >
+              {`${semester.toUpperCase()} SEMESTER`}
+            </th>
           ))
         )}
-      </tbody>
-    </Table>
+      </tr>
 
+      {/* Row for Batch / Year */}
+      <tr>
+        <th className="custom-color-green-font custom-font">BATCH / YEAR</th>
+        <th className="text-center custom-color-green-font custom-font" colSpan={2}>
+          ({Object.keys(semestersData).length}) {batchYear}
+        </th>
+        {Object.keys(semestersData).map((year) =>
+          Object.keys(semestersData[year]).map((semester) =>
+            semestersData[year][semester].map((subject, idx) => (
+              <th
+                key={`${year}-${semester}-${idx}`}
+                className="text-center custom-color-green-font bg-white custom-font"
+                rowSpan={2}
+              >
+                {subject}
+              </th>
+            ))
+          )
+        )}
+      </tr>
+    </thead>
+    <tbody>
+      {students.length === 0 ? (
+        <tr>
+          {/* Dynamically set colSpan to cover all columns */}
+          <td
+            colSpan={
+              3 +
+              Object.keys(semestersData).reduce(
+                (acc, year) =>
+                  acc +
+                  Object.keys(semestersData[year]).reduce(
+                    (acc2, semester) =>
+                      acc2 + semestersData[year][semester].length,
+                    0
+                  ),
+                0
+              ) +
+              1
+            }
+            className="text-center fst-italic bg-white"
+          >
+            No Student Data Available
+          </td>
+        </tr>
+      ) : (
+        students.map((student, rowIdx) => (
+          <tr key={rowIdx}>
+            <td className="text-center bg-white">{rowIdx + 1}</td>
+            <td className="text-center bg-white">{student.studentNumber}</td>
+            <td className="bg-white">{student.studentName}</td>
 
-    
+            {/* Loop through semestersData to generate columns for each student */}
+            {Object.keys(semestersData).map((year) =>
+              Object.keys(semestersData[year]).map((semester) =>
+                semestersData[year][semester].map((_, gradeIdx) => (
+                  <td
+                    key={`${year}-${semester}-${gradeIdx}`}
+                    className="text-center bg-white"
+                  ></td>
+                ))
+              )
+            )}
 
+            {/* TOR Button */}
+            <td className="bg-white">
+              <Button
+                variant="success"
+                className="w-100"
+                onClick={() => handleTORClick(student)}
+              >
+                TOR
+              </Button>
+            </td>
+          </tr>
+        ))
+      )}
+    </tbody>
+  </Table>
+)}
 
       {/* Modal for displaying student's TOR */}
       <Modal show={showModal} onHide={handleCloseModal} size="xl"  className="custom-modal-width">
@@ -951,10 +1002,24 @@ const downloadPDF = () => {
 
         </Modal.Footer>
       </Modal>
+
+
+      <Modal show={showModalAlertView} onHide={closeShowModalAlertView} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Action Required</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          Please complete all filters (Program, & Admission Year) to view schedules.
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={closeShowModalAlertView}>
+            Close
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 }
-
 
 export default MasterlistOfGradesTable;
 
