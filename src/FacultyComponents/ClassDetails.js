@@ -16,6 +16,7 @@ import QuizModel from '../ReactModels/QuizModel.js';
 import PBAModel from '../ReactModels/PBAModel.js';
 import ExamModel from '../ReactModels/ExamModel.js';
 import ComponentModel from '../ReactModels/ComponentModel.js';
+import SemGradeModel from '../ReactModels/SemGradeModel.js';
 import { Modal, Button } from 'react-bootstrap';
 import * as XLSX from 'xlsx';
 
@@ -24,6 +25,8 @@ import * as XLSX from 'xlsx';
 const ClassDetails = ({classList , classDetails}) => {
 
   const [students, setStudents] = useState(classList);
+
+  //console.log("List of Students:", students);
   const [classInfo, setClassInfo] = useState(classDetails[0]);
 
   const [classGradeData, setClassGradeData] = useState([]);
@@ -33,12 +36,27 @@ const ClassDetails = ({classList , classDetails}) => {
   const [examMaxData, setExamMaxData] = useState([]);
   const [componentWeightData, setComponentWeightData] = useState([]);
 
+  const [pendingStatus, setPending] = useState(false);
+  const [semestralGrades, setSemestralGrades] = useState([]);
+  //console.log(semestralGrades);
+
   const [midtermComponentWeights , setMidtermComponentWeights] = useState([]);
   const [finalsComponentWeights , setFinalsComponentWeights] = useState([]);
   
-
   const [showModal, setShowModal] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
+
+  const studentNumbers = students.map(student => student.studentNumber);
+    
+  // Initialize an empty array for grade that corresponds to the student numbers
+  const gradeArray = new Array(studentNumbers.length).fill(null);
+
+  studentNumbers.forEach((student, index) => {
+    gradeArray[index] = {
+        studentNumber: student,
+        score: undefined
+    };
+  });
 
 
 
@@ -54,13 +72,15 @@ const ClassDetails = ({classList , classDetails}) => {
       id: index, // Add an ID starting from 0
       ...student // Spread the original student data
     }));
-    console.log("Class List: ",studentsWithIds);
+    //console.log("Class List: ",studentsWithIds);
     setStudents(studentsWithIds);
 
     if (students && classInfo){
       handleFetchGrades();
     }
-  }, []);  
+  }, []);
+
+  
 
   const handleModalShow = (action) => {
     setModalMessage(`Grades ${action} successfully!`);
@@ -74,6 +94,12 @@ const ClassDetails = ({classList , classDetails}) => {
   const handleFetchGrades = async () => {
     try {
       const myClass = classInfo.scheduleNumber;
+      const isSubmitted = await SubmissionModel.fetchSubmissionBySchedule(myClass);
+
+      if (isSubmitted[0]?.submissionStatus === 'Pending'){
+        setPending(true);
+      };
+
       const grade = await GradeModel.fetchGradeData(myClass);
       const attendanceDates = await AttendanceModel.fetchAttendanceData(myClass);
       const quizMax = await QuizModel.fetchQuizData(myClass);
@@ -96,8 +122,8 @@ const ClassDetails = ({classList , classDetails}) => {
       const midtermComponents = componentWeights.filter(item => item.period === 1);
       const finalComponents = componentWeights.filter(item => item.period === 2);
 
-      console.log(midtermComponents);
-      console.log(finalComponents);
+      //console.log(midtermComponents);
+      //console.log(finalComponents);
 
       const studentNumbers = students.map(student => student.studentNumber);
 
@@ -142,7 +168,7 @@ const ClassDetails = ({classList , classDetails}) => {
         return acc;
       }, {});
   
-      console.log('Grouped Grades:', groupedGrades);
+      //console.log('Grouped Grades:', groupedGrades);
 
       if(groupedGrades){
         //INITIALIZING THE FETCHED RECORDS FOR DATABASE RIGHT AWAY
@@ -250,16 +276,38 @@ const ClassDetails = ({classList , classDetails}) => {
           finalExamMax ? finalExamMax : []
         );
 
-        console.log(ToFinalExamColumns);
-
         if(ToMidtermAttendanceColumns[0]?.grade){// Initializing midtermAttendanceColumns and midtermAttendanceData
           
           ToMidtermAttendanceColumns.sort((a, b) => a.id - b.id);
-
-          //Sorting them to match the indexes from student ClassList
-          ToMidtermAttendanceColumns[0].grade.sort((a, b) => {
-            return studentNumbers.indexOf(a.studentNumber) - studentNumbers.indexOf(b.studentNumber);
+          
+          ToMidtermAttendanceColumns.forEach(column => { // Iterate over each row
+            const attendanceArray = new Array(studentNumbers.length).fill(null);
+          
+            studentNumbers.forEach((student, index) => {
+              attendanceArray[index] = {
+                studentNumber: student,
+                status: "Select" // Default status
+              };
+            });
+          
+            column.grade.forEach(student => {
+              const index = studentNumbers.indexOf(student.studentNumber);
+              if (index !== -1) {
+                attendanceArray[index] = {
+                  studentNumber: student.studentNumber,
+                  status: student.status
+                };
+              }
+            });
+            
+            column.grade = attendanceArray; // updating the entire column
+          
+            // Sorting them to match the indexes from student ClassList
+            column.grade.sort((a, b) => {
+              return studentNumbers.indexOf(a.studentNumber) - studentNumbers.indexOf(b.studentNumber);
+            });
           });
+
           setmidtermAttendanceColumns(ToMidtermAttendanceColumns); //Initialize midtermAttendanceColumns
   
           const initialData = ToMidtermAttendanceColumns.reduce((acc, column, dateIndex) => {
@@ -279,10 +327,34 @@ const ClassDetails = ({classList , classDetails}) => {
           
           ToFinalAttendanceColumns.sort((a, b) => a.id - b.id);
 
-          //Sorting them to match the indexes from student ClassList
-          ToFinalAttendanceColumns[0].grade.sort((a, b) => {
-            return studentNumbers.indexOf(a.studentNumber) - studentNumbers.indexOf(b.studentNumber);
+          ToFinalAttendanceColumns.forEach(column => { // Iterate over each row
+            const attendanceArray = new Array(studentNumbers.length).fill(null);
+          
+            studentNumbers.forEach((student, index) => {
+              attendanceArray[index] = {
+                studentNumber: student,
+                status: "Select" // Default status
+              };
+            });
+          
+            column.grade.forEach(student => {
+              const index = studentNumbers.indexOf(student.studentNumber);
+              if (index !== -1) {
+                attendanceArray[index] = {
+                  studentNumber: student.studentNumber,
+                  status: student.status
+                };
+              }
+            });
+            
+            column.grade = attendanceArray; // updating the entire column
+          
+            // Sorting them to match the indexes from student ClassList
+            column.grade.sort((a, b) => {
+              return studentNumbers.indexOf(a.studentNumber) - studentNumbers.indexOf(b.studentNumber);
+            });
           });
+
           setfinalsAttendanceColumns(ToFinalAttendanceColumns); //Initialize midtermAttendanceColumns
   
           const initialData = ToFinalAttendanceColumns.reduce((acc, column, dateIndex) => {
@@ -302,11 +374,34 @@ const ClassDetails = ({classList , classDetails}) => {
           
           ToMidtermAssignmentColumns.sort((a, b) => a.id - b.id);
 
-          //Sorting them to match the indexes from student ClassList
-          ToMidtermAssignmentColumns[0].grade.sort((a, b) => {
-            return studentNumbers.indexOf(a.studentNumber) - studentNumbers.indexOf(b.studentNumber);
+          ToMidtermAssignmentColumns.forEach(column => { // Iterate over each row
+            const assignmentArray = new Array(studentNumbers.length).fill(null);
+          
+            studentNumbers.forEach((student, index) => {
+              assignmentArray[index] = {
+                studentNumber: student,
+                score: undefined // Default
+              };
+            });
+          
+            column.grade.forEach(student => {
+              const index = studentNumbers.indexOf(student.studentNumber);
+              if (index !== -1) {
+                assignmentArray[index] = {
+                  studentNumber: student.studentNumber,
+                  score: student.score
+                };
+              }
+            });
+            
+            column.grade = assignmentArray; // updating the entire column
+          
+            // Sorting them to match the indexes from student ClassList
+            column.grade.sort((a, b) => {
+              return studentNumbers.indexOf(a.studentNumber) - studentNumbers.indexOf(b.studentNumber);
+            });
           });
-          console.log(ToMidtermAssignmentColumns);
+
           setmidtermAssignmentColumns(ToMidtermAssignmentColumns); //Initialize midtermAssignmentColumns
   
           const initialData = ToMidtermAssignmentColumns.reduce((acc, column, index) => {
@@ -316,7 +411,7 @@ const ClassDetails = ({classList , classDetails}) => {
             });
             return acc;
           }, {});
-          console.log(initialData);
+          //console.log(initialData);
           setmidtermAssignmentScores(initialData);//Initialize midtermAssignmentScores
         }
 
@@ -324,11 +419,34 @@ const ClassDetails = ({classList , classDetails}) => {
           
           ToFinalAssignmentColumns.sort((a, b) => a.id - b.id);
 
-          //Sorting them to match the indexes from student ClassList
-          ToFinalAssignmentColumns[0].grade.sort((a, b) => {
-            return studentNumbers.indexOf(a.studentNumber) - studentNumbers.indexOf(b.studentNumber);
+          ToFinalAssignmentColumns.forEach(column => { // Iterate over each row
+            const assignmentArray = new Array(studentNumbers.length).fill(null);
+          
+            studentNumbers.forEach((student, index) => {
+              assignmentArray[index] = {
+                studentNumber: student,
+                score: undefined // Default
+              };
+            });
+          
+            column.grade.forEach(student => {
+              const index = studentNumbers.indexOf(student.studentNumber);
+              if (index !== -1) {
+                assignmentArray[index] = {
+                  studentNumber: student.studentNumber,
+                  score: student.score
+                };
+              }
+            });
+            
+            column.grade = assignmentArray; // updating the entire column
+          
+            // Sorting them to match the indexes from student ClassList
+            column.grade.sort((a, b) => {
+              return studentNumbers.indexOf(a.studentNumber) - studentNumbers.indexOf(b.studentNumber);
+            });
           });
-          console.log(ToFinalAssignmentColumns);
+
           setfinalsAssignmentColumns(ToFinalAssignmentColumns); //Initialize finalsAssignmentColumns
   
           const initialData = ToFinalAssignmentColumns.reduce((acc, column, index) => {
@@ -338,7 +456,7 @@ const ClassDetails = ({classList , classDetails}) => {
             });
             return acc;
           }, {});
-          console.log(initialData);
+          //console.log(initialData);
           setfinalsAssignmentScores(initialData);//Initialize finalsAssignmentScores
         }
 
@@ -346,10 +464,34 @@ const ClassDetails = ({classList , classDetails}) => {
           
           ToMidtermQuizColumns.sort((a, b) => a.id - b.id);
 
-          //Sorting them to match the indexes from student ClassList
-          ToMidtermQuizColumns[0].grade.sort((a, b) => {
-            return studentNumbers.indexOf(a.studentNumber) - studentNumbers.indexOf(b.studentNumber);
+          ToMidtermQuizColumns.forEach(column => { // Iterate over each row
+            const quizArray = new Array(studentNumbers.length).fill(null);
+          
+            studentNumbers.forEach((student, index) => {
+              quizArray[index] = {
+                studentNumber: student,
+                score: undefined // Default
+              };
+            });
+          
+            column.grade.forEach(student => {
+              const index = studentNumbers.indexOf(student.studentNumber);
+              if (index !== -1) {
+                quizArray[index] = {
+                  studentNumber: student.studentNumber,
+                  score: student.score
+                };
+              }
+            });
+            
+            column.grade = quizArray; // updating the entire column
+          
+            // Sorting them to match the indexes from student ClassList
+            column.grade.sort((a, b) => {
+              return studentNumbers.indexOf(a.studentNumber) - studentNumbers.indexOf(b.studentNumber);
+            });
           });
+          
           setmidtermQuizColumns(ToMidtermQuizColumns); //Initialize midtermQuizColumns
   
           const initialData = ToMidtermQuizColumns.reduce((acc, column) => {
@@ -373,10 +515,34 @@ const ClassDetails = ({classList , classDetails}) => {
           
           ToFinalQuizColumns.sort((a, b) => a.id - b.id);
 
-          //Sorting them to match the indexes from student ClassList
-          ToFinalQuizColumns[0].grade.sort((a, b) => {
-            return studentNumbers.indexOf(a.studentNumber) - studentNumbers.indexOf(b.studentNumber);
+          ToFinalQuizColumns.forEach(column => { // Iterate over each row
+            const quizArray = new Array(studentNumbers.length).fill(null);
+          
+            studentNumbers.forEach((student, index) => {
+              quizArray[index] = {
+                studentNumber: student,
+                score: undefined // Default
+              };
+            });
+          
+            column.grade.forEach(student => {
+              const index = studentNumbers.indexOf(student.studentNumber);
+              if (index !== -1) {
+                quizArray[index] = {
+                  studentNumber: student.studentNumber,
+                  score: student.score
+                };
+              }
+            });
+            
+            column.grade = quizArray; // updating the entire column
+          
+            // Sorting them to match the indexes from student ClassList
+            column.grade.sort((a, b) => {
+              return studentNumbers.indexOf(a.studentNumber) - studentNumbers.indexOf(b.studentNumber);
+            });
           });
+
           setfinalsQuizColumns(ToFinalQuizColumns); //Initialize finalsQuizColumns
   
           const initialData = ToFinalQuizColumns.reduce((acc, column) => {
@@ -399,11 +565,34 @@ const ClassDetails = ({classList , classDetails}) => {
           
           ToMidtermRecitationColumns.sort((a, b) => a.id - b.id);
 
-          //Sorting them to match the indexes from student ClassList
-          ToMidtermRecitationColumns[0].grade.sort((a, b) => {
-            return studentNumbers.indexOf(a.studentNumber) - studentNumbers.indexOf(b.studentNumber);
+          ToMidtermRecitationColumns.forEach(column => { // Iterate over each row
+            const recitationArray = new Array(studentNumbers.length).fill(null);
+          
+            studentNumbers.forEach((student, index) => {
+              recitationArray[index] = {
+                studentNumber: student,
+                score: undefined // Default
+              };
+            });
+          
+            column.grade.forEach(student => {
+              const index = studentNumbers.indexOf(student.studentNumber);
+              if (index !== -1) {
+                recitationArray[index] = {
+                  studentNumber: student.studentNumber,
+                  score: student.score
+                };
+              }
+            });
+            
+            column.grade = recitationArray; // updating the entire column
+          
+            // Sorting them to match the indexes from student ClassList
+            column.grade.sort((a, b) => {
+              return studentNumbers.indexOf(a.studentNumber) - studentNumbers.indexOf(b.studentNumber);
+            });
           });
-          console.log(ToMidtermRecitationColumns);
+
           setmidtermRecitationColumns(ToMidtermRecitationColumns); //Initialize midtermRecitationColumns
   
           const initialData = ToMidtermRecitationColumns.reduce((acc, column, index) => {
@@ -413,7 +602,7 @@ const ClassDetails = ({classList , classDetails}) => {
             });
             return acc;
           }, {});
-          console.log(initialData);
+          //console.log(initialData);
           setmidtermRecitationScores(initialData);//Initialize midtermRecitationScores
         }
 
@@ -421,11 +610,34 @@ const ClassDetails = ({classList , classDetails}) => {
           
           ToFinalRecitationColumns.sort((a, b) => a.id - b.id);
 
-          //Sorting them to match the indexes from student ClassList
-          ToFinalRecitationColumns[0].grade.sort((a, b) => {
-            return studentNumbers.indexOf(a.studentNumber) - studentNumbers.indexOf(b.studentNumber);
+          ToFinalRecitationColumns.forEach(column => { // Iterate over each row
+            const recitationArray = new Array(studentNumbers.length).fill(null);
+          
+            studentNumbers.forEach((student, index) => {
+              recitationArray[index] = {
+                studentNumber: student,
+                score: undefined // Default
+              };
+            });
+          
+            column.grade.forEach(student => {
+              const index = studentNumbers.indexOf(student.studentNumber);
+              if (index !== -1) {
+                recitationArray[index] = {
+                  studentNumber: student.studentNumber,
+                  score: student.score
+                };
+              }
+            });
+            
+            column.grade = recitationArray; // updating the entire column
+          
+            // Sorting them to match the indexes from student ClassList
+            column.grade.sort((a, b) => {
+              return studentNumbers.indexOf(a.studentNumber) - studentNumbers.indexOf(b.studentNumber);
+            });
           });
-          console.log(ToFinalRecitationColumns);
+
           setfinalsRecitationColumns(ToFinalRecitationColumns); //Initialize finalsRecitationColumns
   
           const initialData = ToFinalRecitationColumns.reduce((acc, column, index) => {
@@ -435,7 +647,7 @@ const ClassDetails = ({classList , classDetails}) => {
             });
             return acc;
           }, {});
-          console.log(initialData);
+          //console.log(initialData);
           setfinalsRecitationScores(initialData);//Initialize finalsRecitationScores
         }
 
@@ -443,10 +655,34 @@ const ClassDetails = ({classList , classDetails}) => {
           
           ToMidtermPBAColumns.sort((a, b) => a.id - b.id); //Sorting by instanceNumber (id)
 
-          //Sorting them to match the indexes from student ClassList
-          ToMidtermPBAColumns[0].grade.sort((a, b) => {
-            return studentNumbers.indexOf(a.studentNumber) - studentNumbers.indexOf(b.studentNumber);
+          ToMidtermPBAColumns.forEach(column => { // Iterate over each row
+            const pbaArray = new Array(studentNumbers.length).fill(null);
+          
+            studentNumbers.forEach((student, index) => {
+              pbaArray[index] = {
+                studentNumber: student,
+                score: undefined // Default
+              };
+            });
+          
+            column.grade.forEach(student => {
+              const index = studentNumbers.indexOf(student.studentNumber);
+              if (index !== -1) {
+                pbaArray[index] = {
+                  studentNumber: student.studentNumber,
+                  score: student.score
+                };
+              }
+            });
+            
+            column.grade = pbaArray; // updating the entire column
+          
+            // Sorting them to match the indexes from student ClassList
+            column.grade.sort((a, b) => {
+              return studentNumbers.indexOf(a.studentNumber) - studentNumbers.indexOf(b.studentNumber);
+            });
           });
+
           setmidtermPBAColumns(ToMidtermPBAColumns); //Initialize midtermPBAColumns
   
           const initialData = ToMidtermPBAColumns.reduce((acc, column, pbaIndex) => {
@@ -463,10 +699,34 @@ const ClassDetails = ({classList , classDetails}) => {
 
           ToFinalPBAColumns.sort((a, b) => a.id - b.id); //Sorting by instanceNumber (id)
           
-          //Sorting them to match the indexes from student ClassList
-          ToFinalPBAColumns[0].grade.sort((a, b) => {
-            return studentNumbers.indexOf(a.studentNumber) - studentNumbers.indexOf(b.studentNumber);
+          ToFinalPBAColumns.forEach(column => { // Iterate over each row
+            const pbaArray = new Array(studentNumbers.length).fill(null);
+          
+            studentNumbers.forEach((student, index) => {
+              pbaArray[index] = {
+                studentNumber: student,
+                score: undefined // Default
+              };
+            });
+          
+            column.grade.forEach(student => {
+              const index = studentNumbers.indexOf(student.studentNumber);
+              if (index !== -1) {
+                pbaArray[index] = {
+                  studentNumber: student.studentNumber,
+                  score: student.score
+                };
+              }
+            });
+            
+            column.grade = pbaArray; // updating the entire column
+          
+            // Sorting them to match the indexes from student ClassList
+            column.grade.sort((a, b) => {
+              return studentNumbers.indexOf(a.studentNumber) - studentNumbers.indexOf(b.studentNumber);
+            });
           });
+
           setfinalsPBAColumns(ToFinalPBAColumns); //Initialize finalsPBAColumns
   
           const initialData = ToFinalPBAColumns.reduce((acc, column, pbaIndex) => {
@@ -487,15 +747,24 @@ const ClassDetails = ({classList , classDetails}) => {
           ToMidtermExamColumns[0].grade.sort((a, b) => {
             return studentNumbers.indexOf(a.studentNumber) - studentNumbers.indexOf(b.studentNumber);
           });
-
+          
           const initialData = {};
-          const grades = ToMidtermExamColumns[0].grade;
 
-          grades.forEach((grade, index) => {
+          studentNumbers.forEach((student, index) => {
             initialData[index] = {
-              score: grade.score,
-              studentNumber: grade.studentNumber
+                studentNumber: student,
+                score: undefined // Default score
             };
+          });
+
+          ToMidtermExamColumns[0].grade.forEach(student => {
+            const index = studentNumbers.indexOf(student.studentNumber);
+            if (index !== -1) {
+              initialData[index] = {
+                  studentNumber: student.studentNumber,
+                  score: student.score
+              };
+            }
           });
           
           setMidtermExamScores(initialData);
@@ -515,13 +784,22 @@ const ClassDetails = ({classList , classDetails}) => {
           });
 
           const initialData = {};
-          const grades = ToFinalExamColumns[0].grade;
 
-          grades.forEach((grade, index) => {
+          studentNumbers.forEach((student, index) => {
             initialData[index] = {
-              score: grade.score,
-              studentNumber: grade.studentNumber
+                studentNumber: student,
+                score: undefined // Default score
             };
+          });
+
+          ToFinalExamColumns[0].grade.forEach(student => {
+            const index = studentNumbers.indexOf(student.studentNumber);
+            if (index !== -1) {
+              initialData[index] = {
+                  studentNumber: student.studentNumber,
+                  score: student.score
+              };
+            }
           });
           
           setfinalsExamScores(initialData);
@@ -642,26 +920,57 @@ const ClassDetails = ({classList , classDetails}) => {
   
   const handleSubmit = async () => {
     try{
-      // For Submission Status
-      // const submissionData = {
-      //   created_at: new Date(),
-      //   scheduleNumber: classInfo.scheduleNumber,
-      //   submissionStatus: 'Pending'
-      // };
+      //Save the changes first
+      const saveState = await handleSave();
 
-      // console.log(submissionData);
+      //For bulk inserting grades in db
+      const semesterGradeData = [];
+      const allGrades = students.map((student, studentIndex) => {
+        const semestralGrade = calculateSemestralGrade(
+          calculateMidtermGrade(studentIndex), 
+          calculateFinalsGrade(studentIndex)
+        );
+    
+        const { numEq } = getSemestralNumericalEquivalentAndRemarks(
+          student.id,
+          semestralGrade,
+          MidtermhasBlankScores(studentIndex) || FinalshasBlankScores(studentIndex)
+        );
+    
+        return { 
+          student: student.studentNumber,
+          numEq
+        };
+      });
+      //console.log(allGrades);
 
-      // const submission = await SubmissionModel.createAndInsertSubmission(submissionData);
+      allGrades.forEach((student) => {
+        semesterGradeData.push({
+          scheduleNumber: classInfo.scheduleNumber,
+          studentNumber: student.student,
+          grade: parseFloat(student.numEq) || null
+        });
+      });
 
-      // const [grade, attendance] = await Promise.all([
-      //   GradeModel.updateGradeData(classGradeData),
-      //   AttendanceModel.updateAttendanceData(attendanceLabelData)
-      // ]);
+      const verifyAll = semesterGradeData.find(row => row.grade === null);
 
-      // if (grade && attendance){
-      // }
-      
-      handleModalShow('submitted');
+      if (verifyAll) {
+        toast.error("Found a row with null grade:", verifyAll);
+        return;
+      } else {
+        const semgrades = await SemGradeModel.updateSemGradeData(semesterGradeData);
+
+        // For Submission Status
+        const submissionData = {
+          scheduleNumber: classInfo.scheduleNumber,
+          submissionStatus: 'Pending'
+        };
+        const submission = await SubmissionModel.createAndInsertSubmission(submissionData);
+
+        if (submission && saveState && semgrades){
+          handleModalShow('submitted');
+        }
+      }
     } catch (error){
       console.error("Error submitting class record:", error);
     }
@@ -680,6 +989,9 @@ const ClassDetails = ({classList , classDetails}) => {
 
       if (grade && attendance && quiz && pba && exam && weight){
         handleModalShow('saved');
+        return true;
+      } else {
+        return false;
       }
     } catch (error){
       console.error("Error submitting class record:", error);
@@ -702,7 +1014,7 @@ const handleImport = () => {
   fileInput.onchange = (event) => {
     const file = event.target.files[0];
     if (file) {
-      console.log('File selected:', file.name);
+      //console.log('File selected:', file.name);
       // Add your file processing logic here
     }
   };
@@ -710,7 +1022,7 @@ const handleImport = () => {
 };
 
 const handleExport = () => {
-  console.log('Export action triggered');
+  //console.log('Export action triggered');
   
   // Find the current table based on `selectedPeriod`
   const table = document.querySelector('.details-table'); // Ensure this matches your table's class
@@ -731,7 +1043,7 @@ const handleExport = () => {
 };
 
 const handlePrint = () => {
-  console.log('Print action triggered');
+  //console.log('Print action triggered');
 
   // Find the current table based on `selectedPeriod`
   const table = document.querySelector('.details-table'); // Ensure this matches your table's class
@@ -868,52 +1180,52 @@ const handlePrint = () => {
   {/* FOR MIDTERMS */}
 
   {/* ATTENDANCE DECLARATION */}
-  const [midtermAttendanceColumns, setmidtermAttendanceColumns] = useState([{ id: 1, grade:[] }]); //Storing raw values (PLEA) for table rendering
-  //console.log("Midterm Attendance Columns: ",midtermAttendanceColumns);
+  const [midtermAttendanceColumns, setmidtermAttendanceColumns] = useState([{ id: 1, grade: gradeArray }]); //Storing raw values (PLEA) for table rendering
+  console.log("Midterm Attendance Columns: ",midtermAttendanceColumns);
   const [midtermTotalAttendanceDays, setmidtermTotalAttendanceDays] = useState(0);
   const [midtermAttendanceData, setmidtermAttendanceData] = useState([]); //Storing raw values (PLEA) for calculations
-  //console.log("Midterm Attendance Data: ", midtermAttendanceData);
+  console.log("Midterm Attendance Data: ", midtermAttendanceData);
   const [midtermAttendancePercentage, setmidtermAttendancePercentage] = useState();
-  console.log(midtermAttendancePercentage);
+  //console.log(midtermAttendancePercentage);
   const [midtermAttendance, setmidtermAttendance] = useState([]); //Storing raw values (PLEA) for db upsertion
   const [midtermAttendanceLabels, setmidtermAttendanceLabels] = useState([]); //Storing attendance column dates for db upsertion
 
   {/* ASSIGNMENT DECLARATION */}
-  const [midtermAssignmentColumns, setmidtermAssignmentColumns] = useState([{ id: 1 , grade:[] }]); //Storing raw values (50-100) for table rendering
+  const [midtermAssignmentColumns, setmidtermAssignmentColumns] = useState([{ id: 1 , grade: gradeArray }]); //Storing raw values (50-100) for table rendering
   //console.log("Midterm Assignment Columns:",midtermAssignmentColumns);
   const [midtermAssignmentScores, setmidtermAssignmentScores] = useState([]); //Storing raw values (50-100) for calculations
-  //console.log("Midterm Assignment Scores:", midtermAssignmentScores);
+  console.log("Midterm Assignment Scores:", midtermAssignmentScores);
   const [midtermAssignmentPercentage, setmidtermAssignmentPercentage] = useState();
   const [invalidAssignmentScores, setInvalidAssignmentScores] = useState([]);
   const [midtermAssignment, setmidtermAssignment] = useState([]); //Storing raw values (50-100) for db upsertion
   
   // QUIZZES DECLARATION
-  const [midtermQuizColumns, setmidtermQuizColumns] = useState([{ id: 1, grade:[] }]); // Initialize quiz columns
+  const [midtermQuizColumns, setmidtermQuizColumns] = useState([{ id: 1, grade: gradeArray }]); // Initialize quiz columns
   //console.log("Midterm Quiz Columns:",midtermQuizColumns);
   const [midtermQuizScores, setmidtermQuizScores] = useState([]); // Scores for each quiz
   console.log("Midterm Quiz Scores:",midtermQuizScores);
   const [midtermQuizMaxScores, setmidtermQuizMaxScores] = useState([]); // Maximum scores for each quiz
-  console.log("Midterm Quiz Max:",midtermQuizMaxScores);
+  //console.log("Midterm Quiz Max:",midtermQuizMaxScores);
   const [midtermQuizPercentage, setmidtermQuizPercentage] = useState();
   const [midtermQuiz, setmidtermQuiz] = useState([]); //Storing raw values (int) for db upsertion
   const [midtermQuizMax, setmidtermQuizMax] = useState([]); //Storing attendance column dates for db upsertion
 
 
   {/* RECITATION DECLARATION */}
-  const [midtermRecitationColumns, setmidtermRecitationColumns] = useState([{ id: 1, grade:[] }]);
+  const [midtermRecitationColumns, setmidtermRecitationColumns] = useState([{ id: 1, grade: gradeArray}]);
   //console.log("Midterm Recitation Columns:",midtermRecitationColumns);
   const [midtermRecitationScores, setmidtermRecitationScores] = useState([]);
-  //console.log("Midterm Recitation Scores:",midtermRecitationScores);
+  console.log("Midterm Recitation Scores:",midtermRecitationScores);
   const [midtermRecitationPercentage, setmidtermRecitationPercentage] = useState();
   const [invalidRecitationScores, setInvalidRecitationScores] = useState([]);
   const [midtermRecitation, setmidtermRecitation] = useState([]); //Storing raw values (50-100) for db upsertion
   
 
    // PBA Declaration
-   const [midtermPBAColumns, setmidtermPBAColumns] = useState([{ id: 1, grade:[] }]);
+   const [midtermPBAColumns, setmidtermPBAColumns] = useState([{ id: 1, grade: gradeArray }]);
    //console.log("Midterm PBA Columns: ", midtermPBAColumns);
    const [midtermPBAGradeScores, setmidtermPBAGradeScores] = useState([]);  // Store scores for each PBA column per student
-   //console.log("Midterm PBA Scores: ", midtermPBAGradeScores);
+   console.log("Midterm PBA Scores: ", midtermPBAGradeScores);
    const [midtermPBAGradePercentage, setmidtermPBAGradePercentage] = useState();
    const [invalidPBAScores, setInvalidPBAScores] = useState([]);
    const [midtermPBA, setmidtermPBA] = useState([]);
@@ -922,7 +1234,7 @@ const handlePrint = () => {
 
    // MIDTERM EXAM DECLARATION
   const [midtermExamScores, setMidtermExamScores] = useState({});
-  //console.log("Midterm Exam Scores: ",midtermExamScores);
+  console.log("Midterm Exam Scores: ",midtermExamScores);
   const [midtermExamPercentage, setMidtermExamPercentage] = useState();
   const [midtermTotalItems, setmidtermTotalItems] = useState(); // Default total number of items is 100
   //console.log("Midterm Total Items: ",midtermTotalItems);
@@ -934,8 +1246,8 @@ const handlePrint = () => {
   {/*FOR FINALS*/}
 
   {/* ATTENDANCE DECLARATION */}
-  const [finalsAttendanceColumns, setfinalsAttendanceColumns] = useState([{ id: 1, grade:[] }]);
-  console.log(finalsAttendanceColumns);
+  const [finalsAttendanceColumns, setfinalsAttendanceColumns] = useState([{ id: 1, grade: gradeArray}]);
+  //console.log(finalsAttendanceColumns);
   const [finalsTotalAttendanceDays, setfinalsTotalAttendanceDays] = useState(0);
   const [finalsAttendanceData, setfinalsAttendanceData] = useState([]);
   const [finalsAttendancePercentage, setfinalsAttendancePercentage] = useState(); // Default value of 0
@@ -943,14 +1255,14 @@ const handlePrint = () => {
   const [finalAttendanceLabels, setfinalAttendanceLabels] = useState([]); //Storing attendance column dates for db upsertion
 
   {/* ASSIGNMENT DECLARATION */}
-  const [finalsAssignmentColumns, setfinalsAssignmentColumns] = useState([{ id: 1, grade:[] }]);
+  const [finalsAssignmentColumns, setfinalsAssignmentColumns] = useState([{ id: 1, grade: gradeArray }]);
   const [finalsAssignmentScores, setfinalsAssignmentScores] = useState([]);
   const [finalsAssignmentPercentage, setfinalsAssignmentPercentage] = useState(); // Default to 5%
   const [finalsinvalidAssignmentScores, setfinalsInvalidAssignmentScores] = useState([]);
   const [finalAssignment, setfinalAssignment] = useState([]); //Storing raw values (50-100) for db upsertion
   
   {/* QUIZZES DECLARATION */}
-  const [finalsQuizColumns, setfinalsQuizColumns] = useState([{ id: 1, grade:[] }]); // Initialize quiz columns
+  const [finalsQuizColumns, setfinalsQuizColumns] = useState([{ id: 1, grade: gradeArray }]); // Initialize quiz columns
   //console.log("Final Quiz Columns:", finalsQuizColumns);
   const [finalsQuizScores, setfinalsQuizScores] = useState([]);
   //console.log("Final Quiz Scores:", finalsQuizScores);
@@ -961,14 +1273,14 @@ const handlePrint = () => {
   const [finalQuizMax, setfinalQuizMax] = useState([]); //Storing attendance column dates for db upsertion
 
   {/* RECITATION DECLARATION */}
-  const [finalsRecitationColumns, setfinalsRecitationColumns] = useState([{ id: 1, grade:[] }]);
+  const [finalsRecitationColumns, setfinalsRecitationColumns] = useState([{ id: 1, grade: gradeArray }]);
   const [finalsRecitationScores, setfinalsRecitationScores] = useState([]);
   const [finalsRecitationPercentage, setfinalsRecitationPercentage] = useState();
   const [finalsinvalidRecitationScores, setfinalsInvalidRecitationScores] = useState([]);
   const [finalRecitation, setfinalRecitation] = useState([]); //Storing raw values (50-100) for db upsertion
   
   {/* PBA DECLARATION */}
-  const [finalsPBAColumns, setfinalsPBAColumns] = useState([{ id: 1, grade:[] }]);
+  const [finalsPBAColumns, setfinalsPBAColumns] = useState([{ id: 1, grade: gradeArray }]);
   //console.log(finalsPBAColumns);
   const [finalsPBAGradeScores, setfinalsPBAGradeScores] = useState([]);
   const [finalsPBAGradePercentage, setfinalsPBAGradePercentage] = useState();
@@ -1016,7 +1328,7 @@ const handlePrint = () => {
 
   {/*ADD AND REMOVE COLUMN FOR MIDTERM AND FINALS (COMPLETE)*/}
   const addColumn = (setColumns) => {
-    setColumns((prevColumns) => [...prevColumns, { id: prevColumns.length + 1, grade: [] }]);
+    setColumns((prevColumns) => [...prevColumns, { id: prevColumns.length + 1, grade: gradeArray }]);
   };
   const removeColumn = (index, setColumns) => {
     setColumns((prevColumns) => prevColumns.filter((_, i) => i !== index));
@@ -1240,6 +1552,7 @@ const removeAssignmentColumn = (index, setColumns, setAssignmentScores) => {
     const AttendanceData = []; //For Database: gradeData
     const AttendanceColumns = []; //For Database: attendanceData
 
+    console.log(midtermAttendanceColumns);
     midtermAttendanceColumns?.forEach((column, index) => {
       AttendanceColumns.push({
           scheduleNumber: classInfo.scheduleNumber,
@@ -2165,7 +2478,7 @@ const calculateTotalMidtermCSGrade = (studentIndex) => {
 
   // Scale scores based on their percentages
   const attendanceComponent = attendanceScore > 0 
-    ? (attendanceScore / 100) * attendancePercentage 
+    ? parseFloat(attendanceScore) * (attendancePercentage / 100) 
     : 0;
 
   const assignmentComponent = assignmentScore > 0 
@@ -2202,7 +2515,7 @@ const calculateTotalMidtermCSPercentage = () => {
     (parseFloat(midtermQuizPercentage) > 0 ? parseFloat(midtermQuizPercentage) : 0) + 
     (parseFloat(midtermRecitationPercentage) > 0 ? parseFloat(midtermRecitationPercentage) : 0);
 
-  return totalCSPercentage.toFixed(2); // Format the total percentage to 2 decimal places
+  return totalCSPercentage; // Format the total percentage to 2 decimal places
 };
 
 
@@ -2260,7 +2573,7 @@ const calculateTotalMidtermCSPercentage = () => {
       (parseFloat(finalsQuizPercentage) > 0 ? parseFloat(finalsQuizPercentage) : 0) + 
       (parseFloat(finalsRecitationPercentage) > 0 ? parseFloat(finalsRecitationPercentage) : 0);
   
-    return totalCSPercentage.toFixed(2); // Format the total percentage to 2 decimal places
+    return totalCSPercentage; // Format the total percentage to 2 decimal places
   };
   
   
@@ -2814,8 +3127,14 @@ const handlePercentageChange = (setter, value) => {
   setter(value);
   validateTotalPercentage();
 };
+  // useEffect(() => {
 
     
+  // }, [students, classInfo, midtermAttendanceData, finalsAttendanceData, midtermAssignmentScores, finalsAssignmentScores,
+  //     midtermQuizScores, finalsQuizScores, midtermRecitationScores, finalsRecitationScores, midtermPBAGradeScores, finalsPBAGradeScores,
+  //     midtermExamScores, finalsExamScores
+  // ]);
+  
   {/* MIDTERMS TAB */}
   const renderTableContent = () => {
     switch (selectedPeriod) {
@@ -2878,8 +3197,9 @@ const handlePercentageChange = (setter, value) => {
 
 
               <th rowSpan="3" style={{ background: '#d1e7dd', position: 'sticky',left: 0,top: 42,padding: '0px',zIndex: 1,boxShadow: '1px 0 0 rgba(0, 0, 0, 0.1)', }}>
-                <button disabled={midtermAttendanceColumns[midtermAttendanceColumns.length - 1]?.grade.length === 0}
-                        onClick={() => addColumn(setmidtermAttendanceColumns)} style={{background: 'none', border: 'none'}}>
+                <button 
+                  disabled={midtermAttendanceColumns[midtermAttendanceColumns.length - 1]?.grade.length === 0}
+                  onClick={() => addColumn(setmidtermAttendanceColumns)} style={{background: 'none', border: 'none'}}>
                   <FontAwesomeIcon icon={faPlus} />
                 </button>
               </th>
@@ -2903,7 +3223,8 @@ const handlePercentageChange = (setter, value) => {
                   <th key={index} rowSpan={2} className='sticky-top-left-offset'>
                   <div style={{ display: 'flex', alignItems: 'center' }}> 
                     {index === midtermQuizColumns.length - 1 && ( // Show button only for the last column
-                      <button 
+                      <button
+                        disabled = {midtermQuizColumns.length === 1}
                         onClick={() => removeQuizColumn(index, setmidtermQuizColumns, setmidtermQuizScores, setmidtermQuizMaxScores)} 
                         style={{ background: 'none', border: 'none', marginRight: '5px' }} // Add margin-right for spacing
                       >
@@ -2936,7 +3257,9 @@ const handlePercentageChange = (setter, value) => {
                 ))}
 
               <th rowSpan={2} style={{ background: '#d1e7dd', position: 'sticky',left: 0,top: 105,padding: '0px',zIndex: 1,boxShadow: '1px 0 0 rgba(0, 0, 0, 0.1)', }}>
-                          <button onClick={addMidtermQuizColumn} style={{ background: 'none', border: 'none' }}>
+                          <button
+                            disabled={midtermQuizColumns[midtermQuizColumns.length - 1]?.grade.length === 0}
+                            onClick={addMidtermQuizColumn} style={{ background: 'none', border: 'none' }}>
                             <FontAwesomeIcon icon={faPlus} />
                           </button>
                         </th>
@@ -2944,7 +3267,7 @@ const handlePercentageChange = (setter, value) => {
                     <th rowSpan={2} className='sticky-top-left-offset'>
                     <input
                     type="number"
-                    value={midtermQuizPercentage}
+                    value={midtermQuizPercentage || ""}
                     onChange={(e) => setmidtermQuizPercentage(e.target.value)}
                     style={{ width: '60px' }}
                   />
@@ -2956,6 +3279,7 @@ const handlePercentageChange = (setter, value) => {
                     <div style={{ display: 'flex', alignItems: 'center' }}>
                       {index === midtermPBAColumns.length - 1 && (
                         <button 
+                          disabled = {midtermPBAColumns.length === 1}
                           onClick={() => removeColumn(index, setmidtermPBAColumns)} 
                           style={{ background: 'none', border: 'none', marginRight: '8px' }} // Adjust margin as needed
                         >
@@ -2986,7 +3310,9 @@ const handlePercentageChange = (setter, value) => {
                   </th>
                   ))}
                   <th rowSpan={2} style={{ background: '#d1e7dd', position: 'sticky',left: 0,top: 105,padding: '0px',zIndex: 1,boxShadow: '1px 0 0 rgba(0, 0, 0, 0.1)', }}>
-                    <button onClick={() => addColumn(setmidtermPBAColumns)} style={{ background: 'none', border: 'none' }}>
+                    <button 
+                      disabled={midtermPBAColumns[midtermPBAColumns.length - 1]?.grade.length === 0}
+                      onClick={() => addColumn(setmidtermPBAColumns)} style={{ background: 'none', border: 'none' }}>
                       <FontAwesomeIcon icon={faPlus} />
                     </button>
                   </th>
@@ -3001,7 +3327,7 @@ const handlePercentageChange = (setter, value) => {
               <th colSpan="2" className='sticky-top-left-offset-168'>
                 <input
                   type="number"
-                  value={midtermAttendancePercentage}
+                  value={midtermAttendancePercentage || ""}
                   onChange={(e) => setmidtermAttendancePercentage(e.target.value)}
                   style={{ width: '60px' }}
                 />
@@ -3012,7 +3338,8 @@ const handlePercentageChange = (setter, value) => {
                   <th key={index} className='sticky-top-left-offset-168'>
                   <div style={{ display: 'flex', alignItems: 'center' }}>
                   {index === midtermAssignmentColumns.length - 1 && (
-                    <button 
+                    <button
+                      disabled = {midtermAssignmentColumns.length === 1}
                       onClick={() => removeAssignmentColumn(index, setmidtermAssignmentColumns, setmidtermAssignmentScores)} 
                       style={{ background: 'none', border: 'none', marginRight: '8px' }}
                     >
@@ -3025,7 +3352,9 @@ const handlePercentageChange = (setter, value) => {
                 ))}
 
                 <th style={{ background: '#d1e7dd', position: 'sticky',left: 0,top: 168,padding: '0px',zIndex: 1,boxShadow: '1px 0 0 rgba(0, 0, 0, 0.1)', }}>
-                  <button onClick={() => addColumn(setmidtermAssignmentColumns)} style={{ background: 'none', border: 'none' }}>
+                  <button
+                    disabled={midtermAssignmentColumns[midtermAssignmentColumns.length - 1]?.grade.length === 0}
+                    onClick={() => addColumn(setmidtermAssignmentColumns)} style={{ background: 'none', border: 'none' }}>
                     <FontAwesomeIcon icon={faPlus} />
                   </button>
                 </th>
@@ -3034,7 +3363,7 @@ const handlePercentageChange = (setter, value) => {
                 <th className='sticky-top-left-offset-168'>
             <input
               type="number"
-              value={midtermAssignmentPercentage}
+              value={midtermAssignmentPercentage || ""}
               onChange={(e) => setmidtermAssignmentPercentage(e.target.value)}
               style={{ width: '60px' }}
             />%
@@ -3044,7 +3373,8 @@ const handlePercentageChange = (setter, value) => {
                   <th key={index} className='sticky-top-left-offset-168'>
                   <div style={{ display: 'flex', alignItems: 'center' }}>
                   {index === midtermRecitationColumns.length - 1 && (
-                    <button 
+                    <button
+                      disabled = {midtermRecitationColumns.length === 1}
                       onClick={() => removeAssignmentColumn(index, setmidtermRecitationColumns, setmidtermRecitationScores)} 
                       style={{ background: 'none', border: 'none', marginRight: '8px' }}
                     >
@@ -3057,7 +3387,9 @@ const handlePercentageChange = (setter, value) => {
                 ))}
 
                 <th style={{ background: '#d1e7dd', position: 'sticky',left: 0,top: 168,padding: '0px',zIndex: 1,boxShadow: '1px 0 0 rgba(0, 0, 0, 0.1)', }}>
-                  <button onClick={() => addColumn(setmidtermRecitationColumns)} style={{ background: 'none', border: 'none' }}>
+                  <button
+                    disabled={midtermRecitationColumns[midtermRecitationColumns.length - 1]?.grade.length === 0}
+                    onClick={() => addColumn(setmidtermRecitationColumns)} style={{ background: 'none', border: 'none' }}>
                     <FontAwesomeIcon icon={faPlus} />
                   </button>
                 </th>
@@ -3065,7 +3397,7 @@ const handlePercentageChange = (setter, value) => {
                 <th className='sticky-top-left-offset-168'>
                 <input
                 type="number"
-                value={midtermRecitationPercentage}
+                value={midtermRecitationPercentage || ""}
                 onChange={(e) => setmidtermRecitationPercentage(e.target.value)}
                 style={{ width: '60px' }}
               />
@@ -3078,7 +3410,7 @@ const handlePercentageChange = (setter, value) => {
                 <th className='sticky-top-left-offset-168'>
                   <input
                     type="number"
-                    value={midtermPBAGradePercentage}
+                    value={midtermPBAGradePercentage || ""}
                     onChange={(e) => setmidtermPBAGradePercentage(e.target.value)}
                     style={{ width: '60px' }}
                     min="0"
@@ -3098,7 +3430,7 @@ const handlePercentageChange = (setter, value) => {
                   <th colSpan="2" className='sticky-top-left-offset-168'>
                     <input
                       type="number"
-                      value={midtermExamPercentage}
+                      value={midtermExamPercentage || ""}
                       onChange={(e) => setMidtermExamPercentage(e.target.value)}
                       style={{ width: '60px' }}
                       placeholder="%"
@@ -3108,8 +3440,6 @@ const handlePercentageChange = (setter, value) => {
     
               </tr>
             </thead>
-
-
             <tbody>
               {students.map((student, studentIndex) => {
                 const studentScores = midtermPBAGradeScores[studentIndex] || [];
@@ -3119,23 +3449,22 @@ const handlePercentageChange = (setter, value) => {
                 const percentage = calculateMidtermPercentage(score);
                 const weightedScore = calculateMidtermWeightedScore(percentage).toFixed(2);
                 const { Atotals, points } = getMidtermAttendanceTotals(student.id);
-                const midtermAttendancePercentageScore = getMidtermAttendanceScorePercentage(points); 
+                const midtermAttendancePercentageScore = getMidtermAttendanceScorePercentage(points);
+                const midtermAssignmentComponentScore = calculateMidtermAssignmentComponentScore(student.id, midtermAssignmentPercentage);
+                        
+
+
                 const midtermGrade = calculateMidtermGrade(studentIndex); // Calculate the midterm grade
                 const { numEq, remarks: autoRemarks } = getMidtermNumericalEquivalentAndRemarks(student.id, midtermGrade, studentIndex); // Pass studentIndex to check for blank scores
 
-                    // Determine row background color based on remarks
-                    const getRowClass = (remark) => {
-                      if (remark === "FAILED") return "row-failed";
-                      if (remark === "PASSED") return "row-passed";
-                      if (remark === "INC") return "row-inc";
-                      if (remark === "Select") return "row-select"; // Highlight with a white color
-                      return "";
-                    };
-                    
-                              
-              
-
-
+                // Determine row background color based on remarks
+                const getRowClass = (remark) => {
+                  if (remark === "FAILED") return "row-failed";
+                  if (remark === "PASSED") return "row-passed";
+                  if (remark === "INC") return "row-inc";
+                  if (remark === "Select") return "row-select"; // Highlight with a white color
+                  return "";
+                };
                 
                 return (
                   <tr key={student.id} className={getRowClass(autoRemarks)}>
@@ -3161,7 +3490,6 @@ const handlePercentageChange = (setter, value) => {
                       </td>
                     ))}
 
-
                     <td></td>
 
                     <td>{Atotals.P}</td> {/* Present count */}
@@ -3175,7 +3503,7 @@ const handlePercentageChange = (setter, value) => {
                         (attendance) => attendance.status === 'Select'
                       )
                         ? 0  // Set points to 0 if all statuses are 'Select'
-                        : points.toFixed(2)}  {/* Otherwise, display the points */}
+                        : points.toFixed(2)}%
                     </td>
 
                     <td>
@@ -3190,7 +3518,7 @@ const handlePercentageChange = (setter, value) => {
 
 
                     {/* ASSIGNMENT COMPONENT: DEFINE midtermAssignmentScores IN INPUT */}
-                    {midtermAssignmentColumns.map((assignmentColumn, assignmentIndex) => (//UNRESOLVED
+                    {midtermAssignmentColumns.map((assignmentColumn, assignmentIndex) => (
                       <td key={assignmentColumn.id}>
                         <input
                           type="number"
@@ -3218,12 +3546,9 @@ const handlePercentageChange = (setter, value) => {
                     <td></td>
                     <td>{calculateMidtermAssignmentColumnAverage(student.id)}%</td> {/* Display average directly */}
                     <td>
-                      {(() => {
-                        const assignmentScore = calculateMidtermAssignmentComponentScore(student.id, midtermAssignmentPercentage);
-                        return isNaN(Number(assignmentScore)) || assignmentScore === null
+                      {isNaN(Number(midtermAssignmentComponentScore)) || midtermAssignmentComponentScore === null
                           ? '0.00%'
-                          : `${Number(assignmentScore).toFixed(2)}%`;
-                      })()}
+                          : `${Number(midtermAssignmentComponentScore).toFixed(2)}%`}
                     </td>
 
 
@@ -3252,7 +3577,7 @@ const handlePercentageChange = (setter, value) => {
                         ? '0.00%'  // If no scores are inputted, show 0%
                         : isNaN(Number(calculateMidtermQuizTotalScore(studentIndex))) || calculateMidtermQuizTotalScore(studentIndex) === null
                         ? '0.00%'  // If the total score is invalid or null, show 0%
-                        : `${Number(calculateMidtermQuizTotalScore(studentIndex)).toFixed(2)}%`}  {/* Display total score */}
+                        : `${Number(calculateMidtermQuizTotalScore(studentIndex)).toFixed(2)}%`}   {/* Display total score */}
                     </td>
                     <td>
                       {/* Check if there are no quiz scores for this student */}
@@ -3327,7 +3652,7 @@ const handlePercentageChange = (setter, value) => {
 
                       // Return the computed grade, or '0.00%' if invalid
                       return totalCSGrade || '0.00%';
-                    })()}
+                    })()}%
                   </td>
 
                   {midtermPBAColumns.map((PBAColumn, PBAIndex) => (
@@ -3397,7 +3722,7 @@ const handlePercentageChange = (setter, value) => {
                     <td>
                       {isNaN(Number(calculateMidtermGrade(studentIndex))) || calculateMidtermGrade(studentIndex) === null
                         ? '0.00'
-                        : Number(calculateMidtermGrade(studentIndex)).toFixed(2)}
+                        : Number(calculateMidtermGrade(studentIndex)).toFixed(2)}%
                     </td>
                     <td><center>{numEq}</center></td>
 
@@ -3423,8 +3748,7 @@ const handlePercentageChange = (setter, value) => {
           </table>
           </div>
           </div>
-              
-        );
+      );
 
       case 'finals':
         return (
@@ -3459,6 +3783,7 @@ const handlePercentageChange = (setter, value) => {
                   <div style={{ display: 'flex', alignItems: 'center' }}>
                   {index === finalsAttendanceColumns.length - 1 && ( // Show button only for the last column
                     <button
+                      disabled = {finalsAttendanceColumns.length === 1}
                       onClick={() => removeAttendanceColumn(index, setfinalsAttendanceColumns, setfinalsAttendanceData)}
                       style={{ background: 'none', border: 'none', marginRight: '10px' }}
                     >
@@ -3479,7 +3804,9 @@ const handlePercentageChange = (setter, value) => {
                 ))}
   
                 <th rowSpan="3" style={{ background: '#d1e7dd', position: 'sticky',left: 0,top: 42,padding: '0px',zIndex: 1,boxShadow: '1px 0 0 rgba(0, 0, 0, 0.1)', }}>
-                  <button onClick={() => addColumn(setfinalsAttendanceColumns)} style={{ background: 'none', border: 'none' }}>
+                  <button
+                    disabled={finalsAttendanceColumns[finalsAttendanceColumns.length - 1]?.grade.length === 0}
+                    onClick={() => addColumn(setfinalsAttendanceColumns)} style={{ background: 'none', border: 'none' }}>
                     <FontAwesomeIcon icon={faPlus} />
                   </button>
                 </th>
@@ -3503,7 +3830,8 @@ const handlePercentageChange = (setter, value) => {
                     <th key={index} rowSpan={2} className='sticky-top-left-offset'>
                     <div style={{ display: 'flex', alignItems: 'center' }}> 
                       {index === finalsQuizColumns.length - 1 && ( // Show button only for the last column
-                        <button 
+                        <button
+                          disabled = {finalsQuizColumns.length === 1}
                           onClick={() => removeQuizColumn(index, setfinalsQuizColumns, setfinalsQuizScores, setfinalsQuizMaxScores)} 
                           style={{ background: 'none', border: 'none', marginRight: '5px' }} // Add margin-right for spacing
                         >
@@ -3530,7 +3858,9 @@ const handlePercentageChange = (setter, value) => {
                     </th>
                   ))}
                 <th rowSpan={2} style={{ background: '#d1e7dd', position: 'sticky',left: 0,top: 105,padding: '0px',zIndex: 1,boxShadow: '1px 0 0 rgba(0, 0, 0, 0.1)', }}>
-                            <button onClick={addFinalQuizColumn} style={{ background: 'none', border: 'none' }}>
+                            <button
+                              disabled={finalsQuizColumns[finalsQuizColumns.length - 1]?.grade.length === 0}
+                              onClick={addFinalQuizColumn} style={{ background: 'none', border: 'none' }}>
                               <FontAwesomeIcon icon={faPlus} />
                             </button>
                           </th>
@@ -3538,7 +3868,7 @@ const handlePercentageChange = (setter, value) => {
                       <th rowSpan={2} className='sticky-top-left-offset'>
                       <input
                       type="number"
-                      value={finalsQuizPercentage}
+                      value={finalsQuizPercentage || ""}
                     onChange={(e) => setfinalsQuizPercentage(e.target.value)}
                       style={{ width: '60px' }}
                     />
@@ -3549,7 +3879,8 @@ const handlePercentageChange = (setter, value) => {
                     <th key={index} rowSpan={2} className='sticky-top-left-offset'>
                     <div style={{ display: 'flex', alignItems: 'center' }}>
                       {index === finalsPBAColumns.length - 1 && (
-                        <button 
+                        <button
+                          disabled = {finalsPBAColumns.length === 1}
                           onClick={() => removeColumn(index, setfinalsPBAColumns)} 
                           style={{ background: 'none', border: 'none', marginRight: '8px' }} // Adjust margin as needed
                         >
@@ -3580,7 +3911,9 @@ const handlePercentageChange = (setter, value) => {
                   </th>
                     ))}
                     <th rowSpan={2} style={{ background: '#d1e7dd', position: 'sticky',left: 0,top: 105,padding: '0px',zIndex: 1,boxShadow: '1px 0 0 rgba(0, 0, 0, 0.1)', }}>
-                      <button onClick={() => addColumn(setfinalsPBAColumns)} style={{ background: 'none', border: 'none' }}>
+                      <button 
+                        disabled={finalsPBAColumns[finalsPBAColumns.length - 1]?.grade.length === 0}
+                        onClick={() => addColumn(setfinalsPBAColumns)} style={{ background: 'none', border: 'none' }}>
                         <FontAwesomeIcon icon={faPlus} />
                       </button>
                     </th>
@@ -3595,7 +3928,7 @@ const handlePercentageChange = (setter, value) => {
                 <th colSpan="2" className='sticky-top-left-offset-168'>
                   <input
                     type="number"
-                    value={finalsAttendancePercentage}
+                    value={finalsAttendancePercentage || ""}
                     onChange={(e) => setfinalsAttendancePercentage(e.target.value)}
                     style={{ width: '60px' }}
                   />
@@ -3606,7 +3939,8 @@ const handlePercentageChange = (setter, value) => {
                     <th key={index} className='sticky-top-left-offset-168'>
                     <div style={{ display: 'flex', alignItems: 'center' }}>
                     {index === finalsAssignmentColumns.length - 1 && (
-                      <button 
+                      <button
+                        disabled = {finalsAssignmentColumns.length === 1}
                         onClick={() => removeAssignmentColumn(index, setfinalsAssignmentColumns, setfinalsAssignmentScores)} 
                         style={{ background: 'none', border: 'none', marginRight: '8px' }}
                       >
@@ -3619,7 +3953,9 @@ const handlePercentageChange = (setter, value) => {
                   ))}
 
                   <th style={{ background: '#d1e7dd', position: 'sticky',left: 0,top: 168,padding: '0px',zIndex: 1,boxShadow: '1px 0 0 rgba(0, 0, 0, 0.1)', }}>
-                    <button onClick={() => addColumn(setfinalsAssignmentColumns)} style={{ background: 'none', border: 'none' }}>
+                    <button
+                      disabled={finalsAssignmentColumns[finalsAssignmentColumns.length - 1]?.grade.length === 0}
+                      onClick={() => addColumn(setfinalsAssignmentColumns)} style={{ background: 'none', border: 'none' }}>
                       <FontAwesomeIcon icon={faPlus} />
                     </button>
                   </th>
@@ -3628,7 +3964,7 @@ const handlePercentageChange = (setter, value) => {
                   <th className='sticky-top-left-offset-168'>
               <input
                 type="number"
-                value={finalsAssignmentPercentage}
+                value={finalsAssignmentPercentage || ""}
                 onChange={(e) => setfinalsAssignmentPercentage(e.target.value)}
                 style={{ width: '60px' }}
               />%
@@ -3638,7 +3974,8 @@ const handlePercentageChange = (setter, value) => {
                   <th key={index} className='sticky-top-left-offset-168'>
                   <div style={{ display: 'flex', alignItems: 'center' }}>
                   {index === finalsRecitationColumns.length - 1 && (
-                    <button 
+                    <button
+                      disabled = {finalsRecitationColumns.length === 1}
                       onClick={() => removeAssignmentColumn(index, setfinalsRecitationColumns, setfinalsRecitationScores)} 
                       style={{ background: 'none', border: 'none', marginRight: '8px' }}
                     >
@@ -3650,7 +3987,9 @@ const handlePercentageChange = (setter, value) => {
                 </th>
                 ))}
                   <th style={{ background: '#d1e7dd', position: 'sticky',left: 0,top: 168,padding: '0px',zIndex: 1,boxShadow: '1px 0 0 rgba(0, 0, 0, 0.1)', }}>
-                    <button onClick={() => addColumn(setfinalsRecitationColumns)} style={{ background: 'none', border: 'none' }}>
+                    <button
+                      disabled={finalsRecitationColumns[finalsRecitationColumns.length - 1]?.grade.length === 0}
+                      onClick={() => addColumn(setfinalsRecitationColumns)} style={{ background: 'none', border: 'none' }}>
                       <FontAwesomeIcon icon={faPlus} />
                     </button>
                   </th>
@@ -3658,7 +3997,7 @@ const handlePercentageChange = (setter, value) => {
                   <th className='sticky-top-left-offset-168'>
                   <input
                   type="number"
-                  value={finalsRecitationPercentage}
+                  value={finalsRecitationPercentage || ""}
                   onChange={(e) => setfinalsRecitationPercentage(e.target.value)}
                   style={{ width: '60px' }}
                 />
@@ -3670,7 +4009,7 @@ const handlePercentageChange = (setter, value) => {
                   <th className='sticky-top-left-offset-168'>
                     <input
                       type="number"
-                      value={finalsPBAGradePercentage}
+                      value={finalsPBAGradePercentage || ""}
                       onChange={(e) => setfinalsPBAGradePercentage(parseFloat(e.target.value) || 0)}
                       style={{ width: '60px' }}
                       min="0"
@@ -3690,7 +4029,7 @@ const handlePercentageChange = (setter, value) => {
                     <th colSpan="2" className='sticky-top-left-offset-168'>
                       <input
                         type="number"
-                        value={finalsExamPercentage}
+                        value={finalsExamPercentage || ""}
                         onChange={(e) => setfinalsExamPercentage(e.target.value)}
                         style={{ width: '60px' }}
                         placeholder="%"
@@ -3761,7 +4100,7 @@ const handlePercentageChange = (setter, value) => {
                         (attendance) => attendance.status === 'Select'
                       )
                         ? 0  // Set points to 0 if all statuses are 'Select'
-                        : points.toFixed(2)}  {/* Otherwise, display the points */}
+                        : points.toFixed(2)}%  {/* Otherwise, display the points */}
                     </td>
 
                     <td>
@@ -3908,7 +4247,7 @@ const handlePercentageChange = (setter, value) => {
 
                       // Return the computed grade, or '0.00%' if invalid
                       return totalCSGrade || '0.00%';
-                    })()}
+                    })()}%
                   </td>      
 
                   {finalsPBAColumns.map((PBAColumn, PBAIndex) => (
@@ -3965,14 +4304,14 @@ const handlePercentageChange = (setter, value) => {
                   <td>
                     {isNaN(Number(weightedScore)) || weightedScore === null
                       ? '0.00%'
-                      : `${Number(weightedScore).toFixed(2)}%`}
+                      : `${Number(weightedScore).toFixed(2)}`}%
                   </td>
   
                     {/*MIDTERM GRADE: CLASS STANDING + PBA + MIDTERM EXAM*/}
                     <td>
                       {isNaN(Number(calculateFinalsGrade(studentIndex))) || calculateFinalsGrade(studentIndex) === null
                         ? '0.00'
-                        : Number(calculateFinalsGrade(studentIndex)).toFixed(2)}
+                        : Number(calculateFinalsGrade(studentIndex)).toFixed(2)}%
                     </td>
                     <td><center>{numEq}</center></td>
   
@@ -4018,11 +4357,11 @@ const handlePercentageChange = (setter, value) => {
                   <tr>
                     <th>Class Standing {calculateTotalMidtermCSPercentage()}%</th> {/* working */}
                     <th>Performance Based Assessment {midtermPBAGradePercentage}%</th> {/* working */}
-                    <th>Midterm Exam {calculateMidtermPercentage()}%</th>
+                    <th>Midterm Exam {midtermExamPercentage}%</th>
                     <th>Midterm Grade</th>
                     <th>Class Standing {calculateTotalFinalsCSPercentage()}%</th> {/* working */}
                     <th>Performance Based Assessment {finalsPBAGradePercentage}%</th>
-                    <th>Final Exam {calculateFinalPercentage()}%</th>
+                    <th>Final Exam {finalsExamPercentage}%</th>
                     <th>Final Grade</th>
                   </tr>
                 </thead>
@@ -4031,7 +4370,7 @@ const handlePercentageChange = (setter, value) => {
                     <tr key={student.id} >
                       <td>{student.studentNumber || 'Guest'}</td>
                       <td>
-                        {`${student.studentNameLast || ''}, ${student.studentNameFirst || ''} ${student.studentNameMiddle || ''}`}
+                        {`${student.studentLastName || ''}, ${student.studentFirstName || ''} ${student.studentMiddleName || ''}`}
                       </td>
 
                       <td>
@@ -4042,19 +4381,21 @@ const handlePercentageChange = (setter, value) => {
                       <td>
                         {(() => {
                           const pbaGrade = calculateTotalsAndPBA(midtermPBAGradeScores[studentIndex], midtermPBAGradePercentage).pbaGrade;
-                          return isNaN(Number(pbaGrade)) || pbaGrade === null || pbaGrade === 0 ? '' : `${Number(pbaGrade).toFixed(2)}`;
+                          return isNaN(Number(pbaGrade)) || pbaGrade === null || pbaGrade === 0 ? '' : `${Number(pbaGrade).toFixed(2)}%`;
                         })()}
                       </td>
                       <td>
                         {isNaN(Number(calculateMidtermWeightedScore(calculateMidtermPercentage(midtermExamScores[student.id]?.score)))) || 
                         calculateMidtermWeightedScore(calculateMidtermPercentage(midtermExamScores[student.id]?.score)) === null
                           ? ''
-                          : `${Number(calculateMidtermWeightedScore(calculateMidtermPercentage(midtermExamScores[student.id]?.score))).toFixed(2)}`}
+                          : `${Number(calculateMidtermWeightedScore(calculateMidtermPercentage(midtermExamScores[student.id]?.score))).toFixed(2)}%`}
                       </td>
                       <td>
+                        <strong>
                         {isNaN(Number(calculateMidtermGrade(studentIndex))) || calculateMidtermGrade(studentIndex) === null || calculateMidtermGrade(studentIndex) === 0
                           ? ''
-                          : `${Number(calculateMidtermGrade(studentIndex)).toFixed(2)}`}
+                          : `${Number(calculateMidtermGrade(studentIndex)).toFixed(2)}%`}
+                        </strong>
                       </td>
                       <td>
                         {isNaN(Number(calculateTotalFinalsCSGrade(studentIndex))) || calculateTotalFinalsCSGrade(studentIndex) === null || calculateTotalFinalsCSGrade(studentIndex) === 0
@@ -4064,29 +4405,32 @@ const handlePercentageChange = (setter, value) => {
                       <td>
                         {(() => {
                           const pbaGrade = calculateTotalsAndPBA(finalsPBAGradeScores[studentIndex], finalsPBAGradePercentage).pbaGrade;
-                          return isNaN(Number(pbaGrade)) || pbaGrade === null || pbaGrade === 0 ? '' : `${Number(pbaGrade).toFixed(2)}`;
+                          return isNaN(Number(pbaGrade)) || pbaGrade === null || pbaGrade === 0 ? '' : `${Number(pbaGrade).toFixed(2)}%`;
                         })()}
                       </td>
                       <td>
                         {isNaN(Number(calculateFinalWeightedScore(calculateFinalPercentage(finalsExamScores[student.id]?.score)))) || 
                         calculateFinalWeightedScore(calculateFinalPercentage(finalsExamScores[student.id]?.score)) === null
                           ? ''
-                          : `${Number(calculateFinalWeightedScore(calculateFinalPercentage(finalsExamScores[student.id]?.score))).toFixed(2)}`}
+                          : `${Number(calculateFinalWeightedScore(calculateFinalPercentage(finalsExamScores[student.id]?.score))).toFixed(2)}%`}
                       </td>
                       <td>
+                        <strong>
                         {isNaN(Number(calculateFinalsGrade(studentIndex))) || calculateFinalsGrade(studentIndex) === null || calculateFinalsGrade(studentIndex) === 0
                           ? ''
-                          : `${Number(calculateFinalsGrade(studentIndex)).toFixed(2)}`}
+                          : `${Number(calculateFinalsGrade(studentIndex)).toFixed(2)}%`}
+                        </strong>
                       </td>
                       <td>
                         {isNaN(Number(calculateSemestralGrade(calculateMidtermGrade(studentIndex), calculateFinalsGrade(studentIndex)))) || 
                         calculateSemestralGrade(calculateMidtermGrade(studentIndex), calculateFinalsGrade(studentIndex)) === null || 
                         calculateSemestralGrade(calculateMidtermGrade(studentIndex), calculateFinalsGrade(studentIndex)) === 0
                           ? ''
-                          : `${Number(calculateSemestralGrade(calculateMidtermGrade(studentIndex), calculateFinalsGrade(studentIndex))).toFixed(2)}`}
+                          : `${Number(calculateSemestralGrade(calculateMidtermGrade(studentIndex), calculateFinalsGrade(studentIndex))).toFixed(2)}%`}
                       </td>
                       <td>
-                        {(() => {
+                        <strong>
+                          {(() => {
                           const { numEq } = getSemestralNumericalEquivalentAndRemarks(
                             student.id,
                             calculateSemestralGrade(calculateMidtermGrade(studentIndex), calculateFinalsGrade(studentIndex)),
@@ -4094,8 +4438,10 @@ const handlePercentageChange = (setter, value) => {
                           );
                           return isNaN(Number(numEq)) || numEq === null || numEq === 0 ? '' : numEq;
                         })()}
+                        </strong>
                       </td>
                       <td>
+                        <strong>
                         {(() => {
                           const { remarks } = getSemestralNumericalEquivalentAndRemarks(
                             student.id,
@@ -4104,6 +4450,7 @@ const handlePercentageChange = (setter, value) => {
                           );
                           return remarks || '';
                         })()}
+                        </strong>
                       </td>
 
                     </tr>
@@ -4129,10 +4476,10 @@ const handlePercentageChange = (setter, value) => {
                   </thead>
                   <tbody>
                     {students.map((student, studentIndex) => (
-                      <tr key={student.id}>
+                    <tr key={student.id}>
                     <td>{student.studentNumber || 'Guest'}</td>
                     <td>
-                      {student.studentNameLast || ''}, {student.studentNameFirst || ''} {student.studentNameMiddle || ''}
+                      {student.studentLastName || ''}, {student.studentFirstName || ''} {student.studentMiddleName || ''}
                     </td>
 
                     {/* Midterm Grade */}
@@ -4160,6 +4507,7 @@ const handlePercentageChange = (setter, value) => {
 
                     {/* Numerical Grade */}
                     <td>
+                      <strong>
                       {(() => {
                         const { numEq } = getSemestralNumericalEquivalentAndRemarks(
                           student.id,
@@ -4168,10 +4516,12 @@ const handlePercentageChange = (setter, value) => {
                         );
                         return isNaN(Number(numEq)) || numEq === null || numEq === 0 ? '' : numEq;
                       })()}
+                      </strong>
                     </td>
 
                     {/* Remarks */}
                     <td>
+                      <strong>
                       {(() => {
                         const { remarks } = getSemestralNumericalEquivalentAndRemarks(
                           student.id,
@@ -4180,6 +4530,7 @@ const handlePercentageChange = (setter, value) => {
                         );
                         return remarks || '';
                       })()}
+                      </strong>
                     </td>
 
                       </tr>
