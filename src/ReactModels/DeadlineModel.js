@@ -59,25 +59,30 @@ export default class DeadlineModel {
     }
   }
 
-  static async updateDeadlines(updatedDeadlines) {
+  static async updateDeadlines(updatedDeadline) {
     try {
       const apiUrl = process.env.REACT_APP_API_URL;
+      console.log("Data sent to API:", { updatedDeadlines: [updatedDeadline] });
+  
       const response = await fetch(`${apiUrl}/deadline/update`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ updatedDeadlines }),
+        body: JSON.stringify({ updatedDeadlines: [updatedDeadline] }), // Wrap in an array
       });
-
+  
       if (!response.ok) {
+        const errorDetails = await response.json();
+        console.error("Error details from API:", errorDetails);
         throw new Error('Error updating deadlines');
       }
-
+  
       return await response.json();
     } catch (error) {
       console.error('Error updating deadlines:', error);
       throw error;
     }
   }
+  
 }

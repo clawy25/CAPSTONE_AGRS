@@ -280,34 +280,41 @@ const fetchDeadline = async () => {
   const handleEditDeadline = (index) => {
     setSelectedDeadline(deadlines[index]);
     setShowModal(true);
+    
   };
   
   const handleSaveChanges = async () => {
     if (selectedDeadline) {
       try {
-        // Update the specific deadline via the DeadlineModel
+        console.log("Validating selectedDeadline:", selectedDeadline);
+  
+        if (!selectedDeadline.id || !selectedDeadline.scheduleNumber) {
+          console.warn("Invalid deadline data, cannot update.");
+          return;
+        }
+  
         const updateSelectedDeadline = await DeadlineModel.updateDeadlines(selectedDeadline);
   
-        // Check if the update was successful
         if (updateSelectedDeadline) {
-          // Update the `deadlines` state with the modified selectedDeadline
           setDeadlines((prevDeadlines) =>
             prevDeadlines.map((deadline) =>
               deadline.scheduleNumber === selectedDeadline.scheduleNumber
-                ? selectedDeadline // Replace the old deadline with the updated one
+                ? selectedDeadline
                 : deadline
             )
           );
+          console.log("Updated deadlines state:", deadlines);
         }
       } catch (error) {
         console.error("Error updating deadline:", error);
-        // Optionally handle the error here (e.g., show a notification or alert)
       }
+    } else {
+      console.warn("No selected deadline to update.");
     }
   
-    // Close the modal after saving the changes
     setShowModal(false);
   };
+  
   
   const handleInputChange = (scheduleNumber, field, value) => {
     setFormData((prev) => {
@@ -827,7 +834,7 @@ const fetchDeadline = async () => {
             Save Changes
           </Button>
         </Modal.Footer>
-      </Modal>;
+      </Modal>
 
 
       <Modal show={showModalAlertView} onHide={closeShowModalAlertView} centered>

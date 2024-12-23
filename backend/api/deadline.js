@@ -58,40 +58,42 @@ router.post('/upload', async (req, res) => {
 router.put('/update', async (req, res) => {
   const { updatedDeadlines } = req.body;
 
-  if (!updatedDeadlines || updatedDeadlines.length === 0) {
+  console.log("Received updatedDeadlines:", updatedDeadlines);
+
+  if (!Array.isArray(updatedDeadlines)) {
+    return res.status(400).json({ error: 'updatedDeadlines must be an array.' });
+  }
+
+  if (updatedDeadlines.length === 0) {
     return res.status(400).json({ error: 'No deadlines provided to update.' });
   }
 
   try {
-    const updatePromises = updatedDeadlines.map(deadline => {
-      // Check if the required fields are present before updating
+    const updatePromises = updatedDeadlines.map((deadline) => {
       if (!deadline.id) {
         throw new Error('Missing deadline ID');
       }
       return supabase
         .from('deadline')
         .update(deadline)
-        .eq('id', deadline.id); // Ensure we update the correct row
+        .eq('id', deadline.id);
     });
 
     const results = await Promise.all(updatePromises);
-    
-    // Check for errors in the results
-    const errors = results.filter(result => result.error);
-    
+
+    const errors = results.filter((result) => result.error);
     if (errors.length > 0) {
-      // Log specific error details for debugging
       console.error('Error updating deadlines:', errors);
       return res.status(500).json({ error: 'Failed to update some deadlines', details: errors });
     }
 
     res.json({ success: true, results });
   } catch (error) {
-    // Log the error for debugging
     console.error('Error updating deadlines:', error);
     res.status(500).json({ error: 'Internal server error', details: error.message });
   }
 });
+
 
 
 module.exports = router;
