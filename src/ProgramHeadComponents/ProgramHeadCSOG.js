@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react'; 
+import { useLocation } from 'react-router-dom';
 import { Table, Form, Button, Row, Col, Modal, ButtonToolbar } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css'; 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -44,7 +45,8 @@ const MasterlistOfGradesTable = () => {
   const [groupedData, setGroupedData] = useState({}); 
   const [currentSection, setCurrentSection] = useState("");
   const [validatedSections, setValidatedSections] = useState([]);
-
+  const [expandedSection, setExpandedSection] = useState(null);
+  const [verifiedSections, setVerifiedSections] = useState({});
 
 const handleShowModal = (section) => {
   setCurrentSection(section); // Set the section being validated
@@ -56,12 +58,19 @@ const handleCloseModal = () => {
   setCurrentSection("");      // Clear the current section
 };
 
-const handleValidate = () => {
-  setValidatedSections([...validatedSections, currentSection]);
-  setShowModal(false);  // Close the modal after validation
+
+
+const toggleSection = (sectionNumber) => {
+  setExpandedSection((prevSection) => (prevSection === sectionNumber ? null : sectionNumber));
 };
 
+const { state } = useLocation();
 
+useEffect(() => {
+  if (selectedAcademicYear && selectedProgram && selectedYearLevel && selectedSemester) {
+    fetchCourses(); // Fetch sections automatically
+  }
+}, [selectedAcademicYear, selectedProgram, selectedYearLevel, selectedSemester]);
  
 
   const fetchAcademicYearsAndPrograms = async () => {
@@ -273,6 +282,7 @@ const handleValidate = () => {
   };
   
   
+  
   useEffect(() => {
     fetchAcademicYearsAndPrograms();
   }, [user.programNumber]);
@@ -281,36 +291,196 @@ const handleValidate = () => {
   const handleAcademicYearChange = (e) => {
     const selectedYear = e.target.value;
     setSelectedAcademicYear(selectedYear);
-    setSelectedProgram('');  // Reset dependent fields
+    setSelectedProgram('');
     setSelectedYearLevel('');
     setSelectedSemester('');
-    setSelectedSection('');
-    
+    setGroupedData({}); // Reset sections
   };
-
+  
   const handleProgramChange = (e) => {
     const selectedProgram = e.target.value;
     setSelectedProgram(selectedProgram);
     setSelectedYearLevel('');
     setSelectedSemester('');
-    setSelectedSection('');
-    
+    setGroupedData({}); // Reset sections
   };
-
+  
   const handleYearLevelChange = (e) => {
     const selectedYear = e.target.value;
     setSelectedYearLevel(selectedYear);
     setSelectedSemester('');
-    setSelectedSection('');
-    
+    setGroupedData({}); // Reset sections
+  };
+  
+  const handleSemesterChange = (e) => {
+    const level = e.target.value;
+    setSelectedSemester(level);
+    setGroupedData({}); // Reset sections
   };
 
-  const handleSemesterChange = (e) => {
-    const level = (e.target.value);
-    setSelectedSemester(level);
-    setSelectedSection('');
-    
+  const handleSectionChange = (e) => {
+    setSelectedSection(e.target.value); // Update the selected section
   };
+
+  const sectionOptions = Object.keys(groupedData).sort();
+
+  const generateRandomNames = () => {
+    const names = [
+      "John Doe",
+      "Jane Smith",
+      "Alice Brown",
+      "Bob White",
+      "Charlie Black",
+      "Emily Davis",
+      "Michael Scott",
+      "Pam Beesly",
+      "Jim Halpert",
+      "Dwight Schrute",
+      "Abigail Cruz",
+    ];
+    return Array.from({ length: 20 }, (_, index) => ({
+      studentNo: index + 1,
+      studentName: names[Math.floor(Math.random() * names.length)],
+    }));
+  };
+
+  const dummyData = generateRandomNames();
+
+    // Open the modal and set the current section
+    const handleVerifyClick = (section) => {
+      setCurrentSection(section);
+      setShowModal(true);
+    };
+
+  // Handle validate action
+  const handleValidate = () => {
+    setVerifiedSections((prev) => ({ ...prev, [currentSection]: true }));
+    setShowModal(false);
+  };
+
+  const printTable = () => {
+    if (!dataFetched) {
+      setShowModalAlert(true);
+      return;
+    }
+  
+    const printableSection = document.getElementById('printableTable');
+    if (!printableSection) {
+      console.error('Printable section not found');
+      return;
+    }
+  
+    // Clone the entire printable section
+    const clonedSection = printableSection.cloneNode(true);
+  
+    // Remove unnecessary elements (like forms or buttons)
+    clonedSection.querySelectorAll('form, .d-flex.justify-content-end').forEach((element) => element.remove());
+  
+    // Open the print window
+    const printWindow = window.open('', '', 'height=500,width=1000');
+    printWindow.document.write('<html><head><title>Print</title>');
+    printWindow.document.write(`
+      <style>
+        @media print {
+          @page {
+            size: legal landscape;
+            margin: 'minimum';
+          }
+          body {
+            font-family: Arial, sans-serif;
+            margin: 20px; /* Add some space around the page content */
+          }
+  
+          /* Flexbox layout for rows */
+          .row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+          }
+  
+          .column {
+            width: 48%;
+          }
+  
+          .label-with-line {
+            display: inline-block;
+            width: 180px;
+            padding-right: 5px;
+            text-align: left;
+          }
+  
+          .input-line {
+            display: inline-block;
+            width: calc(100% - 180px);
+            border-bottom: 1px solid black;
+            text-align: center;
+          }
+  
+          .column div {
+            margin-bottom: 10px;
+          }
+  
+          /* Styling for header section */
+          .table-header-info {
+            margin-bottom: 20px;
+            page-break-before: always; /* Ensure new page for each table header info */
+          }
+  
+          .table-header-info:not(:first-of-type) {
+            padding-top: 100px; /* Add space from the top for subsequent headers */
+          }
+  
+          /* Table styling */
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            page-break-after: always; /* Ensure table finishes before the next header starts */
+          }
+  
+          th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: center;
+          }
+
+          thead {
+            display: table-row-group; /* Treat table headers as normal rows */
+          }
+  
+          h5, h6, p {
+            text-align: center;
+            margin: 0;
+          }
+  
+          /* Remove unnecessary elements */
+          form, .d-flex.justify-content-end {
+            display: none !important;
+          }
+        }
+      </style>
+    `);
+    printWindow.document.write('</head><body>');
+  
+    // Dynamically retrieve and add the header info from the page
+    const headerInfo = printableSection.querySelector('.table-header-info');
+    if (headerInfo) {
+      printWindow.document.write(headerInfo.outerHTML);
+    } else {
+      console.warn('Header information not found');
+    }
+  
+    // Append the cloned section (tables and any content)
+    printWindow.document.write(clonedSection.outerHTML);
+  
+    printWindow.document.write('</body></html>');
+    printWindow.document.close();
+    printWindow.print();
+  };
+  
+  
+  
+  
 
 
   const getSemesterText = (sem) => {
@@ -358,279 +528,6 @@ const handleValidate = () => {
     setShowModalAlertView(false);
   }
   
-  const printTable = () => {
-    if (!dataFetched) {
-      setShowModalAlert(true);
-      return;
-    }
-
-    const table = document.getElementById('printableTable');
-    if (!table) {
-      console.error('Table not found');
-      return;
-    }
-  
-    // Clone the table
-    const clonedTable = table.cloneNode(true);
-  
-    // Select all rows (including header and body)
-    const rows = clonedTable.querySelectorAll('tr');
-  
-    // Get all rows for header and body
-    const headerRows = clonedTable.querySelectorAll('thead tr');
-    const bodyRows = clonedTable.querySelectorAll('tbody tr');
-  
-    // Highlight the last column (WGA) in both header and body (only for print)
-    // In header (last cell in both header rows)
-    const headerCells = clonedTable.querySelectorAll('thead th');
-    const lastHeaderCell = headerCells[headerCells.length - 1];
-    lastHeaderCell.style.backgroundColor = '#bf9000'; // Brown for WGA column in header
-    lastHeaderCell.style.color = 'black'; // Text color black for WGA header
-  
-    // In body (last column in each row)
-    bodyRows.forEach(row => {
-      const lastCell = row.cells[row.cells.length - 1]; // Target the last cell in each body row
-      lastCell.style.backgroundColor = '#bf9000'; // Brown for WGA column in body
-    });
-  
-    // Apply colors to the first and second header rows (only for print)
-    if (headerRows.length > 0) {
-      headerRows.forEach((headerRow, index) => {
-        // Apply blue color to the first header row and text color black (only for print)
-        if (index === 0) {
-          headerRow.querySelectorAll('th').forEach(cell => {
-            cell.style.backgroundColor = '#00b0f0'; // Blue
-            cell.style.color = 'black'; // Text color black
-          });
-        }
-        // Apply yellow color to the second header row and text color black (only for print)
-        if (index === 1) {
-          headerRow.querySelectorAll('th').forEach(cell => {
-            cell.style.backgroundColor = '#ffff00'; // Yellow
-            cell.style.color = 'black'; // Text color black
-          });
-        }
-      });
-    }
-  
-    // Remove the last column from body rows (not the header)
-    bodyRows.forEach(row => {
-      row.deleteCell(row.cells.length - 1);
-    });
-  
-    const printWindow = window.open('', '', 'height=500,width=1000');
-    printWindow.document.write('<html><head><title>Print Table</title>');
-    printWindow.document.write(`
-      <style>
-        @media print {
-          @page {
-            size: letter landscape; /* Set Legal size and Landscape orientation */
-            margin: 0;
-            /* Ensure background graphics are included */
-            background: #fff;
-          }
-  
-          body {
-            font-family: Arial, sans-serif;
-          }
-  
-          table {
-            width: 125%;
-            table-layout: auto;
-            border-collapse: collapse;
-            page-break-before: auto;
-          }
-  
-          th, td {
-            border: 1px solid black;
-            padding: 8px;
-            text-align: center;
-          }
-  
-          td {
-            background-color: white;
-          }
-  
-          th {
-            background-color: #4CAF50;
-            color: black; /* Text color black in all header cells */
-          }
-  
-          /* Prevent repeated header on every page */
-          thead {
-            display: table-row-group;
-          }
-  
-          /* Keep rows from splitting between pages */
-          tr {
-            page-break-inside: avoid;
-          }
-  
-          /* Highlight last column in print */
-          th:last-child, td:last-child {
-            background-color: #bf9000; /* Highlight color for last column */
-            color: black; /* Text color black for WGA column */
-          }
-  
-          /* Apply print-specific header row colors */
-          thead tr:nth-child(1) th {
-            background-color: #00b0f0; /* Blue for the first header row */
-            color: black; /* Text color black for first header row */
-          }
-  
-          thead tr:nth-child(2) th {
-            background-color: #ffff00; /* Yellow for the second header row */
-            color: black; /* Text color black for second header row */
-          }
-  
-          .header-container {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 20px;
-            margin-top: 40px;
-          }
-  
-          .logo {
-            height: 80px;
-            margin-right: 20px;
-          }
-  
-          .text {
-            text-align: left;
-            margin-right: 20px;
-          }
-  
-          .city, .college {
-            color: green;
-          }
-  
-          .college {
-            font-size: 29px;
-            font-weight: bold;
-          }
-  
-          .vertical-line {
-            border-left: 2px solid green;
-            height: 80px;
-            margin-left: 20px;
-            margin-right: 20px;
-          }
-  
-          .additional-text {
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
-          }
-  
-          .additional-line {
-            font-size: 16px;
-            font-weight: normal;
-            display: flex;
-            align-items: flex-start;
-            margin-bottom: 5px;
-            color: green;
-          }
-  
-          .icon {
-            margin-right: 8px;
-            font-size: 18px;
-            min-width: 24px;
-            color: green;
-          }
-  
-          .address-container {
-            display: flex;
-            align-items: flex-start;
-          }
-  
-          .address-container .address-text {
-            display: flex;
-            flex-direction: column;
-          }
-  
-          .second-logo {
-            height: 80px;
-            margin-left: 40px;
-          }
-  
-          .separator {
-            border: 0;
-            border-top: 2px solid green;
-            width: 80%;
-            margin: 20px auto;
-          }
-  
-          .centered-text {
-            text-align: center;
-          }
-        }
-  
-      </style>
-      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    `);
-    printWindow.document.write('</head><body>');
-  
-    let fullProgramName;
-    if (program === "BSHM") {
-      fullProgramName = "BACHELOR OF SCIENCE IN HOSPITALITY MANAGEMENT";
-    } else if (program === "BSEntrep") {
-      fullProgramName = "BACHELOR OF SCIENCE IN ENTREPRENEURSHIP";
-    } else {
-      fullProgramName = program;
-    }
-  
-    printWindow.document.write(`
-      <div class="header-container">
-        <img src="/pcc.png" alt="PCC Logo" class="logo" id="logo">
-        <div class="text">
-          <div class="city">PARANAQUE CITY</div>
-          <div class="college">COLLEGE</div>
-        </div>
-        <div class="vertical-line"></div>
-        <div class="additional-text">
-          <div class="additional-line address-container">
-            <span class="icon"><i class="fas fa-map-marker-alt"></i></span>
-            <div class="address-text">
-              <div>Coastal Rd., cor. Victor Medina Street,</div>
-              <div>San Dionisio, Paranaque City, Philippines</div>
-            </div>
-          </div>
-          <div class="additional-line">
-            <span class="icon"><i class="fas fa-envelope"></i></span>info@paranaquecitycollege.edu.ph
-          </div>
-          <div class="additional-line">
-            <span class="icon"><i class="fas fa-phone-alt"></i></span>(02)85343321
-          </div>
-        </div>
-        <img src="/pcc.png" alt="PCC Logo" class="second-logo">
-      </div>
-      <hr class="separator">
-      <div class="centered-text">
-        <h1>OFFICE OF THE COLLEGE REGISTRAR</h1>
-        <h2>Summary of Grades</h2>
-        <h2>${fullProgramName}</h2>
-        <h2>${yearLevel}</h2>
-        <h2>${semester} Semester S.Y. ${academicYear}</h2>
-      </div>
-    `);
-  
-    printWindow.document.write(clonedTable.outerHTML);
-    printWindow.document.write('</body></html>');
-  
-    const logo = printWindow.document.getElementById('logo');
-    logo.onload = () => {
-      printWindow.print();
-      printWindow.close();
-    };
-  
-    logo.onerror = () => {
-      console.error('Logo failed to load.');
-      printWindow.print();
-      printWindow.close();
-    };
-  };
-  
   const openModal = (student) => {
     setShowModal(true);
     console.log('sstudent',student)
@@ -645,203 +542,304 @@ const handleValidate = () => {
   
   return (
     <div>
-      <Form className="p-3 mb-4 bg-white border border-success rounded">
-      <Row className="align-items-center">
-      <Col md={2} className='mb-3'>
-          <Form.Group controlId="academicYear">
-            <Form.Label className='custom-color-green-font custom-font'>Academic Year</Form.Label>
-            <Form.Select value={selectedAcademicYear} onChange={handleAcademicYearChange} className="border-success">
-              <option value="">Select Academic Year</option>
-              {academicYears.sort((a, b) => {
-                let yearA = parseInt(a.academicYear.split('-')[0]);
-                let yearB = parseInt(b.academicYear.split('-')[0]);
-                return yearB - yearA; // Sorting in descending order
-              })
-              .map((program) => (
-                <option key={program.academicYear} value={program.academicYear}>
-                  {program.academicYear}
-                </option>
-              ))}
-            </Form.Select>
-          </Form.Group>
-        </Col>
-        <Col md={2}  className='mb-3'>
-          <Form.Group controlId="program">
-            <Form.Label className='custom-color-green-font custom-font'>Program</Form.Label>
-            <Form.Select value={selectedProgram} onChange={handleProgramChange} className="border-success"
-              disabled={!selectedAcademicYear}>
-            <option value="">Select Program</option>
-              {mappedData
-                ?.filter(p => p.academicYear === selectedAcademicYear)
-                ?.flatMap(p => p.programs)
-                .map((program) => (
-                  <option key={program.programNumber} value={program.programNumber}>
-                    {program.programName}
-                  </option>
-              ))}
-            </Form.Select>
-          </Form.Group>
-        </Col>
-        <Col md={2} className='mb-3'>
-          <Form.Group controlId="yearLevel">
-            <Form.Label className='custom-color-green-font custom-font'>Year Level</Form.Label>
-            <Form.Select value={selectedYearLevel} onChange={handleYearLevelChange} className="border-success"
-              disabled={!selectedAcademicYear || !selectedProgram}>
-              <option value="">Select Year Level</option>
-              {selectedProgramData // Get year levels for selected academic year
-                ?.map(level => (
-                  <option key={level.yearLevel} value={level.yearLevel}>
-                    Year {level.yearLevel}
-                  </option>
-              ))}
-            </Form.Select>
-          </Form.Group>
-        </Col>
-        <Col md={2} className='mb-3'>
-          <Form.Group controlId="semester">
-            <Form.Label className='custom-color-green-font custom-font'>Semester</Form.Label>
-            <Form.Select value={selectedSemester} onChange={handleSemesterChange} className="border-success"
-              disabled={!selectedYearLevel || !selectedAcademicYear || !selectedProgram}>
-            <option value="">Select Semester</option>
-              {selectedYearData
-                ?.map((sem, index) => (
-                  <option key={index} value={sem}>
-                    {getSemesterText(sem)}
-                  </option>
-              ))}
-            </Form.Select>
-          </Form.Group>
-        </Col>
+ <Form className="p-3 mb-4 bg-white border border-success rounded">
+  <Row className="align-items-center">
+    <Col md={2} className='mb-3'>
+      <Form.Group controlId="academicYear">
+        <Form.Label className='custom-color-green-font custom-font'>Academic Year</Form.Label>
+        <Form.Select value={selectedAcademicYear} onChange={handleAcademicYearChange} className="border-success">
+          <option value="">Select Academic Year</option>
+          {academicYears.sort((a, b) => {
+            let yearA = parseInt(a.academicYear.split('-')[0]);
+            let yearB = parseInt(b.academicYear.split('-')[0]);
+            return yearB - yearA; // Sorting in descending order
+          })
+          .map((program) => (
+            <option key={program.academicYear} value={program.academicYear}>
+              {program.academicYear}
+            </option>
+          ))}
+        </Form.Select>
+      </Form.Group>
+    </Col>
+    <Col md={2} className='mb-3'>
+      <Form.Group controlId="program">
+        <Form.Label className='custom-color-green-font custom-font'>Program</Form.Label>
+        <Form.Select value={selectedProgram} onChange={handleProgramChange} className="border-success"
+          disabled={!selectedAcademicYear}>
+          <option value="">Select Program</option>
+          {mappedData
+            ?.filter(p => p.academicYear === selectedAcademicYear)
+            ?.flatMap(p => p.programs)
+            .map((program) => (
+              <option key={program.programNumber} value={program.programNumber}>
+                {program.programName}
+              </option>
+          ))}
+        </Form.Select>
+      </Form.Group>
+    </Col>
+    <Col md={2} className='mb-3'>
+      <Form.Group controlId="yearLevel">
+        <Form.Label className='custom-color-green-font custom-font'>Year Level</Form.Label>
+        <Form.Select value={selectedYearLevel} onChange={handleYearLevelChange} className="border-success"
+          disabled={!selectedAcademicYear || !selectedProgram}>
+          <option value="">Select Year Level</option>
+          {selectedProgramData // Get year levels for selected academic year
+            ?.map(level => (
+              <option key={level.yearLevel} value={level.yearLevel}>
+                Year {level.yearLevel}
+              </option>
+          ))}
+        </Form.Select>
+      </Form.Group>
+    </Col>
+    <Col md={2} className='mb-3'>
+      <Form.Group controlId="semester">
+        <Form.Label className='custom-color-green-font custom-font'>Semester</Form.Label>
+        <Form.Select value={selectedSemester} onChange={handleSemesterChange} className="border-success"
+          disabled={!selectedYearLevel || !selectedAcademicYear || !selectedProgram}>
+          <option value="">Select Semester</option>
+          {selectedYearData
+            ?.map((sem, index) => (
+              <option key={index} value={sem}>
+                {getSemesterText(sem)}
+              </option>
+          ))}
+        </Form.Select>
+      </Form.Group>
+    </Col>
+
+    <Col md={2} className='mb-3'>
+      <Form.Group controlId="sectionSelect">
+        <Form.Label className='custom-color-green-font custom-font'>Section</Form.Label>
+        <Form.Select value={selectedSection} onChange={handleSectionChange} className="border-success"
+          disabled={!selectedSemester}>
+          <option value="">All Sections</option>
+          {sectionOptions.map((section) => (
+            <option key={section} value={section}>
+              {section}
+            </option>
+          ))}
+        </Form.Select>
+      </Form.Group>
+    </Col>
+
+    {/* Aligning the "View" button beside the section */}
+    <Col md={2} className='mb-3'>
+      <Form.Group controlId="viewButton">
+        <Form.Label className="custom-color-green-font custom-font">Action</Form.Label>
+        <div className='d-flex align-items-center'>
+          <Button className="w-100 btn-success" onClick={handleView}>View</Button>
+        </div>
+      </Form.Group>
+    </Col>
+  </Row>
+</Form>
+
       
 
-        <Col md={4} className='mb-3'>
-        <Form.Group controlId="viewButton">
-            <Form.Label className="custom-color-green-font custom-font">Action</Form.Label>
-              <div className='d-flex'>
-                  <Button className="w-100 btn-success me-2" onClick={handleView}>View</Button>
-              </div>
-          </Form.Group>
-        </Col>
-      </Row>
-      </Form>
-      
-
-     
       <div id="printableTable" className="bg-white rounded pt-5 px-3 pb-3 table-responsive">
-    {Object.keys(groupedData).length === 0 || combinedData.length === 0 ? (
-      <div className="text-center py-5">
-        <h5 className="custom-color-green-font fs-5">No Data Available</h5>
-        <p className="fs-6">
-          Please ensure that all filters are applied or data is available to display.
-        </p>
-      </div>
-    ) : (
-      Object.entries(groupedData)
-        .sort(([sectionNumberA], [sectionNumberB]) =>
-          sectionNumberA.localeCompare(sectionNumberB)
-        )
-        .map(([sectionNumber, sectionData], sectionIndex) => (
-          <Table bordered hover key={sectionIndex} className="text-center mb-3">
-            {/* Table Header */}
-            <thead className="table-success">
-              <tr>
-                <th colSpan="3" className="custom-color-green-font fixed-width">{sectionNumber}</th>
-                {sectionData.personnelNames.map((personnelName, index) => (
-                  <th key={`personnel-${index}`} className="bg-success text-white fixed-width">
-                    {personnelName}
-                  </th>
-                ))}
-                <th colSpan={sectionData.courseCodes.length + 1} className="custom-color-green-font fixed-width">
-                  WEIGHTED GRADE AVERAGE
-                </th>
-              </tr>
-              <tr>
-                <th className="bg-success text-white fixed-width">ITEM</th>
-                <th className="bg-success text-white fixed-width">SNUMBER</th>
-                <th className="bg-success text-white student-name">STUDENT NAME</th>
-                {sectionData.courseCodes.map((courseCode, index) => (
-                  <th key={`course-${index}`} className="bg-success text-white fixed-width">
-                    {courseCode}
-                  </th>
-                ))}
-                {sectionData.courseCodes.map((courseCode, index) => (
-                  <th key={`course-grade-${index}`} className="bg-success text-white fixed-width">
-                    {courseCode}
-                  </th>
-                ))}
-                <th className="bg-success text-white fixed-width">WGA</th>
-              </tr>
-            </thead>
+      {Object.keys(groupedData).length === 0 || combinedData.length === 0 ? (
+        <div className="text-center py-5">
+          <h5 className="custom-color-green-font fs-5">No Data Available</h5>
+          <p className="fs-6">
+            Please ensure that all filters are applied or data is available to display.
+          </p>
+        </div>
+      ) : (
+        <>
+          {(selectedSection ? [[selectedSection, groupedData[selectedSection]]] : Object.entries(groupedData))
+            .filter(([sectionNumber]) => sectionNumber)
+            .map(([sectionNumber, sectionData], sectionIndex) => (
+              <div key={sectionIndex}>
+              {/* First Table for the section */}
+              <div className="mb-4">
+                {/* Information above the first table */}
+                <h5 className="text-center custom-color-green-font">ACADEMIC AFFAIRS</h5>
+                <p className="text-center">Institute</p>
+                <h6 className="text-center">SUMMARY OF GRADES</h6>
+                <p className="text-center">________SEMESTER, SCHOOL YEAR_________</p>
 
-            {/* Table Body */}
-            <tbody className="table-success">
-              {combinedData.filter((data) => data.sectionNumber === sectionNumber).length === 0 ? (
+                {/* Information rows */}
+                <div className="row">
+                  {/* Left Column */}
+                  <div className="col-6">
+                    <p><strong>SUBJECT CODE:</strong> 0</p>
+                    <p><strong>SUBJECT DESCRIPTION:</strong> 0</p>
+                    <p><strong>CREDIT UNITS:</strong> 0</p>
+                  </div>
+                  {/* Right Column */}
+                  <div className="col-6">
+                    <p><strong>DAY AND TIME:</strong> 0</p>
+                    <p><strong>FACULTY:</strong> 0</p>
+                    <p><strong>SECTION:</strong> 0</p>
+                  </div>
+                </div>
+              </div>
+
+
+
+            <Table bordered hover className="text-center mb-3">
+              {/* Table Header */}
+              <thead className="table-success">
                 <tr>
-                  <td colSpan={3 + sectionData.courseCodes.length * 2 + 2} className="no-data-row">
-                    No Student Data Available
-                  </td>
+                  <th rowSpan={2} className="custom-color-green-font fixed-width">
+                    STUDENT NO
+                  </th>
+                  <th rowSpan={2} className="custom-color-green-font fixed-width">
+                    STUDENT NAME
+                  </th>
+                  <th colSpan={4} className="custom-color-green-font fixed-width">
+                    MIDTERM %
+                  </th>
+                  <th colSpan={4} className="custom-color-green-font fixed-width">
+                    FINALS %
+                  </th>
+                  <th rowSpan={2} className="custom-color-green-font fixed-width">
+                    SEMESTRAL GRADE
+                  </th>
+                  <th rowSpan={2} className="custom-color-green-font fixed-width">
+                    NUMERICAL EQUIVALENT
+                  </th>
+                  <th rowSpan={2} className="custom-color-green-font fixed-width">
+                    REMARKS
+                  </th>
                 </tr>
-              ) : (
-                combinedData
-                  .filter((studentData) => studentData.sectionNumber === sectionNumber)
-                  .map((studentData, rowIndex) => (
-                    <tr key={rowIndex}>
-                      <td className="bg-white fixed-width">{rowIndex + 1}</td>
-                      <td className="bg-white fixed-width">{studentData.studentNumber}</td>
-                      <td className="bg-white student-name">{studentData.studentName}</td>
+                <tr>
+                  <th className="bg-success text-white fixed-width">CLASS STANDING %</th>
+                  <th className="bg-success text-white fixed-width">OUTCOME BASED ASSESSMENT %</th>
+                  <th className="bg-success text-white student-name">MIDTERM EXAM %</th>
+                  <th className="bg-success text-white student-name">MIDTERM GRADE</th>
+                  <th className="bg-success text-white fixed-width">CLASS STANDING %</th>
+                  <th className="bg-success text-white fixed-width">OUTCOME BASED ASSESSMENT %</th>
+                  <th className="bg-success text-white student-name">FINAL EXAM %</th>
+                  <th className="bg-success text-white student-name">FINAL GRADE</th>
+                </tr>
+              </thead>
+              {/* Table Body */}
+              <tbody>
+                {dummyData.map((student, index) => (
+                  <tr key={index}>
+                    <td>{student.studentNo}</td>
+                    <td>{student.studentName}</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>FAILED</td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
 
-                      {sectionData.courseCodes.map((courseCode, courseIndex) => (
-                        <td key={`course-${courseIndex}`} className="bg-white fixed-width">-</td>
-                      ))}
+            {/* Information above the second table */}
+            <div className="mb-4">
+              <h5 className="text-center custom-color-green-font">ACADEMIC AFFAIRS</h5>
+              <p className="text-center">Institute</p>
+              <h6 className="text-center">GRADE SHEET</h6>
+              <p className="text-center">________SEMESTER, SCHOOL YEAR_________</p>
+              <p className="text-center">DATE: 0</p>
 
-                      {sectionData.courseCodes.map((courseCode, courseIndex) => (
-                        <td key={`course-grade-${courseIndex}`} className="bg-white fixed-width">0.0</td>
-                      ))}
+              {/* Information rows */}
+              <div className="row">
+                {/* Left Column */}
+                <div className="col-6">
+                  <p><strong>SUBJECT CODE:</strong> 0</p>
+                  <p><strong>SUBJECT DESCRIPTION:</strong> 0</p>
+                  <p><strong>CREDIT UNITS:</strong> 0</p>
+                </div>
+                {/* Right Column */}
+                <div className="col-6">
+                  <p><strong>DAY AND TIME:</strong> 0</p>
+                  <p><strong>FACULTY:</strong> 0</p>
+                  <p><strong>SECTION:</strong> 0</p>
+                </div>
+              </div>
+            </div>
 
-                      <td className="bg-white fixed-width">0.0</td>
-                    </tr>
-                  ))
-              )}
-              <tr>
-                <td colSpan={sectionData.courseCodes.length * 2 + 5} style={{ background: "white" }}>
-                <Button
-                  variant="primary"
-                  onClick={() => handleShowModal(sectionNumber)}
-                  style={{
-                    width: '100%',
-                    backgroundColor: validatedSections.includes(sectionNumber) ? '#6c757d' : '#dc3545', // Gray when validated, Red when active
-                    borderColor: validatedSections.includes(sectionNumber) ? '#6c757d' : '#dc3545', // Same for border
-                    color: validatedSections.includes(sectionNumber) ? '#fff' : '#fff', // White text for both
-                    cursor: validatedSections.includes(sectionNumber) ? 'not-allowed' : 'pointer', // Disable cursor when validated
-                  }}
-                  disabled={validatedSections.includes(sectionNumber)} // Disable button if validated
-                >
-                  {validatedSections.includes(sectionNumber) ? 'VALIDATED!' : 'Validate'}
-                </Button>
 
-                </td>
-              </tr>
-            </tbody>
-          </Table>
-        ))
-    )}
-    {/* Validation Modal */}
-    <Modal show={showModal} onHide={handleCloseModal} centered>
-      <Modal.Header closeButton>
-        <Modal.Title>Validate Section</Modal.Title>
-      </Modal.Header>
-      <Modal.Body>
-        <p>( TENTAVITE LETTER )Are you sure you want to validate this for <strong>{currentSection}</strong>?</p>
-      </Modal.Body>
-      <Modal.Footer>
-        <Button variant="secondary" onClick={handleCloseModal}>
-          Cancel
-        </Button>
-        <Button variant="primary" onClick={handleValidate}>
-          Validate
-        </Button>
-      </Modal.Footer>
-    </Modal>
+            {/* Second Table for the section */}
+            <Table bordered hover className="text-center mb-3">
+              {/* Table Header */}
+              <thead className="table-success">
+                <tr>
+                  <th className="custom-color-green-font fixed-width">STUDENT NO</th>
+                  <th className="custom-color-green-font fixed-width">STUDENT NAME</th>
+                  <th className="custom-color-green-font fixed-width">MIDTERM %</th>
+                  <th className="custom-color-green-font fixed-width">FINALS %</th>
+                  <th className="custom-color-green-font fixed-width">SEMESTRAL GRADE</th>
+                  <th className="custom-color-green-font fixed-width">NUMERICAL EQUIVALENT</th>
+                  <th className="custom-color-green-font fixed-width">REMARKS</th>
+                </tr>
+              </thead>
+              {/* Table Body */}
+              <tbody>
+                {dummyData.map((student, index) => (
+                  <tr key={index}>
+                    <td>{student.studentNo}</td>
+                    <td>{student.studentName}</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>FAILED</td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+            
+
+
+
+
+                {/* Verify Button */}
+                <div className="d-flex justify-content-end">
+                  {verifiedSections[sectionNumber] ? (
+                    <>
+                      <Button variant="success" disabled>
+                        VERIFIED
+                      </Button>
+                      <Button vaiant="secondary" className="mx-2" onClick={printTable}>Print</Button>
+
+
+
+
+                    </>
+                  ) : (
+                    <Button variant="primary" className="mt-2" onClick={() => handleVerifyClick(sectionNumber)}>
+                      Verify
+                    </Button>
+                  )}
+                </div>
+              </div>
+            ))}
+        </>
+      )}
+
+      {/* Validation Modal */}
+      <Modal show={showModal} onHide={handleCloseModal} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Verification Section</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p>This is to formally acknowledge that the grades submitted by the faculty for the <strong>{currentSection}</strong> have been reviewed and approved by the (PROGRAM HEAD NAME). The grades are deemed accurate and final for submission to the Registrar’s Office for recording in the official academic records.</p>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleCloseModal}>
+            Cancel
+          </Button>
+          <Button variant="primary" onClick={handleValidate}>
+            Verify
+          </Button>
+        </Modal.Footer>
+      </Modal>
   </div>
 
       <Modal show={showModalAlert} onHide={closeShowModalAlert} centered>

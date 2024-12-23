@@ -176,15 +176,7 @@ export default function ProgramHeadDashboard() {
           onClick={() => handleSectionChange(SECTIONS.CSOG)} // Navigate to CSOG
         >
           <FontAwesomeIcon icon={faTable} className="me-2" />
-          CSOG
-        </Link>
-        <Link
-          to="/programHead-dashboard/mog"
-          className={`submenu-item d-flex align-items-center mb-2 ${location.pathname === '/programHead-dashboard/mog' ? 'active' : ''}`}
-          onClick={() => handleSectionChange(SECTIONS.MOG)} // Navigate to MOG
-        >
-          <FontAwesomeIcon icon={faClipboardList} className="me-2" />
-          MOG
+          Verification
         </Link>
       </div>
     )}
