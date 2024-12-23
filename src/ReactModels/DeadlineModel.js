@@ -6,28 +6,32 @@ export default class DeadlineModel {
     this.deadlineDate = deadlineDate;
   }
 
-  static async fetchDeadlinesBySchedule(scheduleNumber) {
+  static async fetchDeadlinesBySchedule(scheduleNumbers) {
     try {
-      const apiUrl = process.env.REACT_APP_API_URL; // Make sure this environment variable is set correctly
-      const response = await fetch(`${apiUrl}/deadline/bySchedules`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ scheduleNumber }),
-      });
-  
-      if (!response.ok) {
-        throw new Error('Error fetching deadlines');
-      }
-  
-      const data = await response.json();
-      return data;
+        console.log('Payload being sent:', { scheduleNumbers }); // Ensure you're sending an array
+        const apiUrl = process.env.REACT_APP_API_URL; // Verify this environment variable
+        const response = await fetch(`${apiUrl}/deadline/bySchedules`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ scheduleNumbers }), // Corrected key
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            console.error('Server error response:', errorData);
+            throw new Error(errorData.error || 'Error fetching deadlines');
+        }
+
+        const data = await response.json();
+        return data;
     } catch (error) {
-      console.error('Error fetching deadlines:', error);
-      throw error;
+        console.error('Error fetching deadlines:', error);
+        throw error;
     }
-  }
+}
+
   
 
   static async createAndInsertDeadline(newDeadlineData) {
