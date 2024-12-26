@@ -105,4 +105,26 @@ router.post('/upload', async (req, res) => {
     }
   });
 
+
+  router.put('/:studentNumber', async (req, res) => {
+    const { studentNumber } = req.params;
+    const updatedStudentData = req.body;
+
+    try {
+        const { data, error } = await supabase
+            .from('student')
+            .update(updatedStudentData)
+            .eq('studentNumber', studentNumber);
+
+        if (error) {
+            return res.status(500).json({ error: 'Failed to update student data' });
+        }
+
+        res.json(data);
+    } catch (error) {
+        console.error('Error updating student data:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 module.exports = router;

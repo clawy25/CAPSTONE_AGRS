@@ -151,5 +151,26 @@ export default class StudentModel {
           throw error; // Rethrow the error for further handling
       }
     }
+
+    static async updateStudent(studentNumber, updatedFields) {
+        try {
+          const response = await fetch(`/student/${studentNumber}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(updatedFields),
+          });
+    
+          if (!response.ok) {
+            throw new Error('Failed to update student data');
+          }
+    
+          return await response.json();
+        } catch (error) {
+          console.error('Error updating student:', error);
+          throw error;
+        }
+      }
   }
   

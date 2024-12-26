@@ -1,107 +1,178 @@
-import {useContext, useState, useEffect} from 'react';
-import { Row } from 'react-bootstrap';
-import { Link, useNavigate } from 'react-router-dom';
+import { useContext, useState, useEffect } from 'react';
+import { Form, Table, Button, Card } from 'react-bootstrap';
+import 'bootstrap/dist/css/bootstrap.min.css'; 
 import { UserContext } from '../Context/UserContext';
 import PersonnelModel from '../ReactModels/PersonnelModel';
 import AcademicYearModel from '../ReactModels/AcademicYearModel';
 
+export default function RegistrarProfile() {
+    const { user } = useContext(UserContext);
+    const [personnelInfo, setPersonnelInfo] = useState({});
+    const [editablePersonnelInfo, setEditablePersonnelInfo] = useState({});
+    const [isSaving, setIsSaving] = useState(false);
 
-export default function RegistrarProfile(){
+    // Synchronize editablePersonnelInfo with personnelInfo
+    useEffect(() => {
+        setEditablePersonnelInfo(personnelInfo);
+    }, [personnelInfo]);
 
-    const {user} = useContext(UserContext);
-    const [personnelInfo, setPersonnelInfo] = useState([]);
+    useEffect(() => {
+        fetchPersonnelData();
+    }, [user.personnelNumber]);
 
     const fetchPersonnelData = async () => {
         try {
-            // Fetch all academic years
             const academicYearData = await AcademicYearModel.fetchExistingAcademicYears();
-            console.log("Academic years:", academicYearData);
-    
-            // Find the current academic year
-            const currentAcademicYear = academicYearData.find(year => year.isCurrent);
+            const currentAcademicYear = academicYearData.find((year) => year.isCurrent);
+
             if (!currentAcademicYear) {
                 console.error("No current academic year found");
                 return;
             }
-            console.log("Current academic year:", currentAcademicYear.academicYear);
-    
-            // Fetch personnel data using programNumber and current academic year
-            const personnelData = await PersonnelModel.getProfessorsbyProgram(user.programNumber, currentAcademicYear.academicYear);
-            console.log("Personnel data:", personnelData);
 
-            const findPersonnel = personnelData.find(personnel => personnel.personnelNumber === user.personnelNumber);
-            console.log("Personnel matched",findPersonnel)
-    
+            const personnelData = await PersonnelModel.getProfessorsbyProgram(user.programNumber, currentAcademicYear.academicYear);
+            const findPersonnel = personnelData.find((personnel) => personnel.personnelNumber === user.personnelNumber);
+
             if (findPersonnel) {
                 setPersonnelInfo(findPersonnel);
             } else {
                 console.error("Cannot fetch the personnel data");
             }
-
-
         } catch (error) {
             console.error("Error in fetchPersonnelData:", error);
         }
     };
+
+    const updatePersonnelData = async (personnelData) => {
+        try {
+          // Make the API call but ignore the response
+          await PersonnelModel.updatePersonnel(user.personnelNumber, personnelData);
+      
+          console.log('Personnel data updated successfully.');
+          
+        } catch (error) {
+          console.error('Error in updatePersonnelData:', error.message || error);
+        }
+      };
+      
     
+    const handleInputChange = (field, value) => {
+        setEditablePersonnelInfo((prev) => ({
+            ...prev,
+            [field]: value,
+        }));
+    };
+    const getUpdatedFields = () => {
+        const { personnelContact, personnelEmail, personnelAddress } = editablePersonnelInfo;
+        return { personnelContact, personnelEmail, personnelAddress };
+    };
+        
+    const isUnchanged = JSON.stringify(personnelInfo) === JSON.stringify(editablePersonnelInfo);
 
-    useEffect(() => {
-        fetchPersonnelData()
-    }, [user.personnelNumber]) 
-
+    const validatePersonnelInfo = (personnelData) => {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const phoneRegex = /^\d{10,15}$/;
     
-    return(
-        <div className="card bg-white rounded">
-            <div className="card-header bg-white">
-                <p className="fs-5 fw-semibold my-2">{user.personnelNameLast}, {user.personnelNameFirst} {user.personnelNameMiddle} ({user.personnelNumber})</p>
-            </div>
-            <div className="card-body">
-                <div className="row d-flex justify-content-center align-items-center">
-                    <div className="col">
-                        <p className="fs-6">Personnel Number: </p>
-                        <p className="fs-6">Personnel Name: </p>
-                        <p className="fs-6">Gender: </p>
-                        <p className="fs-6">Date of Birth: </p>                    
-                    </div>
-                    <div className="col">
-                        <p className="fs-6 mb-2 fw-semibold">{user.personnelNumber}</p>
-                        <p className="fs-6 mb-3 fw-semibold">{user.personnelNameFirst} {user.personnelNameMiddle} {user.personnelNameLast}</p>
-                        <p className="fs-6 mb-2 fw-semibold">{personnelInfo.personnelSex}</p>
-                        <p className="fs-6 mb-2 fw-semibold">{personnelInfo.personnelBirthDate}</p>
-                    </div>
-                    <div className="col">
-                        <p className="fs-6">Personnel Type: </p>
-                        <p className="fs-6">Mobile No.: </p>
-                        <p className="fs-6">Email Address: </p>
-                        <p className="fs-6">Home Address: </p>
-                    </div>
-                    <div className="col">
-                        <p className="fs-6 mb-3 fw-semibold">{personnelInfo.personnelType}</p>
-                        <input 
-                            type="text" 
-                            className="fs-6 mb-3 fw-semibold" 
-                            value={personnelInfo.personnelContact || ''} 
-                            readOnly
-                        />
-                        <input 
-                            type="text" 
-                            className="fs-6 mb-3 fw-semibold d-block" 
-                            value={personnelInfo.personnelEmail || ''} 
-                            readOnly
-                        />
-                        <input 
-                            type="text" 
-                            className="fs-6 mb-2 fw-semibold" 
-                            value={personnelInfo.personnelAddress || ''} 
-                            readOnly
-                        />
-                    </div>
-                </div>
-            </div>
-            <div className="card-footer p-2 bg-white">
-                <button className="btn btn-success">Save</button>
-            </div>
-        </div>
-
-    )
+        if (!emailRegex.test(personnelData.personnelEmail)) {
+            alert("Please enter a valid email address.");
+            return false;
+        }
+    
+        if (!phoneRegex.test(personnelData.personnelContact)) {
+            alert("Please enter a valid contact number (10-15 digits).");
+            return false;
+        }
+    
+        if (!personnelData.personnelAddress || personnelData.personnelAddress.trim() === "") {
+            alert("Home address cannot be empty.");
+            return false;
+        }
+    
+        return true;
+    };
+    
+    return (
+        <Card className="bg-white rounded">
+            <Card.Header className="bg-white">
+                <p className="fs-5 fw-semibold my-2">
+                    {user.personnelNameLast}, {user.personnelNameFirst} {user.personnelNameMiddle} ({user.personnelNumber})
+                </p>
+            </Card.Header>
+            <Card.Body>
+            <Table>
+                <tbody>
+                    <tr>
+                        <td>Personnel Number</td>
+                        <td className='fs-6 fw-semibold'>{user.personnelNumber}</td>
+                    </tr>
+                    <tr>
+                        <td>Personnel Name</td>
+                        <td className='fs-6 fw-semibold'>
+                            {user.personnelNameFirst} {user.personnelNameMiddle} {user.personnelNameLast}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Gender</td>
+                        <td className='fs-6 fw-semibold'>{editablePersonnelInfo.personnelSex || '-'}</td>
+                    </tr>
+                    <tr>
+                        <td>Date of Birth</td>
+                        <td className='fs-6 fw-semibold'>{editablePersonnelInfo.personnelBirthDate || '-'}</td>
+                    </tr>
+                    <tr>
+                        <td>Personnel Type</td>
+                        <td className='fs-6 fw-semibold'>{editablePersonnelInfo.personnelType || '-'}</td>
+                    </tr>
+                    <tr>
+                        <td>Mobile No.</td>
+                        <td>
+                            <Form.Control
+                                type="text"
+                                value={editablePersonnelInfo.personnelContact || ''}
+                                onChange={(e) => handleInputChange('personnelContact', e.target.value)}
+                                className='fs-6 fw-semibold'
+                            />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Email Address</td>
+                        <td>
+                            <Form.Control
+                                type="text"
+                                value={editablePersonnelInfo.personnelEmail || ''}
+                                onChange={(e) => handleInputChange('personnelEmail', e.target.value)}
+                                className='fs-6 fw-semibold'
+                            />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Home Address</td>
+                        <td>
+                            <Form.Control
+                                type="text"
+                                value={editablePersonnelInfo.personnelAddress || ''}
+                                onChange={(e) => handleInputChange('personnelAddress', e.target.value)}
+                                className='fs-6 fw-semibold'
+                            />
+                        </td>
+                    </tr>
+                </tbody>
+            </Table>
+            </Card.Body>
+            <Card.Footer className="p-2 bg-white">
+            <Button
+                variant="success"
+                disabled={isUnchanged}
+                onClick={() => {
+                    const updatedFields = getUpdatedFields();
+                    if (validatePersonnelInfo(updatedFields)) {
+                        updatePersonnelData(updatedFields);
+                    }
+                }}
+            >
+            {isSaving ? "Saving..." : "Save"}
+            </Button>
+            </Card.Footer>
+        </Card>
+    );
 }

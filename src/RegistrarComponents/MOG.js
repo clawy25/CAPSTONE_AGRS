@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { Form, Row, Col, Button, Modal, Table } from 'react-bootstrap';
+import 'bootstrap/dist/css/bootstrap.min.css'; 
 import * as XLSX from 'sheetjs-style'; // Use sheetjs-style for formatting
 import ProgramModel from '../ReactModels/ProgramModel'; // Ensure this path is correct
 import jsPDF from "jspdf";
@@ -73,7 +74,7 @@ const fetchStudentData = async (programNumber, batchYear) => {
       ScheduleModel.fetchAllSchedules(),
     ]);
 
-    console.log('semestersData:', semestersData);
+    //console.log('semestersData:', semestersData);
 
     const semGradeDataPromises = enrolledStudents.map((enrollment) =>
       SemGradeModel.fetchSemGradeData(enrollment.scheduleNumber)
@@ -83,7 +84,7 @@ const fetchStudentData = async (programNumber, batchYear) => {
     // Flatten the array if fetchSemGradeData returns arrays
     const semGradeData = semGradeDataArray.flat();
 
-    console.log('semGradeData:', semGradeData);
+    //console.log('semGradeData:', semGradeData);
 
     // Combine data from students, enrollment, and schedules
     const combinedData = studentsData.map((student) => {
@@ -92,12 +93,10 @@ const fetchStudentData = async (programNumber, batchYear) => {
       );
 
       // Log warning if no enrollments are found for the student
-      if (studentEnrollments.length === 0) {
-        console.warn(
-          `No enrollments found for student: ${student.studentNumber}`
-        );
+      {if (studentEnrollments.length === 0) {
+        //console.warn(`No enrollments found for student: ${student.studentNumber}`);
         return null; // Exclude students with no enrollments
-      }
+      }}
 
       // Map courses for the student
       const courses = studentEnrollments.map((enrollment) => {
@@ -144,7 +143,7 @@ const fetchStudentData = async (programNumber, batchYear) => {
     // Filter out null values (students with no enrollments)
     const validData = combinedData.filter((student) => student !== null);
 
-    console.log('Grouped Student Data:', validData);
+    //console.log('Grouped Student Data:', validData);
 
     // Normalize values for filtering
     const normalizedProgramNumber = String(programNumber);
@@ -157,7 +156,7 @@ const fetchStudentData = async (programNumber, batchYear) => {
         String(student.studentAdmissionYear) === normalizedBatchYear
     );
 
-    console.log('Filtered Student Data:', filteredData);
+    //console.log('Filtered Student Data:', filteredData);
 
     return filteredData;
   } catch (error) {
@@ -170,14 +169,14 @@ const fetchCurriculum = async (programNumber, batchYear) => {
   try {
     // Fetch all courses
     const curricullumCourse = await CourseModel.fetchAllCourses();
-    console.log("Courses:", curricullumCourse);
+    //console.log("Courses:", curricullumCourse);
 
     const programData = await ProgramModel.fetchProgramData(programNumber); // Updated to programNumber
-    console.log("Programs:", programData);
+    //console.log("Programs:", programData);
 
     // Extract the length of the program
     const programLength = programData.programNumOfYear; // This should provide the number of years
-    console.log("Program Length (Years):", programLength);
+    //console.log("Program Length (Years):", programLength);
 
     // Filter courses by selected programNumber
     const filteredCourses = curricullumCourse.filter(
@@ -229,9 +228,10 @@ const fetchCurriculum = async (programNumber, batchYear) => {
       academicYears.push(`${startYear}-${endYear}`);
     }
 
-    console.log("Academic Years:", academicYears);
-
-    return { groupedCourses, academicYears, programLength }; // Return grouped courses, academic years, and program length
+//    console.log("Academic Years:", academicYears);
+    setSemestersData(groupedCourses); 
+    setAcademicYears(academicYears);
+    return { programLength }; // Return grouped courses, academic years, and program length
   } catch (error) {
     console.error("Failed to fetch Curriculum data:", error);
     return {};
@@ -249,11 +249,9 @@ const fetchCurriculum = async (programNumber, batchYear) => {
       setStudents([]);
       setAcademicYears([]);
       try {
-        const { groupedCourses, academicYears } = await fetchCurriculum(programCode, batchYear);
+        fetchCurriculum(programCode, batchYear);
         const filteredStudents = await fetchStudentData(programCode, batchYear);
-        setSemestersData(groupedCourses); // Update semestersData
         setStudents(filteredStudents); // Update students data
-        setAcademicYears(academicYears); // Update academic years
       } catch (error) {
         console.error("Error fetching data:", error);
         // Optionally, display an error modal here

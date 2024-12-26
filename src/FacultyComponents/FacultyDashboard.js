@@ -15,6 +15,8 @@ import PersonnelModel from '../ReactModels/PersonnelModel'
 import StudentModel from '../ReactModels/StudentModel';
 import TimelineModel from '../ReactModels/TimelineModel';
 import EnrollmentModel from '../ReactModels/EnrollmentModel'
+import NewPassword from '../RegistrarComponents/NewPassword';
+import RegistrarProfile from '../RegistrarComponents/RegistrarProfile';
 import './PrintStyles.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { UserContext } from '../Context/UserContext';
@@ -804,26 +806,11 @@ export default function FacultyDashboard () {
         )}
 
         {selectedSection === SECTIONS.PROFILE && (
-          <section className="card border-success p-3">
-            <h2 className='custom-color-green-font custom-font'>Profile</h2>
-            <div className="custom-font custom-color-green-font fs-6 mb-2">Faculty ID: 2020-00202-PQ-O</div>
-            <input type="text" placeholder="First Name" className="form-control custom-color-green-font mb-2" required />
-            <input type="text" placeholder="Last Name" className="form-control custom-color-green-font mb-2" required />
-            <input type="email" placeholder="Email" className="form-control custom-color-green-font mb-2" required />
-            <button className="btn custom-color-font bg-custom-color-green p-2" onClick={() => alert('Profile information saved!')}>
-              Save
-            </button>
-          </section>
+          <RegistrarProfile />
         )}
 
         {selectedSection === SECTIONS.CHANGE_PASSWORD && (
-          <section className="card border-success p-3">
-            <h2 className='custom-color-green-font custom-font'>Change Password</h2>
-            <input type="password" placeholder="New Password" className="form-control custom-color-green-font mb-2" required />
-            <button className="btn custom-color-font bg-custom-color-green p-2" onClick={() => alert('Password changed successfully!')}>
-              Save
-            </button>
-          </section>
+          <NewPassword />
         )}
       </div>
     </div>

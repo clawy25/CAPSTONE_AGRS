@@ -12,6 +12,7 @@ import ProgramHeadCSOG from './ProgramHeadCSOG';
 import PersonnelModel from '../ReactModels/PersonnelModel';
 import AcademicYearModel from '../ReactModels/AcademicYearModel';
 import RegistrarProfile from '../RegistrarComponents/RegistrarProfile';
+import NewPassword from '../RegistrarComponents/NewPassword';
 
 export default function ProgramHeadDashboard() {
   const navigate = useNavigate();
@@ -65,17 +66,6 @@ export default function ProgramHeadDashboard() {
     }, [user.personnelNumber]) 
   const dropdownRef = useRef(null);
 
-  // Constants for section names
-  const SECTIONS = {
-    GRADES: 'grades',
-    CLASSDESIGNATION: 'classDesignation',
-    HRIS: 'hris',
-    PROFILE: 'profile',
-    CHANGEPASSWORD: 'change-password',
-    CURRICULUM: 'curriculum',
-    MOG: 'mog',
-    CSOG: 'csog',
-  };
 
   // Toggle Grades submenu visibility
   const toggleGradeSubMenu = () => {
@@ -119,7 +109,6 @@ export default function ProgramHeadDashboard() {
 
   // Highlight CSOG by default when Grades is clicked
   const handleGradesClick = () => {
-    setSelectedSection(SECTIONS.CSOG); // Set CSOG as default section within Grades
     setShowGradesSubMenu(true); // Open submenu by default
   };
 
@@ -159,7 +148,7 @@ export default function ProgramHeadDashboard() {
           <div className="menu-item-wrapper">
     {/* Grades Section Link */}
     <div
-      className={`menu-item d-flex align-items-center mb-2 ${selectedSection === SECTIONS.GRADES || selectedSection === SECTIONS.CSOG || selectedSection === SECTIONS.MOG ? 'active' : ''}`}
+      className={`menu-item d-flex align-items-center mb-2 `}
       onClick={() => {
         setShowGradesSubMenu(!showGradesSubMenu);
       }} // Ensure submenu toggles when Grades is clicked
@@ -173,7 +162,7 @@ export default function ProgramHeadDashboard() {
         <Link
           to="/programHead-dashboard/csog"
           className={`submenu-item d-flex align-items-center mb-2 ${location.pathname === '/programHead-dashboard/csog' ? 'active' : ''}`}
-          onClick={() => handleSectionChange(SECTIONS.CSOG)} // Navigate to CSOG
+         // Navigate to CSOG
         >
           <FontAwesomeIcon icon={faTable} className="me-2" />
           Verification
@@ -239,7 +228,7 @@ export default function ProgramHeadDashboard() {
                 <button className="dropdown-item" onClick={() => navigate('/programhead-dashboard/profile')}>
                   Profile
                 </button>
-                <button className="dropdown-item" onClick={() => { handleSectionChange(SECTIONS.CHANGEPASSWORD); setShowDropdown(false); }}>
+                <button className="dropdown-item" onClick={() => navigate('/programhead-dashboard/change-password')}>
                   Change Password
                 </button>
                 <button className="dropdown-item" onClick={handleLogout}>
@@ -307,15 +296,6 @@ export default function ProgramHeadDashboard() {
       </div>
         )}   */}
 
-        {selectedSection === 'change-password' && (
-          <section className="card border-success p-3">
-            <h2 className="custom-color-green-font custom-font">Change Password</h2>
-            <input type="password" placeholder="New Password" className="form-control custom-color-green-font mb-2" required />
-            <button className="btn custom-color-font bg-custom-color-green p-2" onClick={() => alert('Password changed successfully!')}>
-              Save
-            </button>
-          </section>
-        )}
         </div>
 
         <Routes>
@@ -327,6 +307,7 @@ export default function ProgramHeadDashboard() {
               selectedProgram={selectedProgram}/>} />
           <Route path="curriculum" element={<CurriculumPage />} />
           <Route path="profile" element={<RegistrarProfile />}/>
+          <Route path="change-password" element={<NewPassword />}/>
         </Routes>
       </div>
     </div>

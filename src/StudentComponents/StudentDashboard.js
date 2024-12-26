@@ -9,6 +9,7 @@ import StudentSchedule from './StudentSchedule';
 import StudentGrades from './StudentGrades';
 import { UserContext } from '../Context/UserContext';
 import StudentProfile from './StudentProfile';
+import StudentChangePassword from './StudentChangePassword';
 
 export default function StudentDashboard() {
   const navigate = useNavigate();
@@ -125,7 +126,7 @@ export default function StudentDashboard() {
                 <button className="dropdown-item" onClick={() => navigate('/student-dashboard/profile')}>
                   Profile
                 </button>
-                <button className="dropdown-item" onClick={handleChangePasswordClick}>
+                <button className="dropdown-item" onClick={() => navigate('/student-dashboard/change-password')}>
                   Change Password
                 </button>
                 <button className="dropdown-item" onClick={handleLogout}>
@@ -153,6 +154,7 @@ export default function StudentDashboard() {
           <Route path="schedule" element={<StudentSchedule />} /> {/* Sections as submenu */}
           <Route path="grades" element={<StudentGrades />} />
           <Route path="profile" element={<StudentProfile />} />
+          <Route path="change-password" element={<StudentChangePassword />} />
         </Routes>   
       </div>
     </div>

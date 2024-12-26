@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useContext } from 'react';
 import { Form, Row, Col, Button, Modal, Table } from 'react-bootstrap';
+import 'bootstrap/dist/css/bootstrap.min.css'; 
 import { UserContext } from '../Context/UserContext';
 import StudentModel from '../ReactModels/StudentModel';
 import CourseModel from '../ReactModels/CourseModel';
@@ -41,26 +42,16 @@ export default function Grades(){
           (student) => student.studentNumber === studentNumber
         );
     
-        if (!student) {
-          console.warn(`No student found with studentNumber: ${studentNumber}`);
-          return null;
-        }
+
     
         // Fetch the student's enrollments
         const studentEnrollments = enrolledStudents.filter(
           (enrollment) => enrollment.studentNumber === studentNumber
         );
     
-        if (studentEnrollments.length === 0) {
-          console.warn(`No enrollments found for student: ${studentNumber}`);
-          return null;
-        }
-    
         // Map courses for the student
         const courses = studentEnrollments.map((enrollment) => {
-          const schedule = scheduleData.find(
-            (schedule) => schedule.scheduleNumber === enrollment.scheduleNumber
-          );
+
           const course = courseData.find(
             (course) => course.courseCode === enrollment.courseCode
           );
@@ -112,7 +103,7 @@ export default function Grades(){
       try {
         // Fetch all courses
         const curricullumCourse = await CourseModel.fetchAllCourses();
-        console.log("Courses:", curricullumCourse);
+        //console.log("Courses:", curricullumCourse);
     
         // Filter courses by selected programNumber
         const filteredCourses = curricullumCourse.filter(
@@ -155,9 +146,7 @@ export default function Grades(){
   
           return acc;
         }, {});
-  
-    
-        console.log("Grouped Courses by Year and Semester:", groupedCourses);
+        //console.log("Grouped Courses by Year and Semester:", groupedCourses);
         
         setCurriculum(groupedCourses);
       } catch (error) {
