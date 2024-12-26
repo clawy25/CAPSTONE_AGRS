@@ -12,6 +12,8 @@ import StudentModel from '../ReactModels/StudentModel';
 import EnrollmentModel from '../ReactModels/EnrollmentModel';
 import ScheduleModel from '../ReactModels/ScheduleModel';
 import PersonnelModel from '../ReactModels/PersonnelModel';
+import SemGradeModel from '../ReactModels/SemGradeModel';
+import CourseModel from '../ReactModels/CourseModel';
 import '../App.css';
 
 
@@ -22,7 +24,6 @@ const MasterlistOfGradesTable = () => {
   const [program, setProgram] = useState('');
   //const [sections, setSections] = useState(Array(8).fill(null).map((_, index) => `Section ${index + 1}`));
   const [sections, setSections] = useState([]);
-
   const [academicYears, setAcademicYears] = useState([]);
   const [yearLevels, setYearLevels] = useState([]);
   const [programs, setPrograms] = useState([]);
@@ -123,6 +124,18 @@ const MasterlistOfGradesTable = () => {
         return;
       }
   
+      const coursesData = await CourseModel.fetchAllCourses();
+  
+      // Create a map of course codes to course details for quick lookup
+      const courseDetailsMap = coursesData.reduce((map, course) => {
+        map[course.courseCode] = {
+          courseDescriptiveTitle: course.courseDescriptiveTitle || '-',
+          courseLecture: course.courseLecture || 0, // Assuming lecture units are numerical
+          courseLaboratory: course.courseLaboratory || 0, // Assuming lab units are numerical
+        };
+        return map;
+      }, {});
+  
       // Fetch sections filtered by the selected criteria
       const sectionData = await SectionModel.fetchExistingSections(
         selectedAcademicYear,
@@ -130,7 +143,6 @@ const MasterlistOfGradesTable = () => {
         semester,
         selectedProgramNumber
       );
-    
   
       // Extract section numbers from sectionData and sort them in ascending order
       const sectionNumbers = sectionData
@@ -146,12 +158,12 @@ const MasterlistOfGradesTable = () => {
             return parseInt(numA) - parseInt(numB);
           }
   
-          // If numeric parts are the same, compare the alphanumeric part (HM41A, HM41B, etc.)
+          // If numeric parts are the same, compare the alphanumeric part
           if (alphaA !== alphaB) {
             return alphaA.localeCompare(alphaB);
           }
   
-          // If both numeric and alpha parts are the same, compare the suffixes (e.g., B, C, etc.)
+          // If both numeric and alpha parts are the same, compare the suffixes
           return suffixA.localeCompare(suffixB);
         });
   
@@ -178,71 +190,135 @@ const MasterlistOfGradesTable = () => {
         return map;
       }, {});
   
-  
-      // Group course codes and assigned personnel by section number
+      // Group course-related information (courseCode, personnelNames, courseDetails) by section number
       const groupedData = filteredSchedules.reduce((acc, schedule) => {
         const { sectionNumber, courseCode, personnelNumber } = schedule;
         const personnelLastName = personnelNameLastMap[personnelNumber] || "Unknown";
+        const courseDetails = courseDetailsMap[courseCode] || {
+          courseDescriptiveTitle: '-',
+          courseLecture: 0,
+          courseLaboratory: 0,
+        };
+  
+        // Calculate total units (lecture + laboratory)
+        const totalUnits = courseDetails.courseLecture + courseDetails.courseLaboratory;
   
         // Initialize section entry if not already present
         if (!acc[sectionNumber]) {
-          acc[sectionNumber] = { courseCodes: [], personnelNames: [] };
+          acc[sectionNumber] = { courses: [] }; // Now `courses` will hold course-related data
         }
   
-        // Add the course code to the section's list
-        acc[sectionNumber].courseCodes.push(courseCode);
-  
-        // Always append the personnel's last name for each course code, even if redundant
-        acc[sectionNumber].personnelNames.push(personnelLastName);
+        // Add the course data to the section's courses list
+        acc[sectionNumber].courses.push({
+          courseCode,
+          personnelLastName,
+          courseDescriptiveTitle: courseDetails.courseDescriptiveTitle,
+          courseLecture: courseDetails.courseLecture,
+          courseLaboratory: courseDetails.courseLaboratory,
+          totalUnits, // Add total units to the course data
+        });
   
         return acc;
       }, {});
   
       // Save the grouped data to state for rendering
       setGroupedData(groupedData);
+      console.log('groupedData', groupedData);
+  
     } catch (error) {
       console.error("Error fetching courses:", error);
     }
   };
-
+  
   const fetchStudentData = async () => {
     try {
-      // Fetch only the necessary data from the models
+      // Fetch necessary data
       const studentsData = await StudentModel.fetchExistingStudents();
-  
       const enrolledStudents = await EnrollmentModel.fetchAllEnrollment();
-  
       const scheduleData = await ScheduleModel.fetchAllSchedules(selectedAcademicYear);
+      const coursesData = await CourseModel.fetchAllCourses(); // Fetch courses data
   
-      // Combine the data and remove duplicates by studentNumber
-      const combinedData = enrolledStudents.map((enrollment) => {
-        // Match student details
-        const student = studentsData.find(
-          (student) => student.studentNumber === enrollment.studentNumber
-        );
+      // Combine and group data by studentNumber
+      const combinedData = await Promise.all(
+        enrolledStudents.map(async (enrollment) => {
+          // Match student details
+          const student = studentsData.find(
+            (student) => student.studentNumber === enrollment.studentNumber
+          );
   
-        // Match schedule details
-        const schedule = scheduleData.find(
-          (schedule) => schedule.scheduleNumber === enrollment.scheduleNumber
-        );
+          // Match schedule details
+          const schedule = scheduleData.find(
+            (schedule) => schedule.scheduleNumber === enrollment.scheduleNumber
+          );
   
-        return {
-          studentNumber: enrollment.studentNumber,
-          studentName: student
-            ? `${student.studentNameFirst} ${student.studentNameMiddle || ''} ${student.studentNameLast}`
-            : 'Unknown',
-          sectionNumber: schedule ? schedule.sectionNumber : null,
-          scheduleNumber: enrollment.scheduleNumber,
-        };
-      });
+          // Fetch semester grades based on scheduleNumber
+          const semesterGrades = await SemGradeModel.fetchSemGradeData(
+            enrollment.scheduleNumber
+          );
   
-      // Remove duplicates based on studentNumber
-      const distinctData = combinedData.filter(
-        (value, index, self) =>
-          index === self.findIndex((t) => t.studentNumber === value.studentNumber)
+          // Find the grade for the student based on studentNumber and scheduleNumber
+          const studentGrade = semesterGrades.find(
+            (grade) => grade.studentNumber === enrollment.studentNumber
+          );
+  
+          // Separate scheduleNumber, studentGrade, and courseCode into arrays
+          const scheduleNumber = enrollment.scheduleNumber || null;
+          const grade = studentGrade ? studentGrade.grade : 0;
+          const courseCode = schedule?.courseCode || null;
+  
+          // Fetch the course details based on courseCode
+          const course = coursesData.find(course => course.courseCode === courseCode);
+          const courseDescription = course ? course.courseDescriptiveTitle : '-';
+          const courseLecture = course ? course.courseLecture : '-';
+          const courseLaboratory = course ? course.courseLaboratory : '-';
+  
+          return {
+            studentNumber: enrollment.studentNumber,
+            studentName: student
+              ? `${student.studentNameFirst} ${student.studentNameMiddle || ''} ${student.studentNameLast}`
+              : 'Unknown',
+            sectionNumber: schedule?.sectionNumber || null,
+            scheduleNumber,
+            studentGrade: grade,
+            courseCode,
+            courseDescription,
+            courseLecture,
+            courseLaboratory,
+          };
+        })
       );
   
-      // Set the distinct data to the state
+      // Group data by studentNumber to ensure each student is distinct
+      const distinctData = combinedData.reduce((acc, current) => {
+        const existing = acc.find((item) => item.studentNumber === current.studentNumber);
+  
+        if (!existing) {
+          // If student doesn't exist yet, create a new entry
+          acc.push({
+            studentNumber: current.studentNumber,
+            studentName: current.studentName,
+            sectionNumber: current.sectionNumber,
+            scheduleNumbers: [current.scheduleNumber],
+            studentGrades: [current.studentGrade],
+            courseCodes: [current.courseCode],
+            courseDescriptions: [current.courseDescription],
+            courseLectures: [current.courseLecture],
+            courseLaboratories: [current.courseLaboratory],
+          });
+        } else {
+          // If student already exists, push the new schedule data to arrays
+          existing.scheduleNumbers.push(current.scheduleNumber);
+          existing.studentGrades.push(current.studentGrade);
+          existing.courseCodes.push(current.courseCode);
+          existing.courseDescriptions.push(current.courseDescription);
+          existing.courseLectures.push(current.courseLecture);
+          existing.courseLaboratories.push(current.courseLaboratory);
+        }
+  
+        return acc;
+      }, []);
+  
+      // Set the distinct data to state
       setCombinedData(distinctData);
   
       return distinctData;
@@ -250,8 +326,7 @@ const MasterlistOfGradesTable = () => {
       console.error('Failed to fetch student data:', error);
     }
   };
-  
-  
+
   useEffect(() => {
     fetchAcademicYearsAndPrograms();
   }, [user.programNumber]);
@@ -304,6 +379,65 @@ const MasterlistOfGradesTable = () => {
         return `${sem}`;
     }
   };
+
+  function getGradeDescription(grade) {
+    // Handle special cases for 'INC', 'NC', 'OD', 'FA', 'UD'
+    const specialGrades = {
+      'INC': 'Incomplete',
+      'NC': 'No Credit',
+      'OD': 'Officially Dropped',
+      'FA': 'Failure due to Excessive Absences',
+      'UD': 'Unofficially Dropped'
+    };
+    
+    // If the grade is a string (like 'INC', 'NC', etc.), return the special description
+    if (typeof grade === 'string') {
+      return specialGrades[grade] || 'Invalid Grade';
+    }
+  
+    // Handle numeric grades with the provided grade values
+    if (grade === 1.00) return 'Excellent';
+    if (grade === 1.25) return 'Superior';
+    if (grade === 1.50) return 'Very Good';
+    if (grade === 1.75) return 'Good';
+    if (grade === 2.00) return 'Meritorious';
+    if (grade === 2.25) return 'Very Satisfactory';
+    if (grade === 2.50) return 'Satisfactory';
+    if (grade === 2.75) return 'Fairly Satisfactory';
+    if (grade === 3.00) return 'Passing';
+    if (grade === 5.00) return 'Failed';
+  
+    return 'Invalid Grade'; // If the grade doesn't match any of the specified values
+  }
+  
+
+  function calculateGWA(studentGrades) {
+    if (studentGrades.length === 0) return 0; // Return 0 if there are no grades
+  
+    // Calculate the sum of the grades
+    const totalGrades = studentGrades.reduce((acc, grade) => acc + grade, 0);
+  
+    // Calculate the General Weighted Average (GWA)
+    const gwa = totalGrades / studentGrades.length;
+    
+    return gwa.toFixed(2); // Return GWA rounded to 2 decimal places
+  }
+
+  function calculateGradeSum(values) {
+    if (!Array.isArray(values) || values.length === 0) return 0;
+  
+    const total = values.reduce((acc, value) => {
+      if (typeof value === 'number' && !isNaN(value)) {
+        return acc + value;
+      } else {
+        console.warn("Invalid value encountered:", value); // Log invalid values
+        return acc; // Ignore invalid values
+      }
+    }, 0);
+  
+    return total;
+  }
+  
   
   const selectedProgramData = mappedData?.filter(p => p.academicYear === selectedAcademicYear)
                                         ?.flatMap(p => p.programs)
@@ -593,7 +727,7 @@ const MasterlistOfGradesTable = () => {
         <h2>Summary of Grades</h2>
         <h2>${fullProgramName}</h2>
         <h2>${yearLevel}</h2>
-        <h2>${semester} Semester S.Y. ${academicYear}</h2>
+        <h2>${semester} Semester S.Y. ${selectedAcademicYear}</h2>
       </div>
     `);
   
@@ -615,7 +749,6 @@ const MasterlistOfGradesTable = () => {
   
   const openModal = (student) => {
     setShowModal(true);
-    console.log('sstudent',student)
     setSelectedStudent(student);
   };
 
@@ -800,6 +933,7 @@ const MasterlistOfGradesTable = () => {
     printWindow.document.close();
   };
   
+  
   return (
     <div>
       <Form className="p-3 mb-4 bg-white border border-success rounded">
@@ -924,74 +1058,96 @@ const MasterlistOfGradesTable = () => {
           </div>
         ) : (
           Object.entries(groupedData)
-            .sort(([sectionNumberA], [sectionNumberB]) =>
-              sectionNumberA.localeCompare(sectionNumberB)
-            )
-            .map(([sectionNumber, sectionData], sectionIndex) => (
-              <Table bordered hover key={sectionIndex} className="text-center mb-3">
-                {/* Table Header */}
-                <thead className="table-success">
-                  <tr>
-                    <th colSpan="3" className="custom-color-green-font fixed-width">{sectionNumber}</th>
-                    {sectionData.personnelNames.map((personnelName, index) => (
-                      <th key={`personnel-${index}`} className="bg-success text-white fixed-width">
-                        {personnelName}
-                      </th>
-                    ))}
-                    <th colSpan={sectionData.courseCodes.length + 1} className="custom-color-green-font fixed-width">
-                      WEIGHTED GRADE AVERAGE
+          .sort(([sectionNumberA], [sectionNumberB]) =>
+            sectionNumberA.localeCompare(sectionNumberB)
+          )
+          .map(([sectionNumber, sectionData], sectionIndex) => (
+            <Table bordered hover key={sectionIndex} className="text-center mb-3">
+              {/* Table Header */}
+              <thead className="table-success">
+                <tr>
+                  <th colSpan="3" className="custom-color-green-font fixed-width">
+                    {sectionNumber}
+                  </th>
+                  {sectionData.courses.map((course, index) => (
+                    <th key={`course-${index}`} className="bg-success text-white fixed-width">
+                      {course.personnelLastName}
                     </th>
-                    <th rowSpan={2} className="custom-color-green-font fixed-width">Certificate of Grades (COG)</th>
-                  </tr>
+                  ))}
+                  <th colSpan={sectionData.courses.length + 1} className="custom-color-green-font fixed-width">
+                    WEIGHTED GRADE AVERAGE
+                  </th>
+                  <th rowSpan={2} className="custom-color-green-font fixed-width">
+                    Certificate of Grades (COG)
+                  </th>
+                </tr>
+                <tr>
+                  <th className="bg-success text-white fixed-width">ITEM</th>
+                  <th className="bg-success text-white fixed-width">SNUMBER</th>
+                  <th className="bg-success text-white student-name">STUDENT NAME</th>
+                  {sectionData.courses.map((course, index) => (
+                    <th key={`course-grade-${index}`} className="bg-success text-white fixed-width">
+                      {course.courseCode}
+                    </th>
+                  ))}
+                  {sectionData.courses.map((course, index) => (
+                    <th key={`course-grade-${index}`} className="bg-success text-white fixed-width">
+                      {course.courseCode}
+                    </th>
+                  ))}
+                  <th className="bg-success text-white fixed-width">WGA</th>
+                </tr>
+              </thead>
+        
+              {/* Table Body */}
+              <tbody className="table-success">
+                {/* Check if there’s no student data for this section */}
+                {combinedData.filter((data) => data.sectionNumber === sectionNumber).length === 0 ? (
                   <tr>
-                    <th className="bg-success text-white fixed-width">ITEM</th>
-                    <th className="bg-success text-white fixed-width">SNUMBER</th>
-                    <th className="bg-success text-white student-name">STUDENT NAME</th>
-                    {sectionData.courseCodes.map((courseCode, index) => (
-                      <th key={`course-${index}`} className="bg-success text-white fixed-width">
-                        {courseCode}
-                      </th>
-                    ))}
-                    {sectionData.courseCodes.map((courseCode, index) => (
-                      <th key={`course-grade-${index}`} className="bg-success text-white fixed-width">
-                        {courseCode}
-                      </th>
-                    ))}
-                    <th className="bg-success text-white fixed-width">WGA</th>
+                    <td colSpan={3 + sectionData.courses.length + 5} className="no-data-row">
+                      No Student Data Available
+                    </td>
                   </tr>
-                </thead>
-
-                {/* Table Body */}
-                <tbody className="table-success">
-                  {/* Check if there’s no student data for this section */}
-                  {combinedData.filter((data) => data.sectionNumber === sectionNumber).length === 0 ? (
-                    <tr>
-                      <td colSpan={3 + sectionData.courseCodes.length * 2 + 2} className="no-data-row">
-                        No Student Data Available
-                      </td>
-                    </tr>
-                  ) : (
-                    combinedData
-                      .filter((studentData) => studentData.sectionNumber === sectionNumber)
-                      .map((studentData, rowIndex) => (
+                ) : (
+                  combinedData
+                    .filter((studentData) => studentData.sectionNumber === sectionNumber)
+                    .map((studentData, rowIndex) => {
+                      return (
                         <tr key={rowIndex}>
                           <td className="bg-white fixed-width">{rowIndex + 1}</td>
                           <td className="bg-white fixed-width">{studentData.studentNumber}</td>
                           <td className="bg-white student-name">{studentData.studentName}</td>
-
-                          {/* Render empty cells for course codes */}
-                          {sectionData.courseCodes.map((courseCode, courseIndex) => (
-                            <td key={`course-${courseIndex}`} className="bg-white fixed-width">-</td>
-                          ))}
-
+        
+                          {/* Loop through the courses for this section */}
+                          {sectionData.courses.map((course, courseIndex) => {
+                            // Find the corresponding grade for this courseCode in the student's data
+                            const studentIndex = studentData.courseCodes.indexOf(course.courseCode);
+                            const studentGrade = studentIndex !== -1
+                              ? studentData.studentGrades[studentIndex] || '-'
+                              : '-';
+        
+                            // Check if the grade is a number and format it to two decimal places
+                            const formattedGrade = typeof studentGrade === 'number'
+                              ? studentGrade.toFixed(2)
+                              : studentGrade;
+        
+                            return (
+                              <td key={`student-grade-${courseIndex}`} className="bg-white fixed-width">
+                                {formattedGrade}
+                              </td>
+                            );
+                          })}
+        
                           {/* Render 0.0 for course grades */}
-                          {sectionData.courseCodes.map((courseCode, courseIndex) => (
-                            <td key={`course-grade-${courseIndex}`} className="bg-white fixed-width">0.0</td>
+                          {sectionData.courses.map((course, courseIndex) => (
+                            <td key={`course-grade-${courseIndex}`} className="bg-white fixed-width">
+                              0.0
+                            </td>
                           ))}
-
+        
                           {/* Weighted Grade Average */}
                           <td className="bg-white fixed-width">0.0</td>
-
+        
                           {/* COG Button */}
                           <td className="bg-white fixed-width">
                             <Button variant="success" className="w-100" onClick={() => openModal(studentData)}>
@@ -999,11 +1155,13 @@ const MasterlistOfGradesTable = () => {
                             </Button>
                           </td>
                         </tr>
-                      ))
-                  )}
-                </tbody>
-              </Table>
-            ))
+                      );
+                    })
+                )}
+              </tbody>
+            </Table>
+          ))
+        
         )}
       </div>
   
@@ -1184,7 +1342,7 @@ const MasterlistOfGradesTable = () => {
           <Table bordered className="text-center border-black grades-table">
             <thead>
               <tr>
-                <th colSpan="7" className='fs-6'>FIRST SEMESTER</th>
+                <th colSpan="7" className='fs-6 text-uppercase'>{getSemesterText(semester)} SEMESTER</th>
               </tr>
               <tr>
                 <th className='fs-6'>CODE</th>
@@ -1196,29 +1354,64 @@ const MasterlistOfGradesTable = () => {
               </tr>
             </thead>
             <tbody>
-              {Array.from({ length: 8 }).map((_, index) => (
-                <tr key={index}>
-                  <td>-</td>
-                  <td>-</td>
-                  <td>-</td>
-                  <td>-</td>
-                  <td>-</td>
-                  <td>-</td>
-                  <td>-</td>
-                </tr>
-              ))}
+            {combinedData
+              .filter(student => student.studentNumber === selectedStudent?.studentNumber)
+              .map((studentData) => studentData.courseCodes.map((courseCode, index) => {
+                const courseDescription = studentData.courseDescriptions[index];
+                const courseLecture = parseFloat(studentData.courseLectures[index]) || 0;
+                const courseLaboratory = parseFloat(studentData.courseLaboratories[index]) || 0;
+                const totalUnits = courseLecture + courseLaboratory;
+                const studentGrade = studentData.studentGrades[index];
+
+                return (
+                  <tr key={index}>
+                    <td className='fs-6'>{courseCode}</td>
+                    <td className='fs-6'>{courseDescription}</td>
+                    <td className='fs-6'>{courseLecture}</td>
+                    <td className='fs-6'>{courseLaboratory}</td>
+                    <td className='fs-6'>{totalUnits}</td>
+                    <td className='fs-6'>{studentGrade.toFixed(2)}</td>
+                    <td className='fs-6'>{getGradeDescription(studentGrade)}</td>
+                  </tr>
+                );
+              }))}
+
+            <tr>
+              <th>TOTAL</th>
+              <td>-</td>
+              {/* Calculate the total for course lectures */}
+              <td className='fs-6'>{calculateGradeSum(combinedData
+                .filter(student => student.studentNumber === selectedStudent?.studentNumber)
+                .map(studentData => studentData.courseLectures.map(lecture => parseFloat(lecture) || 0))
+                .flat())}</td>
+              
+              {/* Calculate the total for course laboratories */}
+              <td className='fs-6'>{calculateGradeSum(combinedData
+                .filter(student => student.studentNumber === selectedStudent?.studentNumber)
+                .map(studentData => studentData.courseLaboratories.map(laboratory => parseFloat(laboratory) || 0))
+                .flat())}</td>
+              
+              {/* Calculate the total units (sum of lecture and laboratory) */}
+              <td className='fs-6'>{calculateGradeSum(combinedData
+                .filter(student => student.studentNumber === selectedStudent?.studentNumber)
+                .map(studentData => studentData.courseLectures.map((lecture, index) => {
+                  const laboratory = parseFloat(studentData.courseLaboratories[index]) || 0;
+                  return parseFloat(lecture) + laboratory;
+                })
+                ).flat())}</td>
+              
+              <td>-</td>
+              <td>-</td>
+            </tr>
+
               <tr>
-                <th>TOTAL</th>
-                <td>-</td>
-                <td>-</td>
-                <td>-</td>
-                <td>-</td>
-                <td>-</td>
-                <td>-</td>
-              </tr>
-              <tr>
-                <th colspan="2">GENERAL WEIGHTED AVERAGE (GWA) = </th>
-                <td colSpan={5}></td>
+                <th colSpan={2} className='fs-6'>GENERAL WEIGHTED AVERAGE (GWA) = </th>
+                <td colSpan={5} className="fs-6">
+    {combinedData
+      .filter(student => student.studentNumber === selectedStudent?.studentNumber)
+      .map(studentData => calculateGWA(studentData?.studentGrades)) // Calculate the average grade for the student
+    }
+  </td>
               </tr>
             </tbody>
           </Table>
@@ -1265,10 +1458,10 @@ const MasterlistOfGradesTable = () => {
               <tr>
                 <td className="text-start " style={{ width: '50%' }}>
                   <p className="prepared-by" style={{ fontSize: '0.7rem' }}>Prepared by:</p>
-                  <p className="prepared-by" style={{ fontSize: '0.7rem' }}>(Name)</p>
+                  <p className="prepared-by fs-6">{user.personnelNameFirst} {user.personnelNameMiddle} {user.personnelNameLast}</p>
                 </td>
                 <td className="text-end college-registar" style={{ width: '50%' }}>
-                  <p className="fs-6 fw-normal text-center college-registrar-center">____________________________</p>
+                  <p className="fs-6 fw-normal text-center college-registrar-center text-decoration-underline">{user.personnelNameFirst} {user.personnelNameMiddle} {user.personnelNameLast}</p>
                   <p className="fs-6 fw-normal text-center college-registrar-center">College Registrar</p>
                 </td>
               </tr>

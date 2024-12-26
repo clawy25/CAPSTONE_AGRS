@@ -4,7 +4,10 @@ export default class StudentModel {
                 studentSex, studentEmail, 
                 studentBirthDate, studentPccEmail, studentAdmissionYr, 
                 studentYrLevel, studentProgramNumber,
-                studentContact, studentAddress, isABMgraduate) {
+                studentContact, studentAddress, isABMgraduate, grNumber,
+                specialOrderNumber, numberOfSemesterAttended, dateGraduated, 
+                studentBirthPlace, studentNationality, admissionCredentials, 
+                schoolLastAttended, categoryStrand, dateSemesterAdmitted) {
         this.id = id;
         this.studentNumber = studentNumber;
         this.studentPassword = studentPassword;
@@ -22,8 +25,16 @@ export default class StudentModel {
         this.studentContact = studentContact;
         this.studentAddress = studentAddress;
         this.isABMgraduate = isABMgraduate;
-  
-        // Add more here if needed
+        this.grNumber = grNumber;
+        this.specialOrderNumber = specialOrderNumber;
+        this.numberOfSemesterAttended = numberOfSemesterAttended;
+        this.dateGraduated = dateGraduated; 
+        this.studentBirthPlace = studentBirthPlace;
+        this.studentNationality = studentNationality;
+        this.admissionCredentials = admissionCredentials;
+        this.schoolLastAttended = schoolLastAttended;
+        this.categoryStrand = categoryStrand;
+        this.dateSemesterAdmitted = dateSemesterAdmitted;
     }
   
     // Convert Excel date format to JavaScript Date

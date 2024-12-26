@@ -8,6 +8,7 @@ import StudentModel from '../ReactModels/StudentModel';
 import EnrollmentModel from '../ReactModels/EnrollmentModel';
 import ScheduleModel from '../ReactModels/ScheduleModel';
 import CourseModel from '../ReactModels/CourseModel';
+import SemGradeModel from '../ReactModels/SemGradeModel';
 import { UserContext } from '../Context/UserContext'; 
 import '../App.css'
 
@@ -27,6 +28,14 @@ function MasterlistOfGradesTable() {
   const [semestersData, setSemestersData] = useState([]);
   const [academicYears, setAcademicYears] = useState([]);
   const [showModalAlertView, setShowModalAlertView] =useState(false);
+  const currentDate = new Date();
+  const formattedDate = currentDate.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+
+
  
   useEffect(() => {
     const fetchPrograms = async () => {
@@ -55,117 +64,180 @@ function MasterlistOfGradesTable() {
     fetchStudentData();
   }, [user.programNumber]);
 
-  const fetchStudentData = async (programNumber, batchYear) => {
-    try {
-      // Fetch necessary data from models
-      const [studentsData, enrolledStudents, scheduleData] = await Promise.all([
-        StudentModel.fetchExistingStudents(),
-        EnrollmentModel.fetchAllEnrollment(),
-        ScheduleModel.fetchAllSchedules(),
-      ]);
-  
-      //console.log('Students Data:', studentsData);
-  
-      // Combine data from students, enrollment, and schedules
-      const combinedData = enrolledStudents.map((enrollment) => {
-        const student = studentsData.find(
-          (student) => student.studentNumber === enrollment.studentNumber
+const fetchStudentData = async (programNumber, batchYear) => {
+  try {
+    // Fetch necessary data from models
+    const [studentsData, enrolledStudents, scheduleData] = await Promise.all([
+      StudentModel.fetchExistingStudents(),
+      EnrollmentModel.fetchAllEnrollment(),
+      ScheduleModel.fetchAllSchedules(),
+    ]);
+
+    console.log('semestersData:', semestersData);
+
+    const semGradeDataPromises = enrolledStudents.map((enrollment) =>
+      SemGradeModel.fetchSemGradeData(enrollment.scheduleNumber)
+    );
+    const semGradeDataArray = await Promise.all(semGradeDataPromises);
+
+    // Flatten the array if fetchSemGradeData returns arrays
+    const semGradeData = semGradeDataArray.flat();
+
+    console.log('semGradeData:', semGradeData);
+
+    // Combine data from students, enrollment, and schedules
+    const combinedData = studentsData.map((student) => {
+      const studentEnrollments = enrolledStudents.filter(
+        (enrollment) => enrollment.studentNumber === student.studentNumber
+      );
+
+      // Log warning if no enrollments are found for the student
+      if (studentEnrollments.length === 0) {
+        console.warn(
+          `No enrollments found for student: ${student.studentNumber}`
         );
+        return null; // Exclude students with no enrollments
+      }
+
+      // Map courses for the student
+      const courses = studentEnrollments.map((enrollment) => {
         const schedule = scheduleData.find(
           (schedule) => schedule.scheduleNumber === enrollment.scheduleNumber
         );
-  
-        return {
-          studentAdmissionYear: student?.studentAdmissionYr || '',
-          studentProgramNumber: student?.studentProgramNumber || '',
-          studentNumber: enrollment.studentNumber,
-          studentName: student
-            ? `${student.studentNameFirst} ${student.studentNameMiddle || ''} ${student.studentNameLast}`
-            : 'Unknown',
-          scheduleNumber: enrollment.scheduleNumber,
-          studentGender: student.studentSex,
-          studentAddress: student.studentAddress,
-          studentBirthDate: student.studentBirthDate,
-          studentProgramNumber: student.studentProgramNumber,
+        const gradeData = semGradeData.find(
+          (semGrade) =>
+            semGrade.scheduleNumber === enrollment.scheduleNumber &&
+            semGrade.studentNumber === enrollment.studentNumber
+        );
 
+        return {
+          courseCode: enrollment.courseCode,
+          scheduleNumber: enrollment.scheduleNumber,
+          grade: gradeData?.grade || 0,
         };
       });
-  
-      // Remove duplicates by studentNumber
-      const distinctData = combinedData.filter(
-        (value, index, self) =>
-          index === self.findIndex((t) => t.studentNumber === value.studentNumber)
-      );
-  
-     // console.log('Distinct Data:', distinctData);
-  
-      // Normalize values for filtering
-      const normalizedProgramNumber = String(programNumber);
-      const normalizedBatchYear = String(batchYear);
-  
-      // Filter based on selected program and batch year
-      const filteredData = distinctData.filter(
-        (student) =>
-          String(student.studentProgramNumber) === normalizedProgramNumber &&
-          String(student.studentAdmissionYear) === normalizedBatchYear
-      );
-  
-      console.log('Filtered Student Data:', filteredData);
-  
-      return filteredData;
-    } catch (error) {
-      console.error('Failed to fetch and filter student data:', error);
-      return [];
-    }
-  };
-  
-  const fetchCurriculum = async (programNumber, batchYear) => {
-    try {
-      // Fetch all courses
-      const curricullumCourse = await CourseModel.fetchAllCourses();
-      console.log("Courses:", curricullumCourse);
-  
-      // Filter courses by selected programNumber
-      const filteredCourses = curricullumCourse.filter(
-        (course) => String(course.programNumber) === String(programNumber)
-      );
-  
-      //console.log("Filtered Courses for Program:", filteredCourses);
-  
-      // Group courses by year level and semester
-      const groupedCourses = filteredCourses.reduce((acc, course) => {
-        const { courseYearLevel, courseSemester, courseCode } = course;
-  
-        if (!acc[courseYearLevel]) {
-          acc[courseYearLevel] = {};
-        }
-  
-        if (!acc[courseYearLevel][courseSemester]) {
-          acc[courseYearLevel][courseSemester] = [];
-        }
-  
-        acc[courseYearLevel][courseSemester].push(courseCode);
-        return acc;
-      }, {});
-  
-      //console.log("Grouped Courses by Year and Semester:", groupedCourses);
-  
-      // Dynamically generate academic years starting from the batchYear
-      const academicYears = [];
-      for (let i = 0; i < 4; i++) { // Assume a 4-year program
-        const startYear = batchYear + i;
-        const endYear = startYear + 1;
-        academicYears.push(`${startYear}-${endYear}`);
+
+      return {
+        studentAdmissionYear: student?.studentAdmissionYr || 'N/A',
+        studentProgramNumber: student?.studentProgramNumber || 'N/A',
+        studentNumber: student.studentNumber,
+        studentName: `${student.studentNameFirst} ${
+          student.studentNameMiddle || 'N/A'
+        } ${student.studentNameLast}`,
+        studentGender: student.studentSex || 'N/A',
+        studentAddress: student.studentAddress || 'N/A',
+        studentBirthDate: student.studentBirthDate || 'N/A',
+        studentBirthPlace: student.studentBirthPlace || 'N/A',
+        studentGrNumber: student.grNumber || 'N/A',
+        studentspecielaNumber: student.specialOrderNumber || 'N/A',
+        studentNumberOdSemesterAttended: student.numberOfSemesterAttended || 'N/A',
+        studentDateGraduated: student.dateGraduated || 'N/A',
+        studentnationality: student. studentNationality || 'N/A',
+        studentAdmissionCredentials: student.admissionCredentials || 'N/A',
+        studentSchoolLastAttended: student.schoolLastAttended || 'N/A',
+        studentCategoryStarnd: student.categoryStrand || 'N/A',
+        studentDateSemesterAdmitted: student.dateSemesterAdmitted || 'N/A',
+        courses, // Array of course data
+      };
+    });
+
+    // Filter out null values (students with no enrollments)
+    const validData = combinedData.filter((student) => student !== null);
+
+    console.log('Grouped Student Data:', validData);
+
+    // Normalize values for filtering
+    const normalizedProgramNumber = String(programNumber);
+    const normalizedBatchYear = String(batchYear);
+
+    // Filter based on selected program and batch year
+    const filteredData = validData.filter(
+      (student) =>
+        String(student.studentProgramNumber) === normalizedProgramNumber &&
+        String(student.studentAdmissionYear) === normalizedBatchYear
+    );
+
+    console.log('Filtered Student Data:', filteredData);
+
+    return filteredData;
+  } catch (error) {
+    console.error('Failed to fetch and filter student data:', error);
+    return [];
+  }
+};
+
+const fetchCurriculum = async (programNumber, batchYear) => {
+  try {
+    // Fetch all courses
+    const curricullumCourse = await CourseModel.fetchAllCourses();
+    console.log("Courses:", curricullumCourse);
+
+    const programData = await ProgramModel.fetchProgramData(programNumber); // Updated to programNumber
+    console.log("Programs:", programData);
+
+    // Extract the length of the program
+    const programLength = programData.programNumOfYear; // This should provide the number of years
+    console.log("Program Length (Years):", programLength);
+
+    // Filter courses by selected programNumber
+    const filteredCourses = curricullumCourse.filter(
+      (course) => String(course.programNumber) === String(programNumber)
+    );
+
+    // Group courses by year level and semester
+    const groupedCourses = filteredCourses.reduce((acc, course) => {
+      const {
+        courseYearLevel,
+        courseSemester,
+        courseCode,
+        courseDescriptiveTitle,
+        courseLecture,
+        courseLaboratory,
+      } = course;
+
+      // Calculate unit of credits
+      const unitOfCredits = (courseLecture || 0) + (courseLaboratory || 0);
+
+      // Ensure yearLevel and semester groups exist
+      if (!acc[courseYearLevel]) {
+        acc[courseYearLevel] = {};
       }
-  
-     // console.log("Academic Years:", academicYears);
-  
-      return { groupedCourses, academicYears }; // Return both grouped courses and academic years
-    } catch (error) {
-      console.error("Failed to fetch Curriculum data:", error);
-      return {};
+
+      if (!acc[courseYearLevel][courseSemester]) {
+        acc[courseYearLevel][courseSemester] = [];
+      }
+
+      // Push the complete course details
+      acc[courseYearLevel][courseSemester].push({
+        courseCode,
+        courseDescriptiveTitle,
+        courseLecture,
+        courseLaboratory,
+        unitOfCredits,
+      });
+
+      return acc;
+    }, {});
+
+    console.log("Grouped Courses by Year and Semester:", groupedCourses);
+
+    // Dynamically generate academic years starting from the batchYear
+    const academicYears = [];
+    for (let i = 0; i < programLength; i++) {
+      const startYear = batchYear + i;
+      const endYear = startYear + 1;
+      academicYears.push(`${startYear}-${endYear}`);
     }
-  };
+
+    console.log("Academic Years:", academicYears);
+
+    return { groupedCourses, academicYears, programLength }; // Return grouped courses, academic years, and program length
+  } catch (error) {
+    console.error("Failed to fetch Curriculum data:", error);
+    return {};
+  }
+};
+
 
   const closeShowModalAlertView = () => {
     setShowModalAlertView(false);
@@ -216,6 +288,36 @@ function MasterlistOfGradesTable() {
   };
 
   const handleCloseModal = () => setShowModal(false);
+
+  function getGradeDescription(grade) {
+    // Handle special cases for 'INC', 'NC', 'OD', 'FA', 'UD'
+    const specialGrades = {
+      'INC': 'Incomplete',
+      'NC': 'No Credit',
+      'OD': 'Officially Dropped',
+      'FA': 'Failure due to Excessive Absences',
+      'UD': 'Unofficially Dropped'
+    };
+    
+    // If the grade is a string (like 'INC', 'NC', etc.), return the special description
+    if (typeof grade === 'string') {
+      return specialGrades[grade] || 'Invalid Grade';
+    }
+  
+    // Handle numeric grades with the provided grade values
+    if (grade === 1.00) return 'Excellent';
+    if (grade === 1.25) return 'Superior';
+    if (grade === 1.50) return 'Very Good';
+    if (grade === 1.75) return 'Good';
+    if (grade === 2.00) return 'Meritorious';
+    if (grade === 2.25) return 'Very Satisfactory';
+    if (grade === 2.50) return 'Satisfactory';
+    if (grade === 2.75) return 'Fairly Satisfactory';
+    if (grade === 3.00) return 'Passing';
+    if (grade === 5.00) return 'Failed';
+  
+    return 'Invalid Grade'; // If the grade doesn't match any of the specified values
+  }
 
   // Example students data
   const getAcademicYear = (batchYear, yearLevel) => {
@@ -570,132 +672,143 @@ const downloadPDF = () => {
   </div>
 ) : (
   <Table bordered responsive hover className="table-success mt-2 mb-4">
-    <thead className="table-success">
-      {/* Row for Year Levels */}
-      <tr>
-        <th className="custom-color-green-font custom-font">PROGRAM</th>
-        <th className="text-center custom-color-green-font custom-font" colSpan={2}>
-          {programName}
-        </th>
-        {Object.keys(semestersData).map((year, idx) => {
-          // Calculate academic year for this year level
-          const academicYear = getAcademicYear(batchYear, idx + 1);
-          return (
-            <th
-              key={year}
-              colSpan={Object.values(semestersData[year]).flat().length}
-              className="text-center custom-color-green-font custom-font"
-            >
-              {`${year} YEAR A.Y. ${academicYear}`}
-            </th>
-          );
-        })}
-        <th
-          rowSpan="4"
-          className="align-middle text-center bg-white custom-color-green-font custom-font"
-        >
-          Transcript of Records(TOR)
-        </th>
-      </tr>
+  <thead className="table-success">
+    {/* Row for Year Levels */}
+    <tr>
+      <th className="custom-color-green-font custom-font">PROGRAM</th>
+      <th className="text-center custom-color-green-font custom-font" colSpan={2}>
+        {programName}
+      </th>
+      {Object.keys(semestersData).map((year, idx) => {
+        const academicYear = getAcademicYear(batchYear, idx + 1);
+        return (
+          <th
+            key={year}
+            colSpan={Object.values(semestersData[year]).flat().length}
+            className="text-center custom-color-green-font custom-font"
+          >
+            {`${year} YEAR A.Y. ${academicYear}`}
+          </th>
+        );
+      })}
+      <th
+        rowSpan="4"
+        className="align-middle text-center bg-white custom-color-green-font custom-font"
+      >
+        Transcript of Records (TOR)
+      </th>
+    </tr>
 
-      {/* Row for Program Code */}
-      <tr>
-        <th className="custom-color-green-font custom-font">PROGRAM CODE</th>
-        <th className="text-center custom-color-green-font custom-font" colSpan={2}>
-          {programCode}
-        </th>
-        {Object.keys(semestersData).map((year) =>
-          Object.keys(semestersData[year]).map((semester) => (
+    {/* Row for Program Code */}
+    <tr>
+      <th className="custom-color-green-font custom-font">PROGRAM CODE</th>
+      <th className="text-center custom-color-green-font custom-font" colSpan={2}>
+        {programCode}
+      </th>
+      {Object.keys(semestersData).map((year, idx) => {
+        const academicYear = getAcademicYear(batchYear, idx + 1);
+        return Object.keys(semestersData[year]).map((semester) => (
+          <th
+            key={`${year}-${semester}`}
+            colSpan={semestersData[year][semester].length}
+            className="text-center bg-white custom-color-green-font custom-font"
+          >
+            {`${semester.toUpperCase()} SEMESTER A.Y. ${academicYear}`}
+          </th>
+        ));
+      })}
+    </tr>
+
+    {/* Row for Batch / Year */}
+    <tr>
+      <th className="custom-color-green-font custom-font">BATCH / YEAR</th>
+      <th className="text-center custom-color-green-font custom-font" colSpan={2}>
+        ({Object.keys(semestersData).length}) {batchYear}
+      </th>
+      {Object.keys(semestersData).map((year) => {
+        return Object.keys(semestersData[year]).map((semester) =>
+          semestersData[year][semester].map((course, courseIdx) => (
             <th
-              key={`${year}-${semester}`}
-              colSpan={semestersData[year][semester].length}
-              className="text-center bg-white custom-color-green-font custom-font"
+              key={`${year}-${semester}-${courseIdx}`}
+              className="text-center custom-color-green-font bg-white custom-font"
+              rowSpan={2}
             >
-              {`${semester.toUpperCase()} SEMESTER`}
+              {course.courseCode}
             </th>
           ))
-        )}
-      </tr>
+        );
+      })}
+    </tr>
+  </thead>
+  <tbody>
+  {students.length === 0 ? (
+    <tr>
+      <td
+        colSpan={
+          3 +
+          Object.keys(semestersData).reduce(
+            (acc, year) =>
+              acc +
+              Object.keys(semestersData[year]).reduce(
+                (acc2, semester) =>
+                  acc2 + semestersData[year][semester].length,
+                0
+              ),
+            0
+          ) +
+          1
+        }
+        className="text-center fst-italic bg-white"
+      >
+        No Student Data Available
+      </td>
+    </tr>
+  ) : (
+    students.map((student, rowIdx) => (
+      <tr key={rowIdx}>
+        {/* Student Info */}
+        <td className="text-center bg-white">{rowIdx + 1}</td>
+        <td className="text-center bg-white">{student.studentNumber}</td>
+        <td className="bg-white">{student.studentName}</td>
 
-      {/* Row for Batch / Year */}
-      <tr>
-        <th className="custom-color-green-font custom-font">BATCH / YEAR</th>
-        <th className="text-center custom-color-green-font custom-font" colSpan={2}>
-          ({Object.keys(semestersData).length}) {batchYear}
-        </th>
+        {/* Display Grades */}
         {Object.keys(semestersData).map((year) =>
           Object.keys(semestersData[year]).map((semester) =>
-            semestersData[year][semester].map((subject, idx) => (
-              <th
-                key={`${year}-${semester}-${idx}`}
-                className="text-center custom-color-green-font bg-white custom-font"
-                rowSpan={2}
-              >
-                {subject}
-              </th>
-            ))
+            semestersData[year][semester].map((course, gradeIdx) => {
+              // Find the grade for the course
+              const courseGrade = student.courses.find(
+                (studentCourse) => studentCourse.courseCode === course.courseCode
+              )?.grade;
+
+              return (
+                <td
+                  key={`${year}-${semester}-${gradeIdx}`}
+                  className="text-center bg-white"
+                >
+                  {courseGrade !== undefined ? courseGrade : '-'}
+                </td>
+              );
+            })
           )
         )}
-      </tr>
-    </thead>
-    <tbody>
-      {students.length === 0 ? (
-        <tr>
-          {/* Dynamically set colSpan to cover all columns */}
-          <td
-            colSpan={
-              3 +
-              Object.keys(semestersData).reduce(
-                (acc, year) =>
-                  acc +
-                  Object.keys(semestersData[year]).reduce(
-                    (acc2, semester) =>
-                      acc2 + semestersData[year][semester].length,
-                    0
-                  ),
-                0
-              ) +
-              1
-            }
-            className="text-center fst-italic bg-white"
+
+        {/* TOR Button */}
+        <td className="bg-white">
+          <Button
+            variant="success"
+            className="w-100"
+            onClick={() => handleTORClick(student)}
           >
-            No Student Data Available
-          </td>
-        </tr>
-      ) : (
-        students.map((student, rowIdx) => (
-          <tr key={rowIdx}>
-            <td className="text-center bg-white">{rowIdx + 1}</td>
-            <td className="text-center bg-white">{student.studentNumber}</td>
-            <td className="bg-white">{student.studentName}</td>
+            TOR
+          </Button>
+        </td>
+      </tr>
+    ))
+  )}
+</tbody>
 
-            {/* Loop through semestersData to generate columns for each student */}
-            {Object.keys(semestersData).map((year) =>
-              Object.keys(semestersData[year]).map((semester) =>
-                semestersData[year][semester].map((_, gradeIdx) => (
-                  <td
-                    key={`${year}-${semester}-${gradeIdx}`}
-                    className="text-center bg-white"
-                  ></td>
-                ))
-              )
-            )}
+</Table>
 
-            {/* TOR Button */}
-            <td className="bg-white">
-              <Button
-                variant="success"
-                className="w-100"
-                onClick={() => handleTORClick(student)}
-              >
-                TOR
-              </Button>
-            </td>
-          </tr>
-        ))
-      )}
-    </tbody>
-  </Table>
 )}
 
       {/* Modal for displaying student's TOR */}
@@ -709,7 +822,7 @@ const downloadPDF = () => {
           {selectedStudent && (
             <div>
            <table className="table table-white">
-            <thead class="no-border">
+            <thead className="no-border">
               <tr>
                 <th className="text-center" style={{ width: '25%' }}>
                   <img src="/pcc.png" alt="Logo" className="img-fluid" style={{ width: '110px' }} />
@@ -761,11 +874,11 @@ const downloadPDF = () => {
             <td rowSpan={2}><p style={{ fontSize: '0.7rem' }}>PERMANENT ADDRESS:</p></td>
             <td rowSpan={2}><p style={{ fontSize: '0.7rem' }}>{selectedStudent?.studentAddress}</p></td>
             <td><p style={{ fontSize: '0.7rem' }}>GR NO.:</p></td>
-            <td><p style={{ fontSize: '0.7rem' }}>(COPC-032 s. 2023 CRO)</p></td>
+            <td><p style={{ fontSize: '0.7rem' }}>{selectedStudent?.studentGrNumber}</p></td>
           </tr>
           <tr>
             <td><p style={{ fontSize: '0.7rem' }}>SPECIAL ORDER NO.:</p></td>
-            <td><p style={{ fontSize: '0.7rem' }}>((B) 50-343924 - 0028 S. 2024, Dated April 27,2024)</p></td>
+            <td><p style={{ fontSize: '0.7rem' }}>{selectedStudent?.studentspecielaNumber}</p></td>
           </tr>
           <tr>
             <td><p style={{ fontSize: '0.7rem' }}>DATE OF BIRTH</p></td>
@@ -775,16 +888,16 @@ const downloadPDF = () => {
           </tr>
           <tr>
             <td><p style={{ fontSize: '0.7rem' }}>PLACE OF BIRTH</p></td>
-            <td><p style={{ fontSize: '0.7rem' }}>(BIRTH PLACE)</p></td>
+            <td><p style={{ fontSize: '0.7rem' }}>{selectedStudent?.studentBirthPlace}</p></td>
             <td><p style={{ fontSize: '0.7rem' }}>ATTENDED:</p></td>
-            <td><p style={{ fontSize: '0.7rem' }}>(8 semester(s)?)</p></td>
+            <td><p style={{ fontSize: '0.7rem' }}>{selectedStudent?.studentNumberOdSemesterAttended}</p></td>
           </tr>
           <tr>
             <td><p style={{ fontSize: '0.7rem' }}>NATIONALITY</p></td>
-            <td><p style={{ fontSize: '0.7rem' }}>(FILIPINO?)</p></td>
+            <td><p style={{ fontSize: '0.7rem' }}>{selectedStudent?.studentnationality}</p></td>
 
             <td><p style={{ fontSize: '0.7rem' }}>DATE GRADUATED:</p></td>
-            <td><p style={{ fontSize: '0.7rem' }}>(GRADUATE KA?)</p></td>
+            <td><p style={{ fontSize: '0.7rem' }}>{selectedStudent?.studentDateGraduated}</p></td>
           </tr>
         </tbody>
       </table>
@@ -808,7 +921,7 @@ const downloadPDF = () => {
             </p>
           </td>
             <td><p style={{ fontSize: '0.7rem' }}>ADMISSION CREDENTIALS</p></td>
-            <td><p style={{ fontSize: '0.7rem' }}>(F-137)</p></td>
+            <td><p style={{ fontSize: '0.7rem' }}>{selectedStudent?.studentAdmissionCredentials}</p></td>
             <td></td>
           </tr>
         </thead>
@@ -817,76 +930,129 @@ const downloadPDF = () => {
             <td><p style={{ fontSize: '0.7rem' }}>DATE GRADUATED/LAST ATTENDED:</p></td>
             <td><p style={{ fontSize: '0.7rem' }}>{batchYear}</p></td>
             <td><p style={{ fontSize: '0.7rem' }}>SCHOOL LAST ATTENDED:</p></td>
-            <td><p style={{ fontSize: '0.7rem' }}>(COLLEGE NAME)</p></td>
+            <td><p style={{ fontSize: '0.7rem' }}>{selectedStudent?.studentSchoolLastAttended}</p></td>
             <td></td>
           </tr>
           <tr>
             <td><p style={{ fontSize: '0.7rem' }}>CATEGORY:</p></td>
-            <td><p style={{ fontSize: '0.7rem' }}>SHS - TVL Strand</p></td>
+            <td><p style={{ fontSize: '0.7rem' }}>{selectedStudent?.studentCategoryStarnd}</p></td>
             <td><p style={{ fontSize: '0.7rem' }}>DATE/SEMESTER ADMITTED: </p></td>
-            <td><p style={{ fontSize: '0.7rem' }}>(1st Semester A.Y. 2019-2020)</p></td>
+            <td><p style={{ fontSize: '0.7rem' }}>{selectedStudent?.studentDateSemesterAdmitted}</p></td>
             <td></td>
           </tr>
         </tbody>
       </table>
 
+      <Table bordered responsive className="text-center">
+        <thead>
+          <tr style={{ border: "2px solid black" }}>
+            <th colSpan={6}><p className="fs-6 text-start mb-1">ACADEMIC RECORD</p></th>
+          </tr>
+          <tr>
+            <th className="custom-color-green-font align-middle" rowSpan="2">
+              TERM & SCHOOL YEAR
+            </th>
+            <th className="custom-color-green-font align-middle" rowSpan="2">
+              SUBJECT CODE
+            </th>
+            <th className="custom-color-green-font align-middle" rowSpan="2">
+              DESCRIPTIVE TITLE
+            </th>
+            <th className="custom-color-green-font align-middle" colSpan="2">
+              FINAL
+            </th>
+            <th className="custom-color-green-font align-middle" rowSpan="2">
+              UNITS OF CREDIT
+            </th>
+          </tr>
+          <tr>
+            <th className="custom-color-green-font">GRADES</th>
+            <th className="custom-color-green-font">COMPLETION</th>
+          </tr>
+        </thead>
+        <tbody>
+  {Object.keys(semestersData)
+    .sort((a, b) => parseInt(a) - parseInt(b)) // Sort year levels numerically
+    .map((yearLevel, idx) =>
+      [1, 2].map((semester) => {
+        const courses =
+          (semestersData[yearLevel] && semestersData[yearLevel][semester]) ||
+          []; // Default to empty array if no data
 
-         
-          <Table bordered responsive className="text-center">
-            <thead>
-              <tr style={{ border: "2px solid black" }}>
-                <th colSpan={6}><p className='fs-6 text-start mb-1'>ACADEMIC RECORD</p></th>
-              </tr>
-              <tr>
-                <th className="custom-color-green-font align-middle" rowSpan="2">
-                  TERM & SCHOOL YEAR
-                </th>
-                <th className="custom-color-green-font align-middle" rowSpan="2">
-                  SUBJECT CODE
-                </th>
-                <th className="custom-color-green-font align-middle" rowSpan="2">
-                  DESCRIPTIVE TITLE
-                </th>
-                <th className="custom-color-green-font align-middle" colSpan="2">
-                  FINAL
-                </th>
-                <th className="custom-color-green-font align-middle" rowSpan="2">
-                  UNITS OF CREDIT
-                </th>
-              </tr>
-              <tr>
-                <th className="custom-color-green-font">GRADES</th>
-                <th className="custom-color-green-font">COMPLETION</th>
-              </tr>
-            </thead>
-            <tbody>
-         
-            {/* Generate 8 rows with 6 columns (td) each */}
-            {Array(8).fill().map((_, rowIndex) => (
-              <tr key={rowIndex}>
-                {Array(6).fill().map((_, colIndex) => (
-                  <td key={colIndex} className='fs-5'>-</td>
-                ))}
-              </tr>
-            ))}
+        const academicYear = getAcademicYear(batchYear, idx + 1); // Get academic year based on batchYear and index
 
-            {/* Uncomment this section to map over your `semestersData` */}
-            {/* {Object.keys(semestersData).map((year) =>
-              Object.keys(semestersData[year]).map((semester, semIdx) =>
-                semestersData[year][semester].map((subject, subIdx) => (
-                  <tr key={`${year}-${semester}-${subIdx}`}>
-                    <td>{year} - {semester}</td>
-                    <td>{subject.code}</td>
-                    <td>{subject.title}</td>
-                    <td>{subject.finalGrade}</td>
-                    <td>{subject.completion}</td>
-                    <td>{subject.units}</td>
-                  </tr>
-                ))
-              )
-            )} */}
-          </tbody>
-          </Table>
+        return (
+          <React.Fragment key={`${yearLevel}-${semester}`}>
+            {/* Semester Header */}
+            <tr>
+              <td rowSpan={Math.max(courses.length, 1) + 1}>
+                {semester === 1 ? "1st" : "2nd"} Semester <br /> {academicYear}
+              </td>
+            </tr>
+            {/* Render Courses */}
+            {courses.length > 0 ? (
+              courses.map((subject, subIndex) => (
+                <tr key={`${yearLevel}-${semester}-${subIndex}`}>
+                  <td>{subject.courseCode}</td>
+                  <td>{subject.courseDescriptiveTitle}</td>
+                  <td>
+                    {/* Display grade for the selected student */}
+                    {selectedStudent &&
+                      students
+                        .filter(
+                          (student) =>
+                            student.studentNumber === selectedStudent.studentNumber &&
+                            student.courses.some((course) => course.courseCode === subject.courseCode)
+                        )
+                        .map((student) => {
+                          const course = student.courses.find(
+                            (course) => course.courseCode === subject.courseCode
+                          );
+                          return (
+                            <div key={student.studentNumber}>
+                              {course ? course.grade : "-"}
+                            </div>
+                          );
+                        })}
+                  </td>
+                  <td>
+                    {/* Display grade for the selected student */}
+                    {selectedStudent &&
+                      students
+                        .filter(
+                          (student) =>
+                            student.studentNumber === selectedStudent.studentNumber &&
+                            student.courses.some((course) => course.courseCode === subject.courseCode)
+                        )
+                        .map((student) => {
+                          const course = student.courses.find(
+                            (course) => course.courseCode === subject.courseCode
+                          );
+                          return (
+                            <div key={student.studentNumber}>
+                              {getGradeDescription(course ? course.grade : "-")}
+                            </div>
+                          );
+                        })}
+                  </td>
+                  <td>{subject.unitOfCredits}</td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={5} className="text-muted">
+                  No courses available
+                </td>
+              </tr>
+            )}
+          </React.Fragment>
+        );
+      })
+    )}
+</tbody>
+
+      </Table>
+
           <Table bordered responsive className="text-center">
             <thead>
             <tr style={{ border: "2px solid black" }}>
@@ -915,7 +1081,7 @@ const downloadPDF = () => {
               <td colSpan={1} rowSpan={1} style={{ fontSize: '0.7rem' }}>1.25</td>
               <td colSpan={1} rowSpan={1} style={{ fontSize: '0.7rem' }}>96-98%</td>
               <td colSpan={1} rowSpan={1} style={{ fontSize: '0.7rem' }}>SUPERIOR</td>
-              <td colSpan={3} rowSpan={1} style={{ fontSize: '0.7rem', textAlign: "center" }}><strong><big>MELISSA TAN</big></strong></td>
+              <td colSpan={3} rowSpan={1} style={{ fontSize: '0.7rem', textAlign: "center" }}><strong><big>{user.personnelNameFirst} {user.personnelNameMiddle} {user.personnelNameLast}</big></strong></td>
             </tr>
             <tr style={{ border: "2px solid black" }}>
               <td colSpan={1} rowSpan={1} style={{ fontSize: '0.7rem' }}>1.50</td>
@@ -933,7 +1099,7 @@ const downloadPDF = () => {
                 <td colSpan={1}  rowSpan={1}><p  style={{ fontSize: '0.7rem' }}>2.00</p></td>
                 <td colSpan={1}  rowSpan={1}><p  style={{ fontSize: '0.7rem' }}>87-89%</p></td>
                 <td colSpan={1}  rowSpan={1}><p  style={{ fontSize: '0.7rem' }}>MERITORIOUS</p></td>
-                <td colSpan={3}  rowSpan={1}><p  style={{ fontSize: '0.7rem', textAlign: "center"}} ><strong><big>LORNA L. DELLORO</big></strong></p></td>
+                <td colSpan={3}  rowSpan={1}><p  style={{ fontSize: '0.7rem', textAlign: "center"}} ><strong><big>___________</big></strong></p></td>
               </tr>
               <tr style={{ border: "2px solid black" }}>
                 <td colSpan={1}  rowSpan={1}><p style={{ fontSize: '0.7rem' }}>2.25</p></td>
@@ -951,7 +1117,7 @@ const downloadPDF = () => {
                 <td colSpan={1}  rowSpan={1}><p  style={{ fontSize: '0.7rem' }}>2.75</p></td>
                 <td colSpan={1}  rowSpan={1}><p  style={{ fontSize: '0.7rem' }}>76-80%</p></td>
                 <td colSpan={1}  rowSpan={1}><p  style={{ fontSize: '0.7rem' }}>FAIRLY SATISFACTORY</p></td>
-                <td colSpan={3}  rowSpan={1}><p  style={{ fontSize: '0.7rem', textAlign: "center"}}><big>MAY 23, 2024</big></p></td>
+                <td colSpan={3}  rowSpan={1}><p  style={{ fontSize: '0.7rem', textAlign: "center"}}><big>{formattedDate}</big></p></td>
               </tr>
               <tr style={{ border: "2px solid black" }}>
                 <td colSpan={1}  rowSpan={1}><p style={{ fontSize: '0.7rem' }}>3.00</p></td>
@@ -978,7 +1144,7 @@ const downloadPDF = () => {
                 <td colSpan={1}  rowSpan={1}><p style={{ fontSize: '0.7rem' }}>UD</p></td>
                 <td colSpan={1}  rowSpan={1}><p style={{ fontSize: '0.7rem' }}></p></td>
                 <td colSpan={1}  rowSpan={1}><p style={{ fontSize: '0.7rem' }}>UNOFFICIALY DROPPED</p></td>
-                <td colSpan={3}  rowSpan={1}><p style={{ textAlign: "center", fontSize: '0.7rem'}} ><strong><big>JORGE ERWIN A. RAD, RL, MLIS, MBA</big></strong></p></td>
+                <td colSpan={3}  rowSpan={1}><p style={{ textAlign: "center", fontSize: '0.7rem'}} ><strong><big>{user.personnelNameFirst} {user.personnelNameMiddle} {user.personnelNameLast}</big></strong></p></td>
               </tr>
               <tr style={{ border: "2px solid black" }}>
                 <td colSpan={1}  rowSpan={1}><p style={{ fontSize: '0.7rem' }}>FA</p></td>
@@ -1002,8 +1168,6 @@ const downloadPDF = () => {
 
         </Modal.Footer>
       </Modal>
-
-
       <Modal show={showModalAlertView} onHide={closeShowModalAlertView} centered>
         <Modal.Header closeButton>
           <Modal.Title>Action Required</Modal.Title>
