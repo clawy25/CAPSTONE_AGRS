@@ -65,105 +65,98 @@ function MasterlistOfGradesTable() {
     fetchStudentData();
   }, [user.programNumber]);
 
-const fetchStudentData = async (programNumber, batchYear) => {
-  try {
-    // Fetch necessary data from models
-    const [studentsData, enrolledStudents, scheduleData] = await Promise.all([
-      StudentModel.fetchExistingStudents(),
-      EnrollmentModel.fetchAllEnrollment(),
-      ScheduleModel.fetchAllSchedules(),
-    ]);
-
-    //console.log('semestersData:', semestersData);
-
-    const semGradeDataPromises = enrolledStudents.map((enrollment) =>
-      SemGradeModel.fetchSemGradeData(enrollment.scheduleNumber)
-    );
-    const semGradeDataArray = await Promise.all(semGradeDataPromises);
-
-    // Flatten the array if fetchSemGradeData returns arrays
-    const semGradeData = semGradeDataArray.flat();
-
-    //console.log('semGradeData:', semGradeData);
-
-    // Combine data from students, enrollment, and schedules
-    const combinedData = studentsData.map((student) => {
-      const studentEnrollments = enrolledStudents.filter(
-        (enrollment) => enrollment.studentNumber === student.studentNumber
+  const fetchStudentData = async (programNumber, batchYear) => {
+    try {
+      // Fetch necessary data from models
+      const [studentsData, enrolledStudents, scheduleData] = await Promise.all([
+        StudentModel.fetchExistingStudents(),
+        EnrollmentModel.fetchAllEnrollment(),
+        ScheduleModel.fetchAllSchedules(),
+      ]);
+  
+      const semGradeDataPromises = enrolledStudents.map((enrollment) =>
+        SemGradeModel.fetchSemGradeData(enrollment.scheduleNumber)
       );
-
-      // Log warning if no enrollments are found for the student
-      {if (studentEnrollments.length === 0) {
-        //console.warn(`No enrollments found for student: ${student.studentNumber}`);
-        return null; // Exclude students with no enrollments
-      }}
-
-      // Map courses for the student
-      const courses = studentEnrollments.map((enrollment) => {
-        const schedule = scheduleData.find(
-          (schedule) => schedule.scheduleNumber === enrollment.scheduleNumber
+      const semGradeDataArray = await Promise.all(semGradeDataPromises);
+  
+      // Flatten the array if fetchSemGradeData returns arrays
+      const semGradeData = semGradeDataArray.flat();
+  
+      // Combine data from students, enrollment, and schedules
+      const combinedData = studentsData.map((student) => {
+        const studentEnrollments = enrolledStudents.filter(
+          (enrollment) => enrollment.studentNumber === student.studentNumber
         );
-        const gradeData = semGradeData.find(
-          (semGrade) =>
-            semGrade.scheduleNumber === enrollment.scheduleNumber &&
-            semGrade.studentNumber === enrollment.studentNumber
-        );
-
+  
+        if (studentEnrollments.length === 0) {
+          return null; // Exclude students with no enrollments
+        }
+  
+        // Map courses for the student
+        const courses = studentEnrollments.map((enrollment) => {
+          const gradeData = semGradeData.find(
+            (semGrade) =>
+              semGrade.scheduleNumber === enrollment.scheduleNumber &&
+              semGrade.studentNumber === enrollment.studentNumber
+          );
+  
+          return {
+            courseCode: enrollment.courseCode,
+            scheduleNumber: enrollment.scheduleNumber,
+            grade: gradeData?.grade || 0,
+          };
+        });
+  
         return {
-          courseCode: enrollment.courseCode,
-          scheduleNumber: enrollment.scheduleNumber,
-          grade: gradeData?.grade || 0,
+          studentAdmissionYear: student?.studentAdmissionYr || 'N/A',
+          studentProgramNumber: student?.studentProgramNumber || 'N/A',
+          studentNumber: student.studentNumber,
+          studentName: `${student.studentNameLast}, ${student.studentNameFirst} ${student.studentNameMiddle || 'N/A'}`,
+          studentGender: student.studentSex || 'N/A',
+          studentAddress: student.studentAddress || 'N/A',
+          studentBirthDate: student.studentBirthDate || 'N/A',
+          studentBirthPlace: student.studentBirthPlace || 'N/A',
+          studentGrNumber: student.grNumber || 'N/A',
+          studentspecielaNumber: student.specialOrderNumber || 'N/A',
+          studentNumberOdSemesterAttended: student.numberOfSemesterAttended || 'N/A',
+          studentDateGraduated: student.dateGraduated || 'N/A',
+          studentnationality: student.studentNationality || 'N/A',
+          studentAdmissionCredentials: student.admissionCredentials || 'N/A',
+          studentSchoolLastAttended: student.schoolLastAttended || 'N/A',
+          studentCategoryStarnd: student.categoryStrand || 'N/A',
+          studentDateSemesterAdmitted: student.dateSemesterAdmitted || 'N/A',
+          courses, // Array of course data
         };
       });
-
-      return {
-        studentAdmissionYear: student?.studentAdmissionYr || 'N/A',
-        studentProgramNumber: student?.studentProgramNumber || 'N/A',
-        studentNumber: student.studentNumber,
-        studentName: `${student.studentNameFirst} ${
-          student.studentNameMiddle || 'N/A'
-        } ${student.studentNameLast}`,
-        studentGender: student.studentSex || 'N/A',
-        studentAddress: student.studentAddress || 'N/A',
-        studentBirthDate: student.studentBirthDate || 'N/A',
-        studentBirthPlace: student.studentBirthPlace || 'N/A',
-        studentGrNumber: student.grNumber || 'N/A',
-        studentspecielaNumber: student.specialOrderNumber || 'N/A',
-        studentNumberOdSemesterAttended: student.numberOfSemesterAttended || 'N/A',
-        studentDateGraduated: student.dateGraduated || 'N/A',
-        studentnationality: student. studentNationality || 'N/A',
-        studentAdmissionCredentials: student.admissionCredentials || 'N/A',
-        studentSchoolLastAttended: student.schoolLastAttended || 'N/A',
-        studentCategoryStarnd: student.categoryStrand || 'N/A',
-        studentDateSemesterAdmitted: student.dateSemesterAdmitted || 'N/A',
-        courses, // Array of course data
-      };
-    });
-
-    // Filter out null values (students with no enrollments)
-    const validData = combinedData.filter((student) => student !== null);
-
-    //console.log('Grouped Student Data:', validData);
-
-    // Normalize values for filtering
-    const normalizedProgramNumber = String(programNumber);
-    const normalizedBatchYear = String(batchYear);
-
-    // Filter based on selected program and batch year
-    const filteredData = validData.filter(
-      (student) =>
-        String(student.studentProgramNumber) === normalizedProgramNumber &&
-        String(student.studentAdmissionYear) === normalizedBatchYear
-    );
-
-    //console.log('Filtered Student Data:', filteredData);
-
-    return filteredData;
-  } catch (error) {
-    console.error('Failed to fetch and filter student data:', error);
-    return [];
-  }
-};
+  
+      // Filter out null values (students with no enrollments)
+      const validData = combinedData.filter((student) => student !== null);
+  
+      // Normalize values for filtering
+      const normalizedProgramNumber = String(programNumber);
+      const normalizedBatchYear = String(batchYear);
+  
+      // Filter based on selected program and batch year
+      const filteredData = validData.filter(
+        (student) =>
+          String(student.studentProgramNumber) === normalizedProgramNumber &&
+          String(student.studentAdmissionYear) === normalizedBatchYear
+      );
+  
+      // Sort the filtered data by student surname (last name)
+      const sortedData = filteredData.sort((a, b) => {
+        const lastNameA = a.studentName.split(',')[0].toLowerCase();
+        const lastNameB = b.studentName.split(',')[0].toLowerCase();
+        return lastNameA.localeCompare(lastNameB);
+      });
+  
+      return sortedData;
+    } catch (error) {
+      console.error('Failed to fetch and filter student data:', error);
+      return [];
+    }
+  };
+  
 
 const fetchCurriculum = async (programNumber, batchYear) => {
   try {
@@ -662,152 +655,152 @@ const downloadPDF = () => {
       {/* Grades Table */}
 
       {Object.keys(semestersData).length === 0 && students.length === 0 ? (
-  <div className="text-center py-5 bg-white rounded pt-5 px-4 pb-5">
-    <h5 className="custom-color-green-font mt-5 fs-5">No Data Available</h5>
-    <p className="fs-6 mb-4">
-      Please ensure that all filters are applied then click "View" to display the data.
-    </p>
-  </div>
-) : (
-  <Table bordered responsive hover className="table-success mt-2 mb-4">
-  <thead className="table-success">
-    {/* Row for Year Levels */}
-    <tr>
-      <th className="custom-color-green-font custom-font">PROGRAM</th>
-      <th className="text-center custom-color-green-font custom-font" colSpan={2}>
-        {programName}
-      </th>
-      {Object.keys(semestersData).map((year, idx) => {
-        const academicYear = getAcademicYear(batchYear, idx + 1);
-        return (
-          <th
-            key={year}
-            colSpan={Object.values(semestersData[year]).flat().length}
-            className="text-center custom-color-green-font custom-font"
-          >
-            {`${year} YEAR A.Y. ${academicYear}`}
-          </th>
-        );
-      })}
-      <th
-        rowSpan="4"
-        className="align-middle text-center bg-white custom-color-green-font custom-font"
-      >
-        Transcript of Records (TOR)
-      </th>
-    </tr>
+      <div className="text-center py-5 bg-white rounded pt-5 px-4 pb-5">
+        <h5 className="custom-color-green-font mt-5 fs-5">No Data Available</h5>
+        <p className="fs-6 mb-4">
+          Please ensure that all filters are applied then click "View" to display the data.
+        </p>
+      </div>
+      ) : (
+          <Table bordered responsive hover className="table-success mt-2 mb-4">
+          <thead className="table-success">
+            {/* Row for Year Levels */}
+            <tr>
+              <th className="custom-color-green-font custom-font">PROGRAM</th>
+              <th className="text-center custom-color-green-font custom-font" colSpan={2}>
+                {programName}
+              </th>
+              {Object.keys(semestersData).map((year, idx) => {
+                const academicYear = getAcademicYear(batchYear, idx + 1);
+                return (
+                  <th
+                    key={year}
+                    colSpan={Object.values(semestersData[year]).flat().length}
+                    className="text-center custom-color-green-font custom-font"
+                  >
+                    {`${year} YEAR A.Y. ${academicYear}`}
+                  </th>
+                );
+              })}
+              <th
+                rowSpan="4"
+                className="align-middle text-center bg-white custom-color-green-font custom-font"
+              >
+                Transcript of Records (TOR)
+              </th>
+            </tr>
 
-    {/* Row for Program Code */}
-    <tr>
-      <th className="custom-color-green-font custom-font">PROGRAM CODE</th>
-      <th className="text-center custom-color-green-font custom-font" colSpan={2}>
-        {programCode}
-      </th>
-      {Object.keys(semestersData).map((year, idx) => {
-        const academicYear = getAcademicYear(batchYear, idx + 1);
-        return Object.keys(semestersData[year]).map((semester) => (
-          <th
-            key={`${year}-${semester}`}
-            colSpan={semestersData[year][semester].length}
-            className="text-center bg-white custom-color-green-font custom-font"
-          >
-            {`${semester.toUpperCase()} SEMESTER A.Y. ${academicYear}`}
-          </th>
-        ));
-      })}
-    </tr>
+            {/* Row for Program Code */}
+            <tr>
+              <th className="custom-color-green-font custom-font">PROGRAM CODE</th>
+              <th className="text-center custom-color-green-font custom-font" colSpan={2}>
+                {programCode}
+              </th>
+              {Object.keys(semestersData).map((year, idx) => {
+                const academicYear = getAcademicYear(batchYear, idx + 1);
+                return Object.keys(semestersData[year]).map((semester) => (
+                  <th
+                    key={`${year}-${semester}`}
+                    colSpan={semestersData[year][semester].length}
+                    className="text-center bg-white custom-color-green-font custom-font"
+                  >
+                    {`${semester.toUpperCase()} SEMESTER A.Y. ${academicYear}`}
+                  </th>
+                ));
+              })}
+            </tr>
 
-    {/* Row for Batch / Year */}
-    <tr>
-      <th className="custom-color-green-font custom-font">BATCH / YEAR</th>
-      <th className="text-center custom-color-green-font custom-font" colSpan={2}>
-        ({Object.keys(semestersData).length}) {batchYear}
-      </th>
-      {Object.keys(semestersData).map((year) => {
-        return Object.keys(semestersData[year]).map((semester) =>
-          semestersData[year][semester].map((course, courseIdx) => (
-            <th
-              key={`${year}-${semester}-${courseIdx}`}
-              className="text-center custom-color-green-font bg-white custom-font"
-              rowSpan={2}
-            >
-              {course.courseCode}
-            </th>
-          ))
-        );
-      })}
-    </tr>
-  </thead>
-  <tbody>
-  {students.length === 0 ? (
-    <tr>
-      <td
-        colSpan={
-          3 +
-          Object.keys(semestersData).reduce(
-            (acc, year) =>
-              acc +
-              Object.keys(semestersData[year]).reduce(
-                (acc2, semester) =>
-                  acc2 + semestersData[year][semester].length,
-                0
-              ),
-            0
-          ) +
-          1
-        }
-        className="text-center fst-italic bg-white"
-      >
-        No Student Data Available
-      </td>
-    </tr>
-  ) : (
-    students.map((student, rowIdx) => (
-      <tr key={rowIdx}>
-        {/* Student Info */}
-        <td className="text-center bg-white">{rowIdx + 1}</td>
-        <td className="text-center bg-white">{student.studentNumber}</td>
-        <td className="bg-white">{student.studentName}</td>
+            {/* Row for Batch / Year */}
+            <tr>
+              <th className="custom-color-green-font custom-font">BATCH / YEAR</th>
+              <th className="text-center custom-color-green-font custom-font" colSpan={2}>
+                ({Object.keys(semestersData).length}) {batchYear}
+              </th>
+              {Object.keys(semestersData).map((year) => {
+                return Object.keys(semestersData[year]).map((semester) =>
+                  semestersData[year][semester].map((course, courseIdx) => (
+                    <th
+                      key={`${year}-${semester}-${courseIdx}`}
+                      className="text-center custom-color-green-font bg-white custom-font"
+                      rowSpan={2}
+                    >
+                      {course.courseCode}
+                    </th>
+                  ))
+                );
+              })}
+            </tr>
+          </thead>
+          <tbody>
+          {students.length === 0 ? (
+            <tr>
+              <td
+                colSpan={
+                  3 +
+                  Object.keys(semestersData).reduce(
+                    (acc, year) =>
+                      acc +
+                      Object.keys(semestersData[year]).reduce(
+                        (acc2, semester) =>
+                          acc2 + semestersData[year][semester].length,
+                        0
+                      ),
+                    0
+                  ) +
+                  1
+                }
+                className="text-center fst-italic bg-white"
+              >
+                No Student Data Available
+              </td>
+            </tr>
+          ) : (
+            students.map((student, rowIdx) => (
+              <tr key={rowIdx}>
+                {/* Student Info */}
+                <td className="text-center bg-white">{rowIdx + 1}</td>
+                <td className="text-center bg-white">{student.studentNumber}</td>
+                <td className="bg-white">{student.studentName}</td>
 
-        {/* Display Grades */}
-        {Object.keys(semestersData).map((year) =>
-          Object.keys(semestersData[year]).map((semester) =>
-            semestersData[year][semester].map((course, gradeIdx) => {
-              // Find the grade for the course
-              const courseGrade = student.courses.find(
-                (studentCourse) => studentCourse.courseCode === course.courseCode
-              )?.grade;
+                {/* Display Grades */}
+                {Object.keys(semestersData).map((year) =>
+                  Object.keys(semestersData[year]).map((semester) =>
+                    semestersData[year][semester].map((course, gradeIdx) => {
+                      // Find the grade for the course
+                      const courseGrade = student.courses.find(
+                        (studentCourse) => studentCourse.courseCode === course.courseCode
+                      )?.grade;
 
-              return (
-                <td
-                  key={`${year}-${semester}-${gradeIdx}`}
-                  className="text-center bg-white"
-                >
-                  {courseGrade !== undefined ? courseGrade : '-'}
+                      return (
+                        <td
+                          key={`${year}-${semester}-${gradeIdx}`}
+                          className="text-center bg-white"
+                        >
+                          {courseGrade !== undefined ? courseGrade : '-'}
+                        </td>
+                      );
+                    })
+                  )
+                )}
+
+                {/* TOR Button */}
+                <td className="bg-white">
+                  <Button
+                    variant="success"
+                    className="w-100"
+                    onClick={() => handleTORClick(student)}
+                  >
+                    TOR
+                  </Button>
                 </td>
-              );
-            })
-          )
+              </tr>
+            ))
+          )}
+        </tbody>
+
+        </Table>
+
         )}
-
-        {/* TOR Button */}
-        <td className="bg-white">
-          <Button
-            variant="success"
-            className="w-100"
-            onClick={() => handleTORClick(student)}
-          >
-            TOR
-          </Button>
-        </td>
-      </tr>
-    ))
-  )}
-</tbody>
-
-</Table>
-
-)}
 
       {/* Modal for displaying student's TOR */}
       <Modal show={showModal} onHide={handleCloseModal} size="xl"  className="custom-modal-width">

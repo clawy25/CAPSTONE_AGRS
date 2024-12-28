@@ -194,14 +194,7 @@ const MasterlistOfGradesTable = () => {
       const groupedData = filteredSchedules.reduce((acc, schedule) => {
         const { sectionNumber, courseCode, personnelNumber } = schedule;
         const personnelLastName = personnelNameLastMap[personnelNumber] || "Unknown";
-        const courseDetails = courseDetailsMap[courseCode] || {
-          courseDescriptiveTitle: '-',
-          courseLecture: 0,
-          courseLaboratory: 0,
-        };
   
-        // Calculate total units (lecture + laboratory)
-        const totalUnits = courseDetails.courseLecture + courseDetails.courseLaboratory;
   
         // Initialize section entry if not already present
         if (!acc[sectionNumber]) {
@@ -211,11 +204,7 @@ const MasterlistOfGradesTable = () => {
         // Add the course data to the section's courses list
         acc[sectionNumber].courses.push({
           courseCode,
-          personnelLastName,
-          courseDescriptiveTitle: courseDetails.courseDescriptiveTitle,
-          courseLecture: courseDetails.courseLecture,
-          courseLaboratory: courseDetails.courseLaboratory,
-          totalUnits, // Add total units to the course data
+          personnelLastName, // Add total units to the course data
         });
   
         return acc;
@@ -367,7 +356,8 @@ const MasterlistOfGradesTable = () => {
   };
 
 
-  const getSemesterText = (sem) => {
+  const getSemesterText = (semester) => {
+    const sem = parseInt(semester, 10);
     switch (sem) {
       case 1:
         return "First";
@@ -1327,7 +1317,7 @@ const MasterlistOfGradesTable = () => {
               <td className="fs-6 fw-bold">STUDENT ID NO.:</td>
               <td className="fs-6">{selectedStudent ? selectedStudent.studentNumber : "(Student Number of the Student)"}</td>
               <td className="fs-6 fw-bold">SEMESTER:</td>
-              <td className="fs-6">{selectedSemester}</td>
+              <td className="fs-6">{getSemesterText(selectedSemester)}</td>
             </tr>
             <tr>
               <td className="fs-6 fw-bold">PROGRAM CODE & DESCRIPTION:</td>
@@ -1342,7 +1332,7 @@ const MasterlistOfGradesTable = () => {
           <Table bordered className="text-center border-black grades-table">
             <thead>
               <tr>
-                <th colSpan="7" className='fs-6 text-uppercase'>{getSemesterText(semester)} SEMESTER</th>
+                <th colSpan="7" className='fs-6 text-uppercase'>{getSemesterText(selectedSemester)} SEMESTER</th>
               </tr>
               <tr>
                 <th className='fs-6'>CODE</th>

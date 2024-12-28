@@ -90,7 +90,7 @@ export default function StudentProfile() {
     } finally {
       setIsSaving(false);
     }
-  };
+  }; 
 
   return (
     <Card className="bg-white rounded">

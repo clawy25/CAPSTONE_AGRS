@@ -134,6 +134,6 @@ export default function StudentChangePassword() {
           </Button>
         </Form>
       </CardBody>
-    </Card>
+    </Card> 
   );
 }

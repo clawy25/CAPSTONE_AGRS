@@ -153,8 +153,10 @@ export default class StudentModel {
     }
 
     static async updateStudent(studentNumber, updatedFields) {
+      const apiUrl = process.env.REACT_APP_API_URL;
         try {
-          const response = await fetch(`/student/${studentNumber}`, {
+
+          const response = await fetch(`${apiUrl}/student/${studentNumber}`, {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json',

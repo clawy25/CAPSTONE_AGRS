@@ -1,12 +1,16 @@
-import React, { useState, useEffect, useRef, useContext } from 'react';
-import { Form, Row, Col, Button, Modal, Table } from 'react-bootstrap';
+import React, { useState, useEffect, useContext } from 'react';
+import { Button, Modal, Table } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css'; 
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faBook } from '@fortawesome/free-solid-svg-icons';
 import { UserContext } from '../Context/UserContext';
 import StudentModel from '../ReactModels/StudentModel';
 import CourseModel from '../ReactModels/CourseModel';
 import SemGradeModel from '../ReactModels/SemGradeModel';
 import EnrollmentModel from '../ReactModels/EnrollmentModel';
 import ScheduleModel from '../ReactModels/ScheduleModel';
+import AcademicYearModel from '../ReactModels/AcademicYearModel';
+import TimelineModel from '../ReactModels/TimelineModel'
 import './Grades.css';
 import '../App.css';
 
@@ -22,10 +26,9 @@ export default function Grades(){
     const fetchStudentData = async (studentNumber) => {
       try {
         // Fetch necessary data from models
-        const [studentsData, enrolledStudents, scheduleData, courseData] = await Promise.all([
+        const [studentsData, enrolledStudents, courseData] = await Promise.all([
           StudentModel.fetchExistingStudents(),
           EnrollmentModel.fetchAllEnrollment(),
-          ScheduleModel.fetchAllSchedules(),
           CourseModel.fetchAllCourses(),
         ]);
     
@@ -121,6 +124,7 @@ export default function Grades(){
             courseDescriptiveTitle,
             courseLecture,
             courseLaboratory,
+            coursePreRequisite,
           } = course;
   
           // Calculate unit of credits
@@ -142,6 +146,7 @@ export default function Grades(){
             courseLecture,
             courseLaboratory,
             unitOfCredits,
+            coursePreRequisite,
           });
   
           return acc;
@@ -159,6 +164,20 @@ export default function Grades(){
     
     fetchStudentData(user.studentNumber);
   });
+
+  const getSemesterText = (semester) => {
+    const sem = parseInt(semester, 10);
+    switch (sem) {
+      case 1:
+        return "First";
+      case 2:
+        return "Second";
+      case 3:
+        return "Summer";
+      default:
+        return `${sem}`;
+    }
+  };
 
   function getGradeDescription(grade) {
     // Handle special cases for 'INC', 'NC', 'OD', 'FA', 'UD'
@@ -199,11 +218,19 @@ export default function Grades(){
             <p className='custom-color-green-font mt-3 ms-1 fs-6 custom-color-green-font fw-bold'>  ({user.studentNumber})</p>
           </div>
           <div className='card-body card-success border-success rounded'>
+            
+          <div className="d-flex justify-content-end">
+            <Button 
+              className='text-success bg-white border-0 fs-6 fw-semibold' 
+              onClick={() => setShowModal(true)}
+            >
+              <FontAwesomeIcon icon={faBook} /> Curriculum
+            </Button>
+          </div>
 
-            <Button onClick={() => setShowModal(true)}>Curriculum</Button>
           <div className="card">
           <div className="card-header bg-custom-color-green d-flex">
-            <p className="text-white mt-2 ms-1 fs-6 gw-semibold custom-color">
+            <p className="text-white mt-1 fs-6 gw-semibold custom-color">
               Academic Year ({studentData.studentCurrentYearLevel}) First Semester ({studentData.studentCurrentProgram}) 
             </p>
           </div>
@@ -216,6 +243,7 @@ export default function Grades(){
                   <th className="text-success custom-font">Total Units</th>
                   <th className="text-success custom-font">Grade</th>
                   <th className="text-success custom-font">Remarks</th>
+
                 </tr>
               </thead>
               <tbody>
@@ -227,6 +255,7 @@ export default function Grades(){
                       <td className="custom-font">{course.unitOfCredits}</td>
                       <td className="custom-font">{course.finalGrade}</td>
                       <td className="custom-font">{getGradeDescription(course.finalGrade)}</td>
+                      
                     </tr>
                   ))
                 ) : (
@@ -252,7 +281,7 @@ export default function Grades(){
                 <h4>Year Level {yearLevel}</h4>
                 {Object.keys(curriculum[yearLevel]).map((semester) => (
                   <div key={semester} className='table-responsive'>
-                    <h5>{semester} Semester</h5>
+                    <h5>{getSemesterText(semester)} Semester</h5>
                     <Table striped bordered hover>
                       <thead>
                         <tr>
@@ -261,6 +290,7 @@ export default function Grades(){
                           <th>Lecture Hours</th>
                           <th>Laboratory Hours</th>
                           <th>Unit Credits</th>
+                          <th>Pre Requisite</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -271,6 +301,7 @@ export default function Grades(){
                             <td>{course.courseLecture}</td>
                             <td>{course.courseLaboratory}</td>
                             <td>{course.unitOfCredits}</td>
+                            <td className="custom-font">{course.coursePreRequisite}</td>
                           </tr>
                         ))}
                       </tbody>
