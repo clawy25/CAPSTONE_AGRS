@@ -923,7 +923,10 @@ const ClassDetails = ({classList , classDetails}) => {
       //For bulk inserting grades in db
       const semesterGradeData = [];
       const allGrades = students.map((student, studentIndex) => {
-        const semestralGrade = calculateSemestralGrade(
+        
+        //const midtermGrade = 
+        const finalGrade = calculateFinalsGrade(studentIndex);
+        const semestralGrade = calculateSemestralGrade( //Semestral Grade
           calculateMidtermGrade(studentIndex), 
           calculateFinalsGrade(studentIndex)
         );
