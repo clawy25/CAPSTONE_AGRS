@@ -923,15 +923,22 @@ const ClassDetails = ({classList , classDetails}) => {
       //For bulk inserting grades in db
       const semesterGradeData = [];
       const allGrades = students.map((student, studentIndex) => {
-        
-        //const midtermGrade = 
+        const midtermCSGrade = calculateTotalMidtermCSGrade(studentIndex);
+        const midtermPBAGrade = calculateTotalsAndPBA(midtermPBAGradeScores[studentIndex], midtermPBAGradePercentage).pbaGrade;
+        const midtermExamGrade = calculateMidtermWeightedScore(calculateMidtermPercentage(midtermExamScores[student.id]?.score));
+        const midtermGrade = calculateMidtermGrade(studentIndex);
+
+        const finalCSGrade = calculateTotalFinalsCSGrade(studentIndex);
+        const finalPBAGrade = calculateTotalsAndPBA(finalsPBAGradeScores[studentIndex], finalsPBAGradePercentage).pbaGrade;
+        const finalExamGrade = calculateFinalWeightedScore(calculateFinalPercentage(finalsExamScores[student.id]?.score));
         const finalGrade = calculateFinalsGrade(studentIndex);
+
         const semestralGrade = calculateSemestralGrade( //Semestral Grade
           calculateMidtermGrade(studentIndex), 
           calculateFinalsGrade(studentIndex)
         );
     
-        const { numEq } = getSemestralNumericalEquivalentAndRemarks(
+        const { numEq , remarks } = getSemestralNumericalEquivalentAndRemarks(
           student.id,
           semestralGrade,
           MidtermhasBlankScores(studentIndex) || FinalshasBlankScores(studentIndex)
@@ -939,20 +946,56 @@ const ClassDetails = ({classList , classDetails}) => {
     
         return { 
           student: student.studentNumber,
-          numEq
+          midtermCS: midtermCSGrade,
+          midtermPBA: midtermPBAGrade,
+          midtermExam: midtermExamGrade,
+          midtermGrade: midtermGrade,
+          finalCS: finalCSGrade,
+          finalPBA: finalPBAGrade,
+          finalExam: finalExamGrade,
+          finalGrade: finalGrade,
+          semGrade: semestralGrade,
+          numEq,
+          remarks
         };
       });
-      //console.log(allGrades);
+      console.log(allGrades);
 
       allGrades.forEach((student) => {
         semesterGradeData.push({
           scheduleNumber: classInfo.scheduleNumber,
           studentNumber: student.student,
-          grade: parseFloat(student.numEq) || null
+          midtermCS: parseFloat(student.midtermCS) || null,
+          midtermPBA: parseFloat(student.midtermPBA) || null,
+          midtermExam: parseFloat(student.midtermExam) || null,
+          midtermGrade: parseFloat(student.midtermGrade) || null,
+          finalCS: parseFloat(student.finalCS) || null,
+          finalPBA: parseFloat(student.finalPBA) || null,
+          finalExam: parseFloat(student.finalExam) || null,
+          finalGrade: parseFloat(student.finalGrade) || null,
+          semGrade: parseFloat(student.semGrade) || null,
+          numEq: parseFloat(student.numEq) || null,
+          remarks: student.remarks
         });
       });
 
-      const verifyAll = semesterGradeData.find(row => row.grade === null);
+      
+      console.log(semesterGradeData);
+
+      const verifyAll = semesterGradeData.find(row => 
+        row.midtermCS === null || 
+        row.midtermPBA === null || 
+        row.midtermExam === null || 
+        row.midtermGrade === null || 
+        row.finalCS === null || 
+        row.finalPBA === null || 
+        row.finalExam === null || 
+        row.finalGrade === null || 
+        row.semGrade === null || 
+        row.numEq === null || 
+        row.remarks === null
+      );
+      
 
       if (verifyAll) {
         toast.error("Cannot submit as there is at least one student with no grade!");
@@ -961,6 +1004,7 @@ const ClassDetails = ({classList , classDetails}) => {
       } else {
         //Save the changes first
         const saveState = await handleSave();
+        console.log(semesterGradeData);
 
         const semgrades = await SemGradeModel.updateSemGradeData(semesterGradeData);
 
@@ -4692,7 +4736,7 @@ const handlePercentageChange = (setter, value) => {
         </Button>
         
         
-        <Button
+        {/*<Button
           className="post-button"
           disabled={!pendingStatus}
           style={{
@@ -4706,7 +4750,7 @@ const handlePercentageChange = (setter, value) => {
           onClick={handlePost} // Attach handler for Post to Students
         >
           POST
-        </Button>
+        </Button>*/}
       </div>
 
       {/* Confirmation Modal */}

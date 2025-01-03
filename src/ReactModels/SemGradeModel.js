@@ -1,9 +1,22 @@
 export default class SemGradeModel {
-    constructor(id, scheduleNumber, studentNumber, grade) {
+    constructor(id, scheduleNumber, studentNumber,
+                midtermCS, midtermPBA, midtermExam, midtermGrade,
+                finalCS, finalPBA, finalExam, finalGrade,
+                semGrade, numEq, remarks) {
         this.id = id;
         this.scheduleNumber = scheduleNumber;
         this.studentNumber = studentNumber;
-        this.grade = grade;
+        this.midtermCS = midtermCS;
+        this.midtermPBA = midtermPBA;
+        this.midtermExam = midtermExam;
+        this.midtermGrade = midtermGrade;
+        this.finalCS = finalCS;
+        this.finalPBA = finalPBA;
+        this.finalExam = finalExam;
+        this.finalGrade = finalGrade;
+        this.semGrade = semGrade;
+        this.numEq = numEq;
+        this.remarks = remarks;
     }
     
   static async fetchSemGradeData(scheduleNumber) {
@@ -26,7 +39,17 @@ export default class SemGradeModel {
             data.id,
             data.scheduleNumber,
             data.studentNumber,
-            data.grade
+            data.midtermCS,
+            data.midtermPBA,
+            data.midtermExam,
+            data.midtermGrade,
+            data.finalCS,
+            data.finalPBA,
+            data.finalExam,
+            data.finalGrade,
+            data.semGrade,
+            data.numEq,
+            data.remarks
         ));
     } catch (error) {
         console.error('Error fetching semgrades:', error);
