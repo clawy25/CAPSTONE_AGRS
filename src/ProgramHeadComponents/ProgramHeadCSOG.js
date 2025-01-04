@@ -15,6 +15,7 @@ import ScheduleModel from '../ReactModels/ScheduleModel';
 import CourseModel from '../ReactModels/CourseModel';
 import SemGradeModel from '../ReactModels/SemGradeModel';
 import PersonnelModel from '../ReactModels/PersonnelModel';
+import SubmissionModel from '../ReactModels/SubmissionModel';
 import '../App.css';
 
 
@@ -268,6 +269,7 @@ useEffect(() => {
       
         // Add course and schedule details to the section
         acc[sectionNumber].classes.push({
+          scheduleNumber: scheduleNumber,
           courseCode: courseCode,
           courseName: course.courseName,
           courseCredits: course.courseCredits,
@@ -406,10 +408,49 @@ useEffect(() => {
     };
 
   // Handle validate action
-  const handleValidate = () => {
+  const handleValidate = async () => {
+    const scheduleNumbers = getScheduleNumbersForSection(groupedData, currentSection);
+
+    console.log(scheduleNumbers);
+
+    const verify = await Promise.all(
+      scheduleNumbers.map(scheduleNumber => SubmissionModel.fetchSubmissionBySchedule(scheduleNumber))
+    );
+    
+    // Filter and map the data to update submissionStatus to 'Verified'
+    const submissionData = verify
+      .filter(submissions => submissions.length > 0) // Ignore empty arrays
+      .flatMap(submissions => 
+        submissions.map(submission => ({
+          ...submission,
+          submissionStatus: "Verified" // Update submissionStatus
+        }
+      )));
+
+    console.log(submissionData);
+
+    // const updatedData = submissionData.map(data => {
+    //   const { created_at, ...rest } = data; // Exclude created_at from the update payload
+    //   return rest;
+    // });
+
+    // console.log(updatedData);
+
+    
+    await SubmissionModel.updateSubmissionData(submissionData);
+
+
     setVerifiedSections((prev) => ({ ...prev, [currentSection]: true }));
     setShowModal(false);
   };
+
+  // Function to fetch scheduleNumbers for a specific section
+function getScheduleNumbersForSection(sections, sectionKey) {
+  if (!sections[sectionKey]) {
+    return `Section ${sectionKey} does not exist.`;
+  }
+  return sections[sectionKey].classes.map(cls => cls.scheduleNumber);
+}
 
   const printTable = () => {
     if (!dataFetched) {
@@ -562,16 +603,70 @@ useEffect(() => {
                                      ?.flatMap(p => p.semesters);
 
 
-  const handleView = () => {
-    if (selectedAcademicYear && selectedProgram && selectedYearLevel && selectedSemester) {
+  const handleView = async () => {
+    if (selectedAcademicYear && selectedProgram && selectedYearLevel && selectedSemester && selectedSection) {
       fetchCourses();
       fetchStudentData();
+
+      // if (groupedData){
+      //   const scheduleNumbers = getScheduleNumbersForSection(groupedData, selectedSection);
+
+      //   const verify = await Promise.all(
+      //     scheduleNumbers.map(scheduleNumber => SubmissionModel.fetchSubmissionBySchedule(scheduleNumber))
+      //   );
+
+      //   const filteredVerify = verify.filter(submissions => submissions.length > 0)
+      //                                .flatMap(submissions => submissions);
+
+      //   console.log(filteredVerify);
+
+      //   const allVerified = filteredVerify.every(row => row.submissionStatus === "Verified");
+
+      //   console.log(allVerified);
+
+      //   if(allVerified){
+      //     setVerifiedSections((prev) => ({ ...prev, [selectedSection]: true }));
+      //   }
+      // }
       setDataFetched(true); // Indicate that data has been fetched successfully.
     } else {
       setShowModalAlertView(true);
       setDataFetched(false); // Ensure dataFetched is false if filters are incomplete.
     }
   };
+  
+  useEffect(() => {
+    const fetchData = async () => {
+      if (selectedAcademicYear && selectedProgram && selectedYearLevel && selectedSemester && selectedSection && groupedData) {
+  
+        // Get schedule numbers for the section
+        const scheduleNumbers = getScheduleNumbersForSection(groupedData, selectedSection);
+  
+        // Check if scheduleNumbers is an array
+      if (Array.isArray(scheduleNumbers)) {
+        // Fetch the submissions for each schedule number
+        const verify = await Promise.all(
+          scheduleNumbers.map(scheduleNumber => SubmissionModel.fetchSubmissionBySchedule(scheduleNumber))
+        );
+
+        // Filter and flatten the results
+        const filteredVerify = verify.filter(submissions => submissions.length > 0)
+                                      .flatMap(submissions => submissions);
+
+        // Check if all submissions are verified
+        const allVerified = filteredVerify.every(row => row.submissionStatus === "Verified");
+
+        // // Update the state if all are verified
+        // if (allVerified) {
+        //   setVerifiedSections((prev) => ({ ...prev, [selectedSection]: true }));
+        // }
+      }
+      }
+    };
+  
+    fetchData(); // Call the async function inside useEffect
+  }, [selectedAcademicYear, selectedProgram, selectedYearLevel, selectedSemester, selectedSection, groupedData]);
+  
 
   const closeShowModalAlert = () => {
     setShowModalAlert(false);
@@ -707,149 +802,147 @@ useEffect(() => {
             .map(([sectionNumber, sectionData], sectionIndex) => (
               <div key={sectionIndex}>
                 {sectionData.classes.map((Class, courseIndex) => (
-  <div key={courseIndex} className="section-container mb-5 p-4 border rounded shadow-sm bg-white">
-    {/* First Table for the section */}
-    <div className="mb-4">
-      {/* Information above the first table */}
-      <h5 className="text-center custom-color-green-font">ACADEMIC AFFAIRS</h5>
-      <p className="text-center">Institute</p>
-      <h6 className="text-center">SUMMARY OF GRADES</h6>
-      <p className="text-center">{getSemesterText(parseInt(selectedSemester)).toUpperCase()} SEMESTER, SCHOOL YEAR {selectedAcademicYear}</p>
+                  <div key={courseIndex} className="section-container mb-5 p-4 border rounded shadow-sm bg-white">
+                  {/* First Table for the section */}
+                  <div className="mb-4">
+                    {/* Information above the first table */}
+                    <h5 className="text-center custom-color-green-font">ACADEMIC AFFAIRS</h5>
+                    <p className="text-center">Institute</p>
+                    <h6 className="text-center">SUMMARY OF GRADES</h6>
+                    <p className="text-center">{getSemesterText(parseInt(selectedSemester)).toUpperCase()} SEMESTER, SCHOOL YEAR {selectedAcademicYear}</p>
 
-      {/* Information rows */}
-      <div className="row">
-        {/* Left Column */}
-        <div className="col-6">
-          <p><strong>SUBJECT CODE:</strong> {Class.courseCode}</p>
-          <p><strong>SUBJECT DESCRIPTION:</strong> {Class.courseName}</p>
-          <p><strong>CREDIT UNITS:</strong> {Class.courseCredits}</p>
-        </div>
-        {/* Right Column */}
-        <div className="col-6">
-          <p><strong>DAY AND TIME:</strong> {`${Class.scheduleDay}, ${Class.startTime} - ${Class.endTime}`}</p>
-          <p><strong>FACULTY:</strong> {Class.personnelName}</p>
-          <p><strong>SECTION:</strong> {sectionNumber}</p>
-        </div>
-      </div>
-    </div>
+                      {/* Information rows */}
+                      <div className="row">
+                      {/* Left Column */}
+                        <div className="col-6">
+                          <p><strong>SUBJECT CODE:</strong> {Class.courseCode}</p>
+                          <p><strong>SUBJECT DESCRIPTION:</strong> {Class.courseName}</p>
+                          <p><strong>CREDIT UNITS:</strong> {Class.courseCredits}</p>
+                        </div>
+                      {/* Right Column */}
+                        <div className="col-6">
+                          <p><strong>DAY AND TIME:</strong> {`${Class.scheduleDay}, ${Class.startTime} - ${Class.endTime}`}</p>
+                          <p><strong>FACULTY:</strong> {Class.personnelName}</p>
+                          <p><strong>SECTION:</strong> {sectionNumber}</p>
+                        </div>
+                      </div>
+                    </div>
 
-    <Table bordered hover className="text-center mb-3">
-      {/* Table Header */}
-      <thead className="table-success">
-        <tr>
-          <th rowSpan={2} className="custom-color-green-font fixed-width" style={{ textAlign: 'center', verticalAlign: 'middle' }}>
-            STUDENT NO
-          </th>
-          <th rowSpan={2} className="custom-color-green-font fixed-width" style={{ textAlign: 'center', verticalAlign: 'middle' }}>
-            STUDENT NAME
-          </th>
-          <th colSpan={4} className="custom-color-green-font fixed-width" style={{ textAlign: 'center', verticalAlign: 'middle' }}>
-            MIDTERM %
-          </th>
-          <th colSpan={4} className="custom-color-green-font fixed-width" style={{ textAlign: 'center', verticalAlign: 'middle' }}>
-            FINALS %
-          </th>
-          <th rowSpan={2} className="custom-color-green-font fixed-width" style={{ textAlign: 'center', verticalAlign: 'middle' }}>
-            SEMESTRAL GRADE
-          </th>
-          <th rowSpan={2} className="custom-color-green-font fixed-width" style={{ textAlign: 'center', verticalAlign: 'middle' }}>
-            NUMERICAL EQUIVALENT
-          </th>
-          <th rowSpan={2} className="custom-color-green-font fixed-width" style={{ textAlign: 'center', verticalAlign: 'middle' }}>
-            REMARKS
-          </th>
-        </tr>
-        <tr>
-          <th className="bg-success text-white fixed-width" style={{ textAlign: 'center', verticalAlign: 'middle' }}>CLASS STANDING %</th>
-          <th className="bg-success text-white fixed-width" style={{ textAlign: 'center', verticalAlign: 'middle' }}>OUTCOME BASED ASSESSMENT %</th>
-          <th className="bg-success text-white student-name" style={{ textAlign: 'center', verticalAlign: 'middle' }}>MIDTERM EXAM %</th>
-          <th className="bg-success text-white student-name"style={{ textAlign: 'center', verticalAlign: 'middle' }} >MIDTERM GRADE</th>
-          <th className="bg-success text-white fixed-width" style={{ textAlign: 'center', verticalAlign: 'middle' }}>CLASS STANDING %</th>
-          <th className="bg-success text-white fixed-width" style={{ textAlign: 'center', verticalAlign: 'middle' }}>OUTCOME BASED ASSESSMENT %</th>
-          <th className="bg-success text-white student-name" style={{ textAlign: 'center', verticalAlign: 'middle' }}>FINAL EXAM %</th>
-          <th className="bg-success text-white student-name" style={{ textAlign: 'center', verticalAlign: 'middle' }}>FINAL GRADE</th>
-        </tr>
-      </thead>
-      {/* Table Body */}
-      <tbody>
-        {Class.classGrades.grades.map((student, index) => (
-          <tr key={index}>
-            <td>{student.studentNumber}</td>
-            <td>{student.studentLastName}, {student.studentFirstName} {student.studentMiddleName}</td>
-            <td>{student.midtermCS.toFixed(2)}</td>
-            <td>{student.midtermPBA.toFixed(2)}</td>
-            <td>{student.midtermExam.toFixed(2)}</td>
-            <td>{student.midtermGrade.toFixed(2)}</td>
-            <td>{student.finalCS.toFixed(2)}</td>
-            <td>{student.finalPBA.toFixed(2)}</td>
-            <td>{student.finalExam.toFixed(2)}</td>
-            <td>{student.finalGrade.toFixed(2)}</td>
-            <td>{student.semGrade.toFixed(2)}</td>
-            <td>{student.numEq.toFixed(2)}</td>
-            <td>{student.remarks}</td>
-          </tr>
-        ))}
-      </tbody>
-    </Table>
+                    <Table bordered hover className="text-center mb-3">
+                      {/* Table Header */}
+                    <thead className="table-success">
+                      <tr>
+                        <th rowSpan={2} className="custom-color-green-font fixed-width" style={{ textAlign: 'center', verticalAlign: 'middle' }}>
+                          STUDENT NO
+                        </th>
+                        <th rowSpan={2} className="custom-color-green-font fixed-width" style={{ textAlign: 'center', verticalAlign: 'middle' }}>
+                          STUDENT NAME
+                        </th>
+                        <th colSpan={4} className="custom-color-green-font fixed-width" style={{ textAlign: 'center', verticalAlign: 'middle' }}>
+                          MIDTERM %
+                        </th>
+                        <th colSpan={4} className="custom-color-green-font fixed-width" style={{ textAlign: 'center', verticalAlign: 'middle' }}>
+                          FINALS %
+                        </th>
+                        <th rowSpan={2} className="custom-color-green-font fixed-width" style={{ textAlign: 'center', verticalAlign: 'middle' }}>
+                          SEMESTRAL GRADE
+                        </th>
+                        <th rowSpan={2} className="custom-color-green-font fixed-width" style={{ textAlign: 'center', verticalAlign: 'middle' }}>
+                          NUMERICAL EQUIVALENT
+                        </th>
+                        <th rowSpan={2} className="custom-color-green-font fixed-width" style={{ textAlign: 'center', verticalAlign: 'middle' }}>
+                          REMARKS
+                        </th>
+                      </tr>
+                      <tr>
+                        <th className="bg-success text-white fixed-width" style={{ textAlign: 'center', verticalAlign: 'middle' }}>CLASS STANDING %</th>
+                        <th className="bg-success text-white fixed-width" style={{ textAlign: 'center', verticalAlign: 'middle' }}>OUTCOME BASED ASSESSMENT %</th>
+                        <th className="bg-success text-white student-name" style={{ textAlign: 'center', verticalAlign: 'middle' }}>MIDTERM EXAM %</th>
+                        <th className="bg-success text-white student-name"style={{ textAlign: 'center', verticalAlign: 'middle' }} >MIDTERM GRADE</th>
+                        <th className="bg-success text-white fixed-width" style={{ textAlign: 'center', verticalAlign: 'middle' }}>CLASS STANDING %</th>
+                        <th className="bg-success text-white fixed-width" style={{ textAlign: 'center', verticalAlign: 'middle' }}>OUTCOME BASED ASSESSMENT %</th>
+                        <th className="bg-success text-white student-name" style={{ textAlign: 'center', verticalAlign: 'middle' }}>FINAL EXAM %</th>
+                        <th className="bg-success text-white student-name" style={{ textAlign: 'center', verticalAlign: 'middle' }}>FINAL GRADE</th>
+                      </tr>
+                    </thead>
+                    {/* Table Body */}
+                    <tbody>
+                      {Class.classGrades.grades.map((student, index) => (
+                        <tr key={index}>
+                          <td>{student.studentNumber}</td>
+                          <td>{student.studentLastName}, {student.studentFirstName} {student.studentMiddleName}</td>
+                          <td>{student.midtermCS.toFixed(2)}</td>
+                          <td>{student.midtermPBA.toFixed(2)}</td>
+                          <td>{student.midtermExam.toFixed(2)}</td>
+                          <td>{student.midtermGrade.toFixed(2)}</td>
+                          <td>{student.finalCS.toFixed(2)}</td>
+                          <td>{student.finalPBA.toFixed(2)}</td>
+                          <td>{student.finalExam.toFixed(2)}</td>
+                          <td>{student.finalGrade.toFixed(2)}</td>
+                          <td>{student.semGrade.toFixed(2)}</td>
+                          <td>{student.numEq.toFixed(2)}</td>
+                          <td>{student.remarks}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    </Table>
 
-    {/* Partition for the second table */}
-    <div className="mt-5">
-      <h5 className="text-center custom-color-green-font">ACADEMIC AFFAIRS</h5>
-      <p className="text-center">Institute</p>
-      <h6 className="text-center">GRADE SHEET</h6>
-      <p className="text-center">{getSemesterText(parseInt(selectedSemester)).toUpperCase()} SEMESTER, SCHOOL YEAR {selectedAcademicYear}</p>
-      {/*<p className="text-center">DATE: 0</p>*/}
+                    {/* Partition for the second table */}
+                    <div className="mt-5">
+                      <h5 className="text-center custom-color-green-font">ACADEMIC AFFAIRS</h5>
+                      <p className="text-center">Institute</p>
+                      <h6 className="text-center">GRADE SHEET</h6>
+                      <p className="text-center">{getSemesterText(parseInt(selectedSemester)).toUpperCase()} SEMESTER, SCHOOL YEAR {selectedAcademicYear}</p>
+                    {/*<p className="text-center">DATE: 0</p>*/}
 
-      {/* Information rows */}
-      <div className="row">
-        {/* Left Column */}
-        <div className="col-6">
-          <p><strong>SUBJECT CODE:</strong> {Class.courseCode}</p>
-          <p><strong>SUBJECT DESCRIPTION:</strong> {Class.courseName}</p>
-          <p><strong>CREDIT UNITS:</strong> {Class.courseCredits}</p>
-        </div>
-        {/* Right Column */}
-        <div className="col-6">
-          <p><strong>DAY AND TIME:</strong> {`${Class.scheduleDay}, ${Class.startTime} - ${Class.endTime}`}</p>
-          <p><strong>FACULTY:</strong> {Class.personnelName}</p>
-          <p><strong>SECTION:</strong> {sectionNumber}</p>
-        </div>
-      </div>
-    </div>
+                    {/* Information rows */}
+                      <div className="row">
+                      {/* Left Column */}
+                        <div className="col-6">
+                          <p><strong>SUBJECT CODE:</strong> {Class.courseCode}</p>
+                          <p><strong>SUBJECT DESCRIPTION:</strong> {Class.courseName}</p>
+                          <p><strong>CREDIT UNITS:</strong> {Class.courseCredits}</p>
+                        </div>
+                        {/* Right Column */}
+                        <div className="col-6">
+                          <p><strong>DAY AND TIME:</strong> {`${Class.scheduleDay}, ${Class.startTime} - ${Class.endTime}`}</p>
+                          <p><strong>FACULTY:</strong> {Class.personnelName}</p>
+                          <p><strong>SECTION:</strong> {sectionNumber}</p>
+                        </div>
+                      </div>
+                    </div>
 
-    <Table bordered hover className="text-center mb-3">
-      {/* Table Header */}
-      <thead className="table-success">
-        <tr>
-          <th className="custom-color-green-font fixed-width">STUDENT NO</th>
-          <th className="custom-color-green-font fixed-width">STUDENT NAME</th>
-          <th className="custom-color-green-font fixed-width">MIDTERM %</th>
-          <th className="custom-color-green-font fixed-width">FINALS %</th>
-          <th className="custom-color-green-font fixed-width">SEMESTRAL GRADE</th>
-          <th className="custom-color-green-font fixed-width">NUMERICAL EQUIVALENT</th>
-          <th className="custom-color-green-font fixed-width">REMARKS</th>
-        </tr>
-      </thead>
-      {/* Table Body */}
-      <tbody>
-        {Class.classGrades.grades.map((student, index) => (
-          <tr key={index}>
-            <td>{student.studentNumber}</td>
-            <td>{student.studentLastName}, {student.studentFirstName} {student.studentMiddleName}</td>
-            <td>{student.midtermGrade.toFixed(2)}</td>
-            <td>{student.finalGrade.toFixed(2)}</td>
-            <td>{student.semGrade.toFixed(2)}</td>
-            <td><strong>{student.numEq.toFixed(2)}</strong></td>
-            <td>{student.remarks} </td>
-          </tr>
-        ))}
-      </tbody>
-    </Table>
-  </div>
-                ))}
-
-
-                
+                    <Table bordered hover className="text-center mb-3">
+                    {/* Table Header */}
+                    <thead className="table-success">
+                      <tr>
+                        <th className="custom-color-green-font fixed-width">STUDENT NO</th>
+                        <th className="custom-color-green-font fixed-width">STUDENT NAME</th>
+                        <th className="custom-color-green-font fixed-width">MIDTERM %</th>
+                        <th className="custom-color-green-font fixed-width">FINALS %</th>
+                        <th className="custom-color-green-font fixed-width">SEMESTRAL GRADE</th>
+                        <th className="custom-color-green-font fixed-width">NUMERICAL EQUIVALENT</th>
+                        <th className="custom-color-green-font fixed-width">REMARKS</th>
+                      </tr>
+                    </thead>
+                    {/* Table Body */}
+                    <tbody>
+                      {Class.classGrades.grades.map((student, index) => (
+                        <tr key={index}>
+                          <td>{student.studentNumber}</td>
+                          <td>{student.studentLastName}, {student.studentFirstName} {student.studentMiddleName}</td>
+                          <td>{student.midtermGrade.toFixed(2)}</td>
+                          <td>{student.finalGrade.toFixed(2)}</td>
+                          <td>{student.semGrade.toFixed(2)}</td>
+                          <td><strong>{student.numEq.toFixed(2)}</strong></td>
+                          <td>{student.remarks} </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    </Table>
+                  </div>
+                  )
+                )}
                 {/* Verify Button */}
                 <div className="d-flex justify-content-end">
                   {verifiedSections[sectionNumber] ? (
@@ -857,20 +950,17 @@ useEffect(() => {
                       <Button variant="success" disabled>
                         VERIFIED
                       </Button>
-                      <Button vaiant="secondary" className="mx-2" onClick={printTable}>Print</Button>
-
-
-
-
+                      <Button vaiant="secondary" className="mx-2" onClick={printTable}>PRINT</Button>
                     </>
                   ) : (
-                    <Button variant="primary" className="mt-2" onClick={() => handleVerifyClick(sectionNumber)}>
-                      Verify
-                    </Button>
+                      <Button variant="primary" disabled={groupedData[selectedSection].classes.some(cls => cls.classGrades.grades.length === 0)}
+                                                className="mt-2" onClick={() => handleVerifyClick(sectionNumber)}>
+                        VERIFY
+                      </Button>
                   )}
                 </div>
               </div>
-            ))}
+          ))}
         </>
       )}
 
@@ -880,7 +970,7 @@ useEffect(() => {
           <Modal.Title>Verification Section</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <p>This is to formally acknowledge that the grades submitted by the faculty for the <strong>{currentSection}</strong> have been reviewed and approved by the (PROGRAM HEAD NAME). The grades are deemed accurate and final for submission to the Registrar’s Office for recording in the official academic records.</p>
+          <p>This is to formally acknowledge that the grades submitted by the faculty for the <strong>{currentSection}</strong> have been reviewed and approved by <strong>{user.personnelNameFirst} {user.personnelNameMiddle} {user.personnelNameLast} </strong>. The grades are deemed accurate and final for submission to the Registrar’s Office for recording in the official academic records.</p>
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={handleCloseModal}>

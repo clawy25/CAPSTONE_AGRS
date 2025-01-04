@@ -62,7 +62,7 @@ static async createAndInsertSubmission(newSubmissionData) {
   }
 }
 
-static async updateSchedules(updatedSubmission) {
+static async updateSubmissionData(submissionData) {
   try {
     const apiUrl = process.env.REACT_APP_API_URL;
     const response = await fetch(`${apiUrl}/submission/update`, {
@@ -70,7 +70,7 @@ static async updateSchedules(updatedSubmission) {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ updatedSubmission })
+      body: JSON.stringify({ submissionData })
     });
 
     if (!response.ok) {
