@@ -38,8 +38,8 @@ const MasterlistOfGradesTable = () => {
   const [selectedAcademicYear, setSelectedAcademicYear] = useState('');
   const [selectedProgram, setSelectedProgram] = useState('');
   const [selectedYearLevel, setSelectedYearLevel] = useState('');
-  const [selectedSemester, setSelectedSemester] = useState('First');
-  const [selectedSection, setSelectedSection] = useState('A'); // Default to Section A
+  const [selectedSemester, setSelectedSemester] = useState('');
+  const [selectedSection, setSelectedSection] = useState();
   const [currentAcademicYear, setCurrentAcadYear] = useState([]);
   const [selectedStudent, setSelectedStudent] = useState([]);
   const [mappedData, setMappedData] = useState([]);
@@ -50,6 +50,8 @@ const MasterlistOfGradesTable = () => {
   const [validatedSections, setValidatedSections] = useState([]);
   const [expandedSection, setExpandedSection] = useState(null);
   const [verifiedSections, setVerifiedSections] = useState({});
+
+  console.log(verifiedSections);
 
 const handleShowModal = (section) => {
   setCurrentSection(section); // Set the section being validated
@@ -374,7 +376,10 @@ useEffect(() => {
   };
 
   const handleSectionChange = (e) => {
-    setSelectedSection(e.target.value); // Update the selected section
+    if (e.target.value === ""){
+      return;
+    }
+    setSelectedSection(e.target.value);
   };
 
   const sectionOptions = Object.keys(groupedData).sort();
@@ -607,27 +612,6 @@ function getScheduleNumbersForSection(sections, sectionKey) {
     if (selectedAcademicYear && selectedProgram && selectedYearLevel && selectedSemester && selectedSection) {
       fetchCourses();
       fetchStudentData();
-
-      // if (groupedData){
-      //   const scheduleNumbers = getScheduleNumbersForSection(groupedData, selectedSection);
-
-      //   const verify = await Promise.all(
-      //     scheduleNumbers.map(scheduleNumber => SubmissionModel.fetchSubmissionBySchedule(scheduleNumber))
-      //   );
-
-      //   const filteredVerify = verify.filter(submissions => submissions.length > 0)
-      //                                .flatMap(submissions => submissions);
-
-      //   console.log(filteredVerify);
-
-      //   const allVerified = filteredVerify.every(row => row.submissionStatus === "Verified");
-
-      //   console.log(allVerified);
-
-      //   if(allVerified){
-      //     setVerifiedSections((prev) => ({ ...prev, [selectedSection]: true }));
-      //   }
-      // }
       setDataFetched(true); // Indicate that data has been fetched successfully.
     } else {
       setShowModalAlertView(true);
@@ -643,24 +627,28 @@ function getScheduleNumbersForSection(sections, sectionKey) {
         const scheduleNumbers = getScheduleNumbersForSection(groupedData, selectedSection);
   
         // Check if scheduleNumbers is an array
-      if (Array.isArray(scheduleNumbers)) {
-        // Fetch the submissions for each schedule number
-        const verify = await Promise.all(
-          scheduleNumbers.map(scheduleNumber => SubmissionModel.fetchSubmissionBySchedule(scheduleNumber))
-        );
+        if (Array.isArray(scheduleNumbers) && scheduleNumbers.length > 0) {
+          // Fetch the submissions for each schedule number
+          const verify = await Promise.all(
+            scheduleNumbers.map(scheduleNumber => SubmissionModel.fetchSubmissionBySchedule(scheduleNumber))
+          );
 
-        // Filter and flatten the results
-        const filteredVerify = verify.filter(submissions => submissions.length > 0)
-                                      .flatMap(submissions => submissions);
+          console.log(verify);
+  
+          // Filter and flatten the results
+          const filteredVerify = verify.filter(submissions => submissions.length > 0)
+                                        .flatMap(submissions => submissions);
 
-        // Check if all submissions are verified
-        const allVerified = filteredVerify.every(row => row.submissionStatus === "Verified");
-
-        // // Update the state if all are verified
-        // if (allVerified) {
-        //   setVerifiedSections((prev) => ({ ...prev, [selectedSection]: true }));
-        // }
-      }
+          console.log(filteredVerify);
+          if(filteredVerify.length > 0){
+            // Check if all submissions are verified
+            const allVerified = filteredVerify.every(row => row.submissionStatus === "Verified");
+            // Update the state if all are verified
+            if (allVerified) {
+              setVerifiedSections((prev) => ({ ...prev, [selectedSection]: true }));
+            }
+          }
+        }
       }
     };
   
@@ -763,7 +751,7 @@ function getScheduleNumbersForSection(sections, sectionKey) {
         <Form.Label className='custom-color-green-font custom-font'>Section</Form.Label>
         <Form.Select value={selectedSection} onChange={handleSectionChange} className="border-success"
           disabled={!selectedSemester}>
-          <option value="">All Sections</option>
+          <option value="">Select Section</option>
           {sectionOptions.map((section) => (
             <option key={section} value={section}>
               {section}
@@ -797,11 +785,11 @@ function getScheduleNumbersForSection(sections, sectionKey) {
         </div>
       ) : (
         <>
-          {(selectedSection ? [[selectedSection, groupedData[selectedSection]]] : Object.entries(groupedData))
+          {(selectedSection && selectedSection !== '' && groupedData[selectedSection] ? [[selectedSection, groupedData[selectedSection]]] : Object.entries(groupedData))
             .filter(([sectionNumber]) => sectionNumber)
             .map(([sectionNumber, sectionData], sectionIndex) => (
               <div key={sectionIndex}>
-                {sectionData.classes.map((Class, courseIndex) => (
+                {sectionData?.classes?.map((Class, courseIndex) => (
                   <div key={courseIndex} className="section-container mb-5 p-4 border rounded shadow-sm bg-white">
                   {/* First Table for the section */}
                   <div className="mb-4">

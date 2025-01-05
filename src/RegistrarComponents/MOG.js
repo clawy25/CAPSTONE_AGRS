@@ -10,6 +10,7 @@ import EnrollmentModel from '../ReactModels/EnrollmentModel';
 import ScheduleModel from '../ReactModels/ScheduleModel';
 import CourseModel from '../ReactModels/CourseModel';
 import SemGradeModel from '../ReactModels/SemGradeModel';
+import SubmissionModel from '../ReactModels/SubmissionModel';
 import { UserContext } from '../Context/UserContext'; 
 import '../App.css'
 
@@ -65,14 +66,44 @@ function MasterlistOfGradesTable() {
     fetchStudentData();
   }, [user.programNumber]);
 
+  
+  const generateAcademicYears = (startYear) => Array.from({ length: 4 }, (_, i) => `${startYear + i}-${startYear + i + 1}`);
+
   const fetchStudentData = async (programNumber, batchYear) => {
     try {
+
+      const academicYears = generateAcademicYears(parseInt(batchYear));
       // Fetch necessary data from models
-      const [studentsData, enrolledStudents, scheduleData] = await Promise.all([
+      const [studentsData, enrolledStudents] = await Promise.all([
         StudentModel.fetchExistingStudents(),
-        EnrollmentModel.fetchAllEnrollment(),
-        ScheduleModel.fetchAllSchedules(),
+        EnrollmentModel.fetchAllEnrollment()
       ]);
+
+      const schedules = await Promise.all(
+        academicYears.map(async (acadYear) => {
+          return await ScheduleModel.fetchAllSchedules(acadYear);
+        })
+      );
+
+      const scheduleData = schedules.flat();
+
+      const submissionsBySchedule = await Promise.all(
+        scheduleData.map(async (schedule) => {
+          const submissions = await SubmissionModel.fetchSubmissionBySchedule(schedule.scheduleNumber);
+          return {
+            scheduleNumber: schedule.scheduleNumber,
+            status: submissions[0]?.submissionStatus,
+          };
+        })
+      );
+
+      // Example: Logging the submissions grouped by scheduleNumber
+      const filter = submissionsBySchedule.filter((submission) => submission.status === 'Verified');
+
+      const verifiedScheduleNumbers = new Set(filter.map((item) => item.scheduleNumber));
+      
+      
+      
   
       const semGradeDataPromises = enrolledStudents.map((enrollment) =>
         SemGradeModel.fetchSemGradeData(enrollment.scheduleNumber)
@@ -81,6 +112,9 @@ function MasterlistOfGradesTable() {
   
       // Flatten the array if fetchSemGradeData returns arrays
       const semGradeData = semGradeDataArray.flat();
+
+      console.log(semGradeData);
+
   
       // Combine data from students, enrollment, and schedules
       const combinedData = studentsData.map((student) => {
@@ -94,6 +128,8 @@ function MasterlistOfGradesTable() {
   
         // Map courses for the student
         const courses = studentEnrollments.map((enrollment) => {
+
+          const isVerified = verifiedScheduleNumbers.has(enrollment.scheduleNumber);
           const gradeData = semGradeData.find(
             (semGrade) =>
               semGrade.scheduleNumber === enrollment.scheduleNumber &&
@@ -103,7 +139,7 @@ function MasterlistOfGradesTable() {
           return {
             courseCode: enrollment.courseCode,
             scheduleNumber: enrollment.scheduleNumber,
-            grade: gradeData?.grade || 0,
+            grade: isVerified ? (gradeData?.numEq || 0) : 0
           };
         });
   

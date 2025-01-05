@@ -14,6 +14,7 @@ import ScheduleModel from '../ReactModels/ScheduleModel';
 import PersonnelModel from '../ReactModels/PersonnelModel';
 import SemGradeModel from '../ReactModels/SemGradeModel';
 import CourseModel from '../ReactModels/CourseModel';
+import SubmissionModel from '../ReactModels/SubmissionModel';
 import '../App.css';
 
 
@@ -239,6 +240,11 @@ const MasterlistOfGradesTable = () => {
           const schedule = scheduleData.find(
             (schedule) => schedule.scheduleNumber === enrollment.scheduleNumber
           );
+
+          const submission = await SubmissionModel.fetchSubmissionBySchedule(
+            enrollment.scheduleNumber
+          );
+          
   
           // Fetch semester grades based on scheduleNumber
           const semesterGrades = await SemGradeModel.fetchSemGradeData(
@@ -252,7 +258,10 @@ const MasterlistOfGradesTable = () => {
   
           // Separate scheduleNumber, studentGrade, and courseCode into arrays
           const scheduleNumber = enrollment.scheduleNumber || null;
-          const grade = studentGrade ? studentGrade.grade : 0;
+          let grade = 0;
+          if (submission && submission[0]?.submissionStatus === 'Verified'){
+            grade = studentGrade ? studentGrade.numEq : 0;
+          }
           const courseCode = schedule?.courseCode || null;
   
           // Fetch the course details based on courseCode
@@ -308,6 +317,7 @@ const MasterlistOfGradesTable = () => {
       }, []);
   
       // Set the distinct data to state
+      console.log(distinctData);
       setCombinedData(distinctData);
   
       return distinctData;
