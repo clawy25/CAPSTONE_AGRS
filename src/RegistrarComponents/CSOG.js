@@ -240,11 +240,10 @@ const MasterlistOfGradesTable = () => {
           const schedule = scheduleData.find(
             (schedule) => schedule.scheduleNumber === enrollment.scheduleNumber
           );
-
+  
           const submission = await SubmissionModel.fetchSubmissionBySchedule(
             enrollment.scheduleNumber
           );
-          
   
           // Fetch semester grades based on scheduleNumber
           const semesterGrades = await SemGradeModel.fetchSemGradeData(
@@ -259,7 +258,7 @@ const MasterlistOfGradesTable = () => {
           // Separate scheduleNumber, studentGrade, and courseCode into arrays
           const scheduleNumber = enrollment.scheduleNumber || null;
           let grade = 0;
-          if (submission && submission[0]?.submissionStatus === 'Verified'){
+          if (submission && submission[0]?.submissionStatus === 'Verified') {
             grade = studentGrade ? studentGrade.numEq : 0;
           }
           const courseCode = schedule?.courseCode || null;
@@ -278,6 +277,7 @@ const MasterlistOfGradesTable = () => {
             sectionNumber: schedule?.sectionNumber || null,
             scheduleNumber,
             studentGrade: grade,
+            semGrade: studentGrade ? studentGrade.semGrade : null, // Add semGrade here
             courseCode,
             courseDescription,
             courseLecture,
@@ -298,6 +298,7 @@ const MasterlistOfGradesTable = () => {
             sectionNumber: current.sectionNumber,
             scheduleNumbers: [current.scheduleNumber],
             studentGrades: [current.studentGrade],
+            semGrades: [current.semGrade], // Add semGrades array
             courseCodes: [current.courseCode],
             courseDescriptions: [current.courseDescription],
             courseLectures: [current.courseLecture],
@@ -307,6 +308,7 @@ const MasterlistOfGradesTable = () => {
           // If student already exists, push the new schedule data to arrays
           existing.scheduleNumbers.push(current.scheduleNumber);
           existing.studentGrades.push(current.studentGrade);
+          existing.semGrades.push(current.semGrade); // Push semGrade to semGrades array
           existing.courseCodes.push(current.courseCode);
           existing.courseDescriptions.push(current.courseDescription);
           existing.courseLectures.push(current.courseLecture);
@@ -325,6 +327,7 @@ const MasterlistOfGradesTable = () => {
       console.error('Failed to fetch student data:', error);
     }
   };
+  
 
   useEffect(() => {
     fetchAcademicYearsAndPrograms();
@@ -1117,6 +1120,25 @@ const MasterlistOfGradesTable = () => {
                           <td className="bg-white fixed-width">{rowIndex + 1}</td>
                           <td className="bg-white fixed-width">{studentData.studentNumber}</td>
                           <td className="bg-white student-name">{studentData.studentName}</td>
+
+                          {sectionData.courses.map((course, courseIndex) => {
+                            // Find the corresponding grade for this courseCode in the student's data
+                            const studentIndex = studentData.courseCodes.indexOf(course.courseCode);
+                            const semGrade = studentIndex !== -1
+                              ? studentData.semGrades[studentIndex] || '-'
+                              : '-';
+        
+                            // Check if the grade is a number and format it to two decimal places
+                            const formattedGrade = typeof semGrade === 'number'
+                              ? semGrade
+                              : semGrade;
+        
+                            return (
+                              <td key={`semGrade-${courseIndex}`} className="bg-white fixed-width">
+                                {formattedGrade}
+                              </td>
+                            );
+                          })}
         
                           {/* Loop through the courses for this section */}
                           {sectionData.courses.map((course, courseIndex) => {
@@ -1137,16 +1159,23 @@ const MasterlistOfGradesTable = () => {
                               </td>
                             );
                           })}
-        
-                          {/* Render 0.0 for course grades */}
-                          {sectionData.courses.map((course, courseIndex) => (
-                            <td key={`course-grade-${courseIndex}`} className="bg-white fixed-width">
-                              0.0
-                            </td>
-                          ))}
-        
+             
                           {/* Weighted Grade Average */}
-                          <td className="bg-white fixed-width">0.0</td>
+                          <td className="bg-white fixed-width">
+  {(() => {
+    // Filter studentGrades to include only valid numbers
+    const validGrades = studentData.studentGrades.filter(
+      (grade) => typeof grade === 'number' && !isNaN(grade)
+    );
+
+    // Calculate the weighted average if there are valid grades
+    const average = validGrades.length > 0
+      ? (validGrades.reduce((sum, grade) => sum + grade, 0) / validGrades.length).toFixed(2)
+      : '0.00';
+
+    return average;
+  })()}
+</td>
         
                           {/* COG Button */}
                           <td className="bg-white fixed-width">

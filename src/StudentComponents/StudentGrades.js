@@ -76,7 +76,7 @@ export default function Grades(){
             courseLaboratoryUnits: course?.courseLaboratory || 0,
             courseLectureUnits: course?.courseLecture || 0,
             unitOfCredits: totalUnits,
-            finalGrade: gradeData?.grade || "-",
+            finalGrade: gradeData?.numEq || "-",
             completion: gradeData?.completionStatus || "-",
           };
         });

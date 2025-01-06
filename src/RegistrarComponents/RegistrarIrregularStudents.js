@@ -9,6 +9,7 @@ import EnrollmentModel from '../ReactModels/EnrollmentModel';
 import ScheduleModel from '../ReactModels/ScheduleModel'
 import AcademicYearModel from '../ReactModels/AcademicYearModel';
 import PersonnelModel from '../ReactModels/PersonnelModel';
+import ProgramModel from '../ReactModels/ProgramModel';
 
 export default function RegistrarIrregularStudents() {
     const [irregularStudent, setIrregularStudent] = useState([]); // Full list of irregular students
@@ -213,17 +214,31 @@ export default function RegistrarIrregularStudents() {
     };
     
     
-    
     const fetchStudents = async () => {
         try {
             const studentData = await StudentModel.fetchExistingStudents();
             const listOfIrregularStudents = studentData.filter((student) => student.studentType === "Irregular");
-            setIrregularStudent(listOfIrregularStudents);
-            setFilteredStudent(listOfIrregularStudents);
+    
+            // Fetch all programs to map programNumber to programName
+            const programData = await ProgramModel.fetchAllPrograms();
+            const programMap = programData.reduce((map, program) => {
+                map[program.programNumber] = program.programName;
+                return map;
+            }, {});
+    
+            // Add programName to each student based on their programNumber
+            const updatedStudentData = listOfIrregularStudents.map((student) => ({
+                ...student,
+                programName: programMap[student.studentProgramNumber] || "Unknown Program"
+            }));
+    
+            setIrregularStudent(updatedStudentData);
+            setFilteredStudent(updatedStudentData);
         } catch (error) {
             console.error("Error fetching students:", error);
         }
     };
+    
 
     const handleSearch = (studentSearch) => {
         setSearchQuery(studentSearch);
@@ -292,53 +307,52 @@ export default function RegistrarIrregularStudents() {
             </Container>
 
             <Container fluid className="mt-4">
-                <Table responsive hover>
-                    <thead>
-                        <tr>
-                            <th>Student Number</th>
-                            <th>Student Name</th>
-                            <th>Program</th>
-                            <th>Admission Year</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {filteredStudent.length !== 0 ? (
-                            filteredStudent.map((student) => (
-                                <tr key={student.id}>
-                                    <td>{student.studentNumber}</td>
-                                    <td>{student.studentNameLast}, {student.studentNameFirst} {student.studentNameMiddle || ''}</td>
-                                    <td>{student.studentProgramNumber}</td>
-                                    <td>{student.studentAdmissionYr}</td>
-                                    <td>{student.studentType}</td>
-                                    <td className='d-flex justify-content-evenly'>
-                                        <Button
-                                            variant="warning"
-                                            className='w-50 me-2'
-                                            onClick={() => handleEnrollmentClick(student)} // Handle Enrollment button click
-                                        >
-                                            Enrollment
-                                        </Button>
-                                        <Button
-                                            variant="warning"
-                                            className='w-50'
-                                            onClick={() => handleAcademicRecordClick(student)} // Handle Academic Record button click
-                                        >
-                                            Academic Record
-                                        </Button>
-                                    </td>
-                                </tr>
-                            ))
-                        ) : (
-                            <tr>
-                                <td colSpan="6" className="text-center fst-italic">
-                                    No students found
-                                </td>
-                            </tr>
-                        )}
-                    </tbody>
-                </Table>
+            <Table responsive hover>
+    <thead>
+        <tr>
+            <th>Student Number</th>
+            <th>Student Name</th>
+            <th>Program Name</th>
+            <th>Admission Year</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {filteredStudent.length !== 0 ? (
+            filteredStudent.map((student) => (
+                <tr key={student.id}>
+                    <td>{student.studentNumber}</td>
+                    <td>{student.studentNameLast}, {student.studentNameFirst} {student.studentNameMiddle || ''}</td>
+                    <td>{student.programName}</td> {/* Display program name here */}
+                    <td>{student.studentYrLevel}</td>
+                    <td className='d-flex justify-content-evenly'>
+                        <Button
+                            variant="warning"
+                            className='w-50 me-2'
+                            onClick={() => handleEnrollmentClick(student)} // Handle Enrollment button click
+                        >
+                            Enrollment
+                        </Button>
+                        <Button
+                            variant="warning"
+                            className='w-50'
+                            onClick={() => handleAcademicRecordClick(student)} // Handle Academic Record button click
+                        >
+                            Academic Record
+                        </Button>
+                    </td>
+                </tr>
+            ))
+        ) : (
+            <tr>
+                <td colSpan="6" className="text-center fst-italic">
+                    No students found
+                </td>
+            </tr>
+        )}
+    </tbody>
+</Table>
+
             </Container>
             {/* Academic Record Modal */}
             <Modal show={showAcademicRecordModal} size='lg' onHide={handleCloseAcademicRecordModal}>
@@ -405,186 +419,156 @@ export default function RegistrarIrregularStudents() {
             {/* Enrollment Modal */}
             
             <Modal show={showEnrollmentModal} size="xl" onHide={handleCloseEnrollmentModal}>
-        <Modal.Header closeButton>
-            <Modal.Title>Enrollment Details</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-            {selectedStudent ? (
-                <div>
-                    <h5>
-                        {selectedStudent.studentNameFirst} {selectedStudent.studentNameLast}
-                    </h5>
-                    <p>
-                        <strong>Student Number:</strong> {selectedStudent.studentNumber}
-                    </p>
-                    <p>
-                        <strong>Program:</strong> {selectedStudent.studentProgramNumber}
-                    </p>
-                    <p>
-                        <strong>Admission Year:</strong> {selectedStudent.studentAdmissionYr}
-                    </p>
+                <Modal.Header closeButton>
+                    <Modal.Title>Enrollment Details</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    {selectedStudent ? (
+                        <div>
+                            {/* Student Information */}
+                            <h5>
+                                {selectedStudent.studentNameFirst} {selectedStudent.studentNameLast}
+                            </h5>
+                            <p>
+                                <strong>Student Number:</strong> {selectedStudent.studentNumber}
+                            </p>
+                            <p>
+                                <strong>Program:</strong> {selectedStudent.studentProgramNumber}
+                            </p>
+                            <p>
+                                <strong>Admission Year:</strong> {selectedStudent.studentAdmissionYr}
+                            </p>
 
-                    {/* Enrollment Details Content */}
-                    <div className="table-responsive">
-                    <Table hover className="mt-2">
-    <thead>
-        <tr className="text-center">
-            <th className="text-success custom-font">#</th>
-            <th className="text-success custom-font">Course Code</th>
-            <th className="text-success custom-font">Course Description</th>
-            <th className="text-success custom-font">Lecture Units</th>
-            <th className="text-success custom-font">Lab Units</th>
-            <th className="text-success custom-font">Schedule</th>
-            <th className="text-success custom-font">Professor</th>
-            <th className="text-success custom-font">Section</th>
-            <th className="text-success custom-font">Schedule Number</th>
-        </tr>
-    </thead>
-    <tbody>
-        {rows.map((row, index) => (
-            <tr key={index}>
-                <td>{index + 1}</td>
-                {/* Course Selector */}
-                <td>
-                    <Form.Select
-                        value={row.courseCode}
-                        onChange={(e) => {
-                            const selectedCourse = courses.find(
-                                (course) => course.courseCode === e.target.value
-                            );
+                            {/* Enrollment Details Table */}
+                            <div className="table-responsive">
+                                <Table hover className="mt-2">
+                                    <thead>
+                                        <tr className="text-center">
+                                            <th className="text-success custom-font">#</th>
+                                            <th className="text-success custom-font">Course Code</th>
+                                            <th className="text-success custom-font">Course Description</th>
+                                            <th className="text-success custom-font">Lecture Units</th>
+                                            <th className="text-success custom-font">Lab Units</th>
+                                            <th className="text-success custom-font">Schedule</th>
+                                            <th className="text-success custom-font">Professor</th>
+                                            <th className="text-success custom-font">Section</th>
+                                            <th className="text-success custom-font">Schedule Number</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {rows.map((row, index) => (
+                                            <tr key={index}>
+                                                {/* Row Index */}
+                                                <td>{index + 1}</td>
+                                                {/* Course Selector */}
+                                                <td>
+                                                    <Form.Select
+                                                        value={row.courseCode}
+                                                        onChange={(e) => {
+                                                            const selectedCourse = courses.find(
+                                                                (course) => course.courseCode === e.target.value
+                                                            );
+                                                            setRows(
+                                                                rows.map((r, i) =>
+                                                                    i === index
+                                                                        ? {
+                                                                            ...r,
+                                                                            courseCode: e.target.value,
+                                                                            courseDescription: selectedCourse?.courseDescriptiveTitle || '',
+                                                                            courseLecture: selectedCourse?.courseLecture || 0,
+                                                                            courseLaboratory: selectedCourse?.courseLaboratory || 0,
+                                                                        }
+                                                                        : r
+                                                                )
+                                                            );
+                                                        }}
+                                                    >
+                                                        <option value="">Select Course</option>
+                                                        {courses.map((course, idx) => (
+                                                            <option key={idx} value={course.courseCode}>
+                                                                {course.courseCode}
+                                                            </option>
+                                                        ))}
+                                                    </Form.Select>
+                                                </td>
+                                                {/* Display Course Details */}
+                                                <td>
+                                                    <Form.Control type="text" value={row.courseDescription} readOnly />
+                                                </td>
+                                                <td>
+                                                    <Form.Control type="text" value={row.courseLecture} readOnly />
+                                                </td>
+                                                <td>
+                                                    <Form.Control type="text" value={row.courseLaboratory} readOnly />
+                                                </td>
+                                                {/* Schedule Selector */}
+                                                <td>
+                                                    <Form.Select
+                                                        value={row.scheduleNumber}
+                                                        onChange={(e) => {
+                                                            const selectedSchedule = schedules.find(
+                                                                (schedule) => schedule.scheduleNumber === e.target.value
+                                                            );
+                                                            setRows(
+                                                                rows.map((r, i) =>
+                                                                    i === index
+                                                                        ? {
+                                                                            ...r,
+                                                                            scheduleNumber: selectedSchedule?.scheduleNumber || '',
+                                                                            schedule: selectedSchedule?.schedule || '',
+                                                                            professorNumber: selectedSchedule?.personnelNumber || '',
+                                                                            professorName: selectedSchedule?.personnelName || '',
+                                                                            section: selectedSchedule?.sectionNumber || '',
+                                                                        }
+                                                                        : r
+                                                                )
+                                                            );
+                                                        }}
+                                                    >
+                                                        <option value="">Select Schedule</option>
+                                                        {schedules
+                                                            .filter((schedule) => schedule.courseCode === row.courseCode)
+                                                            .map((schedule, idx) => (
+                                                                <option key={idx} value={schedule.scheduleNumber}>
+                                                                    {schedule.schedule}
+                                                                </option>
+                                                            ))}
+                                                    </Form.Select>
+                                                </td>
+                                                {/* Professor, Section, and Schedule Number */}
+                                                <td>
+                                                    <Form.Control type="text" value={row.professorName} readOnly />
+                                                </td>
+                                                <td>
+                                                    <Form.Control type="text" value={row.section} readOnly />
+                                                </td>
+                                                <td>
+                                                    <Form.Control type="text" value={row.scheduleNumber} readOnly />
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </Table>
+                            </div>
 
-                            setRows(
-                                rows.map((r, i) =>
-                                    i === index
-                                        ? {
-                                              ...r,
-                                              courseCode: e.target.value,
-                                              courseDescription: selectedCourse?.courseDescriptiveTitle || '',
-                                              courseLecture: selectedCourse?.courseLecture || 0,
-                                              courseLaboratory: selectedCourse?.courseLaboratory || 0,
-                                          }
-                                        : r
-                                )
-                            );
-                        }}
-                    >
-                        <option value="">Select Course</option>
-                        {courses.map((course, idx) => (
-                            <option key={idx} value={course.courseCode}>
-                                {course.courseCode}
-                            </option>
-                        ))}
-                    </Form.Select>
-                </td>
-                {/* Display Course Description */}
-                <td>
-                    <Form.Control
-                        type="text"
-                        value={row.courseDescription}
-                        readOnly
-                    />
-                </td>
-                {/* Display Lecture Units */}
-                <td>
-                    <Form.Control
-                        type="text"
-                        value={row.courseLecture}
-                        readOnly
-                    />
-                </td>
-                {/* Display Laboratory Units */}
-                <td>
-                    <Form.Control
-                        type="text"
-                        value={row.courseLaboratory}
-                        readOnly
-                    />
-                </td>
-                {/* Schedule Selector */}
-                <td>
-                <Form.Select
-    value={row.scheduleNumber}
-    onChange={(e) => {
-        const selectedSchedule = schedules.find(
-            (schedule) => schedule.scheduleNumber === e.target.value
-        );
+                            {/* Add Row Button */}
+                            <div className="d-flex justify-content-left mt-3">
+                                <Button variant="primary" onClick={handleAddRow}>
+                                    Add Row
+                                </Button>
+                            </div>
+                        </div>
+                    ) : (
+                        <p>No student selected</p>
+                    )}
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="success" onClick={handleEnrollStudents}>
+                        Enroll
+                    </Button>
+                </Modal.Footer>
+            </Modal>
 
-        setRows(
-            rows.map((r, i) =>
-                i === index
-                    ? {
-                          ...r,
-                          scheduleNumber: selectedSchedule?.scheduleNumber || '',
-                          schedule: selectedSchedule?.schedule || '',
-                          professorNumber: selectedSchedule?.personnelNumber || '',
-                          professorName: selectedSchedule?.personnelName || '',
-                          section: selectedSchedule?.sectionNumber || '',
-                      }
-                    : r
-            )
-        );
-    }}
->
-    <option value="">Select Schedule</option>
-    {schedules
-        .filter((schedule) => schedule.courseCode === row.courseCode)
-        .map((schedule, idx) => (
-            <option key={idx} value={schedule.scheduleNumber}>
-                {schedule.schedule}
-            </option>
-        ))}
-</Form.Select>
-
-                </td>
-
-                {/* Professor */}
-                <td>
-                    <Form.Control
-                        type="text"
-                        value={row.professorName}
-                        readOnly
-                    />
-                </td>
-                {/* Section */}
-                <td>
-                    <Form.Control
-                        type="text"
-                        value={row.section}
-                        readOnly
-                    />
-                </td>
-                {/* Schedule Number */}
-                <td>
-                    <Form.Control
-                        type="text"
-                        value={row.scheduleNumber}
-                        readOnly
-                    />
-                </td>
-            </tr>
-        ))}
-    </tbody>
-</Table>
-<div className='d-flex justify-content-left'>
-<Button variant="primary" className='' onClick={handleAddRow}>
-        Add Row
-    </Button>
-    <div className='d-flex justify-content-left mt-3'>
-    <Button variant="success" onClick={handleEnrollStudents}>
-        Enroll
-    </Button>
-</div>
-
-</div>
-
-</div>
-
-                </div>
-            ) : (
-                <p>No student selected</p>
-            )}
-        </Modal.Body>
-    </Modal>
         </Container>
     );
 }
