@@ -77,6 +77,16 @@ export default class StudentModel {
                 data.studentProgramNumber,
                 null,
                 null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
                 null
             );
         } catch (error) {

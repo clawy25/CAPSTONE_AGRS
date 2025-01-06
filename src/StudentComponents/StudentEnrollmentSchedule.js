@@ -71,7 +71,7 @@ const ScheduleTable = () => {
   
       if (student) {
         // Set the student's full name
-        const fullName = `${student.studentNameLast},${student.studentNameFirst} ${student.studentNameMiddle || ''} ${student.studentNameLast}`;
+        const fullName = `${student.studentNameLast}, ${student.studentNameFirst} ${student.studentNameMiddle || ''}`;
         setStudentName(fullName.trim());
       } else {
         throw new Error("Student not found.");
