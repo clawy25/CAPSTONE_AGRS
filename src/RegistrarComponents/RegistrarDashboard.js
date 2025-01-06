@@ -13,7 +13,8 @@ import '../App.css';
 import { UserContext } from '../Context/UserContext';
 import CSOG from './CSOG';
 import MOG from './MOG';
-import Sections from './Sections'; // Import Sections component
+import Sections from './Sections'; 
+import RegistrarIrregularStudents from './RegistrarIrregularStudents'
 
 export default function RegistrarDashboard() {
   const navigate = useNavigate();
@@ -89,6 +90,13 @@ export default function RegistrarDashboard() {
               >
                 <FontAwesomeIcon icon={faTable} className="me-2" />
                 SECTIONS
+              </Link>
+              <Link 
+                to="/registrar-dashboard/irregular-students" 
+                className={`submenu-item d-flex align-items-center mb-2 ${location.pathname === '/registrar-dashboard/irregular-students' ? 'active' : ''}`}
+              >
+                <FontAwesomeIcon icon={faTable} className="me-2" />
+                IRREGULAR
               </Link>
             </div>
           )}
@@ -189,7 +197,8 @@ export default function RegistrarDashboard() {
           <Route path="staff/*" element={<RegistrarStaff />} />
           <Route path="academicYear" element={<HeadRegistrarAcademicYear />} />
           <Route path="profile" element={<RegistrarProfile />} />
-          <Route path="change-password" element={<NewPassword />} />
+          <Route path="change-password" element={<NewPassword />} /> 
+          <Route path="irregular-students" element={<RegistrarIrregularStudents />} />
         </Routes>
       </div>
     </div>

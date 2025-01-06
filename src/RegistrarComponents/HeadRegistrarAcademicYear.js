@@ -436,7 +436,7 @@ export default function HeadRegistrarAcademicYear() {
         </Form.Select>
       </Form.Group>
       </Col>
-      <Col className='d-flex'>
+      <Col className='d-flex justify-content-end'>
       <Button variant="success" className="mt-3 p-2 mb-1" value="addNew" onClick={handleAcademicYearChange}>
         Proceed to Next Academic Year
       </Button>

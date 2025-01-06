@@ -724,28 +724,30 @@ export default function FacultyDashboard () {
 
   {/* Table Content */}
   <div id="printableContent">
-  <div className="class-info-row mb-3 mx-2 p-2 border border-success fs-6 rounded bg-success text-white">
-  <div className="row">
-    <div className="col-12 col-md-2">
-      <strong>Academic Year:</strong> {selectedAcademicYear || "N/A"}
-    </div>
-    <div className="col-12 col-md-2">
-      <strong>Program:</strong> {UserProgram.programName || "Program Not Assigned"}
-    </div>
-    <div className="col-12 col-md-2">
-      <strong>Year Level:</strong> {selectedYearLevel || "N/A"}
-    </div>
-    <div className="col-12 col-md-2">
-      <strong>Semester:</strong> {selectedSemester || "N/A"}
-    </div>
-    <div className="col-12 col-md-2">
-      <strong>Section:</strong> {selectedSect || "N/A"}
-    </div>
-    <div className="col-12 col-md-2">
-      <strong>Course/Subject:</strong> {selectedCourse || "N/A"}
-    </div>
+  <div
+  className="class-info-row mb-3 mx-2 p-2 border border-success fs-6 rounded bg-success text-white"
+  style={{display: "grid", gridTemplateColumns: "1fr 1fr", columnGap: "20px", rowGap: "10px", padding: "10px", fontSize: "14px",}}>
+  <div>
+    <strong>Academic Year:</strong> {selectedAcademicYear || "N/A"}
   </div>
+  <div>
+    <strong>Program:</strong> {UserProgram.programName || "Program Not Assigned"}
+  </div>
+  <div>
+    <strong>Year Level:</strong> {selectedYearLevel || "N/A"}
+  </div>
+  <div>
+    <strong>Semester:</strong> {selectedSemester || "N/A"}
+  </div>
+  <div>
+    <strong>Section:</strong> {selectedSect || "N/A"}
+  </div>
+  <div>
+    <strong>Course/Subject:</strong> {selectedCourse || "N/A"}
+  </div>
+  
 </div>
+
 
 
 
