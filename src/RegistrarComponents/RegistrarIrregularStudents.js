@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Table, Container, Modal, Form } from 'react-bootstrap';
+import { Button, Table, Container, Modal, Form, Dropdown } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import StudentModel from '../ReactModels/StudentModel';
@@ -53,80 +53,91 @@ export default function RegistrarIrregularStudents() {
 
 
     const fetchCurriculum = async (programNumber, studentNumber) => {
-        console.log("Program Number:", programNumber);  // Debug: Log programNumber
-        console.log("Student Number:", studentNumber);  // Debug: Log studentNumber
+        console.log("Fetching curriculum for Program:", programNumber, "Student:", studentNumber);
+    
+        // Validate inputs
+        if (!programNumber || !studentNumber) {
+            console.error("Program number and student number are required.");
+            return;
+        }
     
         try {
-            // Fetch all courses
-            const curriculumCourses = await CourseModel.fetchAllCourses();
-            console.log("All Courses:", curriculumCourses);  // Log all courses
+            // Step 1: Fetch all data in parallel
+            const [allCourses, allEnrollments] = await Promise.all([
+                CourseModel.fetchAllCourses(),
+                EnrollmentModel.fetchAllEnrollment(),
+            ]);
     
-            // Filter courses by programNumber
-            const filteredCourses = curriculumCourses.filter(
+            console.log("Fetched courses and enrollments");
+    
+            // Step 2: Filter courses by programNumber
+            const programCourses = allCourses.filter(
                 (course) => String(course.programNumber) === String(programNumber)
             );
-            console.log("Filtered Courses:", filteredCourses);  // Log filtered courses
     
-            // Fetch all enrollment data to get scheduleNumber
-            const enrollmentData = await EnrollmentModel.fetchAllEnrollment();
-            console.log("Enrollment Data:", enrollmentData);  // Log enrollment data
+            console.log(`Filtered ${programCourses.length} courses for program ${programNumber}`);
     
-            const groupedCurriculum = {};
+            // Step 3: Index enrollments by courseCode for quick lookup
+            const enrollmentIndex = allEnrollments.reduce((acc, enrollment) => {
+                acc[enrollment.courseCode] = enrollment.scheduleNumber;
+                return acc;
+            }, {});
     
-            // Loop through each filtered course
-            for (const course of filteredCourses) {
+            console.log("Created enrollment index");
+    
+            // Step 4: Fetch grades in parallel and group curriculum
+            const curriculumPromises = programCourses.map(async (course) => {
                 const { courseYearLevel, courseSemester, courseCode } = course;
     
-                console.log("Checking Enrollment for Course Code:", courseCode);
+                // Find scheduleNumber for the course
+                const scheduleNumber = enrollmentIndex[courseCode];
+                if (!scheduleNumber) {
+                    console.log(`No scheduleNumber found for courseCode: ${courseCode}`);
+                    return null;
+                }
     
-                // Find the scheduleNumber from EnrollmentModel using courseCode
-                const enrollment = enrollmentData.find(
-                    (enrollment) => enrollment.courseCode === courseCode
+                // Fetch semGradeData for this scheduleNumber
+                const semGradeData = await SemGradeModel.fetchSemGradeData(scheduleNumber);
+                const studentGrade = semGradeData.find(
+                    (grade) => grade.studentNumber === studentNumber
                 );
     
-                if (enrollment) {
-                    const scheduleNumber = enrollment.scheduleNumber;
-                    console.log("Found scheduleNumber:", scheduleNumber);  // Log the found scheduleNumber
+                return {
+                    ...course,
+                    numEq: studentGrade?.numEq || "N/A",
+                    remarks: studentGrade?.remarks || "N/A",
+                    courseYearLevel,
+                    courseSemester,
+                };
+            });
     
-                    // Fetch the semGrade data using both studentNumber and scheduleNumber
-                    const semGradeData = await SemGradeModel.fetchSemGradeData(scheduleNumber);
-                    console.log("semGradeData:", semGradeData);  // Log the fetched semGrade data
-
-                    const filteredSemGradeData = semGradeData.find(
-                        (data) => data.studentNumber === studentNumber
-                    );
+            // Resolve all promises
+            const resolvedCurriculum = (await Promise.all(curriculumPromises)).filter(Boolean);
     
-                    // Add the semGrade (numEq and remarks) to the course
-                    const courseWithGrade = {
-                        ...course,
-                        numEq: filteredSemGradeData && filteredSemGradeData.numEq ? filteredSemGradeData.numEq : 'N/A',  // Default to 'N/A' if no grade
-                        remarks: filteredSemGradeData && filteredSemGradeData.remarks ? filteredSemGradeData.remarks : 'N/A'  // Default to 'N/A' if no remarks
-                    };
+            console.log("Resolved curriculum courses with grades");
     
-                    // Group the courses by Year Level and Semester
-                    if (!groupedCurriculum[courseYearLevel]) {
-                        groupedCurriculum[courseYearLevel] = {};
-                    }
-                    if (!groupedCurriculum[courseYearLevel][courseSemester]) {
-                        groupedCurriculum[courseYearLevel][courseSemester] = [];
-                    }
+            // Step 5: Group courses by year level and semester
+            const groupedCurriculum = resolvedCurriculum.reduce((acc, course) => {
+                const { courseYearLevel, courseSemester } = course;
     
-                    groupedCurriculum[courseYearLevel][courseSemester].push(courseWithGrade);
-                } else {
-                    console.log(`No enrollment found for courseCode: ${courseCode}`);
-                }
-            }
+                acc[courseYearLevel] = acc[courseYearLevel] || {};
+                acc[courseYearLevel][courseSemester] =
+                    acc[courseYearLevel][courseSemester] || [];
+                acc[courseYearLevel][courseSemester].push(course);
     
-            console.log("Grouped Curriculum:", groupedCurriculum);  // Log final grouped data
+                return acc;
+            }, {});
     
-            // Set the curriculum state
+            console.log("Grouped Curriculum:", groupedCurriculum);
+    
+            // Step 6: Update state
             setCurriculum(groupedCurriculum);
         } catch (error) {
-            console.error("Failed to fetch Curriculum data:", error);
+            console.error("Failed to fetch curriculum:", error);
         }
     };
-
-    const fetchCoursesAndSchedules = async (programNumber, studentNumber) => {
+    
+    const fetchCoursesAndSchedules = async (programNumber) => {
         console.log('programNumber', programNumber);
         try {
             // Fetch courses and filter by programNumber
@@ -179,17 +190,56 @@ export default function RegistrarIrregularStudents() {
     };
 
     const enrollStudents = async (enrollmentData) => {
+        // Validation: Check if any required field is missing
+        for (let i = 0; i < enrollmentData.length; i++) {
+            const data = enrollmentData[i];
+            
+            // Check for missing fields: Adjust according to your required fields
+            if (!data.studentNumber || !data.scheduleNumber || !data.courseCode || !data.status) {
+                console.error(`Missing required field in enrollment data at index ${i}:`, data);
+                alert("Please complete all required fields before enrolling.");
+                return; // Prevent further processing
+            }
+        }
+    
         try {
-            // Assuming EnrollmentModel.createAndInsertEnrollment can handle bulk insertion
-            await EnrollmentModel.createAndInsertEnrollment(enrollmentData);
-            console.log("Enrollment data inserted successfully:", enrollmentData);
+            // Fetch all enrollments from the database
+            const existingEnrollments = await EnrollmentModel.fetchAllEnrollment();
+    
+            // Check if any of the enrollmentData records already exist
+            for (let i = 0; i < enrollmentData.length; i++) {
+                const data = enrollmentData[i];
+    
+                // Check for existing enrollment based on studentNumber, courseCode, and scheduleNumber
+                const isExisting = existingEnrollments.some((enrollment) => 
+                    enrollment.studentNumber === data.studentNumber &&
+                    enrollment.courseCode === data.courseCode &&
+                    enrollment.scheduleNumber === data.scheduleNumber
+                );
+                
+                if (isExisting) {
+                    console.error(`Enrollment already exists for student ${data.studentNumber} in course ${data.courseCode} with schedule ${data.scheduleNumber}`);
+                    alert(`Student ${data.studentNumber} is already enrolled in ${data.courseCode} for this schedule.`);
+                    return; // Prevent further processing if a record exists
+                }
+                else if(!isExisting){
+                    console.log("Inserting enrollment data:", enrollmentData); 
+                    // Proceed to insert the data if no existing record is found
+                    await EnrollmentModel.createAndInsertEnrollment(enrollmentData);
+                    console.log("Enrollment data inserted successfully:", enrollmentData);
+                    alert("Enrollment successful!");
+                }
+            }
+    
+           
         } catch (error) {
             console.error("Error enrolling students:", error);
+            alert("Failed to enroll students. Please try again.");
             throw error;
         }
     };
     
-
+    
     const handleEnrollStudents = async () => {
         if (rows.length === 0) {
             alert("No courses selected for enrollment.");
@@ -203,9 +253,10 @@ export default function RegistrarIrregularStudents() {
             status: 'Ongoing', // Add status 'Ongoing'
         }));
     
+        console.log("Enrollment data:", enrollmentData); // Log the data to verify
+    
         try {
             await enrollStudents(enrollmentData);
-            alert("Enrollment successful!");
             handleCloseEnrollmentModal();
         } catch (error) {
             console.error("Error during enrollment:", error);
@@ -307,51 +358,57 @@ export default function RegistrarIrregularStudents() {
             </Container>
 
             <Container fluid className="mt-4">
+
             <Table responsive hover>
-    <thead>
-        <tr>
-            <th>Student Number</th>
-            <th>Student Name</th>
-            <th>Program Name</th>
-            <th>Admission Year</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        {filteredStudent.length !== 0 ? (
-            filteredStudent.map((student) => (
-                <tr key={student.id}>
-                    <td>{student.studentNumber}</td>
-                    <td>{student.studentNameLast}, {student.studentNameFirst} {student.studentNameMiddle || ''}</td>
-                    <td>{student.programName}</td> {/* Display program name here */}
-                    <td>{student.studentYrLevel}</td>
-                    <td className='d-flex justify-content-evenly'>
-                        <Button
-                            variant="warning"
-                            className='w-50 me-2'
-                            onClick={() => handleEnrollmentClick(student)} // Handle Enrollment button click
-                        >
-                            Enrollment
-                        </Button>
-                        <Button
-                            variant="warning"
-                            className='w-50'
-                            onClick={() => handleAcademicRecordClick(student)} // Handle Academic Record button click
-                        >
-                            Academic Record
-                        </Button>
-                    </td>
-                </tr>
-            ))
-        ) : (
-            <tr>
-                <td colSpan="6" className="text-center fst-italic">
-                    No students found
-                </td>
-            </tr>
-        )}
-    </tbody>
-</Table>
+                <thead className='table-success rounded'>
+                    <tr>
+                        <th className='custom-color-green-font custom-font text-center pt-3'>Student Number</th>
+                        <th className='custom-color-green-font custom-font text-center pt-3'>Student Name</th>
+                        <th className='custom-color-green-font custom-font text-center pt-3'>Program Name</th>
+                        <th className='custom-color-green-font custom-font text-center pt-3'>Admission Year</th>
+                        <th className='custom-color-green-font custom-font text-center pt-3'>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {filteredStudent.length !== 0 ? (
+                        filteredStudent.map((student) => (
+                            <tr key={student.id}>
+                                <td>{student.studentNumber}</td>
+                                <td>
+                                    {student.studentNameLast}, {student.studentNameFirst} {student.studentNameMiddle || ''}
+                                </td>
+                                <td className='text-center'>{student.programName}</td>
+                                <td className='text-center'>{student.studentYrLevel}</td>
+                                <td className='text-center'>
+                                    <Dropdown align="end">
+                                        <Dropdown.Toggle
+                                            variant="link"
+                                            className="p-0 border-0"
+                                            style={{ color: '#000' }}
+                                        >
+                                            <i className="fas fa-ellipsis-v"></i>
+                                        </Dropdown.Toggle>
+                                        <Dropdown.Menu>
+                                            <Dropdown.Item onClick={() => handleEnrollmentClick(student)}>
+                                                Enrollment
+                                            </Dropdown.Item>
+                                            <Dropdown.Item onClick={() => handleAcademicRecordClick(student)}>
+                                                Academic Record
+                                            </Dropdown.Item>
+                                        </Dropdown.Menu>
+                                    </Dropdown>
+                                </td>
+                            </tr>
+                        ))
+                    ) : (
+                        <tr>
+                            <td colSpan="6" className="text-center fst-italic">
+                                No students found
+                            </td>
+                        </tr>
+                    )}
+                </tbody>
+            </Table>
 
             </Container>
             {/* Academic Record Modal */}
