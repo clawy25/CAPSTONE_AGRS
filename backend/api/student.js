@@ -123,15 +123,7 @@ router.post('/upload', async (req, res) => {
 
         // Map auth.user IDs back to the student data
         const studentTableData = studentWithHashedPasswords.map((person, index) => ({
-            studentNumber: person.studentNumber,
-            studentEmail: person.studentEmail,
-            studentNameFirst: person.studentNameFirst,
-            studentNameMiddle: person.studentNameMiddle || null,
-            studentNameLast: person.studentNameLast,
-            studentSex: person.studentSex,
-            studentBirthDate: person.studentBirthDate,
-            studentAddress: person.studentAddress,
-            studentContact: person.studentContact,
+            ...person,
             auth_id: authData[index].id, // Linking auth.users ID
         }));
 

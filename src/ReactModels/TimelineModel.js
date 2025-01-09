@@ -37,19 +37,7 @@ export default class TimelineModel {
     }
     
     // New method to create and insert timeline data
-    static async createAndInsertTimeline(academicYear, studentNumber, yearLevel, semester, startEnroll, endEnroll, isRepeating, isLeaving, admissionYear) {
-        const timelineData = {
-            academicYear,
-            studentNumber,
-            yearLevel,
-            semester,
-            startEnroll,
-            endEnroll,
-            isRepeating,
-            isLeaving,
-            admissionYear
-        };
-
+    static async createAndInsertTimeline(timelineData) {
         try {
             const apiUrl = process.env.REACT_APP_API_URL;
             const response = await fetch(`${apiUrl}/timeline/upload`, {

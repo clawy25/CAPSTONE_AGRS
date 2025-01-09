@@ -1,5 +1,5 @@
 export default class StudentModel {
-    constructor(id, studentNumber, studentPassword, studentType,
+    constructor(id, auth_id, studentNumber, studentPassword, studentType,
                 studentNameFirst,studentNameMiddle, studentNameLast,
                 studentSex, studentEmail, 
                 studentBirthDate, studentPccEmail, studentAdmissionYr, 
@@ -9,6 +9,7 @@ export default class StudentModel {
                 studentBirthPlace, studentNationality, admissionCredentials, 
                 schoolLastAttended, categoryStrand, dateSemesterAdmitted) {
         this.id = id;
+        this.auth_id = auth_id;
         this.studentNumber = studentNumber;
         this.studentPassword = studentPassword;
         this.studentType = studentType;
@@ -62,6 +63,7 @@ export default class StudentModel {
             // Return data
             return new StudentModel(
                 null,
+                data.auth_id,
                 data.studentNumber,
                 null,
                 data.studentType,

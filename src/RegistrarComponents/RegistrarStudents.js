@@ -80,9 +80,11 @@ export default function RegistrarStudents() {
 
 
     // Insert the list of newStudents into the database
-    const insertStudents = async (newStudents) => {
+    const insertStudents = async (newStudents, timelineData) => {
         try {
             await StudentModel.insertStudent(newStudents);
+            await TimelineModel.createAndInsertTimeline(timelineData);
+            
         } catch (error) {
             console.error('Error inserting students in bulk:', error);
         }
@@ -107,6 +109,8 @@ export default function RegistrarStudents() {
             const existingStudentNumbers = new Set(students.map(student => student.studentNumber));
             
             const newStudents = [];
+            const timelineData = [];
+
             const currentYear = new Date().getFullYear();
             const nextYear = currentYear + 1;
             const currentMonth = new Date().getMonth() + 1;
@@ -168,6 +172,7 @@ export default function RegistrarStudents() {
                     // Add new student to the array
                     newStudents.push(new StudentModel(
                         students.length + newStudents.length + 1, // Generate ID
+                        null,
                         studentNumber,
                         studentPassword,
                         studentType,
@@ -196,10 +201,21 @@ export default function RegistrarStudents() {
                         null
                     ));
 
-                    
+
                     // Insert timeline data if yearLevel is 4 or below
                     if (studentYrLevel <= 4) {
-                        await TimelineModel.createAndInsertTimeline(academicYear, studentNumber, studentYrLevel, semester, new Date(), null, false, false, admissionYearInt);
+                        const newTimeline = new TimelineModel(
+                            academicYear,
+                            studentNumber,
+                            studentYrLevel,
+                            semester,
+                            new Date(),
+                            null,
+                            false,
+                            false,
+                            admissionYearInt 
+                        );
+                        timelineData.push(newTimeline);                        
                     }
 
                     // Add the newly generated student number to the existing set
@@ -209,8 +225,35 @@ export default function RegistrarStudents() {
 
             // Insert all valid records in bulk
             console.log("New students to insert:", newStudents);
-            await insertStudents(newStudents);
-            await fetchExistingStudents(); // Refresh the student list after import
+            let emailSet = new Set();
+            let contactSet = new Set();
+            let duplicateEmails = [];
+            let duplicateContacts = [];
+
+            newStudents.forEach(student => {
+                // Check for duplicate email
+                if (emailSet.has(student.studentEmail)) {
+                  duplicateEmails.push(student.studentEmail);
+                } else {
+                  emailSet.add(student.studentEmail);
+                }
+              
+                // Check for duplicate contact
+                if (contactSet.has(student.studentContact)) {
+                  duplicateContacts.push(student.studentContact);
+                } else {
+                  contactSet.add(student.studentContact);
+                }
+            });
+
+            if (duplicateEmails.length > 0 || duplicateContacts.length > 0) {
+                console.log('Duplicate Emails:', duplicateEmails);
+                console.log('Duplicate Contacts:', duplicateContacts);
+                return;
+            } else {
+                await insertStudents(newStudents, timelineData);
+                await fetchExistingStudents();
+            }
         };
 
         reader.readAsArrayBuffer(file);
