@@ -12,6 +12,13 @@ const generateToken = (student) => {
     );
 };
 
+function convertToE164(localNumber) {
+    // Remove non-numeric characters and leading zero
+    const cleanedNumber = localNumber.replace(/^0/, '');
+    // Add country code and return the E.164 format
+    return `+63${cleanedNumber}`;
+}
+
 router.post('/login', async (req, res) => {
     const { studentNumber, password } = req.body; // Get studentNumber from the URL parameter
     try {
@@ -96,7 +103,7 @@ router.post('/upload', async (req, res) => {
                 const { data, error } = await supabase.auth.admin.createUser({
                     email: person.studentEmail, // Email for authentication
                     password: person.studentPassword, // Hashed password (handled by Supabase)
-                    phone: person.studentContact, // Optional phone
+                    phone: convertToE164(person.studentContact), // Optional phone
                     user_metadata: {
                         name: `${person.studentNameFirst} ${person.studentNameMiddle || ''} ${person.studentNameLast}`,
                         studentNumber: person.studentNumber,
