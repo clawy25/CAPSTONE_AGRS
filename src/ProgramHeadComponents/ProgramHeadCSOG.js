@@ -273,8 +273,8 @@ useEffect(() => {
         acc[sectionNumber].classes.push({
           scheduleNumber: scheduleNumber,
           courseCode: courseCode,
-          courseName: course.courseName,
-          courseCredits: course.courseCredits,
+          courseName: course?.courseName,
+          courseCredits: course?.courseCredits,
           personnelName: personnelName,
           scheduleDay: scheduleDay,
           startTime: startTime,

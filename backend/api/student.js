@@ -74,36 +74,66 @@ router.get('/all', async (req, res) => {
 
 router.post('/upload', async (req, res) => {
     try {
-        const studentsData = req.body.data;//This is in array format
-  
+        const studentsData = req.body.data; // This is in array format
+
         // Validate studentsData
         if (!Array.isArray(studentsData) || studentsData.length === 0) {
             return res.status(400).json({ message: 'Invalid data format or no students to insert' });
         }
-  
+
+        // Prepare student data with hashed passwords
         const studentWithHashedPasswords = await Promise.all(studentsData.map(async (person) => {
-          const hashedPassword = await bcrypt.hash(person.studentPassword, 10);
-          return {
-              ...person,
-              studentPassword: hashedPassword
-          };
-      }));
-  
-        // Perform bulk insertion using Supabase
-        const { data, error } = await supabase
-            .from('student') // Replace with your table name
-            .insert(studentWithHashedPasswords);
-  
-        if (error) {
-            throw error;
+            const hashedPassword = await bcrypt.hash(person.studentPassword, 10);
+            return {
+                ...person,
+                studentPassword: hashedPassword
+            };
+        }));
+
+        // Extract and prepare user data for the auth.users table
+        const usersData = studentWithHashedPasswords.map(person => ({
+            email: person.studentEmail, // Assuming email is used for auth
+            encrypted_password: person.studentPassword, // Hashed password
+            raw_user_meta_data: { name: `${person.studentNameFirst} ${person.studentNameMiddle || ''} ${person.studentNameLast}`,
+                                  studentNumber: person.studentNumber,
+                                  sex: person.studentSex,
+                                  birthDate: person.studentBirthDate,
+                                  address: person.studentAddress,
+                                  }, // Additional metadata
+            phone: person.studentContact
+        }));
+
+        // Insert into the auth.users table
+        const { data: authData, error: authError } = await supabase
+            .from('auth.users')
+            .insert(usersData);
+
+        if (authError) {
+            throw new Error(`Error inserting into auth.users: ${authError.message}`);
         }
-  
-        res.status(200).json(data);
+
+        // Extract IDs from auth.users and map them back to student data
+        const studentTableData = studentWithHashedPasswords.map((person, index) => ({
+            ...person,
+            auth_id: authData[index].id // Assuming auth.users returns the ID
+        }));
+
+        // Insert into the public.student table
+        const { data: studentData, error: studentError } = await supabase
+            .from('student') // Replace with your table name
+            .insert(studentTableData);
+
+        if (studentError) {
+            throw new Error(`Error inserting into student table: ${studentError.message}`);
+        }
+
+        res.status(200).json(studentData);
     } catch (error) {
         console.error('Error inserting students:', error);
         res.status(500).json({ message: `Error inserting students: ${error.message || 'Unknown error'}` });
     }
-  });
+});
+
 
 
   router.put('/:studentNumber', async (req, res) => {

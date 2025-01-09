@@ -50,6 +50,7 @@ const Sections = () => {
   
       const allPrograms = await ProgramModel.fetchAllPrograms();
 
+      console.log(allPrograms);
       setPrograms(allPrograms);
   
       if (allPrograms.length > 0) {
@@ -62,15 +63,18 @@ const Sections = () => {
           if (!existingAcadYear) {
             // Filter programs for the current academicYear
             const programsForYear = allPrograms.filter(item => item.academicYear === row.academicYear);
-            
+      
             // Collect unique programs for the academicYear
             const programs = [];
-            const programNamesSet = new Set();
       
             programsForYear.forEach(row => {
-              if (!programNamesSet.has(row.programName)) {
-                programNamesSet.add(row.programName);
+              // Find if the program already exists in the mapped data
+              let existingProgram = programs.find(
+                p => p.programName === row.programName && 
+                     p.yearLevels.some(yl => yl.yearLevel === row.programYrLvlSummer)
+              );
       
+              if (!existingProgram) {
                 // Create yearLevels with default semesters [1, 2], and add semester 3 if programYrLvlSummer matches
                 const yearLevels = Array.from({ length: row.programNumOfYear }, (_, i) => {
                   const yearLevel = i + 1;
@@ -82,6 +86,14 @@ const Sections = () => {
                   programName: row.programName,
                   yearLevels: yearLevels
                 });
+              } else {
+                // Update existing yearLevels for duplicate program
+                const yearLevelIndex = existingProgram.yearLevels.findIndex(
+                  yl => yl.yearLevel === row.programYrLvlSummer
+                );
+                if (yearLevelIndex >= 0) {
+                  existingProgram.yearLevels[yearLevelIndex].semesters = [1, 2, 3];
+                }
               }
             });
       
@@ -96,7 +108,8 @@ const Sections = () => {
       
         console.log(data);
         setMappedData(data);
-      }      
+      }
+      
     } catch (error) {
       console.error("Error fetching data:", error);
     }
