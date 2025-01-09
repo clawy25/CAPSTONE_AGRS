@@ -45,7 +45,7 @@ export default class TimelineModel {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ data: timelineData }),
+                body: JSON.stringify({ data: timelineData })
             });
             if (!response.ok) {
                 throw new Error('Error inserting timeline data');

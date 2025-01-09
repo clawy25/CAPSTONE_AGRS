@@ -111,10 +111,10 @@ export default function RegistrarStudents() {
             const newStudents = [];
             const timelineData = [];
 
-            const currentYear = new Date().getFullYear();
-            const nextYear = currentYear + 1;
             const currentMonth = new Date().getMonth() + 1;
-            const academicYear = `${currentYear}-${nextYear}`;
+            const academicYear = currentAcademicYear.academicYear;
+            //const startYear = parseInt(academicYear.trim().split('-')[0]);
+            const [currentYear, nextYear] = academicYear.trim().split('-').map(year => parseInt(year));
             const semester = currentMonth >= 7 && currentMonth <= 12 ? 1 : 2;
 
             for (const row of data) {
@@ -204,20 +204,20 @@ export default function RegistrarStudents() {
 
                     // Insert timeline data if yearLevel is 4 or below
                     if (studentYrLevel <= 4) {
-                        const newTimeline = new TimelineModel(
-                            null,
-                            academicYear,
-                            studentNumber,
-                            studentYrLevel,
-                            semester,
-                            new Date(),
-                            null,
-                            false,
-                            false,
-                            admissionYearInt 
-                        );
-                        timelineData.push(newTimeline);                        
+                        const newTimeline = {
+                            academicYear: academicYear,
+                            studentNumber: studentNumber,
+                            yearLevel: studentYrLevel,
+                            semester: semester,
+                            startEnroll: new Date(),
+                            endEnroll: null,
+                            isRepeating: false,
+                            isLeaving: false,
+                            admissionYear: admissionYearInt
+                        };
+                        timelineData.push(newTimeline);
                     }
+                    
 
                     // Add the newly generated student number to the existing set
                     existingStudentNumbers.add(studentNumber);
