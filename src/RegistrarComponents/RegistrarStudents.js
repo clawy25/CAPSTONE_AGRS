@@ -181,10 +181,19 @@ export default function RegistrarStudents() {
                         admissionYear,
                         studentYrLevel, // Set year level based on admission year
                         studentProgramNumber,
-                        studentProgramName,
                         studentContact,
                         studentAddress,
-                        isABMgraduate
+                        isABMgraduate,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null
                     ));
 
                     

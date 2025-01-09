@@ -90,37 +90,47 @@ router.post('/upload', async (req, res) => {
             };
         }));
 
-        // Extract and prepare user data for the auth.users table
-        const usersData = studentWithHashedPasswords.map(person => ({
-            email: person.studentEmail, // Assuming email is used for auth
-            encrypted_password: person.studentPassword, // Hashed password
-            raw_user_meta_data: { name: `${person.studentNameFirst} ${person.studentNameMiddle || ''} ${person.studentNameLast}`,
-                                  studentNumber: person.studentNumber,
-                                  sex: person.studentSex,
-                                  birthDate: person.studentBirthDate,
-                                  address: person.studentAddress,
-                                  }, // Additional metadata
-            phone: person.studentContact
-        }));
+        // Insert into auth.users via Supabase Auth API
+        const authData = await Promise.all(
+            studentWithHashedPasswords.map(async (person) => {
+                const { data, error } = await supabase.auth.admin.createUser({
+                    email: person.studentEmail, // Email for authentication
+                    password: person.studentPassword, // Hashed password (handled by Supabase)
+                    phone: person.studentContact, // Optional phone
+                    user_metadata: {
+                        name: `${person.studentNameFirst} ${person.studentNameMiddle || ''} ${person.studentNameLast}`,
+                        studentNumber: person.studentNumber,
+                        sex: person.studentSex,
+                        birthDate: person.studentBirthDate,
+                        address: person.studentAddress,
+                    },
+                });
 
-        // Insert into the auth.users table
-        const { data: authData, error: authError } = await supabase
-            .from('auth.users')
-            .insert(usersData);
+                if (error) {
+                    throw new Error(`Error creating user in auth.users: ${error.message}`);
+                }
 
-        if (authError) {
-            throw new Error(`Error inserting into auth.users: ${authError.message}`);
-        }
+                return data; // Returns the created user data
+            })
+        );
 
-        // Extract IDs from auth.users and map them back to student data
+        // Map auth.user IDs back to the student data
         const studentTableData = studentWithHashedPasswords.map((person, index) => ({
-            ...person,
-            auth_id: authData[index].id // Assuming auth.users returns the ID
+            studentNumber: person.studentNumber,
+            studentEmail: person.studentEmail,
+            studentNameFirst: person.studentNameFirst,
+            studentNameMiddle: person.studentNameMiddle || null,
+            studentNameLast: person.studentNameLast,
+            studentSex: person.studentSex,
+            studentBirthDate: person.studentBirthDate,
+            studentAddress: person.studentAddress,
+            studentContact: person.studentContact,
+            auth_id: authData[index].id, // Linking auth.users ID
         }));
 
         // Insert into the public.student table
         const { data: studentData, error: studentError } = await supabase
-            .from('student') // Replace with your table name
+            .from('student')
             .insert(studentTableData);
 
         if (studentError) {
@@ -133,6 +143,7 @@ router.post('/upload', async (req, res) => {
         res.status(500).json({ message: `Error inserting students: ${error.message || 'Unknown error'}` });
     }
 });
+
 
 
 
