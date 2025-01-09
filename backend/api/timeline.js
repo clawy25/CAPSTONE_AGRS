@@ -36,7 +36,7 @@ router.post('/upload', async (req, res) => {
         // Perform insertion using Supabase
         const { data, error } = await supabase
             .from('timeline')
-            .insert([timelineData]); // Wrap in an array for Supabase
+            .insert(timelineData); // Wrap in an array for Supabase
   
         if (error) {
             throw error;

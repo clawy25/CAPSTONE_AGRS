@@ -205,6 +205,7 @@ export default function RegistrarStudents() {
                     // Insert timeline data if yearLevel is 4 or below
                     if (studentYrLevel <= 4) {
                         const newTimeline = new TimelineModel(
+                            null,
                             academicYear,
                             studentNumber,
                             studentYrLevel,
