@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { Table, Form, Button, Row, Col, Modal } from 'react-bootstrap';
+import { Table, Form, Button, Row, Col, Modal, Spinner } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css'; 
 import AcademicYearModel from '../ReactModels/AcademicYearModel';
 import ProgramModel from '../ReactModels/ProgramModel';
@@ -13,6 +13,7 @@ import { UserContext } from '../Context/UserContext';
 import '../App.css'
 
 const Sections = () => {
+  const [loading, setLoading] = useState(false); 
   const { user } = useContext(UserContext);
   const [selectedAcademicYear, setSelectedAcademicYear] = useState('');
   const [selectedProgram, setSelectedProgram] = useState('');
@@ -221,8 +222,12 @@ const Sections = () => {
 
   const handleView = () => {
     if (selectedAcademicYear && selectedYearLevel && selectedSemester && selectedSection) {
+      setLoading(true);
       setShowTable(true); 
       fetchAndCombineData()
+
+      fetchAndCombineData()
+            .finally(() => setLoading(false));
     } else {
       setShowModalAlertView(true);
     }
@@ -575,7 +580,12 @@ const Sections = () => {
 
       <div className='card bg-white rounded px-3 pb-3 '>
           
-        {showTable ? (
+        {loading ? (
+           <div className="text-center py-5 bg-white">
+           <Spinner animation="border" variant="success" />
+           <p className="mt-3">Loading data, please wait...</p>
+         </div>
+        ): showTable ? (
           selectedSection && schedules.length > 0 ? (
             <Row>
             <div className="card-header bg-white pt-4">
@@ -681,7 +691,12 @@ const Sections = () => {
             
           
           ) : (
-            <div className="text-center">No data available. Please select a section.</div>
+            <div className="text-center py-5 bg-white rounded pt-5 px-4 pb-5">
+            <h5 className="custom-color-green-font mt-5 fs-5 pt-5">No Data Available</h5>
+            <p className="fs-6 mb-2">
+              Please ensure that all filters are applied then click "View" to display the data.
+            </p>
+          </div>
           )
         ) : (
           <div className="text-center">

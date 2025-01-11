@@ -62,7 +62,7 @@ const ScheduleTable = () => {
     try {
       const studentData = await StudentModel.fetchExistingStudents();
   
-      const student = studentData.find(student => student.studentNumber === user.studentNumber);
+      const student = studentData.find(student => student.studentNumber === studentNumber);
       
       if (student.length > 0) {
         setStudentInfo(student);
@@ -178,6 +178,7 @@ const ScheduleTable = () => {
   useEffect(() => {
     fetchAcademicYearsAndPrograms();
     fetchStudentInfo(user.studentNumber);
+    console.log(user.studentNumber)
   }, []);
   
   useEffect(() => {

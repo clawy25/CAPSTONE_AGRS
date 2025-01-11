@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Table, Container, Modal, Form, Dropdown } from 'react-bootstrap';
+import { Button, Table, Container, Modal, Form, Dropdown, Spinner } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import StudentModel from '../ReactModels/StudentModel';
@@ -12,6 +12,7 @@ import PersonnelModel from '../ReactModels/PersonnelModel';
 import ProgramModel from '../ReactModels/ProgramModel';
 
 export default function RegistrarIrregularStudents() {
+    const [loading, setLoading] = useState(false); 
     const [irregularStudent, setIrregularStudent] = useState([]); // Full list of irregular students
     const [searchQuery, setSearchQuery] = useState(''); // Search query
     const [filteredStudent, setFilteredStudent] = useState([]); // Filtered students for display
@@ -266,6 +267,7 @@ export default function RegistrarIrregularStudents() {
     
     
     const fetchStudents = async () => {
+        setLoading(true); 
         try {
             const studentData = await StudentModel.fetchExistingStudents();
             const listOfIrregularStudents = studentData.filter((student) => student.studentType === "Irregular");
@@ -287,6 +289,8 @@ export default function RegistrarIrregularStudents() {
             setFilteredStudent(updatedStudentData);
         } catch (error) {
             console.error("Error fetching students:", error);
+        } finally {
+            setLoading(false);
         }
     };
     
@@ -359,56 +363,65 @@ export default function RegistrarIrregularStudents() {
 
             <Container fluid className="mt-4">
 
+            {loading ? (
+            <div className="text-center py-5 bg-white">
+                <Spinner animation="border" variant="success" />
+                <p className="mt-3">Loading data, please wait...</p>
+            </div>
+            ) : (
             <Table responsive hover>
                 <thead className='table-success rounded'>
-                    <tr>
-                        <th className='custom-color-green-font custom-font text-center pt-3'>Student Number</th>
-                        <th className='custom-color-green-font custom-font text-center pt-3'>Student Name</th>
-                        <th className='custom-color-green-font custom-font text-center pt-3'>Program Name</th>
-                        <th className='custom-color-green-font custom-font text-center pt-3'>Admission Year</th>
-                        <th className='custom-color-green-font custom-font text-center pt-3'>Actions</th>
-                    </tr>
+                <tr>
+                    <th className='custom-color-green-font custom-font text-center pt-3'>Student Number</th>
+                    <th className='custom-color-green-font custom-font text-center pt-3'>Student Name</th>
+                    <th className='custom-color-green-font custom-font text-center pt-3'>Program Name</th>
+                    <th className='custom-color-green-font custom-font text-center pt-3'>Admission Year</th>
+                    <th className='custom-color-green-font custom-font text-center pt-3'>Actions</th>
+                </tr>
                 </thead>
                 <tbody>
-                    {filteredStudent.length !== 0 ? (
-                        filteredStudent.map((student) => (
-                            <tr key={student.id}>
-                                <td>{student.studentNumber}</td>
-                                <td>
-                                    {student.studentNameLast}, {student.studentNameFirst} {student.studentNameMiddle || ''}
-                                </td>
-                                <td className='text-center'>{student.programName}</td>
-                                <td className='text-center'>{student.studentYrLevel}</td>
-                                <td className='text-center'>
-                                    <Dropdown align="end">
-                                        <Dropdown.Toggle
-                                            variant="link"
-                                            className="p-0 border-0"
-                                            style={{ color: '#000' }}
-                                        >
-                                            <i className="fas fa-ellipsis-v"></i>
-                                        </Dropdown.Toggle>
-                                        <Dropdown.Menu>
-                                            <Dropdown.Item onClick={() => handleEnrollmentClick(student)}>
-                                                Enrollment
-                                            </Dropdown.Item>
-                                            <Dropdown.Item onClick={() => handleAcademicRecordClick(student)}>
-                                                Academic Record
-                                            </Dropdown.Item>
-                                        </Dropdown.Menu>
-                                    </Dropdown>
-                                </td>
-                            </tr>
-                        ))
-                    ) : (
-                        <tr>
-                            <td colSpan="6" className="text-center fst-italic">
-                                No students found
-                            </td>
-                        </tr>
-                    )}
+                {filteredStudent.length !== 0 ? (
+                    filteredStudent.map((student) => (
+                    <tr key={student.id}>
+                        <td className='text-center'>{student.studentNumber}</td>
+                        <td className='text-center'>
+                        {student.studentNameLast}, {student.studentNameFirst} {student.studentNameMiddle || ''}
+                        </td>
+                        <td className='text-center'>{student.programName}</td>
+                        <td className='text-center'>{student.studentYrLevel}</td>
+                        <td className='text-center'>
+                        <Dropdown align="end">
+                            <Dropdown.Toggle
+                            variant="link"
+                            className="p-0 border-0"
+                            style={{ color: '#000' }}
+                            >
+                            <i className="fas fa-ellipsis-v"></i>
+                            </Dropdown.Toggle>
+                            <Dropdown.Menu>
+                            <Dropdown.Item onClick={() => handleEnrollmentClick(student)}>
+                                Enrollment
+                            </Dropdown.Item>
+                            <Dropdown.Item onClick={() => handleAcademicRecordClick(student)}>
+                                Academic Record
+                            </Dropdown.Item>
+                            </Dropdown.Menu>
+                        </Dropdown>
+                        </td>
+                    </tr>
+                    ))
+                ) : (
+                    <tr>
+                    <td colSpan="5" className="text-center fst-italic">
+                        No students found
+                    </td>
+                    </tr>
+                )}
                 </tbody>
             </Table>
+            )}
+
+
 
             </Container>
             {/* Academic Record Modal */}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react'; 
-import { Table, Form, Button, Row, Col, Modal } from 'react-bootstrap';
+import { Table, Form, Button, Row, Col, Modal, Spinner } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css'; 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMapMarkerAlt,  faEnvelope, faPhoneAlt} from '@fortawesome/free-solid-svg-icons';
@@ -19,6 +19,7 @@ import '../App.css';
 
 
 const MasterlistOfGradesTable = () => {
+  const [loading, setLoading] = useState(false); 
   const [academicYear, setAcademicYear] = useState('');
   const [yearLevel, setYearLevel] = useState('');
   const [semester, setSemester] = useState('First');
@@ -455,16 +456,28 @@ const MasterlistOfGradesTable = () => {
                                      ?.flatMap(p => p.semesters);
 
 
-  const handleView = () => {
-    if (selectedAcademicYear && selectedProgram && selectedYearLevel && selectedSemester) {
-      fetchCourses();
-      fetchStudentData();
-      setDataFetched(true); // Indicate that data has been fetched successfully.
-    } else {
-      setShowModalAlertView(true);
-      setDataFetched(false); // Ensure dataFetched is false if filters are incomplete.
-    }
-  };
+                                     const handleView = async () => {
+                                      if (selectedAcademicYear && selectedProgram && selectedYearLevel && selectedSemester) {
+                                        try {
+                                          setLoading(true); // Set loading to true before starting the data fetch
+                                    
+                                          // Fetch courses and student data asynchronously
+                                          await Promise.all([fetchCourses(), fetchStudentData()]);
+                                    
+                                          setDataFetched(true); // Indicate that data has been fetched successfully
+                                        } catch (error) {
+                                          console.error("Error fetching data:", error);
+                                          setDataFetched(false); // Ensure dataFetched is false if an error occurs
+                                        } finally {
+                                          setLoading(false); // Set loading to false after the fetch operations (success or error)
+                                        }
+                                      } else {
+                                        setShowModalAlertView(true);
+                                        setDataFetched(false); // Ensure dataFetched is false if filters are incomplete
+                                      }
+                                    };
+                                    
+
 
   const closeShowModalAlert = () => {
     setShowModalAlert(false);
@@ -1052,7 +1065,11 @@ const MasterlistOfGradesTable = () => {
           `}
         </style>
 
-        {Object.keys(groupedData).length === 0 || combinedData.length === 0 ? (
+      {loading ? (
+        <div className="text-center py-5">
+            <Spinner animation="border" variant="success" />
+            <p className="mt-3">Loading data, please wait...</p>
+          </div>):   Object.keys(groupedData).length === 0 || combinedData.length === 0 ? (
           <div className="text-center py-5">
             <h5 className="custom-color-green-font fs-5">No Data Available</h5>
             <p className="fs-6">
@@ -1162,20 +1179,20 @@ const MasterlistOfGradesTable = () => {
              
                           {/* Weighted Grade Average */}
                           <td className="bg-white fixed-width">
-  {(() => {
-    // Filter studentGrades to include only valid numbers
-    const validGrades = studentData.studentGrades.filter(
-      (grade) => typeof grade === 'number' && !isNaN(grade)
-    );
+                            {(() => {
+                              // Filter studentGrades to include only valid numbers
+                              const validGrades = studentData.studentGrades.filter(
+                                (grade) => typeof grade === 'number' && !isNaN(grade)
+                              );
 
-    // Calculate the weighted average if there are valid grades
-    const average = validGrades.length > 0
-      ? (validGrades.reduce((sum, grade) => sum + grade, 0) / validGrades.length).toFixed(2)
-      : '0.00';
+                              // Calculate the weighted average if there are valid grades
+                              const average = validGrades.length > 0
+                                ? (validGrades.reduce((sum, grade) => sum + grade, 0) / validGrades.length).toFixed(2)
+                                : '0.00';
 
-    return average;
-  })()}
-</td>
+                              return average;
+                            })()}
+                          </td>
         
                           {/* COG Button */}
                           <td className="bg-white fixed-width">

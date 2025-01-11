@@ -58,102 +58,116 @@ export default function RegistrarDashboard() {
   }, [showDropdown]);
 
   return (
-    <div className="dashboard-container d-flex">
-      <div className={`sidebar bg-custom-color-green ${showSidebar ? 'd-block' : 'd-none d-md-block'}`}>
-        <button 
-          className="close-sidebar-btn" 
-          onClick={() => setShowSidebar(false)}
-          aria-label="Close Sidebar"
-        >
-          &times;
-        </button>
-        <img src="/pcc.png" alt="Logo" className="college-logo align-items-center ms-5 mb-3" />
-        <div className="welcome-message mb-3 text-center">Hello, {user ? user.personnelNameFirst : 'Guest'}!</div>
-        <nav className="menu mb-3">
-        <div 
-            className="menu-item d-flex align-items-center mb-2" 
+    <div className="dashboard-container d-flex"><div className={`sidebar bg-custom-color-green ${showSidebar ? 'd-block' : 'd-none d-md-block'}`}>
+    <button 
+      className="close-sidebar-btn" 
+      onClick={() => setShowSidebar(false)}
+      aria-label="Close Sidebar"
+    >
+      &times;
+    </button>
+    <img src="/pcc.png" alt="Logo" className="college-logo align-items-center ms-5 mb-3" />
+    <div className="welcome-message mb-3 text-center">Hello, {user ? user.personnelNameFirst : 'Guest'}!</div>
+    <nav className="menu mb-3">
+      <div 
+        className="menu-item d-flex align-items-center mb-2" 
+        onClick={() => {
+          setShowStudentsSubMenu(!showStudentsSubMenu);
+          navigate('/registrar-dashboard/students'); // Directly navigate to RegistrarStudents
+          if (window.innerWidth <= 768) setShowSidebar(false); // Close sidebar on mobile
+        }}
+      >
+        <FontAwesomeIcon icon={faUser} className="me-2" />
+        STUDENTS
+        <FontAwesomeIcon icon={showStudentsSubMenu ? faChevronUp : faChevronDown} className="ms-auto" />
+      </div>
+      
+      {showStudentsSubMenu && (
+        <div className="submenu">
+          <Link 
+            to="/registrar-dashboard/sections" 
+            className={`submenu-item d-flex align-items-center mb-2 ${location.pathname === '/registrar-dashboard/sections' ? 'active' : ''}`}
+            onClick={() => { if (window.innerWidth <= 768) setShowSidebar(false); }}
+          >
+            <FontAwesomeIcon icon={faTable} className="me-2" />
+            SECTIONS
+          </Link>
+          <Link 
+            to="/registrar-dashboard/irregular-students" 
+            className={`submenu-item d-flex align-items-center mb-2 ${location.pathname === '/registrar-dashboard/irregular-students' ? 'active' : ''}`}
+            onClick={() => { if (window.innerWidth <= 768) setShowSidebar(false); }}
+          >
+            <FontAwesomeIcon icon={faTable} className="me-2" />
+            IRREGULAR
+          </Link>
+        </div>
+      )}
+      <div className="menu-item d-flex align-items-center mb-2" onClick={() => setShowGradesSubMenu(!showGradesSubMenu)}>
+        <FontAwesomeIcon icon={faGraduationCap} className="me-2" />
+        GRADES
+        <FontAwesomeIcon icon={showGradesSubMenu ? faChevronUp : faChevronDown} className="ms-auto" />
+      </div>
+      {showGradesSubMenu && (
+        <div className="submenu">
+          <Link 
+            to="/registrar-dashboard/csog"
+            className={`submenu-item d-flex align-items-center mb-2 ${location.pathname === '/registrar-dashboard/csog' ? 'active' : ''}`}
+            onClick={() => { if (window.innerWidth <= 768) setShowSidebar(false); }}
+          >
+            <FontAwesomeIcon icon={faTable} className="me-2" /> {/* CSOG icon */}
+            CSOG
+          </Link>
+          <Link 
+            to="/registrar-dashboard/mog"
+            className={`submenu-item d-flex align-items-center mb-2 ${location.pathname === '/registrar-dashboard/mog' ? 'active' : ''}`}
+            onClick={() => { if (window.innerWidth <= 768) setShowSidebar(false); }}
+          >
+            <FontAwesomeIcon icon={faClipboardList} className="me-2" /> {/* MOG icon */}
+            MOG
+          </Link>
+        </div>
+      )}
+      <Link 
+        to="/registrar-dashboard/grades-submission" 
+        className={`menu-item d-flex align-items-center mb-2 ${location.pathname === '/registrar-dashboard/grades-submission' ? 'active' : ''}`}
+        onClick={() => {
+          setShowGradesSubMenu(false);
+          if (window.innerWidth <= 768) setShowSidebar(false); // Close sidebar on mobile
+        }}
+      >
+        <FontAwesomeIcon icon={faChalkboardTeacher} className="me-2" />
+        GRADES SUBMISSION
+      </Link>
+  
+      {user?.personnelType === 'Admin' && ( 
+        <>
+          <Link 
+            to="/registrar-dashboard/staff" 
+            className={`menu-item d-flex align-items-center mb-2 ${location.pathname.startsWith('/registrar-dashboard/staff') ? 'active' : ''}`}
             onClick={() => {
-              setShowStudentsSubMenu(!showStudentsSubMenu);
-              navigate('/registrar-dashboard/students'); // Directly navigate to RegistrarStudents
+              setShowGradesSubMenu(false);
+              if (window.innerWidth <= 768) setShowSidebar(false);
             }}
           >
-            <FontAwesomeIcon icon={faUser} className="me-2" />
-            STUDENTS
-            <FontAwesomeIcon icon={showStudentsSubMenu ? faChevronUp : faChevronDown} className="ms-auto" />
-          </div>
-          
-          {showStudentsSubMenu && (
-            <div className="submenu">
-              <Link 
-                to="/registrar-dashboard/sections" 
-                className={`submenu-item d-flex align-items-center mb-2 ${location.pathname === '/registrar-dashboard/sections' ? 'active' : ''}`}
-              >
-                <FontAwesomeIcon icon={faTable} className="me-2" />
-                SECTIONS
-              </Link>
-              <Link 
-                to="/registrar-dashboard/irregular-students" 
-                className={`submenu-item d-flex align-items-center mb-2 ${location.pathname === '/registrar-dashboard/irregular-students' ? 'active' : ''}`}
-              >
-                <FontAwesomeIcon icon={faTable} className="me-2" />
-                IRREGULAR
-              </Link>
-            </div>
-          )}
-          <div className="menu-item d-flex align-items-center mb-2" onClick={() => setShowGradesSubMenu(!showGradesSubMenu)}>
-            <FontAwesomeIcon icon={faGraduationCap} className="me-2" />
-            GRADES
-            <FontAwesomeIcon icon={showGradesSubMenu ? faChevronUp : faChevronDown} className="ms-auto" />
-          </div>
-          {showGradesSubMenu && (
-            <div className="submenu">
-              <Link 
-                to="/registrar-dashboard/csog"
-                className={`submenu-item d-flex align-items-center mb-2 ${location.pathname === '/registrar-dashboard/csog' ? 'active' : ''}`}
-              >
-                <FontAwesomeIcon icon={faTable} className="me-2" /> {/* CSOG icon */}
-                CSOG
-              </Link>
-              <Link 
-                to="/registrar-dashboard/mog"
-                className={`submenu-item d-flex align-items-center mb-2 ${location.pathname === '/registrar-dashboard/mog' ? 'active' : ''}`}
-              >
-                <FontAwesomeIcon icon={faClipboardList} className="me-2" /> {/* MOG icon */}
-                MOG
-              </Link>
-            </div>
-          )}
-          <Link 
-            to="/registrar-dashboard/grades-submission" 
-            className={`menu-item d-flex align-items-center mb-2 ${location.pathname === '/registrar-dashboard/grades-submission' ? 'active' : ''}`}
-            onClick={() => setShowGradesSubMenu(false)}
-          >
-            <FontAwesomeIcon icon={faChalkboardTeacher} className="me-2" />
-            GRADES SUBMISSION
+            <FontAwesomeIcon icon={faUserTie} className="me-2" />
+            STAFFS
           </Link>
-
-          {user?.personnelType === 'Admin' && ( 
-            <>
-              <Link 
-                to="/registrar-dashboard/staff" 
-                className={`menu-item d-flex align-items-center mb-2 ${location.pathname.startsWith('/registrar-dashboard/staff') ? 'active' : ''}`}
-                onClick={() => setShowGradesSubMenu(false)}
-              >
-                <FontAwesomeIcon icon={faUserTie} className="me-2" />
-                STAFFS
-              </Link>
-              <Link 
-                to="/registrar-dashboard/academicYear" 
-                className={`menu-item d-flex align-items-center mb-2 ${location.pathname.startsWith('/registrar-dashboard/academicYear') ? 'active' : ''}`}
-                onClick={() => setShowGradesSubMenu(false)}
-              >
-                <FontAwesomeIcon icon={faUserTie} className="me-2" />
-                ACADEMIC YEAR
-              </Link>
-            </>
-          )}
-        </nav>
-      </div>
+          <Link 
+            to="/registrar-dashboard/academicYear" 
+            className={`menu-item d-flex align-items-center mb-2 ${location.pathname.startsWith('/registrar-dashboard/academicYear') ? 'active' : ''}`}
+            onClick={() => {
+              setShowGradesSubMenu(false);
+              if (window.innerWidth <= 768) setShowSidebar(false);
+            }}
+          >
+            <FontAwesomeIcon icon={faUserTie} className="me-2" />
+            ACADEMIC YEAR
+          </Link>
+        </>
+      )}
+    </nav>
+  </div>
+  
 
       <div className="main-content flex-grow-1">
         <header className="header d-flex justify-content-between align-items-center p-3 border-bottom rounded">
@@ -173,18 +187,40 @@ export default function RegistrarDashboard() {
             />
             {showDropdown && (
               <div className="dropdown-menu position-absolute end-0 mt-2 show">
-                <button className="dropdown-item" onClick={() => navigate('/registrar-dashboard/profile')}>
+                <button
+                  className="dropdown-item"
+                  onClick={() => {
+                    navigate('/registrar-dashboard/profile');
+                    if (window.innerWidth <= 768) setShowSidebar(false); // Close sidebar on mobile if needed
+                    setShowDropdown(false); // Close dropdown after selection
+                  }}
+                >
                   Profile
                 </button>
-                <button className="dropdown-item" onClick={() => navigate('/registrar-dashboard/change-password')}>
+                <button
+                  className="dropdown-item"
+                  onClick={() => {
+                    navigate('/registrar-dashboard/change-password');
+                    if (window.innerWidth <= 768) setShowSidebar(false); // Close sidebar on mobile if needed
+                    setShowDropdown(false); // Close dropdown after selection
+                  }}
+                >
                   Change Password
                 </button>
-                <button className="dropdown-item" onClick={handleLogout}>
+                <button
+                  className="dropdown-item"
+                  onClick={() => {
+                    handleLogout();
+                    if (window.innerWidth <= 768) setShowSidebar(false); // Close sidebar on mobile if needed
+                    setShowDropdown(false); // Close dropdown after selection
+                  }}
+                >
                   Logout
                 </button>
               </div>
             )}
           </div>
+
         </header>
 
         <Routes>

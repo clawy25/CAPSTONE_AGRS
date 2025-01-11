@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { Form, Row, Col, Button, Modal, Table } from 'react-bootstrap';
+import { Form, Row, Col, Button, Modal, Table, Spinner } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css'; 
 import * as XLSX from 'sheetjs-style'; // Use sheetjs-style for formatting
 import ProgramModel from '../ReactModels/ProgramModel'; // Ensure this path is correct
@@ -16,6 +16,7 @@ import '../App.css'
 
 // MasterlistOfGradesTable Component
 function MasterlistOfGradesTable() {
+  const [loading, setLoading] = useState(false); 
   const [showModal, setShowModal] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [programs, setPrograms] = useState([]);
@@ -43,7 +44,10 @@ function MasterlistOfGradesTable() {
     const fetchPrograms = async () => {
       try {
         const allPrograms = await ProgramModel.fetchAllPrograms(user.programNumber);
-        setPrograms(allPrograms);
+        const distinctPrograms = allPrograms.filter((program, index, self) =>
+          index === self.findIndex((p) => p.programNumber === program.programNumber)
+      );
+        setPrograms(distinctPrograms);
       } catch (error) {
         console.error("Error fetching programs:", error);
       }
@@ -63,13 +67,16 @@ function MasterlistOfGradesTable() {
     }
     fetchPrograms();
     fetchAdmissionYears()
-    fetchStudentData();
+   
+    
+    fetchStudentData().then(() => setLoading(false));
   }, [user.programNumber]);
 
   
   const generateAcademicYears = (startYear) => Array.from({ length: 4 }, (_, i) => `${startYear + i}-${startYear + i + 1}`);
 
   const fetchStudentData = async (programNumber, batchYear) => {
+   
     try {
 
       const academicYears = generateAcademicYears(parseInt(batchYear));
@@ -139,7 +146,7 @@ function MasterlistOfGradesTable() {
           return {
             courseCode: enrollment.courseCode,
             scheduleNumber: enrollment.scheduleNumber,
-            grade: isVerified ? (gradeData?.numEq || 0) : 0
+            grade: isVerified ? ((gradeData?.numEq || 0).toFixed(2)) : 0
           };
         });
   
@@ -274,21 +281,32 @@ const fetchCurriculum = async (programNumber, batchYear) => {
   
   const handleView = async () => {
     if (programCode && batchYear) {
+      // Reset previous state
       setSemestersData({});
       setStudents([]);
       setAcademicYears([]);
+      setLoading(true); 
       try {
-        fetchCurriculum(programCode, batchYear);
-        const filteredStudents = await fetchStudentData(programCode, batchYear);
-        setStudents(filteredStudents); // Update students data
+        // Start loading indicator
+  
+        // Fetch curriculum and students in parallel
+        await Promise.all([
+          fetchCurriculum(programCode, batchYear),
+          fetchStudentData(programCode, batchYear).then((filteredStudents) => {
+            setStudents(filteredStudents); // Update students data
+          }),
+        ]);
       } catch (error) {
         console.error("Error fetching data:", error);
-        // Optionally, display an error modal here
+        // Optionally, display an error modal or message
+      } finally {
+        setLoading(false); // Stop loading indicator after all fetches complete
       }
     } else {
       setShowModalAlertView(true); // Show alert for missing inputs
     }
   };
+  
 
   const handleProgramNameChange = (e) => {
     const selectedProgramName = e.target.value;
@@ -689,154 +707,160 @@ const downloadPDF = () => {
 
    
       {/* Grades Table */}
-
-      {Object.keys(semestersData).length === 0 && students.length === 0 ? (
-      <div className="text-center py-5 bg-white rounded pt-5 px-4 pb-5">
-        <h5 className="custom-color-green-font mt-5 fs-5">No Data Available</h5>
-        <p className="fs-6 mb-4">
-          Please ensure that all filters are applied then click "View" to display the data.
-        </p>
-      </div>
+      {loading ? (
+        <div className="text-center py-5 bg-white">
+          <Spinner animation="border" variant="success" />
+          <p className="mt-3">Loading data, please wait...</p>
+        </div>
       ) : (
-          <Table bordered responsive hover className="table-success mt-2 mb-4">
-          <thead className="table-success">
-            {/* Row for Year Levels */}
-            <tr>
-              <th className="custom-color-green-font custom-font">PROGRAM</th>
-              <th className="text-center custom-color-green-font custom-font" colSpan={2}>
-                {programName}
-              </th>
-              {Object.keys(semestersData).map((year, idx) => {
-                const academicYear = getAcademicYear(batchYear, idx + 1);
-                return (
-                  <th
-                    key={year}
-                    colSpan={Object.values(semestersData[year]).flat().length}
-                    className="text-center custom-color-green-font custom-font"
-                  >
-                    {`${year} YEAR A.Y. ${academicYear}`}
-                  </th>
-                );
-              })}
-              <th
-                rowSpan="4"
-                className="align-middle text-center bg-white custom-color-green-font custom-font"
-              >
-                Transcript of Records (TOR)
-              </th>
-            </tr>
-
-            {/* Row for Program Code */}
-            <tr>
-              <th className="custom-color-green-font custom-font">PROGRAM CODE</th>
-              <th className="text-center custom-color-green-font custom-font" colSpan={2}>
-                {programCode}
-              </th>
-              {Object.keys(semestersData).map((year, idx) => {
-                const academicYear = getAcademicYear(batchYear, idx + 1);
-                return Object.keys(semestersData[year]).map((semester) => (
-                  <th
-                    key={`${year}-${semester}`}
-                    colSpan={semestersData[year][semester].length}
-                    className="text-center bg-white custom-color-green-font custom-font"
-                  >
-                    {`${semester.toUpperCase()} SEMESTER A.Y. ${academicYear}`}
-                  </th>
-                ));
-              })}
-            </tr>
-
-            {/* Row for Batch / Year */}
-            <tr>
-              <th className="custom-color-green-font custom-font">BATCH / YEAR</th>
-              <th className="text-center custom-color-green-font custom-font" colSpan={2}>
-                ({Object.keys(semestersData).length}) {batchYear}
-              </th>
-              {Object.keys(semestersData).map((year) => {
-                return Object.keys(semestersData[year]).map((semester) =>
-                  semestersData[year][semester].map((course, courseIdx) => (
-                    <th
-                      key={`${year}-${semester}-${courseIdx}`}
-                      className="text-center custom-color-green-font bg-white custom-font"
-                      rowSpan={2}
-                    >
-                      {course.courseCode}
-                    </th>
-                  ))
-                );
-              })}
-            </tr>
-          </thead>
-          <tbody>
-          {students.length === 0 ? (
-            <tr>
-              <td
-                colSpan={
-                  3 +
-                  Object.keys(semestersData).reduce(
-                    (acc, year) =>
-                      acc +
-                      Object.keys(semestersData[year]).reduce(
-                        (acc2, semester) =>
-                          acc2 + semestersData[year][semester].length,
-                        0
-                      ),
-                    0
-                  ) +
-                  1
-                }
-                className="text-center fst-italic bg-white"
-              >
-                No Student Data Available
-              </td>
-            </tr>
+        <>
+          {Object.keys(semestersData).length === 0 && students.length === 0 ? (
+            <div className="text-center py-5 bg-white rounded pt-5 px-4 pb-5">
+              <h5 className="custom-color-green-font mt-5 fs-5">No Data Available</h5>
+              <p className="fs-6 mb-4">
+                Please ensure that all filters are applied then click "View" to display the data.
+              </p>
+            </div>
           ) : (
-            students.map((student, rowIdx) => (
-              <tr key={rowIdx}>
-                {/* Student Info */}
-                <td className="text-center bg-white">{rowIdx + 1}</td>
-                <td className="text-center bg-white">{student.studentNumber}</td>
-                <td className="bg-white">{student.studentName}</td>
-
-                {/* Display Grades */}
-                {Object.keys(semestersData).map((year) =>
-                  Object.keys(semestersData[year]).map((semester) =>
-                    semestersData[year][semester].map((course, gradeIdx) => {
-                      // Find the grade for the course
-                      const courseGrade = student.courses.find(
-                        (studentCourse) => studentCourse.courseCode === course.courseCode
-                      )?.grade;
-
-                      return (
-                        <td
-                          key={`${year}-${semester}-${gradeIdx}`}
-                          className="text-center bg-white"
-                        >
-                          {courseGrade !== undefined ? courseGrade : '-'}
-                        </td>
-                      );
-                    })
-                  )
-                )}
-
-                {/* TOR Button */}
-                <td className="bg-white">
-                  <Button
-                    variant="success"
-                    className="w-100"
-                    onClick={() => handleTORClick(student)}
+            <Table bordered responsive hover className="table-success mt-2 mb-4">
+              <thead className="table-success">
+                {/* Row for Year Levels */}
+                <tr>
+                  <th className="custom-color-green-font custom-font">PROGRAM</th>
+                  <th className="text-center custom-color-green-font custom-font" colSpan={2}>
+                    {programName}
+                  </th>
+                  {Object.keys(semestersData).map((year, idx) => {
+                    const academicYear = getAcademicYear(batchYear, idx + 1);
+                    return (
+                      <th
+                        key={year}
+                        colSpan={Object.values(semestersData[year]).flat().length}
+                        className="text-center custom-color-green-font custom-font"
+                      >
+                        {`${year} YEAR A.Y. ${academicYear}`}
+                      </th>
+                    );
+                  })}
+                  <th
+                    rowSpan="3"
+                    className="align-middle text-center bg-white custom-color-green-font custom-font"
                   >
-                    TOR
-                  </Button>
-                </td>
-              </tr>
-            ))
+                    Transcript of Records (TOR)
+                  </th>
+                </tr>
+
+                {/* Row for Program Code */}
+                <tr>
+                  <th className="custom-color-green-font custom-font">PROGRAM CODE</th>
+                  <th className="text-center custom-color-green-font custom-font" colSpan={2}>
+                    {programCode}
+                  </th>
+                  {Object.keys(semestersData).map((year, idx) => {
+                    const academicYear = getAcademicYear(batchYear, idx + 1);
+                    return Object.keys(semestersData[year]).map((semester) => (
+                      <th
+                        key={`${year}-${semester}`}
+                        colSpan={semestersData[year][semester].length}
+                        className="text-center bg-white custom-color-green-font custom-font"
+                      >
+                        {`${semester.toUpperCase()} SEMESTER A.Y. ${academicYear}`}
+                      </th>
+                    ));
+                  })}
+                </tr>
+
+                {/* Row for Batch / Year */}
+                <tr>
+                  <th className="custom-color-green-font custom-font">BATCH / YEAR</th>
+                  <th className="text-center custom-color-green-font custom-font" colSpan={2}>
+                    ({Object.keys(semestersData).length}) {batchYear}
+                  </th>
+                  {Object.keys(semestersData).map((year) => {
+                    return Object.keys(semestersData[year]).map((semester) =>
+                      semestersData[year][semester].map((course, courseIdx) => (
+                        <th
+                          key={`${year}-${semester}-${courseIdx}`}
+                          className="text-center custom-color-green-font bg-white custom-font"
+                          rowSpan={1}
+                        >
+                          {course.courseCode}
+                        </th>
+                      ))
+                    );
+                  })}
+                </tr>
+              </thead>
+              <tbody>
+                {students.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={
+                        3 +
+                        Object.keys(semestersData).reduce(
+                          (acc, year) =>
+                            acc +
+                            Object.keys(semestersData[year]).reduce(
+                              (acc2, semester) =>
+                                acc2 + semestersData[year][semester].length,
+                              0
+                            ),
+                          0
+                        ) +
+                        1
+                      }
+                      className="text-center fst-italic bg-white"
+                    >
+                      No Student Data Available
+                    </td>
+                  </tr>
+                ) : (
+                  students.map((student, rowIdx) => (
+                    <tr key={rowIdx}>
+                      {/* Student Info */}
+                      <td className="text-center bg-white">{rowIdx + 1}</td>
+                      <td className="text-center bg-white">{student.studentNumber}</td>
+                      <td className="bg-white">{student.studentName}</td>
+
+                      {/* Display Grades */}
+                      {Object.keys(semestersData).map((year) =>
+                        Object.keys(semestersData[year]).map((semester) =>
+                          semestersData[year][semester].map((course, gradeIdx) => {
+                            // Find the grade for the course
+                            const courseGrade = student.courses.find(
+                              (studentCourse) => studentCourse.courseCode === course.courseCode
+                            )?.grade;
+
+                            return (
+                              <td
+                                key={`${year}-${semester}-${gradeIdx}`}
+                                className="text-center bg-white"
+                              >
+                                {courseGrade !== undefined ? courseGrade : '-'}
+                              </td>
+                            );
+                          })
+                        )
+                      )}
+
+                      {/* TOR Button */}
+                      <td className="bg-white">
+                        <Button
+                          variant="success"
+                          className="w-100"
+                          onClick={() => handleTORClick(student)}
+                        >
+                          TOR
+                        </Button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </Table>
           )}
-        </tbody>
-
-        </Table>
-
-        )}
+        </>
+      )}
 
       {/* Modal for displaying student's TOR */}
       <Modal show={showModal} onHide={handleCloseModal} size="xl"  className="custom-modal-width">

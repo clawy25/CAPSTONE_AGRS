@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { Table, Form, Button, Row, Col, Modal } from 'react-bootstrap';
+import { Table, Form, Button, Row, Col, Modal, Spinner } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css'; 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit } from '@fortawesome/free-solid-svg-icons';
@@ -14,6 +14,7 @@ import DeadlineModel from '../ReactModels/DeadlineModel';
 import '../App.css';
 
 export default function RegistrarProfessor() {
+  const [loading, setLoading] = useState(false); 
   const { user } = useContext(UserContext);
   const [academicYears, setAcademicYears] = useState([]);
   const [programs, setPrograms] = useState([]);
@@ -268,15 +269,21 @@ const fetchDeadline = async () => {
     }
   };
   
-  const handleView = () => {
+  const handleView = async () => {
     if (selectedAcademicYear && selectedProgram && selectedYearLevel && selectedSemester && selectedSection) {
-      fetchSchedules();
-      fetchDeadline();
+      setLoading(true);
+      try {
+        await Promise.all([fetchSchedules(), fetchDeadline()]);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setLoading(false);
+      }
     } else {
       setShowModalAlertView(true);
     }
   };
-
+  
   const handleEditDeadline = (index) => {
     setSelectedDeadline(deadlines[index]);
     setShowModal(true);
@@ -558,7 +565,12 @@ const fetchDeadline = async () => {
   
       
 
-        {schedules.length > 0 || deadlines.length > 0 ? (
+        {loading ? (
+          <div className="text-center py-5 bg-white">
+          <Spinner animation="border" variant="success" />
+          <p className="mt-3">Loading data, please wait...</p>
+        </div>
+        ): schedules.length > 0 || deadlines.length > 0 ? (
            <div className="card mb-4 bg-white rounded p-3">
            <div className="card-body table-responsive">
           <Table bordered hover>

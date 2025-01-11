@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import '../App.css'; // Custom styling
+import {Spinner} from 'react-bootstrap'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSearch, faFileAlt, faCog, faFileSignature, faFilter } from '@fortawesome/free-solid-svg-icons'; // Import the icons you want to use
 import * as XLSX from 'xlsx';
@@ -9,6 +10,7 @@ import ProgramModel from '../ReactModels/ProgramModel';
 import AcademicYearModel from '../ReactModels/AcademicYearModel';
 
 export default function RegistrarStudents() {
+    const [loading, setLoading] = useState(false); 
     const [searchQuery, setSearchQuery] = useState('');
     const [filterOption, setFilterOption] = useState('All');
     const [showFilterDropdown, setShowFilterDropdown] = useState(false);
@@ -63,12 +65,15 @@ export default function RegistrarStudents() {
     
     // Fetch existing students from StudentModel
     const fetchExistingStudents = async () => {
+        setLoading(true); 
         try {
             const existingStudents = await StudentModel.fetchExistingStudents();
             console.log(existingStudents); 
             setStudents(existingStudents);
         } catch (error) {
             console.error('Error fetching existing students:', error);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -383,68 +388,57 @@ export default function RegistrarStudents() {
             <h2 className="custom-font custom-color-green-font">Students Masterlist</h2>
         
             <section className='container-fluid bg-white p-2 px-4 rounded'>
-                <div className="row my-3">
-                    {/* Upper left: Search input with icon on the right side */}
-                    <div className="col-12 col-md-6 d-flex align-items-center mb-2 mb-md-0">
-                        <div className="input-group">
-                            <input
-                                type="text"
-                                className="form-control"
-                                placeholder="Search student..."
-                                value={searchQuery}
-                                onChange={handleSearch}
-                            />
-                            <span className="input-group-text">
-                                <FontAwesomeIcon icon={faSearch} /> {/* Font Awesome search icon */}
-                            </span>
-                        </div>
-                        {/* Filter Icon with dropdown */}
-                        <div className="ms-2 position-relative">
-                            <span
-                                className="input-group-text cursor-pointer"
-                                onClick={() => setShowFilterDropdown(!showFilterDropdown)} // Toggle dropdown
-                            >
-                                <FontAwesomeIcon className='custom-color-green-font' icon={faFilter} /> {/* Filter icon */}
-                            </span>
-                            {showFilterDropdown && (
-                                <div className="dropdown-menu show" style={{ position: 'absolute', zIndex: 100 }}>
-                                    <button className="dropdown-item" onClick={() => handleFilterChange('All')}>All</button>
-                                    <button className="dropdown-item" onClick={() => handleFilterChange('Year')}>Year</button>
-                                    <button className="dropdown-item" onClick={() => handleFilterChange('Program')}>Program</button>
-                                    <button className="dropdown-item" onClick={() => handleFilterChange('Status')}>Status</button>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Upper right: Import Student Classlist button */}
-                    <div className="col-12 col-md-6 d-flex justify-content-end align-items-center">
-                        <button className="btn btn-success custom-font w-100 w-md-50" onClick={() => document.querySelector('input[type="file"]').click()}> {/* Use w-md-50 for 50% width on desktop */}
-                            <FontAwesomeIcon icon={faFileAlt} /> Import Students {/* Font Awesome file icon */}
-                        </button>
-                        <input 
-                            type="file" 
-                            style={{ display: 'none' }} 
-                            accept=".xlsx, .xls" 
-                            onChange={handleFileUpload} 
+            <div className="d-flex align-items-center justify-content-between gap-2 w-100 mt-4">
+                {/* Upper left: Search input with icon on the right side */}
+                <div className="mb-2 mb-md-0 w-100 w-md-auto">
+                    <div className="input-group">
+                        <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search student..."
+                            value={searchQuery}
+                            onChange={handleSearch}
                         />
-
+                        <span className="input-group-text">
+                            <FontAwesomeIcon icon={faSearch} /> {/* Font Awesome search icon */}
+                        </span>
                     </div>
                 </div>
 
+                {/* Upper right: Import Student Classlist button */}
+                <div className="mb-2 mb-md-0 w-100 w-md-auto mx-md-2">
+                    <button className="btn btn-success custom-font w-100 w-md-50" onClick={() => document.querySelector('input[type="file"]').click()}>
+                        <FontAwesomeIcon icon={faFileAlt} /> Import Students {/* Font Awesome file icon */}
+                    </button>
+                    <input 
+                        type="file" 
+                        style={{ display: 'none' }} 
+                        accept=".xlsx, .xls" 
+                        onChange={handleFileUpload} 
+                    />
+                </div>
+            </div>
+
+
+
                 {/* Student list table */}
-                <div className="row">
+                <div className="row mt-3">
                     <div className="col-md-12">
                         <div className="table-responsive"> {/* Add table-responsive class for responsive scrolling */}
-                            <table className="table table-hover ">
+                            {loading ? ( <div className="text-center py-5 bg-white mt-4">
+                                        <Spinner animation="border" variant="success" />
+                                        <p className="mt-3">Loading data, please wait...</p>
+                                    </div>
+                                    ):(
+                                <table className="table table-hover ">
                                 <thead className="table-success">
                                     <tr>
-                                        <th className='custom-color-green-font custom-font'style={{ textAlign: 'center' }}>Student Number</th>
-                                        <th className='custom-color-green-font custom-font'style={{ textAlign: 'center' }}>Name</th>
-                                        <th className='custom-color-green-font custom-font'style={{ textAlign: 'center' }}>PCC Email</th>
-                                        <th className='custom-color-green-font custom-font'style={{ textAlign: 'center' }}>Program</th>
-                                        <th className='custom-color-green-font custom-font'style={{ textAlign: 'center' }}>Status</th>
-                                        <th className='custom-color-green-font custom-font'style={{ textAlign: 'center' }}>Actions</th>
+                                        <th className='custom-color-green-font custom-font text-center pt-3'>Student Number</th>
+                                        <th className='custom-color-green-font custom-font text-center pt-3'>Name</th>
+                                        <th className='custom-color-green-font custom-font text-center pt-3'>PCC Email</th>
+                                        <th className='custom-color-green-font custom-font text-center pt-3'>Program</th>
+                                        <th className='custom-color-green-font custom-font text-center pt-3'>Status</th>
+                                        <th className='custom-color-green-font custom-font text-center pt-3'>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody className='bg-white'>
@@ -459,16 +453,7 @@ export default function RegistrarStudents() {
                                                     {programs.find(program => program.programNumber === student.studentProgramNumber)?.programName || 'No Program Assigned'}
                                                 </td>
                                                 <td>
-                                                <select
-                                                    className="form-select custom-color-green-font"
-                                                    value={student.studentType}
-                                                    onChange={(e) => handleStatusChange(student.id, e.target.value)} 
-                                                >
-                                                    <option value="Regular">Regular</option>
-                                                    <option value="Irregular">Irregular</option>
-                                                    <option value="Withdraw">Withdraw</option>
-                                                    <option value="INC">Incomplete (INC)</option>
-                                                </select>
+                                               {student.studentType}
                                                 </td>
                                                 <td>
                                                     <button className="btn btn-success btn-sm me-2">
@@ -483,6 +468,7 @@ export default function RegistrarStudents() {
                                     })}
                                 </tbody>
                             </table>
+                            )}
                         </div>
                     </div>
                 </div>
