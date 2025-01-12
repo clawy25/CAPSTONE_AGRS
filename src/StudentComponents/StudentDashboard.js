@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUser, faCalendarAlt, faGraduationCap, faBars } from '@fortawesome/free-solid-svg-icons';
 import './Dashboard.css';
 import '../App.css';
-import StudentEnrollment from './StudentEnrollment';
+import StudentEnrollmentSchedule from './StudentEnrollmentSchedule';
 import StudentSchedule from './StudentSchedule';
 import StudentGrades from './StudentGrades';
 import { UserContext } from '../Context/UserContext';
@@ -121,15 +121,36 @@ export default function StudentDashboard() {
               aria-label="User Menu"
               style={{ cursor: 'pointer' }}
             />
-            {showDropdown && (
+             {showDropdown && (
               <div className="dropdown-menu position-absolute end-0 mt-2 show">
-                <button className="dropdown-item" onClick={() => navigate('/student-dashboard/profile')}>
+                <button
+                  className="dropdown-item"
+                  onClick={() => {
+                    navigate('/student-dashboard/profile');
+                    if (window.innerWidth <= 768) setShowSidebar(false); // Close sidebar on mobile if needed
+                    setShowDropdown(false); // Close dropdown after selection
+                  }}
+                >
                   Profile
                 </button>
-                <button className="dropdown-item" onClick={() => navigate('/student-dashboard/change-password')}>
+                <button
+                  className="dropdown-item"
+                  onClick={() => {
+                    navigate('/student-dashboard/change-password');
+                    if (window.innerWidth <= 768) setShowSidebar(false); // Close sidebar on mobile if needed
+                    setShowDropdown(false); // Close dropdown after selection
+                  }}
+                >
                   Change Password
                 </button>
-                <button className="dropdown-item" onClick={handleLogout}>
+                <button
+                  className="dropdown-item"
+                  onClick={() => {
+                    handleLogout();
+                    if (window.innerWidth <= 768) setShowSidebar(false); // Close sidebar on mobile if needed
+                    setShowDropdown(false); // Close dropdown after selection
+                  }}
+                >
                   Logout
                 </button>
               </div>
@@ -150,7 +171,7 @@ export default function StudentDashboard() {
         )*/}
 
         <Routes>
-          <Route path="enrollment" element={<StudentEnrollment />} />
+          <Route path="enrollment" element={<StudentEnrollmentSchedule />} />
           <Route path="schedule" element={<StudentSchedule />} /> {/* Sections as submenu */}
           <Route path="grades" element={<StudentGrades />} />
           <Route path="profile" element={<StudentProfile />} />

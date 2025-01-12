@@ -426,7 +426,7 @@ useEffect(() => {
             })
           ) : (
             <tr>
-              <td colSpan="8">No courses available</td>
+              <td colSpan="8" className='text-center'>No courses available</td>
             </tr>
           )}
         </tbody>

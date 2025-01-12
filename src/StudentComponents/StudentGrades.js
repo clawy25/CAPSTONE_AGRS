@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext, useCallback } from 'react';
-import { Button, Modal, Table } from 'react-bootstrap';
+import { Button, Modal, Table,Spinner } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css'; 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBook } from '@fortawesome/free-solid-svg-icons';
@@ -15,6 +15,7 @@ const studentCache = new Map();
 const curriculumCache = new Map();
 
 export default function Grades() {
+  const [loading, setLoading] = useState(false);
   const { user } = useContext(UserContext); // Get the logged-in user from context
   const [error, setError] = useState(null);
   const [studentData, setStudentData] = useState([]);
@@ -26,6 +27,7 @@ export default function Grades() {
       setStudentData(studentCache.get(studentNumber)); // Use cached data if available
       return;
     }
+    setLoading(true);
     try {
       const [studentsData, enrolledStudents, courseData] = await Promise.all([
         StudentModel.fetchExistingStudents(),
@@ -88,10 +90,14 @@ export default function Grades() {
       console.log("Fetched Student Data:", currentStudentData);
 
       studentCache.set(studentNumber, currentStudentData); // Cache the fetched data
+      console.log('student cache', studentCache)
       setStudentData(currentStudentData);
     } catch (error) {
       console.error("Failed to fetch student data:", error);
       setError(error);
+    }
+    finally{
+      setLoading(false);
     }
   }, []);
 
@@ -100,6 +106,7 @@ export default function Grades() {
       setCurriculum(curriculumCache.get(programNumber)); // Use cached data if available
       return;
     }
+    setLoading(true)
     try {
       const curricullumCourse = await CourseModel.fetchAllCourses();
       const filteredCourses = curricullumCourse.filter(
@@ -144,6 +151,9 @@ export default function Grades() {
     } catch (error) {
       console.error("Failed to fetch Curriculum data:", error);
       setError(error);
+    }
+    finally {
+      setLoading(false);
     }
   }, []);
 
@@ -210,56 +220,66 @@ export default function Grades() {
       </div>
       <div className='card-body card-success border-success rounded'>
         
-      <div className="d-flex justify-content-end">
-        <Button 
-          className='text-success bg-white border-0 fs-6 fw-semibold' 
-          onClick={() => setShowModal(true)}
-        >
-          <FontAwesomeIcon icon={faBook} /> Curriculum
-        </Button>
-      </div>
+      
 
-      <div className="card">
-      <div className="card-header bg-custom-color-green d-flex">
-        <p className="text-white mt-1 fs-6 gw-semibold custom-color">
-          Academic Year ({studentData.studentCurrentYearLevel}) First Semester ({studentData.studentCurrentProgram}) 
-        </p>
+    {loading ? (
+      <div className="text-center py-5 bg-white mt-4">
+          <Spinner animation="border" variant="success" />
+          <p className="mt-3">Loading data, please wait...</p>
       </div>
-      <div className="card-body">
-        <Table bordered className="table">
-          <thead className="table-success">
-            <tr>
-              <th className="text-success custom-font">Code</th>
-              <th className="text-success custom-font">Subject</th>
-              <th className="text-success custom-font">Total Units</th>
-              <th className="text-success custom-font">Grade</th>
-              <th className="text-success custom-font">Remarks</th>
-
-            </tr>
-          </thead>
-          <tbody>
-            {studentData.courses && studentData.courses.length > 0 ? (
-              studentData.courses.map((course, index) => (
-                <tr key={index}>
-                  <td className="custom-font">{course.courseCode}</td>
-                  <td className="custom-font">{course.courseDescriptiveTitle}</td>
-                  <td className="custom-font">{course.unitOfCredits}</td>
-                  <td className="custom-font">{course.finalGrade}</td>
-                  <td className="custom-font">{getGradeDescription(course.finalGrade)}</td>
-                  
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="5" className="text-center custom-font">
-                  No courses available.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </Table>
-      </div>
-    </div>
+        ):(
+          <>
+          <div className="d-flex justify-content-end">
+            <Button 
+              className='text-success bg-white border-0 fs-6 fw-semibold' 
+              onClick={() => setShowModal(true)}
+            >
+              <FontAwesomeIcon icon={faBook} /> Curriculum
+            </Button>
+          </div>
+            <div className="card">
+            <div className="card-header bg-custom-color-green d-flex">
+              <p className="text-white mt-1 fs-6 gw-semibold custom-color">
+                Academic Year ({studentData.studentCurrentYearLevel}) First Semester ({studentData.studentCurrentProgram}) 
+              </p>
+            </div>
+            <div className="card-body">
+              <Table bordered className="table">
+                <thead className="table-success">
+                  <tr>
+                    <th className="text-success custom-fon text-center">Code</th>
+                    <th className="text-success custom-font text-center">Subject</th>
+                    <th className="text-success custom-font text-center">Total Units</th>
+                    <th className="text-success custom-font text-center">Grade</th>
+                    <th className="text-success custom-font text-center">Remarks</th>
+      
+                  </tr>
+                </thead>
+                <tbody>
+                  {studentData.courses && studentData.courses.length > 0 ? (
+                    studentData.courses.map((course, index) => (
+                      <tr key={index}>
+                        <td className="custom-font text-center">{course.courseCode}</td>
+                        <td className="custom-font">{course.courseDescriptiveTitle}</td>
+                        <td className="custom-font text-center">{course.unitOfCredits}</td>
+                        <td className="custom-font text-center">{course.finalGrade}</td>
+                        <td className="custom-font text-center">{getGradeDescription(course.finalGrade)}</td>
+                        
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="5" className="text-center custom-font">
+                        No courses available.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </Table>
+            </div>
+          </div>
+          </>
+    )}
 
     <Modal show={showModal} onHide={handleCloseModal} size='lg'centered>
     <Modal.Header closeButton>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useContext, useCallback } from 'react';
+import { Spinner } from 'react-bootstrap';
 import { UserContext } from '../Context/UserContext';
 import ScheduleModel from '../ReactModels/ScheduleModel';
 import CourseModel from '../ReactModels/CourseModel';
@@ -10,12 +11,11 @@ import AcademicYearModel from '../ReactModels/AcademicYearModel';
 import './Schedule.css';
 import '../App.css';
 
-// Caching maps
-const courseCache = new Map();
-const personnelCache = new Map();
-const scheduleCache = new Map();
+// Unified caching map
+const dataCache = new Map();
 
 export default function Schedule() {
+  const [loading, setLoading] = useState(false);
   const { user } = useContext(UserContext);
   const [studentSchedules, setStudentSchedules] = useState([]);
   const [studentName, setStudentName] = useState("");
@@ -23,6 +23,7 @@ export default function Schedule() {
   const [currentAcadYear, setCurrentAcadYear] = useState("");
 
   const fetchData = useCallback(async () => {
+    setLoading(true);
     try {
       // Fetch current academic year and student information
       const [academicYears, students] = await Promise.all([
@@ -45,28 +46,34 @@ export default function Schedule() {
       }
 
       // Fetch data if not cached
-      if (courseCache.size === 0) {
+      if (!dataCache.has('courses')) {
         const fetchedCourses = await CourseModel.fetchAllCourses();
+        const coursesMap = new Map();
         fetchedCourses.forEach((course) => {
-          courseCache.set(course.courseCode, course);
+          coursesMap.set(course.courseCode, course);
         });
+        dataCache.set('courses', coursesMap);
       }
 
-      if (personnelCache.size === 0) {
+      if (!dataCache.has('personnel')) {
         const personnelData = await PersonnelModel.getProfessorsbyProgram(
           user.programNumber,
           currentYear.academicYear
         );
+        const personnelMap = new Map();
         personnelData.forEach((person) => {
-          personnelCache.set(person.personnelNumber, person);
+          personnelMap.set(person.personnelNumber, person);
         });
+        dataCache.set('personnel', personnelMap);
       }
 
-      if (scheduleCache.size === 0) {
+      if (!dataCache.has('schedules')) {
         const schedules = await ScheduleModel.fetchSchedules();
+        const schedulesMap = new Map();
         schedules.forEach((schedule) => {
-          scheduleCache.set(schedule.scheduleNumber, schedule);
+          schedulesMap.set(schedule.scheduleNumber, schedule);
         });
+        dataCache.set('schedules', schedulesMap);
       }
 
       const enrollments = await EnrollmentModel.fetchAllEnrollment();
@@ -76,10 +83,10 @@ export default function Schedule() {
 
       // Build student schedule data
       const schedulesData = studentEnrollments.map((enrollment) => {
-        const matchedSchedule = scheduleCache.get(enrollment.scheduleNumber);
+        const matchedSchedule = dataCache.get('schedules').get(enrollment.scheduleNumber);
         if (matchedSchedule) {
-          const matchedCourse = courseCache.get(matchedSchedule.courseCode);
-          const fetchedPersonnel = personnelCache.get(matchedSchedule.personnelNumber);
+          const matchedCourse = dataCache.get('courses').get(matchedSchedule.courseCode);
+          const fetchedPersonnel = dataCache.get('personnel').get(matchedSchedule.personnelNumber);
 
           if (matchedCourse && fetchedPersonnel) {
             const totalUnits =
@@ -104,6 +111,8 @@ export default function Schedule() {
     } catch (error) {
       setError(error.message);
       console.error("Error fetching student data:", error);
+    } finally {
+      setLoading(false);
     }
   }, [user]);
 
@@ -140,44 +149,50 @@ export default function Schedule() {
         <p className='custom-color-green-font mt-3 ms-1 fs-6 custom-color-green-font fw-bold'>  ({user.studentNumber})</p>
       </div>
       <div className="card-body table-container">
-  <div className="table-responsive">
-    <table className="table table-bordered">
-      <thead className="table-success text-center">
-        <tr>
-          <th className="text-success custom-font">Course Code</th>
-          <th className="text-success custom-font">Course Desc</th>
-          <th className="text-success custom-font">Lecture Units</th>
-          <th className="text-success custom-font">Lab Units</th>
-          <th className="text-success custom-font">Total Units</th>
-          <th className="text-success custom-font">Schedule</th>
-          <th className="text-success custom-font">Professor</th>
-        </tr>
-      </thead>
-      <tbody className="bg-white">
-        {studentSchedules.length > 0 ? (
-          studentSchedules.map((schedule, index) => (
-            <tr key={index}>
-              <td className="custom-font">{schedule.courseCode}</td>
-              <td className="custom-font">{schedule.courseDesc}</td>
-              <td className="custom-font">{schedule.lectureUnits}</td>
-              <td className="custom-font">{schedule.labUnits}</td>
-              <td className="custom-font">{schedule.totalUnits}</td>
-              <td className="custom-font">{schedule.scheduleTime}</td>
-              <td className="custom-font">{schedule.professorName}</td>
-            </tr>
-          ))
+        {loading ? (
+          <div className="text-center py-5 bg-white mt-4">
+            <Spinner animation="border" variant="success" />
+            <p className="mt-3">Loading data, please wait...</p>
+          </div>
         ) : (
-          <tr>
-            <td colSpan="7" className="text-center custom-font">
-              No schedule found for this student.
-            </td>
-          </tr>
+          <div className="table-responsive">
+            <table className="table table-bordered">
+              <thead className="table-success text-center">
+                <tr>
+                  <th className="text-success custom-font">Course Code</th>
+                  <th className="text-success custom-font">Course Desc</th>
+                  <th className="text-success custom-font">Lecture Units</th>
+                  <th className="text-success custom-font">Lab Units</th>
+                  <th className="text-success custom-font">Total Units</th>
+                  <th className="text-success custom-font">Schedule</th>
+                  <th className="text-success custom-font">Professor</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white">
+                {studentSchedules.length > 0 ? (
+                  studentSchedules.map((schedule, index) => (
+                    <tr key={index}>
+                      <td className="custom-font">{schedule.courseCode}</td>
+                      <td className="custom-font">{schedule.courseDesc}</td>
+                      <td className="custom-font">{schedule.lectureUnits}</td>
+                      <td className="custom-font">{schedule.labUnits}</td>
+                      <td className="custom-font">{schedule.totalUnits}</td>
+                      <td className="custom-font">{schedule.scheduleTime}</td>
+                      <td className="custom-font">{schedule.professorName}</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="7" className="text-center custom-font">
+                      No schedule found for this student.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         )}
-      </tbody>
-    </table>
-  </div>
-</div>
-  
+      </div>
     </div>
   );
 }
