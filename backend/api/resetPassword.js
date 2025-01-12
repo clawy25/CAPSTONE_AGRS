@@ -1,5 +1,5 @@
 const express = require('express');
-const supabase = require('./supabaseServer'); // Import your configured Supabase client
+const supabase = require('../supabaseServer'); // Import your configured Supabase client
 const router = express.Router();
 
 router.post('/set', async (req, res) => {
