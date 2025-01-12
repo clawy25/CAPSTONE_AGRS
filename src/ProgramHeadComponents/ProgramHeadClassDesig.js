@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { Table, Form, Button, Row, Col, Modal, FormControl } from 'react-bootstrap';
+import { Table, Form, Button, Row, Col, Modal, FormControl, Container, Spinner } from 'react-bootstrap';
 import AcademicYearModel from '../ReactModels/AcademicYearModel';
 import YearLevelModel from '../ReactModels/YearLevelModel';
 import ProgramModel from '../ReactModels/ProgramModel';
@@ -10,6 +10,7 @@ import PersonnelModel from '../ReactModels/PersonnelModel';
 import { UserContext } from '../Context/UserContext';
 
 const ProgramHeadClassDesig = () => {
+  const [loading, setLoading] = useState(false);
   const { user } = useContext(UserContext);
   const [selectedAcademicYear, setSelectedAcademicYear] = useState('');
   const [selectedProgram, setSelectedProgram] = useState('');
@@ -348,13 +349,24 @@ const ProgramHeadClassDesig = () => {
   
   useEffect(() => {
     if (selectedAcademicYear && selectedProgram && selectedYearLevel && selectedSemester && selectedSection) {
-      setSchedules([]);
-      setCourses([]);
-      fetchSchedules();
-      fetchCourses();
-      setShowTable(true);
+      setLoading(true); // Start loading when fetching data
+      setSchedules([]); // Clear previous schedules
+      setCourses([]); // Clear previous courses
+      
+      // Fetch schedules and courses
+      Promise.all([fetchSchedules(), fetchCourses()])
+        .then(() => {
+          setShowTable(true); // Show the table after data is fetched
+        })
+        .catch((error) => {
+          console.error('Error fetching schedules or courses:', error);
+        })
+        .finally(() => {
+          setLoading(false); // Stop loading when the data is fetched or error occurred
+        });
     }
   }, [selectedAcademicYear, selectedProgram, selectedYearLevel, selectedSemester, selectedSection]);
+  
 
   const handleScheduleChange = (index, field, value) => {
     // Update the schedules array
@@ -451,11 +463,12 @@ const ProgramHeadClassDesig = () => {
                                      ?.flatMap(p => p.semesters);
   return (
     <div>
+      <h2 className="custom-font custom-color-green-font mb-3 mt-2">Class Scheduling</h2>
       <Row className="mb-4 bg-white rounded p-3 m-1 d-flex justify-items-center align-items-center">
       <Col>
           <Form.Group controlId="academicYear">
-            <Form.Label>Academic Year</Form.Label>
-            <Form.Control as="select" value={selectedAcademicYear} onChange={handleAcademicYearChange}>
+            <Form.Label className="custom-color-green-font custom-font">Academic Year</Form.Label>
+            <Form.Select className='border-success' value={selectedAcademicYear} onChange={handleAcademicYearChange}>
               <option value="">Select Academic Year</option>
               {academicYears.sort((a, b) => {
                 let yearA = parseInt(a.academicYear.split('-')[0]);
@@ -467,13 +480,13 @@ const ProgramHeadClassDesig = () => {
                   {program.academicYear}
                 </option>
               ))}
-            </Form.Control>
+            </Form.Select>
           </Form.Group>
         </Col>
         <Col>
           <Form.Group controlId="program">
-            <Form.Label>Program</Form.Label>
-            <Form.Control as="select" value={selectedProgram} onChange={handleProgramChange}
+            <Form.Label className="custom-color-green-font custom-font">Program</Form.Label>
+            <Form.Select className='border-success' value={selectedProgram} onChange={handleProgramChange}
               disabled={!selectedAcademicYear}>
             <option value="">Select Program</option>
               {mappedData
@@ -484,13 +497,13 @@ const ProgramHeadClassDesig = () => {
                     {program.programName}
                   </option>
               ))}
-            </Form.Control>
+            </Form.Select>
           </Form.Group>
         </Col>
         <Col>
           <Form.Group controlId="yearLevel">
-            <Form.Label>Year Level</Form.Label>
-            <Form.Control as="select" value={selectedYearLevel} onChange={handleYearLevelChange}
+            <Form.Label className="custom-color-green-font custom-font">Year Level</Form.Label>
+            <Form.Select className='border-success' value={selectedYearLevel} onChange={handleYearLevelChange}
               disabled={!selectedAcademicYear || !selectedProgram}>
               <option value="">Select Year Level</option>
               {selectedProgramData // Get year levels for selected academic year
@@ -499,13 +512,13 @@ const ProgramHeadClassDesig = () => {
                     Year {level.yearLevel}
                   </option>
               ))}
-            </Form.Control>
+            </Form.Select>
           </Form.Group>
         </Col>
         <Col>
           <Form.Group controlId="semester">
-            <Form.Label>Semester</Form.Label>
-            <Form.Control as="select" value={selectedSemester} onChange={handleSemesterChange}
+            <Form.Label className="custom-color-green-font custom-font">Semester</Form.Label>
+            <Form.Select className='border-success' value={selectedSemester} onChange={handleSemesterChange}
               disabled={!selectedYearLevel || !selectedAcademicYear || !selectedProgram}>
             <option value="">Select Semester</option>
               {selectedYearData
@@ -514,13 +527,13 @@ const ProgramHeadClassDesig = () => {
                     {getSemesterText(sem)}
                   </option>
               ))}
-            </Form.Control>
+            </Form.Select>
           </Form.Group>
         </Col>
         <Col>
           <Form.Group controlId="section">
-          <Form.Label>Section</Form.Label>
-            <Form.Control as="select" value={selectedSection} onChange={handleSectionChange}
+          <Form.Label className="custom-color-green-font custom-font">Section</Form.Label>
+            <Form.Select className='border-success' value={selectedSection} onChange={handleSectionChange}
               disabled={!selectedYearLevel || !selectedAcademicYear || !selectedSemester || !selectedProgram}>
                 <option value="">Select Section</option>
                 {sections
@@ -529,97 +542,127 @@ const ProgramHeadClassDesig = () => {
                       {section.sectionNumber}
                     </option>
                 ))}
-            </Form.Control>
+            </Form.Select>
           </Form.Group>
         </Col>
       </Row>
 
       {/* Table for Subjects */}
-      {showTable &&(
-        <Row className="mb-3">
-        <Col>
-          <Table bordered hover className="text-center">
-            <thead className="table-success">
-              <tr>
-                <th>Subject Code</th>
-                <th>Subject Description</th>
-                <th>Lecture Units</th>
-                <th>Lab Units</th>
-                <th>Schedule</th>
-                <th>Professor</th>
-              </tr>
-            </thead>
-            <tbody>
-            { schedules.length === 0 && (
-            <>
-              <Button className="btn-success w-100" onClick={createSchedules}>Generate List</Button>
-            </>
-            )}
-              {schedules.map((schedule, index) => {
-                // Find the matching course based on courseCode
-                const courseDetails = courses?.find(course => course.courseCode === schedule.courseCode);
-                // If courseDetails exist, render the row
-                return (
-                  <tr key={index}>
-                    <td>{schedule.courseCode}</td>
-                    <td>{courseDetails?.courseDescriptiveTitle || 'N/A'}</td>
-                    <td>{courseDetails?.courseLecture || 'N/A'}</td>
-                    <td>{courseDetails?.courseLaboratory || 'N/A'}</td>
-                    <td>
-                      <div className="d-flex justify-content-start align-items-center">
+      {loading ? (
+  <div className="text-center py-5 bg-white mt-4">
+    <Spinner animation="border" variant="success" />
+    <p className="mt-3">Loading data, please wait...</p>
+  </div>
+) : showTable ? (
+  <Container fluid className="bg-white mt-3 pt-4 pb-2 rounded">
+    <Row className="mb-3 mx-2 mt-4">
+      <Table bordered hover className="text-center">
+        <thead className="table-success">
+          <tr>
+            <th>Subject Code</th>
+            <th>Subject Description</th>
+            <th>Lecture Units</th>
+            <th>Lab Units</th>
+            <th>Schedule</th>
+            <th>Professor</th>
+          </tr>
+        </thead>
+        <tbody>
+          {schedules.length === 0 ? (
+            <tr>
+              <td colSpan="6">
+                <Button className="btn-success w-100" onClick={createSchedules}>
+                  Generate List
+                </Button>
+              </td>
+            </tr>
+          ) : (
+            schedules.map((schedule, index) => {
+              const courseDetails = courses?.find(
+                (course) => course.courseCode === schedule.courseCode
+              );
+              return (
+                <tr key={index}>
+                  <td>{schedule.courseCode}</td>
+                  <td>{courseDetails?.courseDescriptiveTitle || 'N/A'}</td>
+                  <td>{courseDetails?.courseLecture || 'N/A'}</td>
+                  <td>{courseDetails?.courseLaboratory || 'N/A'}</td>
+                  <td>
+                    <div className="d-flex justify-content-start align-items-center">
                       <Form.Control
                         as="select"
                         value={schedule.scheduleDay}
-                        onChange={(e) => handleScheduleChange(index, 'scheduleDay', e.target.value)}
-                        className="mr-2">
-                          <option value="">N/A</option>
-                          <option value="Monday">Mon</option>
-                          <option value="Tuesday">Tue</option>
-                          <option value="Wednesday">Wed</option>
-                          <option value="Thursday">Thu</option>
-                          <option value="Friday">Fri</option>
-                          <option value="Saturday">Sat</option>
+                        onChange={(e) =>
+                          handleScheduleChange(index, 'scheduleDay', e.target.value)
+                        }
+                        className="mr-2"
+                      >
+                        <option value="">N/A</option>
+                        <option value="Monday">Mon</option>
+                        <option value="Tuesday">Tue</option>
+                        <option value="Wednesday">Wed</option>
+                        <option value="Thursday">Thu</option>
+                        <option value="Friday">Fri</option>
+                        <option value="Saturday">Sat</option>
                       </Form.Control>
                       <Form.Control
                         type="time"
                         value={schedule.startTime || ''}
-                        onChange={(e) => handleScheduleChange(index, 'startTime', e.target.value)}
-                        className="mr-2"/>
+                        onChange={(e) =>
+                          handleScheduleChange(index, 'startTime', e.target.value)
+                        }
+                        className="mr-2"
+                      />
                       <Form.Control
                         type="time"
                         value={schedule.endTime || ''}
-                        onChange={(e) => handleScheduleChange(index, 'endTime', e.target.value)}
-                        className="mr-2"/>
-                      </div>
-                    </td>
-                    <td>
-                    {/* Professor Selection */}
-                      <Form.Control
-                        as="select"
-                        value={schedule.personnelNumber || ''} // Ensure this reflects the correct professor for each schedule
-                        onChange={(e) => handleProfessorChange(index, e.target.value)}
-                        className="mr-2">
-                          <option value="">Select Professor</option>
-                          {professors.map((prof) => (
-                            <option key={prof.id} value={prof.personnelNumber}>
-                              {`${prof.personnelNameFirst} ${prof.personnelNameLast}`}
-                            </option>
-                          ))}
-                      </Form.Control>
-                    </td>
-                  </tr>
-                );
-              })}
-            { schedules.length > 0 && (
-            <>
-              <Button className="btn-success w-100" onClick={updateSchedules}>Save Schedule</Button>
-            </>
-            )}
-            </tbody>
-          </Table>
-        </Col>
-      </Row>
-    )}
+                        onChange={(e) =>
+                          handleScheduleChange(index, 'endTime', e.target.value)
+                        }
+                        className="mr-2"
+                      />
+                    </div>
+                  </td>
+                  <td>
+                    <Form.Control
+                      as="select"
+                      value={schedule.personnelNumber || ''}
+                      onChange={(e) => handleProfessorChange(index, e.target.value)}
+                      className="mr-2"
+                    >
+                      <option value="">Select Professor</option>
+                      {professors.map((prof) => (
+                        <option key={prof.id} value={prof.personnelNumber}>
+                          {`${prof.personnelNameFirst} ${prof.personnelNameLast}`}
+                        </option>
+                      ))}
+                    </Form.Control>
+                  </td>
+                </tr>
+              );
+            })
+          )}
+        </tbody>
+      </Table>
+      {schedules.length > 0 && (
+        <Container fluid >
+          <Button className="btn-success" onClick={updateSchedules}>
+            Save Schedule
+          </Button>
+        </Container>
+      )}
+    </Row>
+  </Container>
+) : (
+  <div className="text-center py-5 bg-white rounded pt-5 px-4 pb-5">
+    <h5 className="custom-color-green-font mt-5 fs-5">No Data Available</h5>
+    <p className="fs-6 mb-4">
+      Please ensure that all filters are applied then click "View" to display the data.
+    </p>
+  </div>
+)}
+
+      
     </div>
   );
 };

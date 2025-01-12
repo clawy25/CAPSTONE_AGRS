@@ -144,53 +144,72 @@ export default function ProgramHeadDashboard() {
 
         {/* Navigation Menu */}
         <nav className="menu mb-3">
-          {/* Grades Section Link */}
+          {/* Close Sidebar Button */}
+          <button
+            className="close-sidebar-btn position-absolute top-0 end-0 m-2 me-3"
+            onClick={() => setShowSidebar(false)}
+            aria-label="Close Sidebar"
+            style={{
+              background: 'transparent',
+              border: 'none',
+              fontSize: '1.5rem',
+              cursor: 'pointer',
+              color: 'inherit',
+            }}
+          >
+            &times;
+          </button>
+
+          {/* Grades Section */}
           <div className="menu-item-wrapper">
-    {/* Grades Section Link */}
-    <div
-      className={`menu-item d-flex align-items-center mb-2 `}
-      onClick={() => {
-        setShowGradesSubMenu(!showGradesSubMenu);
-      }} // Ensure submenu toggles when Grades is clicked
-    >
-      <FontAwesomeIcon icon={faGraduationCap} className="me-2" />
-      GRADES
-      <FontAwesomeIcon icon={showGradesSubMenu ? faAngleUp : faAngleDown} className="ms-auto" />
-    </div>
-    {showGradesSubMenu && (
-      <div className="submenu">
-        <Link
-          to="/programHead-dashboard/csog"
-          className={`submenu-item d-flex align-items-center mb-2 ${location.pathname === '/programHead-dashboard/csog' ? 'active' : ''}`}
-         // Navigate to CSOG
-        >
-          <FontAwesomeIcon icon={faTable} className="me-2" />
-          Verification
-        </Link>
-      </div>
-    )}
+            <div
+              className={`menu-item d-flex align-items-center mb-2`}
+              onClick={() => {
+                setShowGradesSubMenu(!showGradesSubMenu);
+              }}
+            >
+              <FontAwesomeIcon icon={faGraduationCap} className="me-2" />
+              GRADES
+              <FontAwesomeIcon icon={showGradesSubMenu ? faAngleUp : faAngleDown} className="ms-auto" />
+            </div>
+            {showGradesSubMenu && (
+              <div className="submenu">
+                <Link
+                  to="/programHead-dashboard/csog"
+                  className={`submenu-item d-flex align-items-center mb-2 ${location.pathname === '/programHead-dashboard/csog' ? 'active' : ''}`}
+                  onClick={() => {
+                    if (window.innerWidth <= 768) setShowSidebar(false); // Close sidebar on mobile
+                  }}
+                >
+                  <FontAwesomeIcon icon={faTable} className="me-2" />
+                  Verification
+                </Link>
+              </div>
+            )}
+          </div>
 
-   
-  </div>
-
-
-  <div 
-            className="menu-item d-flex align-items-center mb-2" 
+          {/* Class Scheduling Section */}
+          <div
+            className="menu-item d-flex align-items-center mb-2"
             onClick={() => {
               setShowClassDesignationSubMenu(!showClassDesignationSubMenu);
-              navigate('/programHead-dashboard/class-scheduling'); // Directly navigate to RegistrarStudents
+              navigate('/programHead-dashboard/class-scheduling');
+              if (window.innerWidth <= 768) setShowSidebar(false); // Close sidebar on mobile
             }}
           >
             <FontAwesomeIcon icon={faTable} className="me-2" />
             CLASS SCHEDULING
             <FontAwesomeIcon icon={showClassDesignationSubMenu ? faAngleUp : faAngleDown} className="ms-auto" />
           </div>
-          
+
           {showClassDesignationSubMenu && (
             <div className="submenu">
-              <Link 
-                to="/programHead-dashboard/curriculum" 
+              <Link
+                to="/programHead-dashboard/curriculum"
                 className={`submenu-item d-flex align-items-center mb-2 ${location.pathname === '/programHead-dashboard/curriculum' ? 'active' : ''}`}
+                onClick={() => {
+                  if (window.innerWidth <= 768) setShowSidebar(false); // Close sidebar on mobile
+                }}
               >
                 <FontAwesomeIcon icon={faTable} className="me-2" />
                 CURRICULUM
@@ -198,6 +217,7 @@ export default function ProgramHeadDashboard() {
             </div>
           )}
         </nav>
+
       </div>
 
       {/* Main Content Area */}
@@ -213,9 +233,7 @@ export default function ProgramHeadDashboard() {
           </button>
 
           <div className="user-info d-flex align-items-center position-relative" ref={dropdownRef}>
-            <span className="me-2">
-              {user ? `${user.personnelNameFirst} (${user.personnelNumber})` : 'Guest'}
-            </span>
+            <span className="me-2">{user ? user.personnelNameFirst : 'Guest'} ({user ? user.personnelNumber : 'Unknown'})</span>
             <FontAwesomeIcon
               icon={faUser}
               className="user-icon"
@@ -225,18 +243,40 @@ export default function ProgramHeadDashboard() {
             />
             {showDropdown && (
               <div className="dropdown-menu position-absolute end-0 mt-2 show">
-                <button className="dropdown-item" onClick={() => navigate('/programhead-dashboard/profile')}>
+                <button
+                  className="dropdown-item"
+                  onClick={() => {
+                    navigate('/programHead-dashboard/profile');
+                    if (window.innerWidth <= 768) setShowSidebar(false); // Close sidebar on mobile if needed
+                    setShowDropdown(false); // Close dropdown after selection
+                  }}
+                >
                   Profile
                 </button>
-                <button className="dropdown-item" onClick={() => navigate('/programhead-dashboard/change-password')}>
+                <button
+                  className="dropdown-item"
+                  onClick={() => {
+                    navigate('/programHead-dashboard/change-password');
+                    if (window.innerWidth <= 768) setShowSidebar(false); // Close sidebar on mobile if needed
+                    setShowDropdown(false); // Close dropdown after selection
+                  }}
+                >
                   Change Password
                 </button>
-                <button className="dropdown-item" onClick={handleLogout}>
+                <button
+                  className="dropdown-item"
+                  onClick={() => {
+                    handleLogout();
+                    if (window.innerWidth <= 768) setShowSidebar(false); // Close sidebar on mobile if needed
+                    setShowDropdown(false); // Close dropdown after selection
+                  }}
+                >
                   Logout
                 </button>
               </div>
             )}
           </div>
+
         </header>
 
         {/* Main Content Section based on selected section */}

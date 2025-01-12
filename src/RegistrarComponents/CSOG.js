@@ -919,6 +919,7 @@ const MasterlistOfGradesTable = () => {
   
   return (
     <div>
+      <h2 className="custom-font custom-color-green-font mb-3 mt-2"> CSOG</h2>
       <Form className="p-3 mb-4 bg-white border border-success rounded">
       <Row className="align-items-center">
       <Col md={2} className='mb-3'>

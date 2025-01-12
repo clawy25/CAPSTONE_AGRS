@@ -385,7 +385,7 @@ export default function RegistrarStudents() {
     //Page Layout
     return (
         <div className="container-fluid">
-            <h2 className="custom-font custom-color-green-font">Students Masterlist</h2>
+            <h2 className="custom-font custom-color-green-font mb-3 mt-2">Students Masterlist</h2>
         
             <section className='container-fluid bg-white p-2 px-4 rounded'>
             <div className="d-flex align-items-center justify-content-between gap-2 w-100 mt-4">

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { Table, Form, Button, Row, Col, Modal } from 'react-bootstrap';
+import { Table, Form, Button, Row, Col, Modal, Spinner, Container } from 'react-bootstrap';
 import AcademicYearModel from '../ReactModels/AcademicYearModel';
 import CourseModel from '../ReactModels/CourseModel';
 import ProgramModel from '../ReactModels/ProgramModel';
@@ -7,6 +7,7 @@ import { UserContext } from '../Context/UserContext'; // Assuming CourseModel ha
 
 const CurriculumPage = () => {
   const { user } = useContext(UserContext);
+  const [loading, setLoading] = useState(false);
   const [program, setPrograms] = useState([]);
   const [selectedAcademicYear, setSelectedAcademicYear] = useState('');
   const [selectedYearLevel, setSelectedYearLevel] = useState('');
@@ -123,11 +124,21 @@ const CurriculumPage = () => {
     }
   }, [selectedAcademicYear, selectedYearLevel, selectedSemester]);
 
-  const handleView = async() => {
+  const handleView = async () => {
     if (selectedAcademicYear && selectedYearLevel && selectedSemester) {
-      setShowTable(true);
+      setLoading(true); // Set loading to true
+      try {
+        // Simulate a delay for fetching or processing data if necessary
+        await new Promise((resolve) => setTimeout(resolve, 1000)); // Example: Simulating a fetch or operation
+        setShowTable(true); // Show the table once data or filters are ready
+      } catch (error) {
+        console.error("Error occurred while handling view:", error);
+      } finally {
+        setLoading(false); // Set loading to false after operation
+      }
     }
   };
+  
 
   const handleAcademicYearChange = (e) => {
     const selectedYear = e.target.value;
@@ -246,12 +257,12 @@ const CurriculumPage = () => {
                                  ?.find(p => p.yearLevel === Number(selectedYearLevel));
   return (
     <div>
-      <h2 className="custom-font custom-color-green-font">Curriculum</h2>
+      <h2 className="custom-font custom-color-green-font mb-3 mt-2">Curriculum</h2>
       <Row className="mb-4 bg-white rounded p-3 m-1">
         <Col>
           <Form.Group controlId="academicYear">
-            <Form.Label>Academic Year</Form.Label>
-            <Form.Control name ="acad" as="select" value={selectedAcademicYear} onChange={handleAcademicYearChange}>
+            <Form.Label className="custom-color-green-font custom-font">Academic Year</Form.Label>
+            <Form.Select name ="acad" as="select" value={selectedAcademicYear} onChange={handleAcademicYearChange} className="border-success">
             <option value="">Select Academic Year</option>
             {program
               .sort((a, b) => {
@@ -265,17 +276,17 @@ const CurriculumPage = () => {
                 </option>
               ))
             }
-            </Form.Control>
+            </Form.Select>
           </Form.Group>
         </Col>
         <Col>
           <Form.Group controlId="selectedYearLevel">
-            <Form.Label>Year Level</Form.Label>
-            <Form.Control
+            <Form.Label className="custom-color-green-font custom-font">Year Level</Form.Label>
+            <Form.Select
             name="year"
-            as="select"
             value={selectedYearLevel}
             onChange={handleYearLevelChange}
+            className="border-success"
             disabled={!selectedAcademicYear}>
               <option value="">Select Year Level</option>
               {program
@@ -286,17 +297,17 @@ const CurriculumPage = () => {
                     Year {level.yearLevel}
                   </option>
               ))}
-            </Form.Control>
+            </Form.Select>
           </Form.Group>
         </Col>
         <Col>
         <Form.Group controlId="semester">
-          <Form.Label>Semester</Form.Label>
-          <Form.Control 
+          <Form.Label className="custom-color-green-font custom-font">Semester</Form.Label>
+          <Form.Select 
           name="sem" 
-          as="select" 
           value={selectedSemester} 
           onChange={handleSemesterChange} 
+          className="border-success"
           disabled={!selectedYearLevel || !selectedAcademicYear}>
             <option value="">Select Semester</option>
               {selectedYearData?.semesters?.map((sem, index) => (
@@ -304,7 +315,7 @@ const CurriculumPage = () => {
                   {getSemesterText(sem)}
                 </option>
               ))}
-          </Form.Control>
+          </Form.Select>
         </Form.Group>
         </Col>
         <Col className="d-flex align-items-end">
@@ -312,51 +323,79 @@ const CurriculumPage = () => {
         </Col>
       </Row>
 
-      {showTable && (
+      {loading ? (
+        <div className="text-center py-5 bg-white mt-4">
+          <Spinner animation="border" variant="success" />
+          <p className="mt-3">Loading data, please wait...</p>
+        </div>
+      ) : showTable ? (
         <>
-          <Table bordered className="text-center mt-4">
-            <thead className="table-success">
-              <tr>
-                <th>Course Code</th>
-                <th>Descriptive Title</th>
-                <th>Lecture Units</th>
-                <th>Laboratory Units</th>
-                <th>Pre-requisite</th>
-                <th>Bridging Course?</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {courses.map((course, index) => (
-                <tr key={index}>
-                  <td>{course.courseCode}</td>
-                  <td>{course.courseDescriptiveTitle}</td>
-                  <td>{course.courseLecture}</td>
-                  <td>{course.courseLaboratory}</td>
-                  <td>{course.coursePreRequisite}</td>
-                  <td>{course.isBridgingCourse? 'Yes' : 'No'}</td>
-                  <td>
-                    <Button variant="success" className="me-2" onClick={() => handleEditCourse(course)}>
-                      Edit
-                    </Button>
-                    <Button variant="danger" onClick={() => handleDeleteCourse(course)}>
-                      Delete
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </Table>
+          {courses.length > 0 ? (
+            <Container fluid className='bg-white mt-3 pt-4 px-3 rounded'>
+              <Table bordered className="text-center mt-4">
+                <thead className="table-success">
+                  <tr>
+                    <th>Course Code</th>
+                    <th>Descriptive Title</th>
+                    <th>Lecture Units</th>
+                    <th>Laboratory Units</th>
+                    <th>Pre-requisite</th>
+                    <th>Bridging Course?</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {courses.map((course, index) => (
+                    <tr key={index}>
+                      <td>{course.courseCode}</td>
+                      <td>{course.courseDescriptiveTitle}</td>
+                      <td>{course.courseLecture}</td>
+                      <td>{course.courseLaboratory}</td>
+                      <td>{course.coursePreRequisite}</td>
+                      <td>{course.isBridgingCourse ? 'Yes' : 'No'}</td>
+                      <td>
+                        <Button
+                          variant="success"
+                          className="me-2"
+                          onClick={() => handleEditCourse(course)}
+                        >
+                          Edit
+                        </Button>
+                        <Button variant="danger" onClick={() => handleDeleteCourse(course)}>
+                          Delete
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </Table>
 
-          <Row className="mt-3">
-            <Col>
-              <Button className="btn-success w-auto" onClick={handleAddCourse}>
-                Add Course
-              </Button>
-            </Col>
-          </Row>
+              <Row className="mt-3 mb-3">
+                <Col>
+                  <Button className="btn-success w-auto mb-3" onClick={handleAddCourse}>
+                    Add Course
+                  </Button>
+                </Col>
+              </Row>
+            </Container>
+          ) : (
+            <div className="text-center py-5 bg-white rounded pt-5 px-4 pb-5">
+            <h5 className="custom-color-green-font mt-5 fs-5">No Data Available</h5>
+            <p className="fs-6 mb-4">
+              Please select a field or add a course to get started.
+            </p>
+          </div>
+          )}
         </>
+      ) : (
+        <div className="text-center py-5 bg-white rounded pt-5 px-4 pb-5">
+        <h5 className="custom-color-green-font mt-5 fs-5">No Data Available</h5>
+        <p className="fs-6 mb-4">
+          Please ensure that all filters are applied then click "View" to display the data.
+        </p>
+      </div>
       )}
+
 
       {/* Modal for Add/Edit Course */}
       <Modal show={showModal} onHide={() => setShowModal(false)}>

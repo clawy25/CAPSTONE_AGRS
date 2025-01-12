@@ -33,7 +33,7 @@ export default function RegistrarStaff() {
           path=""
           element={
             <div>
-              <h1 className="mb-3 custom-font">Manage Staffs</h1>
+              <h2 className="custom-font custom-color-green-font mb-3 mt-2">Manage Staffs</h2>
 
               <div className="row w-100">
                 <div className="col-12 col-md-4 mb-3">

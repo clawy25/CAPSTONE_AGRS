@@ -379,7 +379,7 @@ export default function HeadRegistrarAcademicYear() {
     <Table bordered hover className="mt-2">
       <thead className='table-success'>
         <tr>
-          <th className='custom-color-green-font custom-font'>Programs</th>
+          <th className="custom-font custom-color-green-font mb-3 mt-2">Programs</th>
           <th className='custom-color-green-font custom-font'>Number of Years</th>
           <th className='custom-color-green-font custom-font'>Year Levels with Summer</th>
           <th className='custom-color-green-font custom-font'>Actions</th>

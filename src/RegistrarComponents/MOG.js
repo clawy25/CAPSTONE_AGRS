@@ -554,6 +554,7 @@ const fetchCurriculum = async (programNumber, batchYear) => {
   
   return (
     <div className='container-fluid'>
+      <h2 className="custom-font custom-color-green-font mb-3 mt-2">MOG</h2>
       {/* Program Filter Component */}
       <Form className="p-3 mb-4 bg-white border border-success rounded">
       <Row className="align-items-center">

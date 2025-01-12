@@ -467,7 +467,7 @@ const fetchDeadline = async () => {
 
   return (
     <section>
-      <h2 className="custom-font custom-color-green-font my-3">Grade Submission Status</h2>
+      <h2 className="custom-font custom-color-green-font mb-3 mt-2">Grade Submission Status</h2>
       <Form className="p-3 mb-4 bg-white border border-success rounded">
         <Row className="align-items-center">
           <Col xs={12} sm={6} md={4} lg={2} className='mb-3'>

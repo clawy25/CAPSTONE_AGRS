@@ -347,7 +347,10 @@ export default function RegistrarIrregularStudents() {
     }, []);
 
     return (
+    <>
+    <h2 className="custom-font custom-color-green-font mb-3 mt-2">Irregular Students</h2>
         <Container fluid className="bg-white py-5 rounded">
+            
             <Container fluid className="input-group">
                 <input
                     type="text"
@@ -640,5 +643,6 @@ export default function RegistrarIrregularStudents() {
             </Modal>
 
         </Container>
+    </>
     );
 }

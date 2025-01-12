@@ -478,7 +478,7 @@ const Sections = () => {
   return (
     <div>
       {/* First Row for Academic Year */}
- 
+      <h2 className="custom-font custom-color-green-font mb-3 mt-2">Sections</h2>
 
       {/* Second Row for Program, Year Level, Semester, Section, and Add Section */}
       <Form className="p-3 mb-4 bg-white border border-success rounded">

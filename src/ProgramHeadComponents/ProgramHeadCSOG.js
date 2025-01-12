@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react'; 
 import { useLocation } from 'react-router-dom';
-import { Table, Form, Button, Row, Col, Modal, ButtonToolbar } from 'react-bootstrap';
+import { Table, Form, Button, Row, Col, Modal, ButtonToolbar, Spinner } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css'; 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMapMarkerAlt,  faEnvelope, faPhoneAlt} from '@fortawesome/free-solid-svg-icons';
@@ -20,6 +20,7 @@ import '../App.css';
 
 
 const MasterlistOfGradesTable = () => {
+  const [loading, setLoading] = useState(false)
   const [academicYear, setAcademicYear] = useState('');
   const [yearLevel, setYearLevel] = useState('');
   const [semester, setSemester] = useState('First');
@@ -294,6 +295,7 @@ useEffect(() => {
   };
 
   const fetchStudentData = async () => {
+    setLoading(true);
     try {
       // Fetch only the necessary data from the models
       const studentsData = await StudentModel.fetchExistingStudents();
@@ -337,6 +339,8 @@ useEffect(() => {
       return distinctData;
     } catch (error) {
       console.error('Failed to fetch student data:', error);
+    } finally {
+      setLoading(false);
     }
   };
   
@@ -601,19 +605,28 @@ const printTable = () => {
 
   const handleView = async () => {
     if (selectedAcademicYear && selectedProgram && selectedYearLevel && selectedSemester && selectedSection) {
-      fetchCourses();
-      fetchStudentData();
-      setDataFetched(true); // Indicate that data has been fetched successfully.
-    } else {
-      setShowModalAlertView(true);
-      setDataFetched(false); // Ensure dataFetched is false if filters are incomplete.
-    }
-  };
+     setLoading(true);
+       try {
+                                          // Fetch both data sets concurrently
+         await Promise.all([fetchCourses(), fetchStudentData()]);
+         setDataFetched(true); // Indicate that data has been fetched successfully
+         } catch (error) {
+         console.error('Error fetching data:', error);
+         setDataFetched(false); // Handle error state for data fetching
+         } finally {
+         setLoading(false); // Ensure loading is false after data fetch attempts
+        }
+        } else {
+        setShowModalAlertView(true);
+        setDataFetched(false); // Ensure dataFetched is false if filters are incomplete
+        }
+        };
+                                    
+
   
   useEffect(() => {
     const fetchData = async () => {
       if (selectedAcademicYear && selectedProgram && selectedYearLevel && selectedSemester && selectedSection && groupedData) {
-  
         // Get schedule numbers for the section
         const scheduleNumbers = getScheduleNumbersForSection(groupedData, selectedSection);
   
@@ -646,7 +659,6 @@ const printTable = () => {
     fetchData(); // Call the async function inside useEffect
   }, [selectedAcademicYear, selectedProgram, selectedYearLevel, selectedSemester, selectedSection, groupedData]);
   
-
   const closeShowModalAlert = () => {
     setShowModalAlert(false);
   }
@@ -669,6 +681,7 @@ const printTable = () => {
   
   return (
     <div>
+      <h2 className="custom-font custom-color-green-font mb-3 mt-2">Grades Verification</h2>
  <Form className="p-3 mb-4 bg-white border border-success rounded">
   <Row className="align-items-center">
     <Col md={2} className='mb-3'>
@@ -767,7 +780,12 @@ const printTable = () => {
       
 
       <div id="printableTable" className="bg-white rounded pt-5 px-3 pb-3 table-responsive">
-      {Object.keys(groupedData).length === 0 || combinedData.length === 0 ? (
+      {loading ? (
+        <div className="text-center py-5 bg-white mt-4">
+        <Spinner animation="border" variant="success" />
+        <p className="mt-3">Loading data, please wait...</p>
+    </div>
+      ): Object.keys(groupedData).length === 0 || combinedData.length === 0 ? (
         <div className="text-center py-5">
           <h5 className="custom-color-green-font fs-5">No Data Available</h5>
           <p className="fs-6">
