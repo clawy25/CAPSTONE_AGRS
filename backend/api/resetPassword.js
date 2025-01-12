@@ -12,12 +12,8 @@ router.post('/set', async (req, res) => {
     try {
         console.log('Attempting password reset for email:', email);
 
-        // Check if email exists in auth.users table
-        const { data: user, error: userError } = await supabase
-            .from('auth.users')
-            .select('email')
-            .eq('email', email)
-            .single();
+        // Check if email exists in auth.users table using Supabase's auth API
+        const { data: user, error: userError } = await supabase.auth.api.getUserByEmail(email);
 
         if (userError || !user) {
             console.log('Email does not exist:', email);
