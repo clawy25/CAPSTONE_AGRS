@@ -12,6 +12,19 @@ router.post('/set', async (req, res) => {
     try {
         console.log('Attempting password reset for email:', email);
 
+        // Check if email exists in auth.users table
+        const { data: user, error: userError } = await supabase
+            .from('auth.users')
+            .select('email')
+            .eq('email', email)
+            .single();
+
+        if (userError || !user) {
+            console.log('Email does not exist:', email);
+            return res.status(400).json({ error: 'Email does not exist' });
+        }
+
+        // If the email exists, proceed to reset the password
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
             redirectTo: 'https://paranaquecitycollege.onrender.com/reset-password', // Primary redirect link
         });
@@ -40,6 +53,7 @@ router.post('/set', async (req, res) => {
         res.status(500).json({ error: 'Internal server error' });
     }
 });
+
 
 
 
