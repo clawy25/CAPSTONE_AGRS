@@ -374,136 +374,90 @@ const fetchCurriculum = async (programNumber, batchYear) => {
   
   const handlePrint = () => {
     const contentElement = document.getElementById('modalContent');
-  
+
     if (!contentElement) {
-      console.error("Modal content not found. Ensure the modal is open before printing.");
-      return;
+        console.error("Modal content not found. Ensure the modal is open before printing.");
+        return;
     }
-  
+
     const content = contentElement.innerHTML;
-    const logoURL = '/pcc.png'; 
-  
+    const logoURL = '/pcc.png'; // Ensure the image path is correct and accessible.
+
     const printWindow = window.open('', '', 'width=800,height=600');
     printWindow.document.write(`
       <html>
         <head>
           <title>Print TOR</title>
-          <style>
-            @media print {
-              @page {
-                size: legal;
-                margin: 0;
-              }
-  
-              body {
-                margin: 0;
-                font-family: Arial, sans-serif;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                transform: scale(1.00); /* Adjust scale for fitting content */
-                transform-origin: center center;
-                width: 100%;
-                height: 100%;
-                overflow: hidden; /* Prevent overflow */
-              }
-  
-              .tableContainer {
-                display: block;
-                width: 100%;
-                padding: 10px;
-              }
-  
-              .modalContent {
-                width: 100%;
-                padding: 10px;
-                background: #fff;
-                position: relative;
-                box-sizing: border-box;
-              }
-  
-              /* Watermark logo - centered */
-              .modalContent::before {
-                content: '';
-                position: absolute;
-                top: 30%;
-                left: 50%;
-                transform: translate(-50%, -50%); /* Center the logo */
-                width: 100%;
-                height: 100%;
-                background-image: url('${logoURL}');
-                background-position: center;
-                background-repeat: no-repeat;
-                background-size: 500px 500px; /* Adjust size of logo */
-                opacity: 0.1; /* Low opacity for watermark effect */
-                z-index: 0;
-              }
-  
-              /* Ensure content is above the watermark */
-              .modalContent * {
-                position: relative;
-                z-index: 1;
-              }
-  
-              /* Default table styling (with borders) */
-              .modalContent table {
-                width: 100%;
-                border-collapse: collapse;
-                table-layout: fixed; /* Fix table layout to prevent overflow */
-              }
-  
-              /* Add borders to table cells */
-              .modalContent th {
-                border: 1px solid black; /* Add border to table cells */
-                padding: 5px; /* Optional: Adds padding inside cells */
-                text-align: center; /* Align text to the left */
-              }
+<style>
+@media print {
+  @page {
+    size: legal;
+    margin: 10mm; /* Keep margins small */
+  }
 
-              /* Add borders to table cells */
-              .modalContent td {
-                border: 1px solid black; /* Add border to table cells */
-                padding: 5px; /* Optional: Adds padding inside cells */
-                text-align: left; /* Align text to the left */
-              }
-  
-              /* Specific tables with no borders */
-              .no-border th, .no-border td {
-                border: none; /* Remove borders from these tables */
-              }
-  
-              .modalContent .grading-system th,
-              .modalContent .grading-system td { 
-                font-size: 0.5em; 
-                font-style: italic;
-              }
-  
-              .modalContent .table-upper td { 
-                font-size: 0.7rem; 
-              }
-  
-              .modalContent .table-upper th {
-                font-size: 0.9rem; 
-              }
-  
-              .modalContent .bottom-part-print .certify-statement, 
-              .modalContent .bottom-part-print .college-registrar-center {
-                text-align: center;
-                font-size: 0.7rem;
-              }
-  
-              .modalContent .bottom-part-print .prepared-by{
-                font-size: 0.7rem;
-              }
-  
-              .modalContent .grades-table th, .modalContent .grades-table td {
-                border: 1px solid black;
-                font-size: 0.7rem; 
-              }
-            }
-          </style>
+  body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+  }
+
+  .content {
+    page-break-inside: avoid; /* Prevent unnecessary page breaks */
+    overflow: visible;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    page-break-inside: auto; /* Allow tables to split naturally across pages */
+    page-break-after: auto;
+  }
+
+  th, td {
+    border: 1px solid black;
+    padding: 5px;
+    text-align: left;
+  }
+
+  tr {
+    page-break-inside: avoid; /* Prevent breaking rows */
+  }
+
+  thead {
+    display: table-header-group; /* Repeat headers on each page */
+  }
+
+  tfoot {
+    display: table-footer-group; /* Repeat footers on each page */
+  }
+
+  .watermark {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    background-image: url('${logoURL}');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 500px 500px;
+    opacity: 0.1;
+  }
+}
+</style>
+
+
+
+
+
         </head>
         <body>
-          <div class="modalContent">
+          <!-- Watermark -->
+          <div class="watermark"></div>
+
+          <!-- Content -->
+          <div class="content">
             ${content}
           </div>
           <script>
@@ -515,9 +469,9 @@ const fetchCurriculum = async (programNumber, batchYear) => {
         </body>
       </html>
     `);
-  
+
     printWindow.document.close();
-  };
+};
 
   const downloadExcel = () => {
     const table = document.querySelector('.table-success');
@@ -597,39 +551,6 @@ const fetchCurriculum = async (programNumber, batchYear) => {
     XLSX.writeFile(workbook, `${programName || "Masterlist"}_Grades.xlsx`);
 };
 
-const downloadPDF = () => {
-  const table = document.querySelector('.table-success');
-
-  if (!table) {
-    console.error("Table not found.");
-    return;
-  }
-
-  // Temporarily hide the last column
-  const lastColumnIndex = table.rows[0].cells.length - 1;
-  for (let row of table.rows) {
-    if (row.cells[lastColumnIndex]) {
-      row.cells[lastColumnIndex].style.display = "none";
-    }
-  }
-
-  html2canvas(table, { scale: 2 }).then((canvas) => {
-    const imgData = canvas.toDataURL("image/png");
-    const pdf = new jsPDF("l", "mm", "a4"); // Landscape orientation, mm units, A4 size
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-
-    pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
-    pdf.save(`${programName || "Masterlist"}_Grades.pdf`);
-
-    // Restore the visibility of the last column
-    for (let row of table.rows) {
-      if (row.cells[lastColumnIndex]) {
-        row.cells[lastColumnIndex].style.display = "";
-      }
-    }
-  });
-};
   
   return (
     <div className='container-fluid'>
@@ -697,7 +618,6 @@ const downloadPDF = () => {
             <div className="d-flex">
               <Button className="w-50 btn-success me-2" onClick={handleView}>View</Button>
               <Button className="bg-white custom-color-green-font btn-outline-success w-50 me-2" onClick={downloadExcel}>Download Excel</Button>
-              <Button className="bg-white custom-color-green-font btn-outline-success w-50" onClick={downloadPDF}>Download PDF</Button>
             </div>
           </Form.Group>
         </Col>
@@ -872,156 +792,313 @@ const downloadPDF = () => {
           <div id="modalContent">
           {selectedStudent && (
             <div>
-           <table className="table table-white">
-            <thead className="no-border">
-              <tr>
-                <th className="text-center" style={{ width: '25%' }}>
-                  <img src="/pcc.png" alt="Logo" className="img-fluid" style={{ width: '110px' }} />
-                </th>
-                <th className="text-center" style={{ width: '50%' }}>
-                  <p className="fs-6 mb-0 fw-semibold">PARAÑAQUE CITY COLLGE</p>
-                  <p className="fs-5 mb-0">Office of the College Registrar</p>
-                  <p style={{ fontSize: '0.9rem' }} className="mb-0">Parañaque City, Philippines</p>
-                  <p className="fs-4 mb-0">OFFICIAL TRANSCRIPT OF RECORDS</p>
-                </th>
-                <th className="text-center" style={{ width: '25%' }}>
-                  <p className='fs-6'>UF-REG-018</p>
-                  <p className='fs-6'>Rev.0</p>
-                  <p className='fs-6'>03/01/2022</p>
-                </th>
-              </tr>
-            </thead>
-          </table>
-          
-          <table style={{ border: "2px solid black", width: '100%'  }} className="mb-2">
-        <thead className="no-border">
-          <tr>
-          <td className="no-border" colSpan="2">
-            <p
-              className="fw-bold m-0 px-2 py-1"
-              style={{
-                display: 'inline-block',
-                border: '5px solid #F7FE28',
-                backgroundColor: '#004d00',
-                color: 'white',
-              }}
-            >
-              PERSONAL DATA
-            </p>
-          </td>
-            <td><p style={{ fontSize: '0.7rem' }}>STUDENT NUMBER: </p></td>
-            <td><p style={{ fontSize: '0.7rem' }}>{selectedStudent?.studentNumber}</p></td>
-          </tr>
-        </thead>
-        <tbody className="no-border">
-          <tr>
-            <td><p style={{ fontSize: '0.7rem' }}>NAME</p></td>
-            <td><p style={{ fontSize: '0.7rem' }}>{selectedStudent?.studentName}</p></td>
-
-            <td><p style={{ fontSize: '0.7rem' }}>SEX:</p></td>
-            <td><p style={{ fontSize: '0.7rem' }}>{selectedStudent?.studentGender}</p></td>
-          </tr>
-          <tr>
-            <td rowSpan={2}><p style={{ fontSize: '0.7rem' }}>PERMANENT ADDRESS:</p></td>
-            <td rowSpan={2}><p style={{ fontSize: '0.7rem' }}>{selectedStudent?.studentAddress}</p></td>
-            <td><p style={{ fontSize: '0.7rem' }}>GR NO.:</p></td>
-            <td><p style={{ fontSize: '0.7rem' }}>{selectedStudent?.studentGrNumber}</p></td>
-          </tr>
-          <tr>
-            <td><p style={{ fontSize: '0.7rem' }}>SPECIAL ORDER NO.:</p></td>
-            <td><p style={{ fontSize: '0.7rem' }}>{selectedStudent?.studentspecielaNumber}</p></td>
-          </tr>
-          <tr>
-            <td><p style={{ fontSize: '0.7rem' }}>DATE OF BIRTH</p></td>
-            <td><p style={{ fontSize: '0.7rem' }}>{selectedStudent?.studentBirthDate}</p></td>
-            <td><p style={{ fontSize: '0.7rem' }}>ACADEMIC PROGRAM:</p></td>
-            <td><p style={{ fontSize: '0.7rem' }}>{programName}</p></td>
-          </tr>
-          <tr>
-            <td><p style={{ fontSize: '0.7rem' }}>PLACE OF BIRTH</p></td>
-            <td><p style={{ fontSize: '0.7rem' }}>{selectedStudent?.studentBirthPlace}</p></td>
-            <td><p style={{ fontSize: '0.7rem' }}>ATTENDED:</p></td>
-            <td><p style={{ fontSize: '0.7rem' }}>{selectedStudent?.studentNumberOdSemesterAttended}</p></td>
-          </tr>
-          <tr>
-            <td><p style={{ fontSize: '0.7rem' }}>NATIONALITY</p></td>
-            <td><p style={{ fontSize: '0.7rem' }}>{selectedStudent?.studentnationality}</p></td>
-
-            <td><p style={{ fontSize: '0.7rem' }}>DATE GRADUATED:</p></td>
-            <td><p style={{ fontSize: '0.7rem' }}>{selectedStudent?.studentDateGraduated}</p></td>
-          </tr>
-        </tbody>
-      </table>
+<table className="table table-white" style={{ borderCollapse: 'collapse', border: '2px solid black' }}>
+  <thead className="no-border">
+    <tr>
+      <th
+        className="text-center"
+        style={{ width: '25%', border: 'none' }}
+      >
+        <img
+          src="/pcc.png"
+          alt="Logo"
+          className="img-fluid"
+          style={{ width: '110px' }}
+        />
+      </th>
+      <th
+        className="text-center"
+        style={{ width: '50%', border: 'none' }}
+      >
+        <p className="fs-6 mb-0 fw-semibold">
+          PARAÑAQUE CITY COLLEGE
+        </p>
+        <p className="fs-5 mb-0">Office of the College Registrar</p>
+        <p
+          style={{ fontSize: '0.9rem' }}
+          className="mb-0"
+        >
+          Parañaque City, Philippines
+        </p>
+        <p className="fs-4 mb-0">
+          OFFICIAL TRANSCRIPT OF RECORDS
+        </p>
+      </th>
+      <th
+        className="text-center"
+        style={{ width: '25%', border: 'none' }}
+      >
+        <p className="fs-6">UF-REG-018</p>
+        <p className="fs-6">Rev.0</p>
+        <p className="fs-6">03/01/2022</p>
+      </th>
+    </tr>
+  </thead>
+</table>
 
 
+                        
+              <table
+                style={{ border: "2px solid black", width: "100%", borderCollapse: "collapse" }}
+                className="mb-2"
+              >
+                <thead className="no-border">
+                  <tr>
+                    <td
+                      className="no-border"
+                      colSpan="2"
+                      style={{ border: "none" }}
+                    >
+                      <p
+                        className="fw-bold m-0 px-2 py-1"
+                        style={{
+                          display: "inline-block",
+                          border: "5px solid #F7FE28",
+                          backgroundColor: "#004d00",
+                          color: "white",
+                        }}
+                      >
+                        PERSONAL DATA
+                      </p>
+                    </td>
+                    <td style={{ border: "none" }}>
+                      <p style={{ fontSize: "0.7rem" }}>STUDENT NUMBER: </p>
+                    </td>
+                    <td style={{ border: "none" }}>
+                      <p style={{ fontSize: "0.7rem" }}>
+                        {selectedStudent?.studentNumber}
+                      </p>
+                    </td>
+                  </tr>
+                </thead>
+                <tbody className="no-border">
+                  <tr>
+                    <td style={{ border: "none" }}>
+                      <p style={{ fontSize: "0.7rem" }}>NAME</p>
+                    </td>
+                    <td style={{ border: "none" }}>
+                      <p style={{ fontSize: "0.7rem" }}>{selectedStudent?.studentName}</p>
+                    </td>
+                    <td style={{ border: "none" }}>
+                      <p style={{ fontSize: "0.7rem" }}>SEX:</p>
+                    </td>
+                    <td style={{ border: "none" }}>
+                      <p style={{ fontSize: "0.7rem" }}>{selectedStudent?.studentGender}</p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td
+                      style={{
+                        border: "none",
+                      }}
+                      rowSpan={2}
+                    >
+                      <p style={{ fontSize: "0.7rem" }}>PERMANENT ADDRESS:</p>
+                    </td>
+                    <td style={{ border: "none" }} rowSpan={2}>
+                      <p style={{ fontSize: "0.7rem" }}>{selectedStudent?.studentAddress}</p>
+                    </td>
+                    <td style={{ border: "none" }}>
+                      <p style={{ fontSize: "0.7rem" }}>GR NO.:</p>
+                    </td>
+                    <td style={{ border: "none" }}>
+                      <p style={{ fontSize: "0.7rem" }}>{selectedStudent?.studentGrNumber}</p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style={{ border: "none" }}>
+                      <p style={{ fontSize: "0.7rem" }}>SPECIAL ORDER NO.:</p>
+                    </td>
+                    <td style={{ border: "none" }}>
+                      <p style={{ fontSize: "0.7rem" }}>
+                        {selectedStudent?.studentspecielaNumber}
+                      </p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style={{ border: "none" }}>
+                      <p style={{ fontSize: "0.7rem" }}>DATE OF BIRTH</p>
+                    </td>
+                    <td style={{ border: "none" }}>
+                      <p style={{ fontSize: "0.7rem" }}>{selectedStudent?.studentBirthDate}</p>
+                    </td>
+                    <td style={{ border: "none" }}>
+                      <p style={{ fontSize: "0.7rem" }}>ACADEMIC PROGRAM:</p>
+                    </td>
+                    <td style={{ border: "none" }}>
+                      <p style={{ fontSize: "0.7rem" }}>{programName}</p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style={{ border: "none" }}>
+                      <p style={{ fontSize: "0.7rem" }}>PLACE OF BIRTH</p>
+                    </td>
+                    <td style={{ border: "none" }}>
+                      <p style={{ fontSize: "0.7rem" }}>{selectedStudent?.studentBirthPlace}</p>
+                    </td>
+                    <td style={{ border: "none" }}>
+                      <p style={{ fontSize: "0.7rem" }}>ATTENDED:</p>
+                    </td>
+                    <td style={{ border: "none" }}>
+                      <p style={{ fontSize: "0.7rem" }}>
+                        {selectedStudent?.studentNumberOdSemesterAttended}
+                      </p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style={{ border: "none" }}>
+                      <p style={{ fontSize: "0.7rem" }}>NATIONALITY</p>
+                    </td>
+                    <td style={{ border: "none" }}>
+                      <p style={{ fontSize: "0.7rem" }}>{selectedStudent?.studentnationality}</p>
+                    </td>
+                    <td style={{ border: "none" }}>
+                      <p style={{ fontSize: "0.7rem" }}>DATE GRADUATED:</p>
+                    </td>
+                    <td style={{ border: "none" }}>
+                      <p style={{ fontSize: "0.7rem" }}>{selectedStudent?.studentDateGraduated}</p>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
 
-      <table style={{ border: "2px solid black", width: '100%'  }} className="p-2 mb-0">
-        <thead className="no-border">
-          <tr >
-          <td colSpan="1">
-            <p
-              className="fw-bold m-0 px-2 py-1"
-              style={{
-                display: 'inline-block',
-                border: '5px solid #F7FE28',
-                backgroundColor: '#004d00',
-                color: 'white',
-              }}
-            >
-              ENTRANCE DATA
-            </p>
-          </td>
-            <td><p style={{ fontSize: '0.7rem' }}>ADMISSION CREDENTIALS</p></td>
-            <td><p style={{ fontSize: '0.7rem' }}>{selectedStudent?.studentAdmissionCredentials}</p></td>
-            <td></td>
-          </tr>
-        </thead>
-        <tbody className="no-border">
-          <tr>
-            <td><p style={{ fontSize: '0.7rem' }}>DATE GRADUATED/LAST ATTENDED:</p></td>
-            <td><p style={{ fontSize: '0.7rem' }}>{batchYear}</p></td>
-            <td><p style={{ fontSize: '0.7rem' }}>SCHOOL LAST ATTENDED:</p></td>
-            <td><p style={{ fontSize: '0.7rem' }}>{selectedStudent?.studentSchoolLastAttended}</p></td>
-            <td></td>
-          </tr>
-          <tr>
-            <td><p style={{ fontSize: '0.7rem' }}>CATEGORY:</p></td>
-            <td><p style={{ fontSize: '0.7rem' }}>{selectedStudent?.studentCategoryStarnd}</p></td>
-            <td><p style={{ fontSize: '0.7rem' }}>DATE/SEMESTER ADMITTED: </p></td>
-            <td><p style={{ fontSize: '0.7rem' }}>{selectedStudent?.studentDateSemesterAdmitted}</p></td>
-            <td></td>
-          </tr>
-        </tbody>
-      </table>
 
-      <Table bordered responsive className="text-center">
-        <thead>
-          <tr style={{ border: "2px solid black" }}>
-            <th colSpan={6}><p className="fs-6 text-start mb-1">ACADEMIC RECORD</p></th>
-          </tr>
-          <tr>
-            <th className="custom-color-green-font align-middle" rowSpan="2">
-              TERM & SCHOOL YEAR
-            </th>
-            <th className="custom-color-green-font align-middle" rowSpan="2">
-              SUBJECT CODE
-            </th>
-            <th className="custom-color-green-font align-middle" rowSpan="2">
-              DESCRIPTIVE TITLE
-            </th>
-            <th className="custom-color-green-font align-middle" colSpan="2">
-              FINAL
-            </th>
-            <th className="custom-color-green-font align-middle" rowSpan="2">
-              UNITS OF CREDIT
-            </th>
-          </tr>
-          <tr>
-            <th className="custom-color-green-font">GRADES</th>
-            <th className="custom-color-green-font">COMPLETION</th>
-          </tr>
-        </thead>
-        <tbody>
+
+              <table
+                style={{ border: "2px solid black", width: "100%", borderCollapse: "collapse" }}
+                className="p-2 mb-0"
+              >
+                <thead className="no-border">
+                  <tr>
+                    <td colSpan="1" style={{ border: "none" }}>
+                      <p
+                        className="fw-bold m-0 px-2 py-1"
+                        style={{
+                          display: "inline-block",
+                          border: "5px solid #F7FE28",
+                          backgroundColor: "#004d00",
+                          color: "white",
+                        }}
+                      >
+                        ENTRANCE DATA
+                      </p>
+                    </td>
+                    <td style={{ border: "none" }}>
+                      <p style={{ fontSize: "0.7rem" }}>ADMISSION CREDENTIALS</p>
+                    </td>
+                    <td style={{ border: "none" }}>
+                      <p style={{ fontSize: "0.7rem" }}>
+                        {selectedStudent?.studentAdmissionCredentials}
+                      </p>
+                    </td>
+                    <td style={{ border: "none" }}></td>
+                  </tr>
+                </thead>
+                <tbody className="no-border">
+                  <tr>
+                    <td style={{ border: "none" }}>
+                      <p style={{ fontSize: "0.7rem" }}>DATE GRADUATED/LAST ATTENDED:</p>
+                    </td>
+                    <td style={{ border: "none" }}>
+                      <p style={{ fontSize: "0.7rem" }}>{batchYear}</p>
+                    </td>
+                    <td style={{ border: "none" }}>
+                      <p style={{ fontSize: "0.7rem" }}>SCHOOL LAST ATTENDED:</p>
+                    </td>
+                    <td style={{ border: "none" }}>
+                      <p style={{ fontSize: "0.7rem" }}>
+                        {selectedStudent?.studentSchoolLastAttended}
+                      </p>
+                    </td>
+                    <td style={{ border: "none" }}></td>
+                  </tr>
+                  <tr>
+                    <td style={{ border: "none" }}>
+                      <p style={{ fontSize: "0.7rem" }}>CATEGORY:</p>
+                    </td>
+                    <td style={{ border: "none" }}>
+                      <p style={{ fontSize: "0.7rem" }}>{selectedStudent?.studentCategoryStarnd}</p>
+                    </td>
+                    <td style={{ border: "none" }}>
+                      <p style={{ fontSize: "0.7rem" }}>DATE/SEMESTER ADMITTED: </p>
+                    </td>
+                    <td style={{ border: "none" }}>
+                      <p style={{ fontSize: "0.7rem" }}>
+                        {selectedStudent?.studentDateSemesterAdmitted}
+                      </p>
+                    </td>
+                    <td style={{ border: "none" }}></td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <Table
+                style={{ border: "2px solid black", borderCollapse: "collapse", width: "100%", margin: 0 }}
+                responsive
+                className="text-center"
+>
+                <thead>
+                  <tr>
+                    <th
+                      colSpan={6}
+                      style={{ border: "1px solid black", padding: "8px", fontSize: "0.7rem" }}
+                    >
+                      <p className="fs-6 text-start mb-1">ACADEMIC RECORD</p>
+                    </th>
+                  </tr>
+                  <tr>
+                    <th
+                      className="custom-color-green-font align-middle"
+                      rowSpan="2"
+                      style={{ border: "1px solid black", padding: "8px", fontSize: "0.7rem" }}
+                    >
+                      TERM & SCHOOL YEAR
+                    </th>
+                    <th
+                      className="custom-color-green-font align-middle"
+                      rowSpan="2"
+                      style={{ border: "1px solid black", padding: "8px", fontSize: "0.7rem" }}
+                    >
+                      SUBJECT CODE
+                    </th>
+                    <th
+                      className="custom-color-green-font align-middle"
+                      rowSpan="2"
+                      style={{ border: "1px solid black", padding: "8px", fontSize: "0.7rem" }}
+                    >
+                      DESCRIPTIVE TITLE
+                    </th>
+                    <th
+                      className="custom-color-green-font align-middle"
+                      colSpan="2"
+                      style={{ border: "1px solid black", padding: "8px", fontSize: "0.7rem" }}
+                    >
+                      FINAL
+                    </th>
+                    <th
+                      className="custom-color-green-font align-middle"
+                      rowSpan="2"
+                      style={{ border: "1px solid black", padding: "8px", fontSize: "0.7rem" }}
+                    >
+                      UNITS OF CREDIT
+                    </th>
+                  </tr>
+                  <tr>
+                    <th
+                      className="custom-color-green-font"
+                      style={{ border: "1px solid black", padding: "8px", fontSize: "0.7rem" }}
+                    >
+                      GRADES
+                    </th>
+                    <th
+                      className="custom-color-green-font"
+                      style={{ border: "1px solid black", padding: "8px", fontSize: "0.7rem" }}
+                    >
+                      COMPLETION
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
   {Object.keys(semestersData)
     .sort((a, b) => parseInt(a) - parseInt(b)) // Sort year levels numerically
     .map((yearLevel, idx) =>
@@ -1036,28 +1113,73 @@ const downloadPDF = () => {
           <React.Fragment key={`${yearLevel}-${semester}`}>
             {/* Semester Header */}
             <tr>
-              <td rowSpan={Math.max(courses.length, 1) + 1}>
-                {semester === 1 ? "1st" : "2nd"} Semester <br /> {academicYear}
+              <td
+                style={{
+                  borderLeft: "1px solid black",
+                  borderRight: "1px solid black",
+                  padding: "8px",
+                  textAlign: "center",
+                  fontSize: "0.7rem",
+                }}
+                rowSpan={Math.max(courses.length, 1) + 1}
+              >
+                {semester === 1 ? "1st" : "2nd"} Semester <br />{" "}
+                {academicYear}
               </td>
             </tr>
             {/* Render Courses */}
             {courses.length > 0 ? (
               courses.map((subject, subIndex) => (
                 <tr key={`${yearLevel}-${semester}-${subIndex}`}>
-                  <td>{subject.courseCode}</td>
-                  <td>{subject.courseDescriptiveTitle}</td>
-                  <td>
-                    {/* Display grade for the selected student */}
+                  <td
+                    style={{
+                      borderLeft: "1px solid black",
+                      borderRight: "1px solid black",
+                      borderTop: "none",
+                      borderBottom: "none",
+                      padding: "8px",
+                      fontSize: "0.7rem",
+                    }}
+                  >
+                    {subject.courseCode}
+                  </td>
+                  <td
+                    style={{
+                      borderLeft: "1px solid black",
+                      borderRight: "1px solid black",
+                      borderTop: "none",
+                      borderBottom: "none",
+                      padding: "8px",
+                      fontSize: "0.7rem",
+                    }}
+                  >
+                    {subject.courseDescriptiveTitle}
+                  </td>
+                  <td
+                    style={{
+                      borderLeft: "1px solid black",
+                      borderRight: "1px solid black",
+                      borderTop: "none",
+                      borderBottom: "none",
+                      padding: "8px",
+                      fontSize: "0.7rem",
+                    }}
+                  >
                     {selectedStudent &&
                       students
                         .filter(
                           (student) =>
-                            student.studentNumber === selectedStudent.studentNumber &&
-                            student.courses.some((course) => course.courseCode === subject.courseCode)
+                            student.studentNumber ===
+                              selectedStudent.studentNumber &&
+                            student.courses.some(
+                              (course) =>
+                                course.courseCode === subject.courseCode
+                            )
                         )
                         .map((student) => {
                           const course = student.courses.find(
-                            (course) => course.courseCode === subject.courseCode
+                            (course) =>
+                              course.courseCode === subject.courseCode
                           );
                           return (
                             <div key={student.studentNumber}>
@@ -1066,32 +1188,70 @@ const downloadPDF = () => {
                           );
                         })}
                   </td>
-                  <td>
-                    {/* Display grade for the selected student */}
+                  <td
+                    style={{
+                      borderLeft: "1px solid black",
+                      borderRight: "1px solid black",
+                      borderTop: "none",
+                      borderBottom: "none",
+                      padding: "8px",
+                      fontSize: "0.7rem",
+                    }}
+                  >
                     {selectedStudent &&
                       students
                         .filter(
                           (student) =>
-                            student.studentNumber === selectedStudent.studentNumber &&
-                            student.courses.some((course) => course.courseCode === subject.courseCode)
+                            student.studentNumber ===
+                              selectedStudent.studentNumber &&
+                            student.courses.some(
+                              (course) =>
+                                course.courseCode === subject.courseCode
+                            )
                         )
                         .map((student) => {
                           const course = student.courses.find(
-                            (course) => course.courseCode === subject.courseCode
+                            (course) =>
+                              course.courseCode === subject.courseCode
                           );
                           return (
                             <div key={student.studentNumber}>
-                              {getGradeDescription(course ? course.grade : "-")}
+                              {getGradeDescription(
+                                course ? course.grade : "-"
+                              )}
                             </div>
                           );
                         })}
                   </td>
-                  <td>{subject.unitOfCredits}</td>
+                  <td
+                    style={{
+                      borderLeft: "1px solid black",
+                      borderRight: "1px solid black",
+                      borderTop: "none",
+                      borderBottom: "none",
+                      padding: "8px",
+                      fontSize: "0.7rem",
+                    }}
+                  >
+                    {subject.unitOfCredits}
+                  </td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan={5} className="text-muted">
+                <td
+                  colSpan={5}
+                  className="text-muted"
+                  style={{
+                    borderLeft: "1px solid black",
+                    borderRight: "1px solid black",
+                    borderTop: "none",
+                    borderBottom: "none",
+                    padding: "8px",
+                    textAlign: "center",
+                    fontSize: "0.7rem",
+                  }}
+                >
                   No courses available
                 </td>
               </tr>
@@ -1101,10 +1261,14 @@ const downloadPDF = () => {
       })
     )}
 </tbody>
+</Table>
 
-      </Table>
-
-          <Table bordered responsive className="text-center">
+<Table
+              bordered
+              responsive
+              className="text-center"
+              style={{ margin: 0 }}
+            >
             <thead>
             <tr style={{ border: "2px solid black" }}>
                 <th colSpan={1}><p className='fs-6 text-start mb-1'>REMARKS:</p></th>

@@ -457,129 +457,120 @@ function getScheduleNumbersForSection(sections, sectionKey) {
   return sections[sectionKey].classes.map(cls => cls.scheduleNumber);
 }
 
-  const printTable = () => {
-    if (!dataFetched) {
-      setShowModalAlert(true);
-      return;
-    }
-  
-    const printableSection = document.getElementById('printableTable');
-    if (!printableSection) {
-      console.error('Printable section not found');
-      return;
-    }
-  
-    // Clone the entire printable section
-    const clonedSection = printableSection.cloneNode(true);
-  
-    // Remove unnecessary elements (like forms or buttons)
-    clonedSection.querySelectorAll('form, .d-flex.justify-content-end').forEach((element) => element.remove());
-  
-    // Open the print window
-    const printWindow = window.open('', '', 'height=500,width=1000');
-    printWindow.document.write('<html><head><title>Print</title>');
-    printWindow.document.write(`
-      <style>
-        @media print {
-          @page {
-            size: legal landscape;
-            margin: 'minimum';
-          }
-          body {
-            font-family: Arial, sans-serif;
-            margin: 20px; /* Add some space around the page content */
-          }
-  
-          /* Flexbox layout for rows */
-          .row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 10px;
-          }
-  
-          .column {
-            width: 48%;
-          }
-  
-          .label-with-line {
-            display: inline-block;
-            width: 180px;
-            padding-right: 5px;
-            text-align: left;
-          }
-  
-          .input-line {
-            display: inline-block;
-            width: calc(100% - 180px);
-            border-bottom: 1px solid black;
-            text-align: center;
-          }
-  
-          .column div {
-            margin-bottom: 10px;
-          }
-  
-          /* Styling for header section */
-          .table-header-info {
-            margin-bottom: 20px;
-            page-break-before: always; /* Ensure new page for each table header info */
-          }
-  
-          .table-header-info:not(:first-of-type) {
-            padding-top: 100px; /* Add space from the top for subsequent headers */
-          }
-  
-          /* Table styling */
-          table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-            page-break-after: always; /* Ensure table finishes before the next header starts */
-          }
-  
-          th, td {
-            border: 1px solid black;
-            padding: 8px;
-            text-align: center;
-          }
+const printTable = () => {
+  if (!dataFetched) {
+    setShowModalAlert(true);
+    return;
+  }
 
-          thead {
-            display: table-row-group; /* Treat table headers as normal rows */
-          }
-  
-          h5, h6, p {
-            text-align: center;
-            margin: 0;
-          }
-  
-          /* Remove unnecessary elements */
-          form, .d-flex.justify-content-end {
-            display: none !important;
-          }
+  const printableSection = document.getElementById('printableTable');
+  if (!printableSection) {
+    console.error('Printable section not found');
+    return;
+  }
+
+  // Clone the entire printable section
+  const clonedSection = printableSection.cloneNode(true);
+
+  // Remove unnecessary elements (like forms or buttons)
+  clonedSection.querySelectorAll('form, .d-flex.justify-content-end').forEach((element) => element.remove());
+
+  // Open the print window
+  const printWindow = window.open('', '', 'height=500,width=1000');
+  printWindow.document.write('<html><head><title>Print</title>');
+  printWindow.document.write(`
+    <style>
+      @media print {
+        @page {
+          size: legal landscape;
+          margin: 'minimum';
         }
-      </style>
-    `);
-    printWindow.document.write('</head><body>');
-  
-    // Dynamically retrieve and add the header info from the page
-    const headerInfo = printableSection.querySelector('.table-header-info');
-    if (headerInfo) {
-      printWindow.document.write(headerInfo.outerHTML);
+        body {
+          font-family: Arial, sans-serif;
+          margin: 20px;
+        }
+        .main-header {
+          text-align: center;
+          margin-bottom: 20px;
+        }
+        .main-header img {
+          max-width: 100px; /* Adjust the size of the logo */
+          display: block;
+          margin: 0 auto;
+        }
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          margin-bottom: 20px;
+          page-break-after: always;
+        }
+        th, td {
+          border: 1px solid black;
+          padding: 8px;
+          text-align: center;
+        }
+        tbody {
+          background-color: #f2f2f2;
+        }
+        th {
+          background-color: #4CAF50;
+          color: white;
+        }
+        th[colspan="2"]:contains("Midterm"), td[colspan="2"]:contains("Midterm") {
+          background-color: #FFA500;
+          color: white;
+        }
+        th[colspan="2"]:contains("Finals"), td[colspan="2"]:contains("Finals") {
+          background-color: #90EE90;
+          color: white;
+        }
+        thead {
+          display: table-row-group;
+        }
+        h5, h6, p {
+          text-align: center;
+          margin: 0;
+        }
+        form, .d-flex.justify-content-end {
+          display: none !important;
+        }
+      }
+    </style>
+  `);
+  printWindow.document.write('</head><body>');
+
+  // Iterate over each table in the cloned section
+  const tables = clonedSection.querySelectorAll('table');
+  tables.forEach((table) => {
+    // Find the "ACADEMIC AFFAIRS" header cloned from the UI
+    const academicHeader = table.previousElementSibling;
+
+    // Create the main header for each table
+    const mainHeader = document.createElement('div');
+    mainHeader.className = 'main-header';
+    mainHeader.innerHTML = `
+      <img src="/pcc.png" alt="Logo"> <!-- Insert logo image here -->
+      <h5>PARANAQUE CITY</h5>
+      <h5>COLLEGE</h5>
+    `;
+
+    // Insert the main header BEFORE the "ACADEMIC AFFAIRS" header
+    if (academicHeader) {
+      academicHeader.parentNode.insertBefore(mainHeader, academicHeader);
     } else {
-      console.warn('Header information not found');
+      // Fallback: If no academic header exists, just insert the main header before the table
+      table.parentNode.insertBefore(mainHeader, table);
     }
-  
-    // Append the cloned section (tables and any content)
-    printWindow.document.write(clonedSection.outerHTML);
-  
-    printWindow.document.write('</body></html>');
-    printWindow.document.close();
-    printWindow.print();
-  };
-  
-  
-  
-  
+  });
+
+  // Write the cloned section to the print window
+  printWindow.document.write(clonedSection.outerHTML);
+
+  printWindow.document.write('</body></html>');
+  printWindow.document.close();
+  printWindow.print();
+};
+
 
 
   const getSemesterText = (sem) => {
@@ -798,26 +789,32 @@ function getScheduleNumbersForSection(sections, sectionKey) {
                     <p className="text-center">Institute</p>
                     <h6 className="text-center">SUMMARY OF GRADES</h6>
                     <p className="text-center">{getSemesterText(parseInt(selectedSemester)).toUpperCase()} SEMESTER, SCHOOL YEAR {selectedAcademicYear}</p>
-
-                      {/* Information rows */}
-                      <div className="row">
-                      {/* Left Column */}
-                        <div className="col-6">
-                          <p><strong>SUBJECT CODE:</strong> {Class.courseCode}</p>
-                          <p><strong>SUBJECT DESCRIPTION:</strong> {Class.courseName}</p>
-                          <p><strong>CREDIT UNITS:</strong> {Class.courseCredits}</p>
-                        </div>
-                      {/* Right Column */}
-                        <div className="col-6">
-                          <p><strong>DAY AND TIME:</strong> {`${Class.scheduleDay}, ${Class.startTime} - ${Class.endTime}`}</p>
-                          <p><strong>FACULTY:</strong> {Class.personnelName}</p>
-                          <p><strong>SECTION:</strong> {sectionNumber}</p>
-                        </div>
-                      </div>
+                    <br></br>
                     </div>
 
                     <Table bordered hover className="text-center mb-3">
                       {/* Table Header */}
+                      <thead>
+                        <tr>
+                          <td colSpan={3} style={{ fontWeight: 'bold', padding: '4px' }}>SUBJECT CODE:</td>
+                          <td colSpan={4} style={{ padding: '4px' }}>{Class.courseCode}</td>
+                          <td colSpan={3} style={{ fontWeight: 'bold', padding: '4px' }}>DAY AND TIME:</td>
+                          <td colSpan={3} style={{ padding: '4px' }}>{`${Class.scheduleDay}, ${Class.startTime} - ${Class.endTime}`}</td>
+                        </tr>
+                        <tr>
+                          <td colSpan={3} style={{ fontWeight: 'bold', padding: '4px' }}>SUBJECT DESCRIPTION:</td>
+                          <td colSpan={4} style={{ padding: '4px' }}>{Class.courseName}</td>
+                          <td colSpan={3} style={{ fontWeight: 'bold', padding: '4px' }}>FACULTY:</td>
+                          <td colSpan={3} style={{ padding: '4px' }}>{Class.personnelName}</td>
+                        </tr>
+                        <tr>
+                          <td colSpan={3} style={{ fontWeight: 'bold', padding: '4px' }}>CREDIT UNITS:</td>
+                          <td colSpan={4} style={{ padding: '4px' }}>{Class.courseCredits}</td>
+                          <td colSpan={3} style={{ fontWeight: 'bold', padding: '4px' }}>SECTION</td>
+                          <td colSpan={3} style={{ padding: '4px' }}>{sectionNumber}</td>
+                        </tr>
+                      </thead>
+
                     <thead className="table-success">
                       <tr>
                         <th rowSpan={2} className="custom-color-green-font fixed-width" style={{ textAlign: 'center', verticalAlign: 'middle' }}>
@@ -873,6 +870,32 @@ function getScheduleNumbersForSection(sections, sectionKey) {
                         </tr>
                       ))}
                     </tbody>
+                    <thead>
+                    <tr>
+                        <td colSpan={2}>Submitted by:</td>
+                        <td colSpan={2}>Date:</td>
+                        <td colSpan={2}>Checked by:</td>
+                        <td colSpan={2}>Noted by:</td>
+                        <td colSpan={2}>Approved by:</td>
+                        <td colSpan={3}>Received by:</td>
+                      </tr>
+                      <tr>
+                        <td colSpan={2} style={{ height: '50px' }}></td>
+                        <td colSpan={2} rowSpan={2}></td>
+                        <td colSpan={2}></td>
+                        <td colSpan={2}></td>
+                        <td colSpan={2}></td>
+                        <td colSpan={3}></td>
+                      </tr>
+
+                      <tr>
+                        <td colSpan={2}>Faculty</td>
+                        <td colSpan={2}>Program Chair</td>
+                        <td colSpan={2}>Dean</td>
+                        <td colSpan={2}>VPAA</td>
+                        <td colSpan={3}>College Registar</td>
+                      </tr>
+                    </thead>
                     </Table>
 
                     {/* Partition for the second table */}
@@ -881,27 +904,32 @@ function getScheduleNumbersForSection(sections, sectionKey) {
                       <p className="text-center">Institute</p>
                       <h6 className="text-center">GRADE SHEET</h6>
                       <p className="text-center">{getSemesterText(parseInt(selectedSemester)).toUpperCase()} SEMESTER, SCHOOL YEAR {selectedAcademicYear}</p>
+                      <br></br>
                     {/*<p className="text-center">DATE: 0</p>*/}
-
-                    {/* Information rows */}
-                      <div className="row">
-                      {/* Left Column */}
-                        <div className="col-6">
-                          <p><strong>SUBJECT CODE:</strong> {Class.courseCode}</p>
-                          <p><strong>SUBJECT DESCRIPTION:</strong> {Class.courseName}</p>
-                          <p><strong>CREDIT UNITS:</strong> {Class.courseCredits}</p>
-                        </div>
-                        {/* Right Column */}
-                        <div className="col-6">
-                          <p><strong>DAY AND TIME:</strong> {`${Class.scheduleDay}, ${Class.startTime} - ${Class.endTime}`}</p>
-                          <p><strong>FACULTY:</strong> {Class.personnelName}</p>
-                          <p><strong>SECTION:</strong> {sectionNumber}</p>
-                        </div>
-                      </div>
                     </div>
 
                     <Table bordered hover className="text-center mb-3">
                     {/* Table Header */}
+                    <thead>
+                        <tr>
+                          <td colSpan={2} style={{ fontWeight: 'bold', padding: '4px' }}>SUBJECT CODE:</td>
+                          <td colSpan={2} style={{ padding: '4px' }}>{Class.courseCode}</td>
+                          <td colSpan={1} style={{ fontWeight: 'bold', padding: '4px' }}>DAY AND TIME:</td>
+                          <td colSpan={2} style={{ padding: '4px' }}>{`${Class.scheduleDay}, ${Class.startTime} - ${Class.endTime}`}</td>
+                        </tr>
+                        <tr>
+                          <td colSpan={2} style={{ fontWeight: 'bold', padding: '4px' }}>SUBJECT DESCRIPTION:</td>
+                          <td colSpan={2} style={{ padding: '4px' }}>{Class.courseName}</td>
+                          <td colSpan={1} style={{ fontWeight: 'bold', padding: '4px' }}>FACULTY:</td>
+                          <td colSpan={2} style={{ padding: '4px' }}>{Class.personnelName}</td>
+                        </tr>
+                        <tr>
+                          <td colSpan={2} style={{ fontWeight: 'bold', padding: '4px' }}>CREDIT UNITS:</td>
+                          <td colSpan={2} style={{ padding: '4px' }}>{Class.courseCredits}</td>
+                          <td colSpan={1} style={{ fontWeight: 'bold', padding: '4px' }}>SECTION</td>
+                          <td colSpan={2} style={{ padding: '4px' }}>{sectionNumber}</td>
+                        </tr>
+                      </thead>
                     <thead className="table-success">
                       <tr>
                         <th className="custom-color-green-font fixed-width">STUDENT NO</th>
@@ -925,8 +953,34 @@ function getScheduleNumbersForSection(sections, sectionKey) {
                           <td><strong>{student.numEq.toFixed(2)}</strong></td>
                           <td>{student.remarks} </td>
                         </tr>
+                        
                       ))}
                     </tbody>
+                    <thead>
+                    <tr>
+                        <td>Submitted by:</td>
+                        <td>Date:</td>
+                        <td>Checked by:</td>
+                        <td>Noted by:</td>
+                        <td>Approved by:</td>
+                        <td colSpan={2}>Received by:</td>
+                      </tr>
+                      <tr>
+                        <td style={{ height: '50px' }}></td>
+                        <td rowSpan={2}></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td colSpan={2}></td>
+                      </tr>
+                      <tr>
+                      <td>Faculty</td>
+                        <td>Program Chair</td>
+                        <td>Dean</td>
+                        <td>VPAA</td>
+                        <td colSpan={2}>College Registrar</td>
+                      </tr>
+                    </thead>
                     </Table>
                   </div>
                   )

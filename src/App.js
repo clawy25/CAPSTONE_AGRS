@@ -20,6 +20,7 @@ import ProgramHeadPage from './ProgramHeadComponents/ProgramHeadPage';
 import StudentEnrollmentSchedule from './StudentComponents/StudentEnrollmentSchedule';
 import ForgotPassword from './ForgotPassword';
 import ErrorPage from './ErrorPage';
+import ResetPassword from './ResetPassword';
 
 const App = () => {
   return (
@@ -44,6 +45,7 @@ const App = () => {
         <Route path="*" element={<ErrorPage />} />
         <Route path="/studentEnrollmentSchedule" element={<StudentEnrollmentSchedule/>} />
         <Route path="/ForgotPassword" element={<ForgotPassword />} />
+        <Route path="/ResetPassword" element={<ResetPassword />} />
       </Routes>
     </UserProvider>
   );

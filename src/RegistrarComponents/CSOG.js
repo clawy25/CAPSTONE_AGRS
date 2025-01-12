@@ -16,7 +16,8 @@ import SemGradeModel from '../ReactModels/SemGradeModel';
 import CourseModel from '../ReactModels/CourseModel';
 import SubmissionModel from '../ReactModels/SubmissionModel';
 import '../App.css';
-
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 const MasterlistOfGradesTable = () => {
   const [loading, setLoading] = useState(false); 
@@ -487,281 +488,138 @@ const MasterlistOfGradesTable = () => {
     setShowModalAlertView(false);
   }
   
-  const printTable = () => {
+  const printTable = async () => {
     if (!dataFetched) {
       setShowModalAlert(true);
       return;
     }
-
-    const table = document.getElementById('printableTable');
-    if (!table) {
-      console.error('Table not found');
+  
+    // Select all sections with tables
+    const tables = document.querySelectorAll('.page-break');
+  
+    if (!tables.length) {
+      console.error('No tables found for printing');
       return;
     }
   
-    // Clone the table
-    const clonedTable = table.cloneNode(true);
+    // Function to print a single table with a delay
+    const printSingleTable = (table, index) => {
+      return new Promise((resolve) => {
+        // Create a new jsPDF instance with legal size and landscape orientation
+        const pdf = new jsPDF('landscape', 'mm', 'legal'); // Use 'legal' size
   
-    // Select all rows (including header and body)
-    const rows = clonedTable.querySelectorAll('tr');
-  
-    // Get all rows for header and body
-    const headerRows = clonedTable.querySelectorAll('thead tr');
-    const bodyRows = clonedTable.querySelectorAll('tbody tr');
-  
-    // Highlight the last column (WGA) in both header and body (only for print)
-    // In header (last cell in both header rows)
-    const headerCells = clonedTable.querySelectorAll('thead th');
-    const lastHeaderCell = headerCells[headerCells.length - 1];
-    lastHeaderCell.style.backgroundColor = '#bf9000'; // Brown for WGA column in header
-    lastHeaderCell.style.color = 'black'; // Text color black for WGA header
-  
-    // In body (last column in each row)
-    bodyRows.forEach(row => {
-      const lastCell = row.cells[row.cells.length - 1]; // Target the last cell in each body row
-      lastCell.style.backgroundColor = '#bf9000'; // Brown for WGA column in body
-    });
-  
-    // Apply colors to the first and second header rows (only for print)
-    if (headerRows.length > 0) {
-      headerRows.forEach((headerRow, index) => {
-        // Apply blue color to the first header row and text color black (only for print)
         if (index === 0) {
-          headerRow.querySelectorAll('th').forEach(cell => {
-            cell.style.backgroundColor = '#00b0f0'; // Blue
-            cell.style.color = 'black'; // Text color black
-          });
+          // Add a custom header for the first table
+          pdf.addImage('/pcc.png', 'PNG', 85, 10, 20, 20); // PCC Logo
+          pdf.setFontSize(14);
+          pdf.setTextColor(0, 128, 0); // Set text color to green
+          pdf.text('PARAÑAQUE CITY', 110, 17);
+          
+          pdf.setFontSize(25);
+          pdf.setFont('helvetica', 'bold');
+          pdf.text('COLLEGE', 110, 26);
+          
+          // Draw a vertical line
+          pdf.setDrawColor(0, 128, 0); // Green color
+          pdf.setLineWidth(1);
+          pdf.line(160, 10, 160, 30);
+  
+          // Add additional text
+          pdf.setFontSize(10);
+          pdf.setFont('helvetica', 'normal');
+          pdf.text('Coastal Rd., cor. Victor Medina Street,', 165, 15);
+          pdf.text('San Dionisio, Paranaque City, Philippines', 165, 20);
+          pdf.text('info@paranaquecitycollege.edu.ph | (02) 85343321', 165, 25);
+  
+          // Add a second logo
+          pdf.addImage('/pcc.png', 'PNG', 250, 10, 20, 20); // PCC Logo on the right
+  
+          // Separator
+          pdf.setDrawColor(0, 128, 0); // Green color
+          pdf.line(5, 35, 350, 35); // Horizontal line separator
+  
+          // Reset the text color to black for the following text
+          pdf.setTextColor(0, 0, 0); // Black color
+  
+          // Centered title
+          pdf.setFontSize(16);
+          const title = 'OFFICE OF THE COLLEGE REGISTRAR';
+          const titleWidth = pdf.getTextWidth(title);
+          const titleX = 177.5 - (titleWidth / 2); // Center of the page minus half of the text width
+          pdf.text(title, titleX, 45);
+  
+          // Subtitle in black color
+          pdf.setFontSize(14);
+          const subtitle = 'Summary of Grades';
+          const subtitleWidth = pdf.getTextWidth(subtitle);
+          const subtitleX = 177.5 - (subtitleWidth / 2); // Center of the page minus half of the text width
+          pdf.text(subtitle, subtitleX, 52);
         }
-        // Apply yellow color to the second header row and text color black (only for print)
-        if (index === 1) {
-          headerRow.querySelectorAll('th').forEach(cell => {
-            cell.style.backgroundColor = '#ffff00'; // Yellow
-            cell.style.color = 'black'; // Text color black
-          });
+  
+        // Add a title or header for each table
+        const sectionNumber = table.getAttribute('data-section') || `Section ${index + 1}`;
+        const startY = index === 0 ? 80 : 20; // Adjust table start position if a header is added
+        pdf.setFontSize(12);
+        pdf.text(`Table for ${sectionNumber}`, 10, startY - 10);
+  
+        // Extract the table data
+        const htmlTable = table.querySelector('table');
+  
+        if (!htmlTable) {
+          console.warn(`No table found in section ${sectionNumber}`);
+          return resolve();
         }
+  
+        // Clone the table to avoid altering the DOM
+        const clonedTable = htmlTable.cloneNode(true);
+  
+        // Remove the last column from the header and body
+        const headerRow = clonedTable.querySelector('thead tr');
+        if (headerRow) {
+          headerRow.removeChild(headerRow.lastElementChild);
+        }
+  
+        const bodyRows = clonedTable.querySelectorAll('tbody tr');
+        bodyRows.forEach((row) => {
+          row.removeChild(row.lastElementChild);
+        });
+  
+        // Use jsPDF's autoTable plugin to add the table content
+        pdf.autoTable({
+          html: clonedTable,
+          startY: startY, // Position the table below the header or title
+          styles: {
+            fontSize: 7, // Smaller font size for table content
+            cellPadding: 2,
+            lineWidth: 0.1, // Line width for cell borders
+            lineColor: [0, 0, 0], // Black color for borders
+          },
+          headStyles: {
+            fillColor: [76, 175, 80], // Green header background color
+            textColor: [255, 255, 255], // White text color
+            fontSize: 8, // Slightly larger font size for headers
+            lineWidth: 0.1, // Border line width for header cells
+            lineColor: [0, 0, 0], // Black border for header cells
+          },
+          tableLineColor: [0, 0, 0], // Black border color for all cells
+          tableLineWidth: 0.1, // Border width for all cells
+        });
+  
+        // Download the PDF file
+        pdf.save(`Table_${sectionNumber}.pdf`);
+  
+        resolve(); // Resolve when done printing a table
       });
-    }
-  
-    // Remove the last column from body rows (not the header)
-    bodyRows.forEach(row => {
-      row.deleteCell(row.cells.length - 1);
-    });
-  
-    const printWindow = window.open('', '', 'height=500,width=1000');
-    printWindow.document.write('<html><head><title>Print Table</title>');
-    printWindow.document.write(`
-      <style>
-        @media print {
-          @page {
-            size: legal landscape; /* Set Legal size and Landscape orientation */
-            margin: 0;
-            /* Ensure background graphics are included */
-            background: #fff;
-          }
-  
-          body {
-            font-family: Arial, sans-serif;
-          }
-  
-          table {
-            width: 125%;
-            table-layout: auto;
-            border-collapse: collapse;
-            page-break-before: auto;
-          }
-
-  
-          th, td {
-            border: 1px solid black;
-            padding: 8px;
-            text-align: center;
-            width: 500px;
-          }
-
-  
-          td {
-            background-color: white;
-          }
-  
-          th {
-            background-color: #4CAF50;
-            color: black; /* Text color black in all header cells */
-          }
-  
-          /* Prevent repeated header on every page */
-          thead {
-            display: table-row-group;
-          }
-  
-          /* Keep rows from splitting between pages */
-          tr {
-            page-break-inside: avoid;
-          }
-  
-          /* Highlight last column in print */
-          th:last-child, td:last-child {
-            background-color: #bf9000; /* Highlight color for last column */
-            color: black; /* Text color black for WGA column */
-          }
-  
-          /* Apply print-specific header row colors */
-          thead tr:nth-child(1) th {
-            background-color: #00b0f0; /* Blue for the first header row */
-            color: black; /* Text color black for first header row */
-          }
-  
-          thead tr:nth-child(2) th {
-            background-color: #ffff00; /* Yellow for the second header row */
-            color: black; /* Text color black for second header row */
-          }
-  
-          .header-container {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 20px;
-            margin-top: 40px;
-          }
-  
-          .logo {
-            height: 80px;
-            margin-right: 20px;
-          }
-  
-          .text {
-            text-align: left;
-            margin-right: 20px;
-          }
-  
-          .city, .college {
-            color: green;
-          }
-  
-          .college {
-            font-size: 29px;
-            font-weight: bold;
-          }
-  
-          .vertical-line {
-            border-left: 2px solid green;
-            height: 80px;
-            margin-left: 20px;
-            margin-right: 20px;
-          }
-  
-          .additional-text {
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
-          }
-  
-          .additional-line {
-            font-size: 16px;
-            font-weight: normal;
-            display: flex;
-            align-items: flex-start;
-            margin-bottom: 5px;
-            color: green;
-          }
-  
-          .icon {
-            margin-right: 8px;
-            font-size: 18px;
-            min-width: 24px;
-            color: green;
-          }
-  
-          .address-container {
-            display: flex;
-            align-items: flex-start;
-          }
-  
-          .address-container .address-text {
-            display: flex;
-            flex-direction: column;
-          }
-  
-          .second-logo {
-            height: 80px;
-            margin-left: 40px;
-          }
-  
-          .separator {
-            border: 10;
-            border-top: 2px solid green;
-            width: 80%;
-            margin: 20px auto;
-          }
-  
-          .centered-text {
-            text-align: center;
-          }
-        }
-  
-      </style>
-      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    `);
-    printWindow.document.write('</head><body>');
-  
-    let fullProgramName;
-    if (program === "BSHM") {
-      fullProgramName = "BACHELOR OF SCIENCE IN HOSPITALITY MANAGEMENT";
-    } else if (program === "BSEntrep") {
-      fullProgramName = "BACHELOR OF SCIENCE IN ENTREPRENEURSHIP";
-    } else {
-      fullProgramName = program;
-    }
-  
-    printWindow.document.write(`
-      <div class="header-container">
-        <img src="/pcc.png" alt="PCC Logo" class="logo" id="logo">
-        <div class="text">
-          <div class="city">PARANAQUE CITY</div>
-          <div class="college">COLLEGE</div>
-        </div>
-        <div class="vertical-line"></div>
-        <div class="additional-text">
-          <div class="additional-line address-container">
-            <span class="icon"><i class="fas fa-map-marker-alt"></i></span>
-            <div class="address-text">
-              <div>Coastal Rd., cor. Victor Medina Street,</div>
-              <div>San Dionisio, Paranaque City, Philippines</div>
-            </div>
-          </div>
-          <div class="additional-line">
-            <span class="icon"><i class="fas fa-envelope"></i></span>info@paranaquecitycollege.edu.ph
-          </div>
-          <div class="additional-line">
-            <span class="icon"><i class="fas fa-phone-alt"></i></span>(02)85343321
-          </div>
-        </div>
-        <img src="/pcc.png" alt="PCC Logo" class="second-logo">
-      </div>
-      <hr class="separator">
-      <div class="centered-text">
-        <h1>OFFICE OF THE COLLEGE REGISTRAR</h1>
-        <h2>Summary of Grades</h2>
-        <h2>${fullProgramName}</h2>
-        <h2>${yearLevel}</h2>
-        <h2>${semester} Semester S.Y. ${selectedAcademicYear}</h2>
-      </div>
-    `);
-  
-    printWindow.document.write(clonedTable.outerHTML);
-    printWindow.document.write('</body></html>');
-  
-    const logo = printWindow.document.getElementById('logo');
-    logo.onload = () => {
-      printWindow.print();
-      printWindow.close();
     };
   
-    logo.onerror = () => {
-      console.error('Logo failed to load.');
-      printWindow.print();
-      printWindow.close();
-    };
+    // Print each table one by one with a delay
+    for (let i = 0; i < tables.length; i++) {
+      await printSingleTable(tables[i], i);
+    }
+  
+    console.log('All tables have been printed sequentially.');
   };
+  
   
   const openModal = (student) => {
     setShowModal(true);
@@ -772,6 +630,103 @@ const MasterlistOfGradesTable = () => {
     setShowModal(false);
     setSelectedStudent(null);
   };
+
+  const printSpecificTable = (sectionNumber) => {
+    const container = document.querySelector(`.page-break[data-section="${sectionNumber}"]`);
+    if (!container) {
+      console.error('Container not found for section:', sectionNumber);
+      return;
+    }
+  
+    const table = container.querySelector('table');
+    if (!table) {
+      console.error('Table not found for section:', sectionNumber);
+      return;
+    }
+  
+    // Insert the "WGA" header in the last column if not already there
+    const thElements = table.querySelectorAll('th');
+    if (thElements.length > 0 && thElements[thElements.length - 1].textContent !== "WGA") {
+      const headerRow = table.querySelector('tr');
+      const newHeader = document.createElement('th');
+      newHeader.textContent = "WGA";
+      headerRow.appendChild(newHeader);
+    }
+  
+    // Create the print window
+    const printWindow = window.open('', '', 'height=500,width=1000');
+    const isFirstTable = sectionNumber === 1; // Assuming sectionNumber 1 represents the first table
+  
+    // Constructing the content
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Print Table</title>
+          <style>
+            /* General styles for printing */
+            @media print {
+              body {
+                margin: 0;
+                padding: 0;
+                font-family: Arial, sans-serif;
+              }
+              table {
+                width: 100%; /* Ensure table fits within page width */
+                border-collapse: collapse; /* Collapse borders for a clean design */
+                margin: 0 auto; /* Center the table */
+              }
+              th, td {
+                border: 1px solid #000; /* Ensure borders are visible */
+                padding: 8px; /* Add spacing for readability */
+                text-align: center; /* Center-align text for consistency */
+              }
+              th {
+                background-color: #28a745; /* Use the same header background color as UI */
+                color: #fff; /* White text for headers */
+              }
+              .custom-color-green-font {
+                background-color: #d4edda; /* Match UI's green cell color */
+              }
+              .bg-success {
+                background-color: #28a745; /* Match green background in UI */
+                color: white; /* Match white text */
+              }
+              .bg-white {
+                background-color: #fff; /* Match white background */
+              }
+              /* Hide the last column data (td) but keep the last column header (th) */
+              table td:last-child {
+                display: none; /* Hide the last column data */
+              }
+              /* Hide the last column header from the print layout */
+              @media print {
+                table th:last-child {
+                  display: none; /* Hide the last column header (WGA) */
+                }
+              }
+              /* Custom header styles for the first table */
+              ${isFirstTable ? `
+                .custom-header {
+                  font-size: 18px;
+                  font-weight: bold;
+                  text-align: center;
+                  margin-bottom: 20px;
+                  text-decoration: underline;
+                }
+              ` : ''}
+            </style>
+          </head>
+          <body>
+            ${isFirstTable ? `<div class="custom-header">This is a Custom Header for the First Table</div>` : ''}
+            ${table.outerHTML}
+          </body>
+        </html>
+    `);
+  
+    printWindow.document.close();
+    printWindow.print();
+  };
+  
 
 
   const handlePrint = () => {
@@ -843,29 +798,42 @@ const MasterlistOfGradesTable = () => {
               }
 
 
-            .modalContent * {
-              position: relative;
-              z-index: 1; /* Ensure content is above the watermark */
-            }
-              
-  
+              .modalContent {
+                position: relative;
+                width: 100%;
+                padding: 10px;
+                box-sizing: border-box;
+                margin-bottom: 20px;
+                border: 1px solid #ccc;
+                background: #fff;
+              }
+
               .modalContent .label {
                 position: absolute;
-                top: 50%;
-                left: -280px; /* Position the label outside the table */
-                transform: translateY(-50%) rotate(-90deg); /* Rotate to vertical and center align */
-                font-size: 1rem;
+                top: 0;
+                left: -30px; /* Adjust the left positioning if needed */
+                height: 100%; /* Match the height of the modalContent */
+                writing-mode: vertical-rl; /* Text flows vertically, right to left */
+                text-orientation: mixed; /* Ensures text is readable (not upside down) */
+                text-align: center;
+                font-size: 1.2rem;
                 font-weight: bold;
                 text-transform: uppercase;
                 background-color: green;
                 color: white;
                 padding: 10px 5px;
-                border-radius: 5px;
-                width: 525px; /* Increase width to accommodate longer text */
-                text-align: center;
+                border-radius: 5px 0 0 5px; /* Rounded corners for the right side */
                 white-space: nowrap; /* Prevent text from wrapping */
-                box-sizing: border-box; /* Ensure padding fits inside the label */
+                width: 30px; /* Smaller width for the label */
+                box-sizing: border-box;
               }
+
+              .modalContent .tableContainer {
+                margin-left: 10px; /* Add space to accommodate the label */
+              }
+
+
+
 
   
               .modalContent:first-of-type .label {
@@ -948,7 +916,6 @@ const MasterlistOfGradesTable = () => {
   
     printWindow.document.close();
   };
-  
   
   return (
     <div>
@@ -1065,59 +1032,67 @@ const MasterlistOfGradesTable = () => {
           `}
         </style>
 
-      {loading ? (
-        <div className="text-center py-5">
-            <Spinner animation="border" variant="success" />
-            <p className="mt-3">Loading data, please wait...</p>
-          </div>):   Object.keys(groupedData).length === 0 || combinedData.length === 0 ? (
-          <div className="text-center py-5">
-            <h5 className="custom-color-green-font fs-5">No Data Available</h5>
-            <p className="fs-6">
-              Please ensure that all filters are applied or data is available to display.
-            </p>
-          </div>
-        ) : (
-          Object.entries(groupedData)
-          .sort(([sectionNumberA], [sectionNumberB]) =>
-            sectionNumberA.localeCompare(sectionNumberB)
-          )
-          .map(([sectionNumber, sectionData], sectionIndex) => (
-            <Table bordered hover key={sectionIndex} className="text-center mb-3">
-              {/* Table Header */}
-              <thead className="table-success">
-                <tr>
-                  <th colSpan="3" className="custom-color-green-font fixed-width">
-                    {sectionNumber}
-                  </th>
-                  {sectionData.courses.map((course, index) => (
-                    <th key={`course-${index}`} className="bg-success text-white fixed-width">
-                      {course.personnelLastName}
-                    </th>
-                  ))}
-                  <th colSpan={sectionData.courses.length + 1} className="custom-color-green-font fixed-width">
-                    WEIGHTED GRADE AVERAGE
-                  </th>
-                  <th rowSpan={2} className="custom-color-green-font fixed-width">
-                    Certificate of Grades (COG)
-                  </th>
-                </tr>
-                <tr>
-                  <th className="bg-success text-white fixed-width">ITEM</th>
-                  <th className="bg-success text-white fixed-width">SNUMBER</th>
-                  <th className="bg-success text-white student-name">STUDENT NAME</th>
-                  {sectionData.courses.map((course, index) => (
-                    <th key={`course-grade-${index}`} className="bg-success text-white fixed-width">
-                      {course.courseCode}
-                    </th>
-                  ))}
-                  {sectionData.courses.map((course, index) => (
-                    <th key={`course-grade-${index}`} className="bg-success text-white fixed-width">
-                      {course.courseCode}
-                    </th>
-                  ))}
-                  <th className="bg-success text-white fixed-width">WGA</th>
-                </tr>
-              </thead>
+        {loading ? (
+  <div className="text-center py-5">
+    <Spinner animation="border" variant="success" />
+    <p className="mt-3">Loading data, please wait...</p>
+  </div>
+) : Object.keys(groupedData).length === 0 || combinedData.length === 0 ? (
+  <div className="text-center py-5">
+    <h5 className="custom-color-green-font fs-5">No Data Available</h5>
+    <p className="fs-6">
+      Please ensure that all filters are applied or data is available to display.
+    </p>
+  </div>
+) : (
+  Object.entries(groupedData)
+    .sort(([sectionNumberA], [sectionNumberB]) =>
+      sectionNumberA.localeCompare(sectionNumberB)
+    )
+    .map(([sectionNumber, sectionData], sectionIndex) => (
+      <div
+        className="page-break"
+        key={sectionIndex}
+        data-section={sectionNumber}
+        style={{ marginBottom: "50px", position: "relative" }}
+      >
+       {/* Table Component */}
+       <Table bordered hover className="text-center mb-3">
+        {/* Table Header */}
+        <thead className="table-success">
+          <tr>
+            <th colSpan="3" className="custom-color-green-font fixed-width">
+              {sectionNumber}
+            </th>
+            {sectionData.courses.map((course, index) => (
+              <th key={`course-${index}`} className="bg-success text-white fixed-width">
+                {course.personnelLastName}
+              </th>
+            ))}
+            <th colSpan={sectionData.courses.length + 1} className="custom-color-green-font fixed-width">
+              WEIGHTED GRADE AVERAGE
+            </th>
+            <th rowSpan={2} className="custom-color-green-font fixed-width">
+              Certificate of Grades (COG)
+            </th>
+          </tr>
+          <tr>
+            <th className="bg-success text-white fixed-width">ITEM</th>
+            <th className="bg-success text-white fixed-width">SNUMBER</th>
+            <th className="bg-success text-white student-name">STUDENT NAME</th>
+            {sectionData.courses.map((course, index) => (
+              <th key={`course-grade-${index}`} className="bg-success text-white fixed-width">
+                {course.courseCode}
+              </th>
+            ))}
+            {sectionData.courses.map((course, index) => (
+              <th key={`course-grade-${index}`} className="bg-success text-white fixed-width">
+                {course.courseCode}
+              </th>
+            ))}
+            <th className="bg-success text-white fixed-width">WGA</th>
+          </tr>
+        </thead>
         
               {/* Table Body */}
               <tbody className="table-success">
@@ -1206,10 +1181,19 @@ const MasterlistOfGradesTable = () => {
                 )}
               </tbody>
             </Table>
-          ))
-        
-        )}
+        {/* Print Button Positioned Below the Table */}
+        <div style={{ textAlign: "right", marginTop: "10px" }}>
+          <Button
+            variant="primary"
+            className="print-button"
+            onClick={() => printSpecificTable(sectionNumber)}
+          >
+            Print Table
+          </Button>
+        </div>
       </div>
+    ))
+)}
   
 
        {/* Modal for COG */}
@@ -1552,6 +1536,7 @@ const MasterlistOfGradesTable = () => {
           </Button>
         </Modal.Footer>
       </Modal>
+    </div>
     </div>
   );
 };
