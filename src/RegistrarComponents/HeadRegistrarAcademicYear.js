@@ -2,9 +2,11 @@ import React, { useState, useEffect, useContext } from 'react';
 import { Table, Modal, Button, Form, Spinner, Alert, Row, Col } from 'react-bootstrap';
 import AcademicYearModel from '../ReactModels/AcademicYearModel';
 import ProgramModel from '../ReactModels/ProgramModel';
+import PersonnelModel from '../ReactModels/PersonnelModel';
+import TimelineModel from '../ReactModels/TimelineModel';
+import CourseModel from '../ReactModels/CourseModel';
 import '../App.css';
 import { UserContext } from '../Context/UserContext';
-import PersonnelModel from '../ReactModels/PersonnelModel';
 
 export default function HeadRegistrarAcademicYear() {
   
@@ -211,12 +213,36 @@ export default function HeadRegistrarAcademicYear() {
           academicYear: currentAcademicYear.academicYear,
           isCurrent: false
         };
+
+        console.log(updateCurrent.academicYear); //Old row
+        console.log(newAcademicYear.academicYear); //New row
+
+        //Fetch all movable rows of the old academicYear
+        const [enrollments, personnels, courses, programs] = await Promise.all([
+          TimelineModel.fetchTimelineByAcademicYear(updateCurrent.academicYear),
+          PersonnelModel.fetchAllPersonnel(updateCurrent.academicYear),
+          CourseModel.fetchAllCourses().then(data => data.filter(row => row.academicYear === updateCurrent.academicYear)),
+          ProgramModel.fetchAllPrograms().then(data => data.filter(row => row.academicYear === updateCurrent.academicYear))
+        ]);
         
-        const update = await AcademicYearModel.updateAcademicYear(updateCurrent.id, updateCurrent);
+        console.log(enrollments);//WTF
+        console.log(personnels);//EZ
+        console.log(courses);//EZ
+        console.log(programs);//EZ
         
-        if (update) {
-          await AcademicYearModel.createAndInsertAcademicYear(newAcademicYear);
-        }
+
+        // enrollments.forEach((row) => {
+
+          
+        //   row
+        // });
+        
+        // const update = await AcademicYearModel.updateAcademicYear(updateCurrent.id, updateCurrent);
+
+        // After updating the old row, insert the new row AND start making duplicate copies of the old rows from other tables
+        // if (update) {
+        //   await AcademicYearModel.createAndInsertAcademicYear(newAcademicYear);
+        // }
 
         fetchAcademicYears();
         handleCloseAddAcadYear();
@@ -661,7 +687,7 @@ export default function HeadRegistrarAcademicYear() {
             The system will proceed from <strong>{currentAcademicYear?.academicYear}</strong> to{' '}
           <strong>{newAcademicYear?.academicYear}</strong>. WARNING! THIS ACTION IS IRREVERSIBLE!
           </p>
-          <p>This action requires verification. To proceed, please provide your details to authorize this action.</p>
+          <p><i>This action requires verification. To proceed, please provide your details to authorize this action.</i></p>
 
         <Form>
           <Form.Group className="mb-3">

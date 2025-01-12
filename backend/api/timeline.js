@@ -4,6 +4,27 @@ const supabase = require('../supabaseServer');
 
 router.post('/all', async (req, res) => {
 
+    const { academicYear } = req.body;
+    try {
+        // Fetch all timeline data
+        const { data: timelineData, error: timelineError } = await supabase
+            .from('timeline') // Ensure this is your actual table name
+            .select('*')
+            .eq('academicYear', academicYear);
+  
+        if (timelineError || !timelineData) {
+            return res.status(500).json({ error: timelineError.message || 'Failed to fetch timeline data' });
+        }
+  
+        res.json(timelineData); // Return the array of timeline entries
+    } catch (error) {
+        console.error('Error fetching timeline:', error); // Log the error
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+router.post('/student', async (req, res) => {
+
     const { academicYear, studentNumber } = req.body;
     try {
         // Fetch all timeline data

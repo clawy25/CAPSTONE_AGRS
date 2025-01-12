@@ -17,7 +17,9 @@ export default function Forgotpassword() {
         setMessage(null);
     
         try {
-            const response = await fetch('http://localhost:3001/api/forgot-password', {
+            
+            const apiUrl = process.env.REACT_APP_API_URL;
+            const response = await fetch(`${apiUrl}/forgot-password/set`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

@@ -13,11 +13,33 @@ export default class TimelineModel {
         this.admissionYear = admissionYear;
     }
 
+    static async fetchTimelineByAcademicYear(academicYear) { //Needs deployment first
+        try {
+            const apiUrl = process.env.REACT_APP_API_URL;
+            const response = await fetch(`${apiUrl}/timeline/all`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ academicYear }), // Send credentials
+              });
+            if (!response.ok) {
+                throw new Error('Error fetching timeline data');
+            }
+            const data = await response.json();
+            return data;
+
+        } catch (error) {
+            console.error('Error fetching timeline data:', error);
+            throw error;
+        }
+    }
+    
     // Function to fetch timeline data (Read only)
     static async fetchTimelineData(academicYear, studentNumber) {
         try {
             const apiUrl = process.env.REACT_APP_API_URL;
-            const response = await fetch(`${apiUrl}/timeline/all`, {
+            const response = await fetch(`${apiUrl}/timeline/student`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
