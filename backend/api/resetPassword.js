@@ -12,10 +12,17 @@ router.post('/set', async (req, res) => {
     try {
         console.log('Attempting password reset for email:', email);
 
-        // Check if email exists in auth.users table using Supabase's auth API
-        const { data: user, error: userError } = await supabase.auth.api.getUserByEmail(email);
+        // Fetch users with admin privileges (this call requires service role or server-side key)
+        const { data, error: listError } = await supabase.auth.admin.listUsers({
+            filter: `email.eq.${email}`, // Filter by email
+        });
 
-        if (userError || !user) {
+        if (listError) {
+            console.error('Error fetching users:', listError);
+            return res.status(500).json({ error: 'Error fetching users' });
+        }
+
+        if (data.length === 0) {
             console.log('Email does not exist:', email);
             return res.status(400).json({ error: 'Email does not exist' });
         }
@@ -49,6 +56,7 @@ router.post('/set', async (req, res) => {
         res.status(500).json({ error: 'Internal server error' });
     }
 });
+
 
 
 
