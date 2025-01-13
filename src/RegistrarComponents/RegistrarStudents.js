@@ -370,18 +370,31 @@ export default function RegistrarStudents() {
     };
 
     //Query Function
-    const filteredStudents = students.filter(student => {
+    const filteredStudents = students
+    .map(student => {
+        // Ensure programName is mapped correctly
+        const program = programs.find(prog => prog.programNumber === student.studentProgramNumber);
+        const programName = program ? program.programName : 'Unknown';
+
+        // Return the updated student object with programName
+        return { ...student, programName };
+    })
+    .filter(student => {
         const searchQueryLower = searchQuery.toLowerCase();
         return (
             (student.studentNameFirst && student.studentNameFirst.toLowerCase().includes(searchQueryLower)) ||
             (student.studentNameLast && student.studentNameLast.toLowerCase().includes(searchQueryLower)) ||
             (student.studentNumber && student.studentNumber.toLowerCase().includes(searchQueryLower)) ||
             (student.admissionYear && student.admissionYear.toLowerCase().includes(searchQueryLower)) ||
-            (student.studentType && student.studentType.toLowerCase().includes(searchQueryLower)) &&
+            (student.studentType && student.studentType.toLowerCase().includes(searchQueryLower)) ||
+            (student.programName && student.programName.toLowerCase().includes(searchQueryLower)) && // Include programName in the search
             (filterOption === 'All' || student.studentType === filterOption)
         );
     });
-    
+
+// Log the final filtered students for debugging
+console.log('Filtered Students:', filteredStudents);
+
     //Page Layout
     return (
         <div className="container-fluid">
@@ -449,13 +462,13 @@ export default function RegistrarStudents() {
                                                 <td className='custom-color-green-font'>{student.studentNumber}</td>
                                                 <td className='custom-color-green-font'>{student.studentNameLast || ''}, {student.studentNameFirst || ''} {student.studentNameMiddle || ''}</td>
                                                 <td className='custom-color-green-font'>{student.studentPccEmail}</td>
-                                                <td className='custom-color-green-font'>
+                                                <td className='custom-color-green-font text-center'>
                                                     {programs.find(program => program.programNumber === student.studentProgramNumber)?.programName || 'No Program Assigned'}
                                                 </td>
-                                                <td>
+                                                <td className='custom-color-green-font text-center'>
                                                {student.studentType}
                                                 </td>
-                                                <td>
+                                                <td className='d-flex align-itmes-cneter justify-content-center'>
                                                     <button className="btn btn-success btn-sm me-2">
                                                         <FontAwesomeIcon icon={faCog} /> COG {/* Font Awesome settings icon */}
                                                     </button>
