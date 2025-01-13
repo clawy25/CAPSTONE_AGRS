@@ -631,6 +631,215 @@ const MasterlistOfGradesTable = () => {
     setSelectedStudent(null);
   };
 
+  const customPrintFunctionForFirstTable = (sectionNumber) => {
+    const container = document.querySelector(`.page-break[data-section="${sectionNumber}"]`);
+    if (!container) {
+      console.error('Container not found for section:', sectionNumber);
+      return;
+    }
+  
+    const table = container.querySelector('table');
+    if (!table) {
+      console.error('Table not found for section:', sectionNumber);
+      return;
+    }
+  
+    // Clone the table to avoid modifying the original table
+    const tableClone = table.cloneNode(true);
+  
+    // Insert the "WGA" header in the second-last column if not already there
+    const thElements = tableClone.querySelectorAll('th');
+    if (thElements.length > 0) {
+      const headerRow = tableClone.querySelectorAll('tr')[1]; // Access the second row of header
+      const lastColumnIndex = headerRow.cells.length - 1;
+  
+      // Check if "WGA" already exists in the second last column before adding
+      if (headerRow.cells[lastColumnIndex - 1].textContent !== "WGA") {
+        const newHeader = document.createElement('th');
+        newHeader.textContent = "WGA";
+        headerRow.cells[lastColumnIndex - 1].appendChild(newHeader);
+      }
+    }
+  
+    // Create the print window
+    const printWindow = window.open('', '', 'height=500,width=1000');
+    const isFirstTable = sectionNumber === 1; // Assuming sectionNumber 1 represents the first table
+  
+    // Constructing the content
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Print Table</title>
+          <style>
+            /* General styles for printing */
+            @media print {
+              body {
+                margin: 0;
+                padding: 0;
+                font-family: Arial, sans-serif;
+              }
+  
+              /* Page setup for landscape and legal size */
+              @page {
+                size: legal landscape; /* Set paper size to legal and orientation to landscape */
+                margin: 20mm; /* Default margin */
+              }
+  
+              .header-table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-bottom: 20px;
+              }
+  
+              .header-table img {
+                width: 60px;
+                height: 60px;
+              }
+  
+              .header-table td {
+                vertical-align: middle;
+                text-align: center;
+                border: none;
+                padding: 0;
+              }
+  
+              .header-left {
+                width: 30%;
+                text-align: center;
+              }
+  
+              .header-right {
+                width: 30%;
+                text-align: center;
+              }
+  
+              .header-center {
+                text-align: left;
+                font-size: 14px;
+              }
+  
+              .header-center h1 {
+                margin: 0;
+                font-size: 20px;
+                color: green;
+                text-align: left;
+              }
+  
+              .header-center h5 {
+                margin: 0;
+                font-size: 18px;
+                font-weight: bold;
+                color: green;
+                text-align: left;
+              }
+  
+              .header-center p {
+                margin: 2px 0;
+                font-size: 12px;
+                color: black;
+                text-align: left;
+                width: 100%;
+                color: green;
+              }
+  
+              .separator {
+                border-top: 2px solid green;
+                margin: 10px 0;
+              }
+  
+              table {
+                width: 100%; /* Ensure table fits within page width */
+                border-collapse: collapse; /* Collapse borders for a clean design */
+                margin: 0 auto; /* Center the table */
+              }
+  
+              th, td {
+                border: 1px solid #000; /* Ensure borders are visible */
+                padding: 8px; /* Add spacing for readability */
+                text-align: center; /* Center-align text for consistency */
+              }
+  
+              th {
+                background-color: #28a745; /* Use the same header background color as UI */
+                color: #fff; /* White text for headers */
+              }
+  
+              .custom-color-green-font {
+                background-color: #d4edda; /* Match UI's green cell color */
+              }
+  
+              .bg-success {
+                background-color: #28a745; /* Match green background in UI */
+                color: white; /* Match white text */
+              }
+  
+              .bg-white {
+                background-color: #fff; /* Match white background */
+              }
+  
+              /* Hide the last column data (td) but keep the last column header (th) */
+              table td:last-child {
+                display: none; /* Hide the last column data */
+              }
+  
+              /* Adjust colSpan dynamically for the print layout */
+              @media print {
+                table th:last-child,
+                table td:last-child {
+                  display: none; /* Hide last column's header and data for print */
+                }
+  
+                /* Adjust colSpan for the header row */
+                table tr:first-child th:last-child {
+                  /* Adjust colSpan dynamically for header row to reflect hidden last column */
+                  colspan: calc(100% - 1); /* Update the colSpan to exclude last column */
+                }
+  
+                table th[colspan] {
+                  /* Make sure colSpan is properly calculated for each row */
+                  colspan: 100;
+                }
+  
+                .vertical-line {
+                  border-right: 2px solid black; /* Adds vertical line */
+                  padding-right: 10px; /* Space between text and the line */
+                }
+              }
+            </style>
+          </head>
+          <body>
+            <table class="header-table">
+              <tr colspan={4}>
+                <td class="header-left">
+                  <img src="/pcc.png" alt="PCC Logo">
+                </td>
+                <td class="header-center vertical-line">
+                  <h5>PARAÑAQUE CITY</h5>
+                  <h1><big><big><big>COLLEGE</big></big></big></h1>
+                </td>
+                <td class="header-center">
+                  <p>Coastal Rd., cor. Victor Medina Street,</p>
+                  <p>San Dionisio, Paranaque City, Philippines</p>
+                  <p>info@paranaquecitycollege.edu.ph</p>
+                  <p> (02) 85343321</p>
+                </td>
+                <td class="header-right">
+                  <img src="/pcc.png" alt="PCC Logo">
+                </td>
+                <td></td>
+              </tr>
+            </table>
+            <hr class="separator">
+            ${tableClone.outerHTML}
+          </body>
+        </html>
+    `);
+  
+    printWindow.document.close();
+    printWindow.print();
+  };
+  
+
   const printSpecificTable = (sectionNumber) => {
     const container = document.querySelector(`.page-break[data-section="${sectionNumber}"]`);
     if (!container) {
@@ -644,13 +853,21 @@ const MasterlistOfGradesTable = () => {
       return;
     }
   
-    // Insert the "WGA" header in the last column if not already there
-    const thElements = table.querySelectorAll('th');
-    if (thElements.length > 0 && thElements[thElements.length - 1].textContent !== "WGA") {
-      const headerRow = table.querySelector('tr');
-      const newHeader = document.createElement('th');
-      newHeader.textContent = "WGA";
-      headerRow.appendChild(newHeader);
+    // Clone the table to avoid modifying the original table
+    const tableClone = table.cloneNode(true);
+  
+    // Insert the "WGA" header in the second-last column if not already there
+    const thElements = tableClone.querySelectorAll('th');
+    if (thElements.length > 0) {
+      const headerRow = tableClone.querySelectorAll('tr')[1]; // Access the second row of header
+      const lastColumnIndex = headerRow.cells.length - 1;
+  
+      // Check if "WGA" already exists in the second last column before adding
+      if (headerRow.cells[lastColumnIndex - 1].textContent !== "WGA") {
+        const newHeader = document.createElement('th');
+        newHeader.textContent = "WGA";
+        headerRow.cells[lastColumnIndex - 1].appendChild(newHeader);
+      }
     }
   
     // Create the print window
@@ -698,27 +915,30 @@ const MasterlistOfGradesTable = () => {
               table td:last-child {
                 display: none; /* Hide the last column data */
               }
-              /* Hide the last column header from the print layout */
+  
+              /* Adjust colSpan dynamically for the print layout */
               @media print {
-                table th:last-child {
-                  display: none; /* Hide the last column header (WGA) */
+                table th:last-child,
+                table td:last-child {
+                  display: none; /* Hide last column's header and data for print */
+                }
+  
+                /* Adjust colSpan for the header row */
+                table tr:first-child th:last-child {
+                  /* Adjust colSpan dynamically for header row to reflect hidden last column */
+                  colspan: calc(100% - 1); /* Update the colSpan to exclude last column */
+                }
+  
+                table th[colspan] {
+                  /* Make sure colSpan is properly calculated for each row */
+                  colspan: 100;
                 }
               }
-              /* Custom header styles for the first table */
-              ${isFirstTable ? `
-                .custom-header {
-                  font-size: 18px;
-                  font-weight: bold;
-                  text-align: center;
-                  margin-bottom: 20px;
-                  text-decoration: underline;
-                }
-              ` : ''}
             </style>
           </head>
           <body>
             ${isFirstTable ? `<div class="custom-header">This is a Custom Header for the First Table</div>` : ''}
-            ${table.outerHTML}
+            ${tableClone.outerHTML}
           </body>
         </html>
     `);
@@ -727,8 +947,8 @@ const MasterlistOfGradesTable = () => {
     printWindow.print();
   };
   
-
-
+  
+  
   const handlePrint = () => {
     const contentElement = document.getElementById('modalContent');
   
@@ -1184,13 +1404,26 @@ const MasterlistOfGradesTable = () => {
             </Table>
         {/* Print Button Positioned Below the Table */}
         <div style={{ textAlign: "right", marginTop: "10px" }}>
-          <Button
-            variant="primary"
-            className="print-button"
-            onClick={() => printSpecificTable(sectionNumber)}
-          >
-            Print Table
-          </Button>
+        <div style={{ textAlign: "right", marginTop: "10px" }}>
+  {sectionIndex === 0 ? ( // Check if it's the first table
+    <Button
+      variant="warning"
+      className="print-button"
+      onClick={() => customPrintFunctionForFirstTable(sectionNumber)}
+    >
+      Print Table
+    </Button>
+  ) : (
+    <Button
+      variant="warning"
+      className="print-button"
+      onClick={() => printSpecificTable(sectionNumber)}
+    >
+      Print Table
+    </Button>
+  )}
+</div>
+
         </div>
       </div>
     ))
