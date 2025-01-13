@@ -1,13 +1,21 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 export default function ResetPassword() {
     const navigate = useNavigate();
+    const location = useLocation();
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [accessToken, setAccessToken] = useState('');
+
+    useEffect(() => {
+        const queryParams = new URLSearchParams(location.search);
+        const token = queryParams.get('access_token');
+        setAccessToken(token || '');
+    }, [location]);
 
     const handlePasswordReset = async (e) => {
         e.preventDefault();
@@ -17,26 +25,31 @@ export default function ResetPassword() {
             return;
         }
 
+        if (!accessToken) {
+            setError('Access token is missing. Please use the password reset link again.');
+            return;
+        }
+
         setIsSubmitting(true);
         setError('');
         setSuccess('');
 
         try {
-            const response = await fetch('http://localhost:3001/api/reset-password', {
-                method: 'POST',
+            const response = await fetch(`${process.env.REACT_APP_API_URL}/auth/v1/user`, {
+                method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
+                    Authorization: `Bearer ${accessToken}`,
                 },
                 body: JSON.stringify({ password: newPassword }),
             });
 
-            const data = await response.json();
-
             if (response.ok) {
                 setSuccess('Password has been successfully reset!');
-                setTimeout(() => navigate('/login'), 3000); // Redirect to login page after 3 seconds
+                setTimeout(() => navigate('/login'), 3000);
             } else {
-                setError(data.error || 'Failed to reset password. Please try again.');
+                const data = await response.json();
+                setError(data.error_description || 'Failed to reset password.');
             }
         } catch (err) {
             console.error('Error resetting password:', err);
@@ -83,14 +96,6 @@ export default function ResetPassword() {
                             {isSubmitting ? 'Resetting...' : 'Reset Password'}
                         </button>
                     </form>
-                </div>
-                <div className="col-12 col-md-6 d-flex justify-content-center align-items-center flex-column order-2 order-md-1">
-                    <img
-                        className="PCClogo img-fluid rounded mt-4 pt-md-3"
-                        src="pcc.png"
-                        alt="PCC Logo"
-                        style={{ maxWidth: '100%', height: 'auto' }}
-                    />
                 </div>
             </div>
         </div>
