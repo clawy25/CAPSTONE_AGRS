@@ -3,6 +3,25 @@ const router = express.Router();
 const supabase = require('../supabaseServer');
 
 router.post('/all', async (req, res) => {
+  const { academicYear } = req.body;
+  try {
+      const { data, error } = await supabase
+          .from('semestralGrades')
+          .select('*')
+          .eq('academicYear', academicYear);
+
+      if (error) {
+          return res.status(500).json({ error: error.message });
+      }
+
+      res.json(data);
+  } catch (error) {
+      console.error('Error fetching semgrades:', error);
+      res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+router.post('/BySchedule', async (req, res) => {
     const { scheduleNumber } = req.body;
     try {
         const { data, error } = await supabase

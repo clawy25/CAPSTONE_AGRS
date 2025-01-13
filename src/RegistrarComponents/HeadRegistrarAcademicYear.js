@@ -5,6 +5,8 @@ import ProgramModel from '../ReactModels/ProgramModel';
 import PersonnelModel from '../ReactModels/PersonnelModel';
 import TimelineModel from '../ReactModels/TimelineModel';
 import CourseModel from '../ReactModels/CourseModel';
+import StudentModel from '../ReactModels/StudentModel';
+import SemGradeModel from '../ReactModels/SemGradeModel';
 import '../App.css';
 import { UserContext } from '../Context/UserContext';
 
@@ -218,24 +220,64 @@ export default function HeadRegistrarAcademicYear() {
         console.log(newAcademicYear.academicYear); //New row
 
         //Fetch all movable rows of the old academicYear
-        const [enrollments, personnels, courses, programs] = await Promise.all([
+        const [enrollments, personnels, courses, programs, students, semGrades] = await Promise.all([
           TimelineModel.fetchTimelineByAcademicYear(updateCurrent.academicYear),
           PersonnelModel.fetchAllPersonnel(updateCurrent.academicYear),
           CourseModel.fetchAllCourses().then(data => data.filter(row => row.academicYear === updateCurrent.academicYear)),
-          ProgramModel.fetchAllPrograms().then(data => data.filter(row => row.academicYear === updateCurrent.academicYear))
+          ProgramModel.fetchAllPrograms().then(data => data.filter(row => row.academicYear === updateCurrent.academicYear)),
+          StudentModel.fetchExistingStudents(),
+          //SemGradeModel.fetchAllSemGrades(updateCurrent.academicYear)
         ]);
-        
-        console.log(enrollments);//WTF
-        console.log(personnels);//EZ
-        console.log(courses);//EZ
-        console.log(programs);//EZ
-        
 
-        // enrollments.forEach((row) => {
 
-          
-        //   row
-        // });
+        //Update the Academic Year for each row
+        enrollments.forEach(item => {
+          delete item.id;
+          const [startYear, endYear] = item.academicYear.split('-').map(Number);
+          item.academicYear = `${startYear + 1}-${endYear + 1}`;
+        });
+        
+        personnels.forEach(item => {
+          delete item.id;
+          const [startYear, endYear] = item.academicYear.split('-').map(Number);
+          item.academicYear = `${startYear + 1}-${endYear + 1}`;
+        });
+
+        courses.forEach(item => {
+          delete item.id;
+          const [startYear, endYear] = item.academicYear.split('-').map(Number);
+          item.academicYear = `${startYear + 1}-${endYear + 1}`;
+        });
+
+        programs.forEach(item => {
+          delete item.id;
+          const [startYear, endYear] = item.academicYear.split('-').map(Number);
+          item.academicYear = `${startYear + 1}-${endYear + 1}`;
+        });
+
+        const studentNumbers = enrollments.map((criteria) => criteria.studentNumber);
+        const enrolledStudents = students.filter((student) =>
+          studentNumbers.includes(student.studentNumber)
+        );
+
+        console.log(enrolledStudents);//Filtered list of enrolled students in old acadYear
+        console.log(enrollments);// List of enrollments in old acadYear
+        console.log(personnels);// List of personnels in old acadYear
+        console.log(courses);// List of courses in old acadYear
+        console.log(programs);// List of programs in old acadYear
+        //console.log(semGrades);
+
+        //PROCEDURE
+
+        //1. Get the grades (semGrades) for each enrolled students (enrolledStudents)
+        //2.
+
+
+
+
+
+
+
         
         // const update = await AcademicYearModel.updateAcademicYear(updateCurrent.id, updateCurrent);
 

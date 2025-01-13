@@ -2,7 +2,7 @@ export default class SemGradeModel {
     constructor(id, scheduleNumber, studentNumber,
                 midtermCS, midtermPBA, midtermExam, midtermGrade,
                 finalCS, finalPBA, finalExam, finalGrade,
-                semGrade, numEq, remarks) {
+                semGrade, numEq, remarks, academicYear) {
         this.id = id;
         this.scheduleNumber = scheduleNumber;
         this.studentNumber = studentNumber;
@@ -17,12 +17,52 @@ export default class SemGradeModel {
         this.semGrade = semGrade;
         this.numEq = numEq;
         this.remarks = remarks;
+        this.academicYear = academicYear;
     }
-    
+  
+  static async fetchAllSemGrades(academicYear) {
+      try {
+          const apiUrl = process.env.REACT_APP_API_URL;
+          const response = await fetch(`${apiUrl}/semgrade/all`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ academicYear }),
+          });
+          if (!response.ok) {
+              throw new Error('Error fetching semgrades data');
+          }
+          const data = await response.json();
+  
+          // Assuming data is an array of quiz objects
+          return data.map(data => new SemGradeModel(
+              data.id,
+              data.scheduleNumber,
+              data.studentNumber,
+              data.midtermCS,
+              data.midtermPBA,
+              data.midtermExam,
+              data.midtermGrade,
+              data.finalCS,
+              data.finalPBA,
+              data.finalExam,
+              data.finalGrade,
+              data.semGrade,
+              data.numEq,
+              data.remarks,
+              data.academicYear
+          ));
+      } catch (error) {
+          console.error('Error fetching semgrades:', error);
+          throw error;
+      }
+  }
+
   static async fetchSemGradeData(scheduleNumber) {
     try {
         const apiUrl = process.env.REACT_APP_API_URL;
-        const response = await fetch(`${apiUrl}/semgrade/all`, {
+        const response = await fetch(`${apiUrl}/semgrade/BySchedule`, {
           method: 'POST',
           headers: {
               'Content-Type': 'application/json',
@@ -49,7 +89,8 @@ export default class SemGradeModel {
             data.finalGrade,
             data.semGrade,
             data.numEq,
-            data.remarks
+            data.remarks,
+            data.academicYear
         ));
     } catch (error) {
         console.error('Error fetching semgrades:', error);

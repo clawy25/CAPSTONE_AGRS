@@ -975,7 +975,8 @@ const ClassDetails = ({classList , classDetails}) => {
           finalGrade: parseFloat(student.finalGrade) || null,
           semGrade: parseFloat(student.semGrade) || null,
           numEq: parseFloat(student.numEq) || null,
-          remarks: student.remarks
+          remarks: student.remarks || null,
+          academicYear: classInfo.academicYear || null
         });
       });
 
@@ -993,7 +994,8 @@ const ClassDetails = ({classList , classDetails}) => {
         row.finalGrade === null || 
         row.semGrade === null || 
         row.numEq === null || 
-        row.remarks === null
+        row.remarks === null ||
+        row.academicYear === null
       );
       
 

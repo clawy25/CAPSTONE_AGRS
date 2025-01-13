@@ -96,10 +96,20 @@ const ScheduleTable = () => {
         console.error('Missing academicYear or studentNumber');
         return;
       }
-  
       const timelineData = await TimelineModel.fetchTimelineData(academicYear, studentNumber);
-  
+
       if (timelineData && timelineData.length > 0) {
+        // Sort by yearLevel (1-4) and then by semester (1-3) in descending order
+        timelineData.sort((a, b) => {
+          // Compare yearLevel first (higher yearLevel comes first)
+          if (b.yearLevel !== a.yearLevel) {
+            return b.yearLevel - a.yearLevel; // Descending order
+          }
+      
+          // If yearLevel is the same, compare semester
+          return b.semester - a.semester; // Descending order
+        });
+      
         const latestTimeline = timelineData[0];
         setYearLevel(latestTimeline.yearLevel || 'Unknown');
         setSemester(latestTimeline.semester || 'Unknown');
@@ -107,6 +117,7 @@ const ScheduleTable = () => {
         setYearLevel('No data available');
         setSemester('No data available');
       }
+
     } catch (error) {
       console.error('Error fetching semester:', error);
       setSemester('Error fetching semester');
