@@ -25,6 +25,8 @@ export default function HeadRegistrarAcademicYear() {
     password: '',
   });
   const [program, setPrograms] = useState([]);
+
+  const [currentSemester, setCurrentSemester] = useState();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -33,6 +35,7 @@ export default function HeadRegistrarAcademicYear() {
   const [showProgramAddModal, setShowProgramAddModal] = useState(false);
   const [showProgramEditModal, setShowProgramEditModal] = useState(false);
   const [showAcademicYearConfirmationModal, setAcademicYearConfirmationModal] = useState(false);
+  const [showNextSemesterConfirmationModal, setShowNextSemesterConfirmationModal] = useState(false);
   const [showProgramConfirmationModal, setProgramConfirmationModal] = useState(false);
   const [selectedAcademicYear, setSelectedAcademicYear] = useState('');
   
@@ -54,6 +57,14 @@ export default function HeadRegistrarAcademicYear() {
 
       setCurrentAcademicYear(isCurrent);
       setAcademicYears(years);
+
+      const check = await TimelineModel.fetchTimelineByAcademicYear(isCurrent.academicYear);
+
+      // Find the highest semester value in the rows
+      const highestSemester = check.reduce((max, row) => Math.max(max, row.semester), 0);
+      // Set the current semester based on the highest value found
+      setCurrentSemester(highestSemester || 1); // Default to 1 if no rows are present
+
     } catch (err) {
       setError(err.message);
     } finally {
@@ -113,11 +124,18 @@ export default function HeadRegistrarAcademicYear() {
   };
   // Handlers for modals
   const handleShowAdd = () => setShowAddModal(true);
+
   const handleCloseAddAcadYear = () => {
     setAcademicYearConfirmationModal(false);
     setVerify({ personnelNumber: '', password: ''});
     setNewAcademicYear({ academicYear: '', isCurrent: false });
   };
+
+  const handleCloseNextSem = () => {
+    setShowNextSemesterConfirmationModal(false);
+    setVerify({ personnelNumber: '', password: ''});
+  };
+
   const handleShowEdit = (year) => {
     setEditAcademicYear(year);
     setShowEditModal(true);
@@ -204,7 +222,7 @@ export default function HeadRegistrarAcademicYear() {
   
 
   // Add a new academic year
-  const handleAddAcademicYear = async () => {
+  const handleAddAcademicYear = async (action) => {
     try {
       const admin = await PersonnelModel.LoginPersonnelData(verify.personnelNumber, verify.password);
 
@@ -226,52 +244,34 @@ export default function HeadRegistrarAcademicYear() {
           CourseModel.fetchAllCourses().then(data => data.filter(row => row.academicYear === updateCurrent.academicYear)),
           ProgramModel.fetchAllPrograms().then(data => data.filter(row => row.academicYear === updateCurrent.academicYear)),
           StudentModel.fetchExistingStudents(),
-          //SemGradeModel.fetchAllSemGrades(updateCurrent.academicYear)
+          SemGradeModel.fetchAllSemGrades(updateCurrent.academicYear)
         ]);
 
 
-        //Update the Academic Year for each row
-        enrollments.forEach(item => {
-          delete item.id;
-          const [startYear, endYear] = item.academicYear.split('-').map(Number);
-          item.academicYear = `${startYear + 1}-${endYear + 1}`;
-        });
+        // //Update the Academic Year for each row
+        // enrollments.forEach(item => {
+        //   delete item.id;
+        //   const [startYear, endYear] = item.academicYear.split('-').map(Number);
+        //   item.academicYear = `${startYear + 1}-${endYear + 1}`;
+        // });
         
-        personnels.forEach(item => {
-          delete item.id;
-          const [startYear, endYear] = item.academicYear.split('-').map(Number);
-          item.academicYear = `${startYear + 1}-${endYear + 1}`;
-        });
+        // personnels.forEach(item => {
+        //   delete item.id;
+        //   const [startYear, endYear] = item.academicYear.split('-').map(Number);
+        //   item.academicYear = `${startYear + 1}-${endYear + 1}`;
+        // });
 
-        courses.forEach(item => {
-          delete item.id;
-          const [startYear, endYear] = item.academicYear.split('-').map(Number);
-          item.academicYear = `${startYear + 1}-${endYear + 1}`;
-        });
+        // courses.forEach(item => {
+        //   delete item.id;
+        //   const [startYear, endYear] = item.academicYear.split('-').map(Number);
+        //   item.academicYear = `${startYear + 1}-${endYear + 1}`;
+        // });
 
-        programs.forEach(item => {
-          delete item.id;
-          const [startYear, endYear] = item.academicYear.split('-').map(Number);
-          item.academicYear = `${startYear + 1}-${endYear + 1}`;
-        });
-
-        const studentNumbers = enrollments.map((criteria) => criteria.studentNumber);
-        const enrolledStudents = students.filter((student) =>
-          studentNumbers.includes(student.studentNumber)
-        );
-
-        console.log(enrolledStudents);//Filtered list of enrolled students in old acadYear
-        console.log(enrollments);// List of enrollments in old acadYear
-        console.log(personnels);// List of personnels in old acadYear
-        console.log(courses);// List of courses in old acadYear
-        console.log(programs);// List of programs in old acadYear
-        //console.log(semGrades);
-
-        //PROCEDURE
-
-        //1. Get the grades (semGrades) for each enrolled students (enrolledStudents)
-        //2.
-
+        // programs.forEach(item => {
+        //   delete item.id;
+        //   const [startYear, endYear] = item.academicYear.split('-').map(Number);
+        //   item.academicYear = `${startYear + 1}-${endYear + 1}`;
+        // });
 
 
 
@@ -286,8 +286,125 @@ export default function HeadRegistrarAcademicYear() {
         //   await AcademicYearModel.createAndInsertAcademicYear(newAcademicYear);
         // }
 
-        fetchAcademicYears();
-        handleCloseAddAcadYear();
+        if(action ==='newAcad' && currentSemester === 3){
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          fetchAcademicYears();
+          handleCloseAddAcadYear();
+        } else if (action === 'newSem' && currentSemester !== 3){
+          //Get the list of enrolled students
+          const studentNumbers = enrollments.filter((enrollment) => enrollment.semester === currentSemester
+                                                                 && enrollment.endEnroll === null 
+                                                                 && enrollment.isLeaving === false)
+                                            .map((enrollment) => enrollment.studentNumber);
+          //console.log(studentNumbers);
+
+          //Filter the object by the list
+          const enrolledStudents = students.filter((student) =>
+            studentNumbers.includes(student.studentNumber)
+          );
+
+          const filteredSemGrades = semGrades.filter((student) =>
+            studentNumbers.includes(student.studentNumber)
+          );
+
+          const filteredCourses = courses.filter((course) =>
+            course.courseSemester === currentSemester
+          );
+
+          console.log(enrolledStudents);//Filtered list of enrolled students in old acadYear (StudentModel)
+          console.log(enrollments);// List of enrollments in old acadYear (TimelineModel)
+          console.log(personnels);// List of personnels in old acadYear (PersonnelModel) Standalone
+          console.log(filteredCourses);// List of courses in old acadYear (CourseModel) Standalone
+          console.log(programs);// List of programs in old acadYear (ProgramModel) Standalone
+          console.log(filteredSemGrades); // List of grades in old acadYear (SemGradeModel)
+          console.log(currentSemester);
+
+          //PROCEDURE
+
+          //1. Get the grades (semGrades) for each enrolled students (enrolledStudents)
+          //2. Check if they passed for this sem or not, then reflect it on the timeline (enrollments) and update the status of (students)
+
+          const programRegex = /^([A-Za-z]+)(\d)(\d)(.)$/;
+
+          const studentGrades = filteredSemGrades.reduce((student, record) => {
+            const key = record.studentNumber; // Group by the `studentNumbers` column
+            if (!student[key]) {
+              student[key] = []; // Initialize an array for this student if it doesn't exist
+            }
+
+            const [course, , programData] = record.scheduleNumber.split('-');
+            const match = programData.match(programRegex);
+
+            student[key].push({
+              course: course,
+              grade: record.numEq,
+              remarks: record.remarks,
+              program: `${match[1]}`,
+              yearLevel: parseInt(match[2]),
+              semester: parseInt(match[3]),
+              section: match[4]
+            }); // Add the record to the appropriate student
+            return student;
+          }, {});
+
+          console.log(studentGrades);
+          console.log(enrolledStudents);
+
+          Object.entries(studentGrades).forEach(([studentNumber, student]) => {
+            // Calculate the total grade for each student
+
+            
+            // Find the student in the enrolledStudents array
+            const studentStatus = enrolledStudents.find(student => student.studentNumber === studentNumber);
+
+
+            //Finding a failed, incomplete, withdrawn course
+            const failed = student.find(student => student.remarks !== 'PASSED');
+            if (failed){
+              studentStatus.studentType = 'Irregular';
+            }
+
+            //Calculating the GWA
+            const totalGrades = student.reduce((total, record) => total + record.grade, 0);
+            const averageGrade = totalGrades / student.length;
+            if (averageGrade > 3) {
+              if (studentStatus) {
+                studentStatus.studentType = 'Irregular';
+              }
+            }
+          
+            //console.log(`Average grade for student ${studentNumber}:`, averageGrade.toFixed(2));
+          });
+
+          const failedStudents = enrolledStudents.filter(students=> students.studentType === 'Irregular');
+          
+          console.log(failedStudents);
+          
+
+
+
+
+
+
+          handleCloseNextSem();
+        }
       }
     } catch (error) {
       console.error('Error adding academic year:', error);
@@ -387,6 +504,8 @@ export default function HeadRegistrarAcademicYear() {
     if (value === 'addNew') {
       setAcademicYearConfirmationModal(true);
       setNewAcademicYear({ academicYear: generateNewAcadYear(currentAcademicYear.academicYear), isCurrent: true });
+    } else if (value === 'nextSem') {
+      setShowNextSemesterConfirmationModal(true);
     } else {
       setSelectedAcademicYear(value);
     }
@@ -481,6 +600,19 @@ export default function HeadRegistrarAcademicYear() {
     </Table>
   );
 
+  const getSemesterText = (sem) => {
+    switch (sem) {
+      case 1:
+        return "First Semester";
+      case 2:
+        return "Second Semester";
+      case 3:
+        return "Summer Semester";
+      default:
+        return `${sem}`;
+    }
+  };
+
   return (
       <div className='container-fluid bg-white p-4 rounded mt-3'>
        <h3 className="mt-2 custom-color-green-font custom-font" >Programs</h3>
@@ -505,7 +637,10 @@ export default function HeadRegistrarAcademicYear() {
       </Form.Group>
       </Col>
       <Col className='d-flex justify-content-end'>
-      <Button variant="success" className="mt-3 p-2 mb-1" value="addNew" onClick={handleAcademicYearChange}>
+      <Button variant="success" className="mt-3 p-2 mb-1 me-5" value="nextSem" onClick={handleAcademicYearChange} disabled={currentSemester === 3}>
+        Proceed to Next Semester
+      </Button>
+      <Button variant="success" className="mt-3 p-2 mb-1" value="addNew" onClick={handleAcademicYearChange} disabled={currentSemester !== 3}>
         Proceed to Next Academic Year
       </Button>
       </Col>
@@ -758,7 +893,54 @@ export default function HeadRegistrarAcademicYear() {
           <Button className="border-success bg-white custom-color-green-font" variant="secondary" onClick={handleCloseAddAcadYear}>
             Close
           </Button>
-          <Button variant="success" onClick={handleAddAcademicYear}>
+          <Button variant="success" onClick={() => handleAddAcademicYear('newAcad')}>
+            Confirm
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      <Modal show={showNextSemesterConfirmationModal} size="lg" onHide={handleCloseNextSem}>
+        <Modal.Header closeButton>
+          <Modal.Title className="custom-color-green-font">Confirmation</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p className="fs-6 fw-semibold text-justify">
+            Are you sure you want to proceed the entire system from <strong>{getSemesterText(currentSemester)}</strong> to <strong>{getSemesterText(currentSemester + 1)}</strong>?
+          </p>
+          <p>
+            The academic year <strong>{currentAcademicYear?.academicYear}</strong> will{' '}
+          proceed to the next semester. WARNING! THIS ACTION IS IRREVERSIBLE!
+          </p>
+          <p><i>This action requires verification. To proceed, please provide your details to authorize this action.</i></p>
+
+        <Form>
+          <Form.Group className="mb-3">
+            <Form.Label>Personnel Number</Form.Label>
+            <Form.Control
+              type="text"
+              name="personnelNumber"
+              placeholder="Personnel Number"
+              value={verify.personnelNumber}
+              onChange={handleVerify}
+            />
+          </Form.Group>
+          <Form.Group className="mb-3">
+            <Form.Label>Personnel Password</Form.Label>
+            <Form.Control
+              type="password"
+              name="password"
+              placeholder="Password"
+              value={verify.password}
+              onChange={handleVerify}
+            />
+          </Form.Group>
+        </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button className="border-success bg-white custom-color-green-font" variant="secondary" onClick={handleCloseNextSem}>
+            Close
+          </Button>
+          <Button variant="success" onClick={() => handleAddAcademicYear('newSem')}>
             Confirm
           </Button>
         </Modal.Footer>
