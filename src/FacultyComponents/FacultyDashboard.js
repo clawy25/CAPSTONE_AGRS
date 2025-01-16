@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useContext } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, Routes, Route, useLocation } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUser, faSignOutAlt, faBars, faChalkboardTeacher, faCalendar } from '@fortawesome/free-solid-svg-icons';
+import { faUser, faSignOutAlt, faBars, faChalkboardTeacher, faCalendar, faPrint } from '@fortawesome/free-solid-svg-icons';
 import FacultySchedulePage from './FacultySchedulePage';
 import '../StudentComponents/Dashboard.css';
 import ClassDetails from './ClassDetails';
@@ -20,11 +20,16 @@ import RegistrarProfile from '../RegistrarComponents/RegistrarProfile';
 import './PrintStyles.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { UserContext } from '../Context/UserContext';
-import { Row, Col, Form, Table } from 'react-bootstrap';
+import { Row, Col, Form, Table, Spinner, Container, Toast, ToastContainer } from 'react-bootstrap';
+
 import { Button } from 'react-bootstrap';
+import ClassList from './ClassList';
+import '../App.css'
 
 
 export default function FacultyDashboard () {
+  const [loading, setLoading] = useState(false)
+  const [showToast, setShowToast] = useState(false);
   const navigate = useNavigate();
   const { user } = useContext(UserContext); // Get user context
   const [currentAcademicYear, setCurrentAcadYear] = useState([]);
@@ -69,15 +74,10 @@ export default function FacultyDashboard () {
   const [userSelectedCount, setUserSelectedCount] = useState(null);
   const [isEnrolled, setIsEnrolled] = useState(false);
   const [showTable, setShowTable] = useState(false);
-  const [isTableVisible, setIsTableVisible] = useState(false);
+  const [isTableVisible, setIsTableVisible] = useState(true);
+  const location = useLocation();
 
-  const SECTIONS = {
-    CLASSES: 'classes',
-    SCHEDULE: 'schedule',
-    HRIS: 'hris',
-    PROFILE: 'profile',
-    CHANGE_PASSWORD: 'change-password',
-  };
+
 
   const fetchAcademicYearsAndPrograms = async () => {
     try {
@@ -228,16 +228,21 @@ export default function FacultyDashboard () {
   };
 
   const handleProfileClick = () => {
-    setSelectedSection(SECTIONS.PROFILE);
+  
     setShowDropdown(false);
   };
 
   const handleChangePasswordClick = () => {
-    setSelectedSection(SECTIONS.CHANGE_PASSWORD);
+  
     setShowDropdown(false);
   };
 
   const handleClassClick = async (className) => {
+    if (!className) {
+      setShowToast(true); 
+      return; // Exit the function if className is empty
+    }
+    setShowToast(false);
     if (!classListData || classListData.length === 0){
       try {
         // Fetch data from all models in parallel
@@ -309,7 +314,7 @@ export default function FacultyDashboard () {
       }
     }
     setSelectedClass(className); // Set the selected class
-    setSelectedSection(SECTIONS.CLASSES); // Ensure the section is still 'classes'
+  
   };
 
   const toggleSidebar = () => {
@@ -323,7 +328,7 @@ export default function FacultyDashboard () {
     setSelectedSemester('');
     setSelectedSect('');
     setSelectedCourse('');
-    setIsTableVisible(false);
+    //setIsTableVisible(false);
     setClassListData([]);
   };
 
@@ -333,7 +338,7 @@ export default function FacultyDashboard () {
     setSelectedSemester('');
     setSelectedSect('');
     setSelectedCourse('');
-    setIsTableVisible(false);
+    //setIsTableVisible(false);
     setClassListData([]);
   };
 
@@ -342,7 +347,7 @@ export default function FacultyDashboard () {
     setSelectedSemester(level);
     setSelectedSect('');
     setSelectedCourse('');
-    setIsTableVisible(false);
+    //setIsTableVisible(false);
     setClassListData([]);
   };
 
@@ -350,97 +355,102 @@ export default function FacultyDashboard () {
     const section = e.target.value;
     setSelectedSect(section);
     setSelectedCourse('');
-    setIsTableVisible(false);
+    //setIsTableVisible(false);
     setClassListData([]);
   };
 
   const handleCourseChange = (e) => {
     const course = e.target.value;
     setSelectedCourse(course);
-    setIsTableVisible(false);
+    //setIsTableVisible(false);
     setClassListData([]);
   };
 
 
-  const handleClassListClick = async () => {
-    // Check for missing required fields
-    if (!selectedAcademicYear || !UserProgram || !selectedYearLevel || !selectedSemester || !selectedSect || !selectedCourse) {
-      alert("Please fill in all required fields.");
-      return;
+  useEffect(() => {
+    const handleClassListClick = async () => {
+      // Check for missing required fields
+      if (!selectedAcademicYear || !UserProgram || !selectedYearLevel || !selectedSemester || !selectedSect || !selectedCourse) {
+        return; // Do not proceed if not all fields are selected
+      }
+
+      // Set loading state and toggle table visibility
+      setIsTableVisible(true);
+      setLoading(true); // Set loading to true when starting data fetch
+
+      try {
+        // Fetch data from all models in parallel
+        const [enrollments, schedules, students, courses] = await Promise.all([
+          EnrollmentModel.fetchAllEnrollment(),
+          ScheduleModel.fetchSchedules(),
+          StudentModel.fetchExistingStudents(),
+          CourseModel.fetchAllCourses(),
+        ]);
+
+        // Create Maps for faster lookups
+        const studentMap = new Map(students.map(student => [student.studentNumber, student]));
+        const scheduleMap = new Map(schedules.map(schedule => [schedule.scheduleNumber, schedule]));
+        const courseMap = new Map(courses.map(course => [course.courseCode, course]));
+
+        // Map over enrollments to create class list
+        const mappedData = enrollments.map((enrollment) => {
+          const matchedStudent = studentMap.get(enrollment.studentNumber) || {};
+          const matchedSchedule = scheduleMap.get(enrollment.scheduleNumber) || {};
+          const matchedCourse = courseMap.get(enrollment.courseCode) || {};
+
+          return {
+            studentNumber: matchedStudent.studentNumber || "N/A",
+            studentLastName: matchedStudent.studentNameLast || "N/A",
+            studentFirstName: matchedStudent.studentNameFirst || "N/A",
+            studentMiddleName: matchedStudent.studentNameMiddle || "N/A",
+            contactNumber: matchedStudent.studentContact || "N/A",
+            pccEmail: matchedStudent.studentPccEmail ? `${matchedStudent.studentPccEmail.split('@')[0]}@` : "N/A",
+            studentAddress: matchedStudent.studentAddress || "N/A",
+            scheduleNumber: matchedSchedule.scheduleNumber || "N/A",
+            academicYear: matchedSchedule.academicYear || "N/A",
+            yearLevel: matchedSchedule.yearLevel || "N/A",
+            semester: matchedSchedule.semester || "N/A",
+            sectionNumber: matchedSchedule.sectionNumber || "N/A",
+            courseCode: matchedCourse.courseCode || "N/A",
+            programNumber: matchedCourse.programNumber || "N/A",
+          };
+        });
+
+        // Apply filtering
+        const filteredResults = mappedData.filter((student) => {
+          const program = UserProgram?.programNumber;
+
+          return (
+            (!selectedAcademicYear || String(student.academicYear).trim() === String(selectedAcademicYear).trim()) &&
+            (!selectedYearLevel || String(student.yearLevel).trim() === String(selectedYearLevel).trim()) &&
+            (!program || student.programNumber === program) &&
+            (!selectedSemester || String(student.semester).trim() === String(selectedSemester).trim()) &&
+            (!selectedSect || String(student.sectionNumber).trim() === String(selectedSect).trim()) &&
+            (!selectedCourse || String(student.courseCode).trim() === String(selectedCourse).trim())
+          );
+        });
+
+        setClassListData(filteredResults);
+
+        // Filter schedules for the selected section and course
+        const selectedSchedule = schedules.filter(schedule => schedule.sectionNumber === selectedSect)
+                                          .filter(schedule => schedule.courseCode === selectedCourse);
+
+        setSelectedSchedule(selectedSchedule);
+
+      } catch (error) {
+        console.error("Error fetching class list data:", error);
+        alert("An error occurred while fetching class list data. Please try again.");
+      } finally {
+        setLoading(false); // Set loading to false when data fetch is done (success or failure)
+      }
+    };
+
+    // Call handleClassListClick when all fields are selected
+    if (selectedAcademicYear && UserProgram && selectedYearLevel && selectedSemester && selectedSect && selectedCourse) {
+      handleClassListClick();
     }
-  
-    // Toggle table visibility
-    setIsTableVisible(true);
-    try {
-      // Fetch data from all models in parallel
-      const [enrollments, schedules, students, courses] = await Promise.all([
-        EnrollmentModel.fetchAllEnrollment(),
-        ScheduleModel.fetchSchedules(),
-        StudentModel.fetchExistingStudents(),
-        CourseModel.fetchAllCourses(),
-      ]);
-
-      // Create Maps for faster lookups
-      const studentMap = new Map(students.map(student => [student.studentNumber, student]));
-      const scheduleMap = new Map(schedules.map(schedule => [schedule.scheduleNumber, schedule]));
-      const courseMap = new Map(courses.map(course => [course.courseCode, course]));
-
-      // Map over enrollments to create class list
-      const mappedData = enrollments.map((enrollment) => {
-        const matchedStudent = studentMap.get(enrollment.studentNumber) || {};
-        const matchedSchedule = scheduleMap.get(enrollment.scheduleNumber) || {};
-        const matchedCourse = courseMap.get(enrollment.courseCode) || {};
-
-        return {
-          studentNumber: matchedStudent.studentNumber || "N/A",
-          studentLastName: matchedStudent.studentNameLast || "N/A",
-          studentFirstName: matchedStudent.studentNameFirst || "N/A",
-          studentMiddleName: matchedStudent.studentNameMiddle || "N/A",
-          contactNumber: matchedStudent.studentContact || "N/A",
-          pccEmail: matchedStudent.studentPccEmail ? `${matchedStudent.studentPccEmail.split('@')[0]}@` : "N/A",
-          studentAddress: matchedStudent.studentAddress || "N/A",
-          scheduleNumber: matchedSchedule.scheduleNumber || "N/A",
-          academicYear: matchedSchedule.academicYear || "N/A",
-          yearLevel: matchedSchedule.yearLevel || "N/A",
-          semester: matchedSchedule.semester || "N/A",
-          sectionNumber: matchedSchedule.sectionNumber || "N/A",
-          courseCode: matchedCourse.courseCode || "N/A",
-          programNumber: matchedCourse.programNumber || "N/A",
-        };
-      });
-
-      console.log(mappedData);
-
-      // Apply filtering
-      const filteredResults = mappedData.filter((student) => {
-        const program = UserProgram?.programNumber;
-
-        return (
-          //(!selectedAcademicYear || String(student.academicYear).trim() === String(selectedAcademicYear).trim()) &&
-          //(!selectedYearLevel || String(student.yearLevel).trim() === String(selectedYearLevel).trim()) &&
-          //(!program || student.programNumber === program) &&
-          //(!selectedSemester || String(student.semester).trim() === String(selectedSemester).trim()) &&
-          (!selectedSect || String(student.sectionNumber).trim() === String(selectedSect).trim()) &&
-          (!selectedCourse || String(student.courseCode).trim() === String(selectedCourse).trim())
-        );
-      });
-      
-      setClassListData(filteredResults);
-
-      const selectedSchedule = schedules.filter(schedule => schedule.sectionNumber === selectedSect)
-                                        .filter(schedule => schedule.courseCode === selectedCourse);
-      
-      setSelectedSchedule(selectedSchedule);
-
-      console.log(selectedSchedule);
-      console.log("Mapped Data:", mappedData);
-      console.log("Filtered Results:", filteredResults);
-    } catch (error) {
-      console.error("Error fetching class list data:", error);
-      alert("An error occurred while fetching class list data. Please try again.");
-    }
-  };
-  
+  }, [selectedAcademicYear, UserProgram, selectedYearLevel, selectedSemester, selectedSect, selectedCourse]); // dependencies
 
   useEffect(() => {
     const handleOutsideClick = (event) => {
@@ -492,32 +502,40 @@ export default function FacultyDashboard () {
   return (
     <div className="dashboard-container d-flex">
       <div className={`sidebar bg-custom-color-green ${showSidebar ? 'd-block' : 'd-none d-md-block'}`}>
-        <img src="pcc.png" alt="Logo" className="college-logo align-items-center ms-5 mb-3" />
-        <div className="welcome-message mb-3 text-center">Hello, {user ? user.personnelNameFirst : 'Guest'}!</div>
+      <button 
+      className="close-sidebar-btn" 
+      onClick={() => setShowSidebar(false)}
+      aria-label="Close Sidebar"
+    >
+      &times;
+    </button>
+      <div className='d-block align-items-center justify-content-center'>
+          <div className='d-flex align-items-center justify-content-center'>
+          <img src="/pcc.png" alt="Logo" className="img-fluid mb-3 college-logo" />
+          </div>
+          <p className="welcome-message mb-3 text-center">Hello, {user ? user.personnelNameFirst : 'Student'}!</p>
+        </div>
         <nav className="menu mb-3">
-          <Link
-            to=""
-            className={`menu-item d-flex align-items-center mb-2 ${selectedSection === SECTIONS.CLASSES ? 'active' : ''}`}
-            onClick={() => { setSelectedSection(SECTIONS.CLASSES); setSelectedClass(null); setShowSidebar(false); }}
+        <Link
+            to="/faculty-dashboard/classes"
+            className={`menu-item d-flex align-items-center mb-2 ${location.pathname === '/faculty-dashboard/classes' ? 'active' : ''}`}
+            onClick={(e) => {
+              e.preventDefault();  // Prevent default Link behavior
+              setSelectedClass(null);
+              setShowSidebar(false);
+              navigate('/faculty-dashboard/classes');  // Manually trigger navigation
+            }}
           >
             <FontAwesomeIcon icon={faChalkboardTeacher} className="me-2" />
             CLASSES
           </Link>
           <Link
-            to=""
-            className={`menu-item d-flex align-items-center mb-2 ${selectedSection === SECTIONS.SCHEDULE ? 'active' : ''}`}
-            onClick={() => { setSelectedSection(SECTIONS.SCHEDULE); setShowSidebar(false); }}
+            to="/faculty-dashboard/schedules"
+            className={`menu-item d-flex align-items-center mb-2 ${location.pathname === '/faculty-dashboard/schedules' ? 'active' : ''}`}
+            onClick={(e) => {navigate('/faculty-dashboard/schedules'); setShowSidebar(false); }}
           >
             <FontAwesomeIcon icon={faCalendar} className="me-2" />
             SCHEDULE
-          </Link>
-          <Link
-            to=""
-            className={`menu-item d-flex align-items-center mb-2 ${selectedSection === SECTIONS.HRIS ? 'active' : ''}`}
-            onClick={() => { setSelectedSection(SECTIONS.HRIS); setShowSidebar(false); }}
-          >
-            <FontAwesomeIcon icon={faUser} className="me-2" />
-            HRIS
           </Link>
         </nav>
       </div>
@@ -540,15 +558,36 @@ export default function FacultyDashboard () {
               aria-label="User Menu"
               style={{ cursor: 'pointer' }}
             />
-            {showDropdown && (
+             {showDropdown && (
               <div className="dropdown-menu position-absolute end-0 mt-2 show">
-                <button className="dropdown-item" onClick={handleProfileClick}>
+                <button
+                  className="dropdown-item"
+                  onClick={() => {
+                    navigate('/faculty-dashboard/profile');
+                    if (window.innerWidth <= 768) setShowSidebar(false); // Close sidebar on mobile if needed
+                    setShowDropdown(false); // Close dropdown after selection
+                  }}
+                >
                   Profile
                 </button>
-                <button className="dropdown-item" onClick={handleChangePasswordClick}>
+                <button
+                  className="dropdown-item"
+                  onClick={() => {
+                    navigate('/faculty-dashboard/change-password');
+                    if (window.innerWidth <= 768) setShowSidebar(false); // Close sidebar on mobile if needed
+                    setShowDropdown(false); // Close dropdown after selection
+                  }}
+                >
                   Change Password
                 </button>
-                <button className="dropdown-item" onClick={handleLogout}>
+                <button
+                  className="dropdown-item"
+                  onClick={() => {
+                    handleLogout();
+                    if (window.innerWidth <= 768) setShowSidebar(false); // Close sidebar on mobile if needed
+                    setShowDropdown(false); // Close dropdown after selection
+                  }}
+                >
                   Logout
                 </button>
               </div>
@@ -556,264 +595,19 @@ export default function FacultyDashboard () {
           </div>
         </header>
 
-{/* FIRST ROW: DROPDOWNS BAR */}
-        {selectedSection === SECTIONS.CLASSES && (
-          <section className="mt-3 ms-0">
-            <h2 className="custom-font custom-color-green-font">Class Records for {selectedClass || ''}</h2>
-              {selectedClass ? ( <div className="ms-0"> <ClassDetails classList={classListData} classDetails={selectedSchedule} /></div>
-              ) : (
-        <div>
 
 
+        <Routes>
+  <Route path="classes/*" element={<ClassList />} />
+  <Route path="schedules" element={<FacultySchedulePage />} />
+  <Route path="profile" element={<RegistrarProfile />} />
+  <Route path="change-password" element={<NewPassword />} />
+  <Route
+    path="classes/class-details"
+    element={<ClassDetails />}  // Ensure ClassDetails is rendered here
+  />
+</Routes>
 
-<Row className="p-3 bg-white border border-success rounded mb-4 m-1  justify-content-center align-items-center">
-  {/* Filter Controls */}
-  <Col>
-    <Form.Group controlId="academicYear">
-      <Form.Label className="custom-color-green-font custom-font">Academic Year</Form.Label>
-      <Form.Control
-        as="select"
-        value={selectedAcademicYear}
-        onChange={handleAcademicYearChange}>
-        <option value="">Select Academic Year</option>
-              {mappedData.sort((a, b) => {
-                let yearA = parseInt(a.academicYear.split('-')[0]);
-                let yearB = parseInt(b.academicYear.split('-')[0]);
-                return yearB - yearA; // Sorting in descending order
-              })
-              .map((program) => (
-                <option key={program.academicYear} value={program.academicYear}>
-                  {program.academicYear}
-                </option>
-              ))}
-      </Form.Control>
-    </Form.Group>
-  </Col>
-
-  <Col>
-    <Form.Group controlId="program">
-      <Form.Label className='custom-color-green-font custom-font'>Program</Form.Label>
-      <Form.Control
-        as="select"
-        disabled>
-        <option value={UserProgram.programNumber}>
-          {UserProgram.programName || 'No Program'}
-        </option>
-      </Form.Control>
-    </Form.Group>
-  </Col>
-
-  <Col>
-    <Form.Group controlId="yearLevel">
-      <Form.Label className="custom-color-green-font custom-font">Year Level</Form.Label>
-      <Form.Control
-        as="select"
-        value={selectedYearLevel}
-        onChange={handleYearLevelChange}
-        disabled={!selectedAcademicYear}>
-        <option value="">Select a year level</option>
-        {mappedData
-          ?.filter(p => p.academicYear === selectedAcademicYear) // Filter by selected academic year
-          ?.flatMap(p => p.yearLevels) // Get year levels for selected academic year
-          ?.map(level => (
-            <option key={level.yearLevel} value={level.yearLevel}>
-              Year {level.yearLevel}
-            </option>
-          )
-        )}
-      </Form.Control>
-    </Form.Group>
-  </Col>
-
-  {/* Semester */}
-  <Col>
-    <Form.Group controlId="semester">
-      <Form.Label className="custom-color-green-font custom-font">Semester</Form.Label>
-      <Form.Control 
-        as="select" 
-        value={selectedSemester} 
-        onChange={handleSemesterChange}
-        disabled={!selectedAcademicYear || !selectedYearLevel}>
-        <option value="">Select a semester</option>
-          {selectedYearData?.semesters?.map((sem, index) => (
-            <option key={index} value={sem}>
-              {getSemesterText(sem)}
-            </option>
-          ))}
-      </Form.Control>
-    </Form.Group>
-  </Col>
-
-  {/* Section */}
-  <Col>
-    <Form.Group controlId="section">
-      <Form.Label className="custom-color-green-font custom-font">Select Section</Form.Label>
-      <Form.Control
-        as="select"
-        value={selectedSect}
-        onChange={handleSectionChange}
-        disabled={!selectedAcademicYear || !selectedYearLevel || !selectedSemester}>
-        <option value="">Select a section</option>
-        {sections.map((section) => (
-          <option key={section.id} value={section.sectionNumber}>
-            {section.sectionNumber}
-          </option>
-        ))}
-      </Form.Control>
-    </Form.Group>
-  </Col>
-
-  {/* Course */}
-  <Col>
-    <Form.Group controlId="course">
-      <Form.Label className="custom-color-green-font custom-font">Course</Form.Label>
-      <Form.Control
-        as="select"
-        value={selectedCourse}
-        onChange={handleCourseChange}
-        disabled={!selectedAcademicYear || !selectedYearLevel || !selectedSemester || !selectedSect}>
-        <option value="">Select a course</option>
-        {schedules.map((course) => (
-          <option key={course.id} value={course.courseCode}>
-            {course.courseCode}
-          </option>
-        ))}
-      </Form.Control>
-    </Form.Group>
-  </Col>
-
-  {/* Button to trigger fetch and filter */}
-  <Col>
-    <Button variant="success" className="w-100 mt-4" onClick={handleClassListClick}>
-      Class List
-    </Button>
-  </Col>
-
-  <Col>
-    <Button variant="success" className="w-100 mt-4" onClick={() => handleClassClick(selectedCourse)}>
-      Grade Sheet
-    </Button>
-  </Col>
-</Row>
-
-
-  {/* Table and printable content */}
-
-  {isTableVisible && (<div className="table-container mt-4 bg-white rounded">
-  {/* Print Button */}
-  <div
-    className="d-flex flex-column flex-md-row justify-content-between align-items-center"
-    style={{
-      position: 'sticky',
-      top: 0,
-      backgroundColor: 'white',
-      zIndex: 10,
-      padding: '10px',
-    }}
-  >
-    <h4 className="custom-font custom-color-green-font text-center text-md-left">
-      Course: {selectedCourse ? `${selectedCourse}` : "All"}
-    </h4>
-    <button 
-      className="btn btn-success mt-2 mt-md-0"
-      onClick={() => printTableContent("printableContent")}
-    >
-      Print Class List
-    </button>
-  </div>
-
-  {/* Table Content */}
-  <div id="printableContent">
-  <div
-  className="class-info-row mb-3 mx-2 p-2 border border-success fs-6 rounded bg-success text-white"
-  style={{display: "grid", gridTemplateColumns: "1fr 1fr", columnGap: "20px", rowGap: "10px", padding: "10px", fontSize: "14px",}}>
-  <div>
-    <strong>Academic Year:</strong> {selectedAcademicYear || "N/A"}
-  </div>
-  <div>
-    <strong>Program:</strong> {UserProgram.programName || "Program Not Assigned"}
-  </div>
-  <div>
-    <strong>Year Level:</strong> {selectedYearLevel || "N/A"}
-  </div>
-  <div>
-    <strong>Semester:</strong> {selectedSemester || "N/A"}
-  </div>
-  <div>
-    <strong>Section:</strong> {selectedSect || "N/A"}
-  </div>
-  <div>
-    <strong>Course/Subject:</strong> {selectedCourse || "N/A"}
-  </div>
-  
-</div>
-
-
-
-
-    {/* Data Table */}
-    <div className="container-fluid">
-    <Table className="table table-responsive table-bordered border-success">
-      <thead className="table-success" style={{ position: 'sticky', top: 0, backgroundColor: '#28a745', zIndex: 5 }}>
-        <tr>
-          <th className="custom-color-green-font">Student Number</th>
-          <th className="custom-color-green-font">Last Name</th>
-          <th className="custom-color-green-font">First Name</th>
-          <th className="custom-color-green-font">Middle Name</th>
-          <th className="custom-color-green-font">Contact Number</th>
-          <th className="custom-color-green-font">PCC Email</th>
-          <th className="custom-color-green-font">Address</th>
-        </tr>
-      </thead>
-      <tbody className="table-light">
-        {classListData.length > 0 ? (
-          classListData.map((student, index) => (
-            <tr key={index}>
-              <td>{student.studentNumber}</td>
-              <td>{student.studentLastName}</td>
-              <td>{student.studentFirstName}</td>
-              <td>{student.studentMiddleName}</td>
-              <td>{student.contactNumber}</td>
-              <td>{student.pccEmail}</td>
-              <td>{student.studentAddress}</td>
-            </tr>
-          ))
-        ) : (
-          <tr>
-            <td colSpan="7" className='text-center'>No Data Available</td>
-          </tr>
-        )}
-      </tbody>
-    </Table>
-</div>
-
-  </div>
-  </div>)}
-  </div>
-)}
-          </section>
-        )}
-
-        {selectedSection === SECTIONS.SCHEDULE && (
-          <section className="m-3 ms-0">
-            <h2 className='custom-color-green-font custom-font ms-3'>Schedule</h2>
-            <FacultySchedulePage />
-          </section>
-        )}
-
-        {selectedSection === SECTIONS.HRIS && (
-          <section className="m-3 ms-0">
-            <h2 className='custom-color-green-font custom-font ms-3'>HRIS</h2>
-          </section>
-        )}
-
-        {selectedSection === SECTIONS.PROFILE && (
-          <RegistrarProfile />
-        )}
-
-        {selectedSection === SECTIONS.CHANGE_PASSWORD && (
-          <NewPassword />
-        )}
       </div>
     </div>
   );

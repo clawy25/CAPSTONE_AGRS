@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useContext } from 'react'; 
 import { useLocation } from 'react-router-dom';
-import { Table, Form, Button, Row, Col, Modal, ButtonToolbar, Spinner } from 'react-bootstrap';
+import { Table, Form, Button, Row, Col, Modal, Container, Spinner } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css'; 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faMapMarkerAlt,  faEnvelope, faPhoneAlt} from '@fortawesome/free-solid-svg-icons';
+import { faPrint, faCheckCircle } from '@fortawesome/free-solid-svg-icons';
 import { UserContext } from '../Context/UserContext';
 import AcademicYearModel from '../ReactModels/AcademicYearModel';
 import YearLevelModel from '../ReactModels/YearLevelModel';
@@ -462,10 +462,7 @@ function getScheduleNumbersForSection(sections, sectionKey) {
 }
 
 const printTable = () => {
-  if (!dataFetched) {
-    setShowModalAlert(true);
-    return;
-  }
+
 
   const printableSection = document.getElementById('printableTable');
   if (!printableSection) {
@@ -603,24 +600,28 @@ const printTable = () => {
                                      ?.flatMap(p => p.semesters);
 
 
-  const handleView = async () => {
-    if (selectedAcademicYear && selectedProgram && selectedYearLevel && selectedSemester && selectedSection) {
-     setLoading(true);
-       try {
-                                          // Fetch both data sets concurrently
-         await Promise.all([fetchCourses(), fetchStudentData()]);
-         setDataFetched(true); // Indicate that data has been fetched successfully
-         } catch (error) {
-         console.error('Error fetching data:', error);
-         setDataFetched(false); // Handle error state for data fetching
-         } finally {
-         setLoading(false); // Ensure loading is false after data fetch attempts
-        }
-        } else {
-        setShowModalAlertView(true);
-        setDataFetched(false); // Ensure dataFetched is false if filters are incomplete
-        }
-        };
+                                     useEffect(() => {
+                                      const handleView = async () => {
+                                        if (selectedSection) {
+                                          setLoading(true);
+                                          try {
+                                            // Fetch both data sets concurrently
+                                            await Promise.all([fetchCourses(), fetchStudentData()]);
+                                            setDataFetched(true); // Indicate that data has been fetched successfully
+                                          } catch (error) {
+                                            console.error('Error fetching data:', error);
+                                            setDataFetched(false); // Handle error state for data fetching
+                                          } finally {
+                                            setLoading(false); // Ensure loading is false after data fetch attempts
+                                          }
+                                        } else {
+                                          //setShowModalAlertView(true);
+                                          setDataFetched(false); // Ensure dataFetched is false if filters are incomplete
+                                        }
+                                      };
+                                  
+                                      handleView();
+                                    }, [selectedSection]);
                                     
 
   
@@ -683,13 +684,20 @@ const printTable = () => {
     <div>
       <h2 className="custom-font custom-color-green-font mb-3 mt-2">Grades Verification</h2>
  <Form className="p-3 mb-4 bg-white border border-success rounded">
-  <Row className="align-items-center">
-    <Col md={2} className='mb-3'>
-      <Form.Group controlId="academicYear">
-        <Form.Label className='custom-color-green-font custom-font'>Academic Year</Form.Label>
-        <Form.Select value={selectedAcademicYear} onChange={handleAcademicYearChange} className="border-success">
-          <option value="">Select Academic Year</option>
-          {academicYears.sort((a, b) => {
+ <Row className="align-items-center justify-content-between gx-3 gy-2">
+  <Col xs={12} sm={12} md={2} className="mb-3">
+    <Form.Group controlId="academicYear">
+      <Form.Label className="custom-color-green-font custom-font text-nowrap">
+        Academic Year
+      </Form.Label>
+      <Form.Select
+        value={selectedAcademicYear}
+        onChange={handleAcademicYearChange}
+        className="border-success w-100"
+      >
+        <option value="">Select Academic Year</option>
+        {academicYears
+          .sort((a, b) => {
             let yearA = parseInt(a.academicYear.split('-')[0]);
             let yearB = parseInt(b.academicYear.split('-')[0]);
             return yearB - yearA; // Sorting in descending order
@@ -699,82 +707,94 @@ const printTable = () => {
               {program.academicYear}
             </option>
           ))}
-        </Form.Select>
-      </Form.Group>
-    </Col>
-    <Col md={2} className='mb-3'>
-      <Form.Group controlId="program">
-        <Form.Label className='custom-color-green-font custom-font'>Program</Form.Label>
-        <Form.Select value={selectedProgram} onChange={handleProgramChange} className="border-success"
-          disabled={!selectedAcademicYear}>
-          <option value="">Select Program</option>
-          {mappedData
-            ?.filter(p => p.academicYear === selectedAcademicYear)
-            ?.flatMap(p => p.programs)
-            .map((program) => (
-              <option key={program.programNumber} value={program.programNumber}>
-                {program.programName}
-              </option>
-          ))}
-        </Form.Select>
-      </Form.Group>
-    </Col>
-    <Col md={2} className='mb-3'>
-      <Form.Group controlId="yearLevel">
-        <Form.Label className='custom-color-green-font custom-font'>Year Level</Form.Label>
-        <Form.Select value={selectedYearLevel} onChange={handleYearLevelChange} className="border-success"
-          disabled={!selectedAcademicYear || !selectedProgram}>
-          <option value="">Select Year Level</option>
-          {selectedProgramData // Get year levels for selected academic year
-            ?.map(level => (
-              <option key={level.yearLevel} value={level.yearLevel}>
-                Year {level.yearLevel}
-              </option>
-          ))}
-        </Form.Select>
-      </Form.Group>
-    </Col>
-    <Col md={2} className='mb-3'>
-      <Form.Group controlId="semester">
-        <Form.Label className='custom-color-green-font custom-font'>Semester</Form.Label>
-        <Form.Select value={selectedSemester} onChange={handleSemesterChange} className="border-success"
-          disabled={!selectedYearLevel || !selectedAcademicYear || !selectedProgram}>
-          <option value="">Select Semester</option>
-          {selectedYearData
-            ?.map((sem, index) => (
-              <option key={index} value={sem}>
-                {getSemesterText(sem)}
-              </option>
-          ))}
-        </Form.Select>
-      </Form.Group>
-    </Col>
-
-    <Col md={2} className='mb-3'>
-      <Form.Group controlId="sectionSelect">
-        <Form.Label className='custom-color-green-font custom-font'>Section</Form.Label>
-        <Form.Select value={selectedSection} onChange={handleSectionChange} className="border-success"
-          disabled={!selectedSemester}>
-          <option value="">Select Section</option>
-          {sectionOptions.map((section) => (
-            <option key={section} value={section}>
-              {section}
+      </Form.Select>
+    </Form.Group>
+  </Col>
+  <Col xs={12} sm={12} md={2} className="mb-3">
+    <Form.Group controlId="program">
+      <Form.Label className="custom-color-green-font custom-font text-nowrap">
+        Program
+      </Form.Label>
+      <Form.Select
+        value={selectedProgram}
+        onChange={handleProgramChange}
+        className="border-success w-100"
+        disabled={!selectedAcademicYear}
+      >
+        <option value="">Select Program</option>
+        {mappedData
+          ?.filter((p) => p.academicYear === selectedAcademicYear)
+          ?.flatMap((p) => p.programs)
+          .map((program) => (
+            <option key={program.programNumber} value={program.programNumber}>
+              {program.programName}
             </option>
           ))}
-        </Form.Select>
-      </Form.Group>
-    </Col>
+      </Form.Select>
+    </Form.Group>
+  </Col>
+  <Col xs={12} sm={12} md={2} className="mb-3">
+    <Form.Group controlId="yearLevel">
+      <Form.Label className="custom-color-green-font custom-font text-nowrap">
+        Year Level
+      </Form.Label>
+      <Form.Select
+        value={selectedYearLevel}
+        onChange={handleYearLevelChange}
+        className="border-success w-100"
+        disabled={!selectedAcademicYear || !selectedProgram}
+      >
+        <option value="">Select Year Level</option>
+        {selectedProgramData?.map((level) => (
+          <option key={level.yearLevel} value={level.yearLevel}>
+            Year {level.yearLevel}
+          </option>
+        ))}
+      </Form.Select>
+    </Form.Group>
+  </Col>
+  <Col xs={12} sm={12} md={2} className="mb-3">
+    <Form.Group controlId="semester">
+      <Form.Label className="custom-color-green-font custom-font text-nowrap">
+        Semester
+      </Form.Label>
+      <Form.Select
+        value={selectedSemester}
+        onChange={handleSemesterChange}
+        className="border-success w-100"
+        disabled={!selectedYearLevel || !selectedAcademicYear || !selectedProgram}
+      >
+        <option value="">Select Semester</option>
+        {selectedYearData?.map((sem, index) => (
+          <option key={index} value={sem}>
+            {getSemesterText(sem)}
+          </option>
+        ))}
+      </Form.Select>
+    </Form.Group>
+  </Col>
+  <Col xs={12} sm={12} md={2} className="mb-3">
+    <Form.Group controlId="sectionSelect">
+      <Form.Label className="custom-color-green-font custom-font text-nowrap">
+        Section
+      </Form.Label>
+      <Form.Select
+        value={selectedSection}
+        onChange={handleSectionChange}
+        className="border-success w-100"
+        disabled={!selectedSemester}
+      >
+        <option value="">Select Section</option>
+        {sectionOptions.map((section) => (
+          <option key={section} value={section}>
+            {section}
+          </option>
+        ))}
+      </Form.Select>
+    </Form.Group>
+  </Col>
+</Row>
 
-    {/* Aligning the "View" button beside the section */}
-    <Col md={2} className='mb-3'>
-      <Form.Group controlId="viewButton">
-        <Form.Label className="custom-color-green-font custom-font">Action</Form.Label>
-        <div className='d-flex align-items-center'>
-          <Button className="w-100 btn-success" onClick={handleView}>View</Button>
-        </div>
-      </Form.Group>
-    </Col>
-  </Row>
 </Form>
 
       
@@ -797,7 +817,7 @@ const printTable = () => {
           {(selectedSection && selectedSection !== '' && groupedData[selectedSection] ? [[selectedSection, groupedData[selectedSection]]] : Object.entries(groupedData))
             .filter(([sectionNumber]) => sectionNumber)
             .map(([sectionNumber, sectionData], sectionIndex) => (
-              <div key={sectionIndex}>
+              <div key={sectionIndex} className='shadow-md'>
                 {sectionData?.classes?.map((Class, courseIndex) => (
                   <div key={courseIndex} className="section-container mb-5 p-4 border rounded shadow-sm bg-white">
                   {/* First Table for the section */}
@@ -810,7 +830,9 @@ const printTable = () => {
                     <br></br>
                     </div>
 
-                    <Table bordered hover className="text-center mb-3">
+                  <Container fluid className='table-responsive overflow-auto hide-scrollbar'>
+                    
+                  <Table bordered hover className="text-center mb-3">
                       {/* Table Header */}
                       <thead>
                         <tr>
@@ -915,6 +937,7 @@ const printTable = () => {
                       </tr>
                     </thead>
                     </Table>
+                    </Container> 
 
                     {/* Partition for the second table */}
                     <div className="mt-5">
@@ -925,7 +948,7 @@ const printTable = () => {
                       <br></br>
                     {/*<p className="text-center">DATE: 0</p>*/}
                     </div>
-
+                  <Container fluid className='table-responsive overflow-auto hide-scrollbar'>
                     <Table bordered hover className="text-center mb-3">
                     {/* Table Header */}
                     <thead>
@@ -1000,6 +1023,7 @@ const printTable = () => {
                       </tr>
                     </thead>
                     </Table>
+                    </Container>
                   </div>
                   )
                 )}
@@ -1008,9 +1032,9 @@ const printTable = () => {
                   {verifiedSections[sectionNumber] ? (
                     <>
                       <Button variant="success" disabled>
-                        VERIFIED
+                      <FontAwesomeIcon icon={faCheckCircle}/> VERIFIED
                       </Button>
-                      <Button vaiant="secondary" className="mx-2" onClick={printTable}>PRINT</Button>
+                      <Button className="mx-2 text-success bg-white border-white" onClick={printTable}><FontAwesomeIcon icon={faPrint}/></Button>
                     </>
                   ) : (
                       <Button variant="primary" disabled={groupedData[selectedSection].classes.some(cls => cls.classGrades.grades.length === 0)}

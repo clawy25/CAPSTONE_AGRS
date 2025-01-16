@@ -66,8 +66,12 @@ export default function RegistrarDashboard() {
     >
       &times;
     </button>
-    <img src="/pcc.png" alt="Logo" className="college-logo align-items-center ms-5 mb-3" />
-    <div className="welcome-message mb-3 text-center">Hello, {user ? user.personnelNameFirst : 'Guest'}!</div>
+    <div className='d-block align-items-center justify-content-center'>
+          <div className='d-flex align-items-center justify-content-center'>
+          <img src="/pcc.png" alt="Logo" className="img-fluid mb-3 college-logo" />
+          </div>
+          <p className="welcome-message mb-3 text-center">Hello, {user ? user.personnelNameFirst : 'Student'}!</p>
+        </div>
     <nav className="menu mb-3">
       <div 
         className="menu-item d-flex align-items-center mb-2" 

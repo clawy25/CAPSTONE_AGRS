@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { Table, Form, Button, Row, Col, Modal, Spinner } from 'react-bootstrap';
+import { Table, Form, Button, Row, Col, Modal, Spinner, Container } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css'; 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit } from '@fortawesome/free-solid-svg-icons';
@@ -269,20 +269,36 @@ const fetchDeadline = async () => {
     }
   };
   
-  const handleView = async () => {
-    if (selectedAcademicYear && selectedProgram && selectedYearLevel && selectedSemester && selectedSection) {
-      setLoading(true);
-      try {
-        await Promise.all([fetchSchedules(), fetchDeadline()]);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      } finally {
-        setLoading(false);
+  useEffect(() => {
+    const handleView = async () => {
+      if (
+        selectedAcademicYear &&
+        selectedProgram &&
+        selectedYearLevel &&
+        selectedSemester &&
+        selectedSection
+      ) {
+        setLoading(true); // Start loading indicator
+        try {
+          // Fetch schedules and deadlines in parallel
+          await Promise.all([fetchSchedules(), fetchDeadline()]);
+        } catch (error) {
+          console.error("Error fetching data:", error); // Log any errors
+        } finally {
+          setLoading(false); // Stop loading indicator after fetch completes
+        }
       }
-    } else {
-      setShowModalAlertView(true);
-    }
-  };
+    };
+  
+    handleView(); // Call the async function
+  }, [
+    selectedAcademicYear,
+    selectedProgram,
+    selectedYearLevel,
+    selectedSemester,
+    selectedSection,
+  ]); // Add dependencies to ensure the effect re-runs when these values change
+  
   
   const handleEditDeadline = (index) => {
     setSelectedDeadline(deadlines[index]);
@@ -469,10 +485,10 @@ const fetchDeadline = async () => {
     <section>
       <h2 className="custom-font custom-color-green-font mb-3 mt-2">Grade Submission Status</h2>
       <Form className="p-3 mb-4 bg-white border border-success rounded">
-        <Row className="align-items-center">
-          <Col xs={12} sm={6} md={4} lg={2} className='mb-3'>
+        <Row className="align-items-center justify-content-between gx-3 gy-2">
+          <Col sm={12} md={2} className='mb-3'>
             <Form.Group controlId="academicYear">
-              <Form.Label className="custom-color-green-font custom-font">Academic Year</Form.Label>
+              <Form.Label className="custom-color-green-font custom-font text-nowrap">Academic Year</Form.Label>
               <Form.Select value={selectedAcademicYear} onChange={handleAcademicYearChange} className="border-success">
                 <option value="">Select Academic Year</option>
                 {academicYears.sort((a, b) => {
@@ -488,9 +504,9 @@ const fetchDeadline = async () => {
               </Form.Select>
             </Form.Group>
           </Col>
-          <Col  xs={12} sm={6} md={4} lg={2} className='mb-3'>
+          <Col  sm={12} md={2} className='mb-3'>
             <Form.Group controlId="program">
-              <Form.Label className="custom-color-green-font custom-font">Program</Form.Label>
+              <Form.Label className="custom-color-green-font custom-font text-nowrap">Program</Form.Label>
               <Form.Select value={selectedProgram} onChange={handleProgramChange} className="border-success"
                 disabled={!selectedAcademicYear}>
               <option value="">Select Program</option>
@@ -505,9 +521,9 @@ const fetchDeadline = async () => {
               </Form.Select>
             </Form.Group>
           </Col>
-          <Col xs={12} sm={6} md={4} lg={2} className='mb-3'>
+          <Col sm={12} md={2} className='mb-3'>
             <Form.Group controlId="yearLevel">
-              <Form.Label className="custom-color-green-font custom-font">Year Level</Form.Label>
+              <Form.Label className="custom-color-green-font custom-font text-nowrap">Year Level</Form.Label>
               <Form.Select value={selectedYearLevel} onChange={handleYearLevelChange} className="border-success"
                 disabled={!selectedAcademicYear || !selectedProgram}>
                 <option value="">Select Year Level</option>
@@ -520,9 +536,9 @@ const fetchDeadline = async () => {
               </Form.Select>
             </Form.Group>
           </Col>
-          <Col xs={12} sm={6} md={4} lg={2} className='mb-3'>
+          <Col sm={12} md={2} className='mb-3'>
             <Form.Group controlId="semester">
-              <Form.Label className="custom-color-green-font custom-font">Semester</Form.Label>
+              <Form.Label className="custom-color-green-font custom-font text-nowrap">Semester</Form.Label>
               <Form.Select value={selectedSemester} onChange={handleSemesterChange} className="border-success"
                 disabled={!selectedYearLevel || !selectedAcademicYear || !selectedProgram}>
               <option value="">Select Semester</option>
@@ -535,9 +551,9 @@ const fetchDeadline = async () => {
               </Form.Select>
             </Form.Group>
           </Col>
-          <Col xs={12} sm={6} md={4} lg={2} className='mb-3'>
+          <Col sm={12} md={2} className='mb-3'>
             <Form.Group controlId="section">
-              <Form.Label className="custom-color-green-font custom-font">Section</Form.Label>
+              <Form.Label className="custom-color-green-font custom-font text-nowrap">Section</Form.Label>
               <Form.Select value={selectedSection} onChange={handleSectionChange} className="border-success"
                 disabled={!selectedYearLevel || !selectedAcademicYear || !selectedSemester || !selectedProgram}>
                   <option value="">Select Section</option>
@@ -549,14 +565,6 @@ const fetchDeadline = async () => {
                   ))}
               </Form.Select>
             </Form.Group>
-          </Col>
-          <Col xs={12} sm={6} md={4} lg={2} className='mb-3'>
-          <Form.Group controlId="viewButton">
-            <Form.Label className="custom-color-green-font custom-font">Action</Form.Label>
-            <Button className="w-100" variant="success" onClick={handleView}>
-              View
-            </Button>
-          </Form.Group>
           </Col>
         </Row>
       </Form>
@@ -571,9 +579,9 @@ const fetchDeadline = async () => {
           <p className="mt-3">Loading data, please wait...</p>
         </div>
         ): schedules.length > 0 || deadlines.length > 0 ? (
-           <div className="card mb-4 bg-white rounded p-3">
-           <div className="card-body table-responsive">
-          <Table bordered hover>
+           <Container fluid className="mb-4 bg-white rounded p-3">
+           <Container fluid className="table-responsive shadow-sm mt-4 mx-auto mb-3">
+          <Table bordered hover className='mt-4 mx-auto mb-3 shadow-sm'>
             <thead className='table-success text-center'>
               <tr>
                 <th className="custom-color-green-font">Schedule Number</th>
@@ -617,10 +625,10 @@ const fetchDeadline = async () => {
               )}
             </tbody>
           </Table>
-        </div>
+        </Container>
 
-        <div className="card-body table-responsive">
-          <Table bordered hover>
+        <Container fluid className="table-responsive shadow-sm mt-4 mx-auto mb-3">
+          <Table bordered hover className='mx-auto mb-3 shadow-sm'>
             <thead className="table-primary text-center">
               <tr>
                 <th className="custom-color-green-font">Schedule Number</th>
@@ -744,13 +752,13 @@ const fetchDeadline = async () => {
             </tbody>
           </Table>
           
-        </div>
-          </div>
+        </Container>
+          </Container>
         ) : (
           <div className="text-center py-5 bg-white rounded pt-5 px-4 pb-5">
           <h5 className="custom-color-green-font mt-5 fs-5">No Data Available</h5>
           <p className="fs-6 mb-4">
-            Please ensure that all filters are applied then click "View" to display the data.
+           Please ensure that all filters are applied or data is available to display.
           </p>
         </div>
         )}

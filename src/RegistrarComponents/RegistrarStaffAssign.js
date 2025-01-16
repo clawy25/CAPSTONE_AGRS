@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { Table, Modal, Button, Form } from 'react-bootstrap';
+import { Table, Modal, Button, Form, Container } from 'react-bootstrap';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faEdit} from '@fortawesome/free-solid-svg-icons';
 import PersonnelModel from '../ReactModels/PersonnelModel';
 import ProgramModel from '../ReactModels/ProgramModel';
 import { UserContext } from '../Context/UserContext';
@@ -156,55 +158,55 @@ export default function RegistrarStaffAssign({ onBack }) {
     }
   };
 
-  const renderTable = () => {
-    return (
-     <div className='table-responsive bg-white  mt-3 overflow-hidden'>
 
-<Table hover className="table table-hover success-border">
+
+  return (
+    <Container fluid className="bg-white rounded pt-2 pb-2">
+      <Container fluid className='mt-4 mx-auto mb-3 table-responsive shadow-sm'>
+      <Table hover className="table table-hover success-border mt-4 shadow-sm">
         <thead className="table-success">
           <tr>
-            <th className='custom-font custom-color-green-font'>Personnel Number</th>
-            <th className='custom-font custom-color-green-font'>First Name</th>
-            <th className='custom-font custom-color-green-font'>Middle Name</th>
-            <th className='custom-font custom-color-green-font'>Last Name</th>
-            <th className='custom-font custom-color-green-font'>Program</th>
-            <th className='custom-font custom-color-green-font'>Personnel Type</th>
-            <th className='custom-font custom-color-green-font'>Actions</th>
+            <th className='custom-color-green-font custom-font text-center pt-3'>Personnel Number</th>
+            <th className='custom-color-green-font custom-font text-center pt-3'>First Name</th>
+            <th className='custom-color-green-font custom-font text-center pt-3'>Middle Name</th>
+            <th className='custom-color-green-font custom-font text-center pt-3'>Last Name</th>
+            <th className='custom-color-green-font custom-font text-center pt-3'>Program</th>
+            <th className='custom-color-green-font custom-font text-center pt-3'>Personnel Type</th>
+            <th className='custom-color-green-font custom-font text-center pt-3'>Actions</th>
           </tr>
         </thead>
         <tbody>
           {programHeads.length > 0 ? (
             programHeads.map((head, index) => (
               <tr key={index}>
-                <td>{head.personnelNumber}</td>
-                <td>{head.personnelNameFirst}</td>
-                <td>{head.personnelNameMiddle}</td>
-                <td>{head.personnelNameLast}</td>
-                <td>{head.programNumber}</td>
-                <td>{head.personnelType}</td>
-                <td>
+                <td className='custom-color-green-font text-center pt-3'>{head.personnelNumber}</td>
+                <td className='custom-color-green-font text-center pt-3'>{head.personnelNameFirst}</td>
+                <td className='custom-color-green-font text-center pt-3'>{head.personnelNameMiddle}</td>
+                <td className='custom-color-green-font text-center pt-3'>{head.personnelNameLast}</td>
+                <td className='custom-color-green-font text-center pt-3'>{head.programNumber}</td>
+                <td className='custom-color-green-font text-center pt-3'>{head.personnelType}</td>
+                <td className='d-flex justify-content-center align-items center'>
                 
-                  <Button variant="success" onClick={() => handleShowEdit(head, index)}>
-                    Edit
+                  <Button variant="warning" className='text-white' onClick={() => handleShowEdit(head, index)}>
+                  <FontAwesomeIcon icon={faEdit}/> Edit
                   </Button>
                 </td>
               </tr>
             ))
           ) : (
             <tr>
-              <td colSpan="7">No Registrar Staff available</td>
+              <td colSpan="7" className='text-center text-italic'>No Registrar Staff available</td>
             </tr>
           )}
         </tbody>
       </Table>
-     </div>
-    );
-  };
+      </Container>
 
-  return (
-    <div className="container-fluid bg-white p-2 px-4 rounded">
-      {renderTable()}
-
+      <Container fluid className="d-flex justify-content-start mt-3 mx-auto mb-2">
+        <Button variant="success" onClick={handleShowAdd}>
+          Add Registrar Staff
+        </Button>
+      </Container>
       {/* Add Registrar Staff Modal */}
       <Modal show={showAddModal} onHide={handleCloseAdd}>
         <Modal.Header closeButton>
@@ -323,11 +325,7 @@ export default function RegistrarStaffAssign({ onBack }) {
       </Modal>
 
       
-      <div className="d-flex justify-content-end mt-3 mb-2">
-        <Button variant="success" onClick={handleShowAdd}>
-          Add Registrar Staff
-        </Button>
-      </div>
-    </div>
+     
+    </Container>
   );
 }

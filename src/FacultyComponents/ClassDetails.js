@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSearch, faPlus, faMinus, faMapMarkerAlt,  faEnvelope, faPhoneAlt } from '@fortawesome/free-solid-svg-icons'; // Import minus icon
 import '../StudentComponents/Dashboard.css';
@@ -17,13 +18,13 @@ import PBAModel from '../ReactModels/PBAModel.js';
 import ExamModel from '../ReactModels/ExamModel.js';
 import ComponentModel from '../ReactModels/ComponentModel.js';
 import SemGradeModel from '../ReactModels/SemGradeModel.js';
-import { Modal, Button } from 'react-bootstrap';
+import { Modal, Button, Container } from 'react-bootstrap';
 import * as XLSX from 'xlsx';
 
 
 
 const ClassDetails = ({classList , classDetails}) => {
-
+  const navigate = useNavigate();
   const [students, setStudents] = useState(classList);
 
   //console.log("List of Students:", students);
@@ -58,6 +59,9 @@ const ClassDetails = ({classList , classDetails}) => {
     };
   });
 
+  const handleGoBack = () => {
+    navigate(-1); // Navigate to the previous page
+  };
 
 
   useEffect(() => {
@@ -4629,7 +4633,7 @@ const handlePercentageChange = (setter, value) => {
     };
 
     return (
-      <div className="class-details">
+      <Container fluid className="bg-white pt-4 px-3 pb-3 rounded">
         <div
           className="buttons-container"
           style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
@@ -4708,7 +4712,7 @@ const handlePercentageChange = (setter, value) => {
       </div>
 
       {/* Button Container */}
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '10px' }}>
+      <div className='d-flex justify-content-end mt-4 me-3 w-100'>
         <Button
           disabled={pendingStatus}
           style={{
@@ -4767,7 +4771,7 @@ const handlePercentageChange = (setter, value) => {
           </Button>
         </Modal.Footer>
       </Modal>
-    </div>
+    </Container>
   );
 };
 

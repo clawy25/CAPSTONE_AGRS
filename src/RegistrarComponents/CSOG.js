@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useContext } from 'react'; 
-import { Table, Form, Button, Row, Col, Modal, Spinner } from 'react-bootstrap';
+import { Table, Form, Button, Row, Col, Modal, Spinner, Container } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css'; 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faMapMarkerAlt,  faEnvelope, faPhoneAlt} from '@fortawesome/free-solid-svg-icons';
+import { faPrint} from '@fortawesome/free-solid-svg-icons';
 import { UserContext } from '../Context/UserContext';
 import AcademicYearModel from '../ReactModels/AcademicYearModel';
 import YearLevelModel from '../ReactModels/YearLevelModel';
@@ -330,7 +330,31 @@ const MasterlistOfGradesTable = () => {
     }
   };
   
-
+  useEffect(() => {
+    const handleView = async () => {
+      if (selectedAcademicYear && selectedProgram && selectedYearLevel && selectedSemester) {
+        try {
+          setLoading(true); // Start loading indicator
+          setDataFetched(false); // Reset dataFetched before fetching new data
+          
+          // Fetch courses and student data in parallel
+          await Promise.all([fetchCourses(), fetchStudentData()]);
+          
+          setDataFetched(true); // Set dataFetched to true if fetch operations succeed
+        } catch (error) {
+          console.error("Error fetching data:", error);
+          setDataFetched(false); // Ensure dataFetched is false if an error occurs
+        } finally {
+          setLoading(false); // Always stop the loading indicator
+        }
+      } else {
+        // If required filters are incomplete
+        setDataFetched(false);
+      }
+    };
+  
+    handleView();
+  }, [selectedAcademicYear, selectedProgram, selectedYearLevel, selectedSemester]);
   useEffect(() => {
     fetchAcademicYearsAndPrograms();
   }, [user.programNumber]);
@@ -457,28 +481,11 @@ const MasterlistOfGradesTable = () => {
                                      ?.flatMap(p => p.semesters);
 
 
-                                     const handleView = async () => {
-                                      if (selectedAcademicYear && selectedProgram && selectedYearLevel && selectedSemester) {
-                                        try {
-                                          setLoading(true); // Set loading to true before starting the data fetch
+                            
                                     
-                                          // Fetch courses and student data asynchronously
-                                          await Promise.all([fetchCourses(), fetchStudentData()]);
                                     
-                                          setDataFetched(true); // Indicate that data has been fetched successfully
-                                        } catch (error) {
-                                          console.error("Error fetching data:", error);
-                                          setDataFetched(false); // Ensure dataFetched is false if an error occurs
-                                        } finally {
-                                          setLoading(false); // Set loading to false after the fetch operations (success or error)
-                                        }
-                                      } else {
-                                        setShowModalAlertView(true);
-                                        setDataFetched(false); // Ensure dataFetched is false if filters are incomplete
-                                      }
-                                    };
+                                     
                                     
-
 
   const closeShowModalAlert = () => {
     setShowModalAlert(false);
@@ -1141,10 +1148,10 @@ const MasterlistOfGradesTable = () => {
     <div>
       <h2 className="custom-font custom-color-green-font mb-3 mt-2"> CSOG</h2>
       <Form className="p-3 mb-4 bg-white border border-success rounded">
-      <Row className="align-items-center">
-      <Col md={2} className='mb-3'>
+      <Row className="align-items-center justify-content-between gx-3 gy-2">
+      <Col sm={12} md={2} className='mb-3'>
           <Form.Group controlId="academicYear">
-            <Form.Label className='custom-color-green-font custom-font'>Academic Year</Form.Label>
+            <Form.Label className='custom-color-green-font custom-font text-nowrap'>Academic Year</Form.Label>
             <Form.Select value={selectedAcademicYear} onChange={handleAcademicYearChange} className="border-success">
               <option value="">Select Academic Year</option>
               {academicYears.sort((a, b) => {
@@ -1160,9 +1167,9 @@ const MasterlistOfGradesTable = () => {
             </Form.Select>
           </Form.Group>
         </Col>
-        <Col md={2}  className='mb-3'>
+        <Col sm={12} md={2}  className='mb-3'>
           <Form.Group controlId="program">
-            <Form.Label className='custom-color-green-font custom-font'>Program</Form.Label>
+            <Form.Label className='custom-color-green-font custom-font text-nowrap'>Program</Form.Label>
             <Form.Select value={selectedProgram} onChange={handleProgramChange} className="border-success"
               disabled={!selectedAcademicYear}>
             <option value="">Select Program</option>
@@ -1177,9 +1184,9 @@ const MasterlistOfGradesTable = () => {
             </Form.Select>
           </Form.Group>
         </Col>
-        <Col md={2} className='mb-3'>
+        <Col sm={12} md={2} className='mb-3'>
           <Form.Group controlId="yearLevel">
-            <Form.Label className='custom-color-green-font custom-font'>Year Level</Form.Label>
+            <Form.Label className='custom-color-green-font custom-font text-nowrap'>Year Level</Form.Label>
             <Form.Select value={selectedYearLevel} onChange={handleYearLevelChange} className="border-success"
               disabled={!selectedAcademicYear || !selectedProgram}>
               <option value="">Select Year Level</option>
@@ -1192,9 +1199,9 @@ const MasterlistOfGradesTable = () => {
             </Form.Select>
           </Form.Group>
         </Col>
-        <Col md={2} className='mb-3'>
+        <Col  sm={12} md={2} className='mb-3'>
           <Form.Group controlId="semester">
-            <Form.Label className='custom-color-green-font custom-font'>Semester</Form.Label>
+            <Form.Label className='custom-color-green-font custom-font text-nowrap'>Semester</Form.Label>
             <Form.Select value={selectedSemester} onChange={handleSemesterChange} className="border-success"
               disabled={!selectedYearLevel || !selectedAcademicYear || !selectedProgram}>
             <option value="">Select Semester</option>
@@ -1209,12 +1216,11 @@ const MasterlistOfGradesTable = () => {
         </Col>
       
 
-        <Col md={4} className='mb-3'>
+        <Col sm={12} md={2} className='mb-3'>
         <Form.Group controlId="viewButton">
-            <Form.Label className="custom-color-green-font custom-font">Action</Form.Label>
+            <Form.Label className="custom-color-green-font custom-font text-nowrap">Action</Form.Label>
               <div className='d-flex'>
-                  <Button className="w-100 btn-success me-2" onClick={handleView}>View</Button>
-                  <Button className="w-100 bg-white custom-color-green-font btn-outline-success py-2" onClick={printTable}>PDF</Button>
+                  <Button className="w-100 btn-success me-2" onClick={printTable}>PDF</Button>
               </div>
           </Form.Group>
         </Col>
@@ -1262,7 +1268,7 @@ const MasterlistOfGradesTable = () => {
   <div className="text-center py-5">
     <h5 className="custom-color-green-font fs-5">No Data Available</h5>
     <p className="fs-6">
-      Please ensure that all filters are applied or data is available to display.
+    Please ensure that all filters are applied or data is available to display.
     </p>
   </div>
 ) : (
@@ -1278,7 +1284,29 @@ const MasterlistOfGradesTable = () => {
         style={{ marginBottom: "50px", position: "relative" }}
       >
        {/* Table Component */}
-       <Table bordered hover className="text-center mb-3">
+       <div className="d-flex justify-content-end align-items-end mb-2 mx-2">
+  {sectionIndex === 0 ? (
+    // Check if it's the first table
+    <Button
+      variant="warning"
+      className="print-button text-white"
+      onClick={() => customPrintFunctionForFirstTable(sectionNumber)}
+    >
+     <FontAwesomeIcon icon={faPrint}/>  Print 
+    </Button>
+  ) : (
+    <Button
+      variant="warning"
+      className="print-button text-white"
+      onClick={() => printSpecificTable(sectionNumber)}
+    >
+      <FontAwesomeIcon icon={faPrint}/>  Print 
+    </Button>
+  )}
+</div>
+
+       <Container fluid className='table-responsive mt-3 mx-auto mb-2 shadow-sm'>
+       <Table bordered hover className="text-center mb-3 shadow-sm">
         {/* Table Header */}
         <thead className="table-success">
           <tr>
@@ -1402,29 +1430,13 @@ const MasterlistOfGradesTable = () => {
                 )}
               </tbody>
             </Table>
+       </Container>
+       
         {/* Print Button Positioned Below the Table */}
-        <div style={{ textAlign: "right", marginTop: "10px" }}>
-        <div style={{ textAlign: "right", marginTop: "10px" }}>
-  {sectionIndex === 0 ? ( // Check if it's the first table
-    <Button
-      variant="warning"
-      className="print-button"
-      onClick={() => customPrintFunctionForFirstTable(sectionNumber)}
-    >
-      Print Table
-    </Button>
-  ) : (
-    <Button
-      variant="warning"
-      className="print-button"
-      onClick={() => printSpecificTable(sectionNumber)}
-    >
-      Print Table
-    </Button>
-  )}
-</div>
+  
 
-        </div>
+
+  
       </div>
     ))
 )}

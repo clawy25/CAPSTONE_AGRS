@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { Form, Row, Col, Button, Modal, Table, Spinner } from 'react-bootstrap';
+import { Form, Row, Col, Button, Modal, Table, Spinner, Container } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css'; 
 import * as XLSX from 'sheetjs-style'; // Use sheetjs-style for formatting
 import ProgramModel from '../ReactModels/ProgramModel'; // Ensure this path is correct
@@ -307,7 +307,37 @@ const fetchCurriculum = async (programNumber, batchYear) => {
     }
   };
   
-
+  useEffect(() => {
+    const handleView = async () => {
+      if (programCode && batchYear) {
+        // Reset previous state
+        setSemestersData({});
+        setStudents([]);
+        setAcademicYears([]);
+        setLoading(true); // Start loading indicator
+  
+        try {
+          // Fetch curriculum and students in parallel
+          const [curriculumData, filteredStudents] = await Promise.all([
+            fetchCurriculum(programCode, batchYear),
+            fetchStudentData(programCode, batchYear),
+          ]);
+  
+          // Update students and other states after fetching data
+          setStudents(filteredStudents);
+          // Optionally process curriculumData here if needed
+        } catch (error) {
+          console.error("Error fetching data:", error);
+          // Optionally display an error modal or message here
+        } finally {
+          setLoading(false); // Stop loading indicator after all fetches complete
+        }
+      } 
+    };
+  
+    handleView();
+  }, [programCode, batchYear]); // Add dependencies to run the effect when these values change
+  
   const handleProgramNameChange = (e) => {
     const selectedProgramName = e.target.value;
     setProgramName(selectedProgramName);
@@ -558,17 +588,17 @@ const fetchCurriculum = async (programNumber, batchYear) => {
       <h2 className="custom-font custom-color-green-font mb-3 mt-2">MOG</h2>
       {/* Program Filter Component */}
       <Form className="p-3 mb-4 bg-white border border-success rounded">
-      <Row className="align-items-center">
+      <Row className="align-items-center justify-content-between gx-3 gy-2">
 
-      <Col xs={12} sm={6} md={2} lg={2}>
-          <Form.Group controlId="batchYear">
-            <Form.Label className="custom-color-green-font custom-font">
+      <Col sm={12} md={6} lg={3}>
+          <Form.Group className='w-100' controlId="batchYear">
+            <Form.Label className="custom-color-green-font custom-font text-nowrap">
               Batch Year
             </Form.Label>
             <Form.Select
               value={batchYear}
               onChange={handleBatchYearSelected}
-              className="border-success"
+              className="border-success "
             >
               <option value="">Select Batch Year</option>
               {admissionYears.map((year) => (
@@ -580,13 +610,13 @@ const fetchCurriculum = async (programNumber, batchYear) => {
 
           </Form.Group>
         </Col>
-        <Col xs={12} sm={6} md={2} lg={2}>
-          <Form.Group controlId="programName">
-            <Form.Label className="custom-color-green-font custom-font">Program Name</Form.Label>
+        <Col sm={12} md={6} lg={3}>
+          <Form.Group className='w-100' controlId="programName">
+            <Form.Label className="custom-color-green-font custom-font text-nowrap">Program Name</Form.Label>
             <Form.Select 
               value={programName} 
               onChange={handleProgramNameChange} 
-              className="border-success"
+              className="border-success "
               disabled={!batchYear}
             >
               <option value="">Select Program Name</option>
@@ -599,27 +629,26 @@ const fetchCurriculum = async (programNumber, batchYear) => {
           </Form.Group>
         </Col>
 
-        <Col xs={12} sm={6} md={2} lg={2}>
-        <Form.Group controlId="programCode">
-          <Form.Label className="custom-color-green-font custom-font">Program Code</Form.Label>
+        <Col sm={12} md={6} lg={3}>
+        <Form.Group className='w-100' controlId="programCode">
+          <Form.Label className="custom-color-green-font custom-font text-nowrap">Program Code</Form.Label>
           <Form.Control 
             type="text"
             value={programCode}
             readOnly
             disabled
-            className="border-success bg-white"
+            className="border-success bg-white "
             placeholder="Select Program Name first"
           />
         </Form.Group>
       </Col>
 
 
-        <Col xs={12} sm={6} md={6} lg={6}>
-          <Form.Group>
-            <Form.Label className="custom-color-green-font custom-font">Action</Form.Label>
+        <Col sm={12} md={6} lg={3}>
+          <Form.Group className='w-100'>
+            <Form.Label className="custom-color-green-font custom-font text-nowrap">Action</Form.Label>
             <div className="d-flex">
-              <Button className="w-50 btn-success me-2" onClick={handleView}>View</Button>
-              <Button className="bg-white custom-color-green-font btn-outline-success w-50 me-2" onClick={downloadExcel}>Download Excel</Button>
+              <Button className="w-100 btn-success me-2" onClick={downloadExcel}>Download Excel</Button>
             </div>
           </Form.Group>
         </Col>
@@ -640,11 +669,12 @@ const fetchCurriculum = async (programNumber, batchYear) => {
             <div className="text-center py-5 bg-white rounded pt-5 px-4 pb-5">
               <h5 className="custom-color-green-font mt-5 fs-5">No Data Available</h5>
               <p className="fs-6 mb-4">
-                Please ensure that all filters are applied then click "View" to display the data.
+              Please ensure that all filters are applied or data is available to display.
               </p>
             </div>
           ) : (
-            <Table bordered responsive hover className="table-success mt-2 mb-4">
+            <Container fluid className='table-response mt-4 mx-auto mb-3 bg-white rounded'>
+              <Table bordered responsive hover className="table-success mt-5 mx-auto mb-4 rounded shadow-sm">
               <thead className="table-success">
                 {/* Row for Year Levels */}
                 <tr>
@@ -780,6 +810,7 @@ const fetchCurriculum = async (programNumber, batchYear) => {
                 )}
               </tbody>
             </Table>
+            </Container>
           )}
         </>
       )}

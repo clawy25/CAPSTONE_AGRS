@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { Table, Form, Button, Row, Col, Modal, Spinner } from 'react-bootstrap';
+import { Table, Form, Button, Row, Col, Modal, Spinner, Container,Card,  CardHeader, CardBody } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css'; 
 import AcademicYearModel from '../ReactModels/AcademicYearModel';
 import ProgramModel from '../ReactModels/ProgramModel';
@@ -220,18 +220,19 @@ const Sections = () => {
     }
   }, [selectedAcademicYear, selectedProgram, selectedYearLevel, selectedSemester, functionCalled]);
 
-  const handleView = () => {
-    if (selectedAcademicYear && selectedYearLevel && selectedSemester && selectedSection) {
-      setLoading(true);
-      setShowTable(true); 
-      fetchAndCombineData()
 
-      fetchAndCombineData()
-            .finally(() => setLoading(false));
-    } else {
-      setShowModalAlertView(true);
-    }
-  };
+  useEffect(() => {
+    const handleView = () => {
+      if (selectedAcademicYear && selectedYearLevel && selectedSemester && selectedSection) {
+        setLoading(true);
+        setShowTable(true); 
+        fetchAndCombineData().finally(() => setLoading(false));
+      }
+    };
+  
+    handleView();
+  }, [selectedAcademicYear, selectedYearLevel, selectedSemester, selectedSection]);  // Dependencies to re-run when any of these values change
+  
 
   const closeShowModalAlertView = () => {
     setShowModalAlertView(false);
@@ -483,9 +484,9 @@ const Sections = () => {
       {/* Second Row for Program, Year Level, Semester, Section, and Add Section */}
       <Form className="p-3 mb-4 bg-white border border-success rounded">
         <Row className="align-items-center">
-        <Col xs={12} sm={6} md={4} lg={2} className='mb-3'>
-            <Form.Group controlId="academicYear">
-              <Form.Label>Academic Year</Form.Label>
+        <Col  sm={12} md={6} lg={2} className='mb-3'>
+            <Form.Group className='w-100' controlId="academicYear">
+              <Form.Label className="custom-color-green-font text-nowrap">Academic Year</Form.Label>
               <Form.Select value={selectedAcademicYear} onChange={handleAcademicYearChange} className="border-success">
                 <option value="">Select Academic Year</option>
                 {academicYears.sort((a, b) => {
@@ -501,9 +502,9 @@ const Sections = () => {
               </Form.Select>
             </Form.Group>
           </Col>
-          <Col xs={12} sm={6} md={4} lg={2} className='mb-3'>
-            <Form.Group controlId="program">
-              <Form.Label>Program</Form.Label>
+          <Col sm={12} md={6} lg={2} className='mb-3'>
+            <Form.Group className='w-100' controlId="program">
+              <Form.Label className="custom-color-green-font text-nowrap">Program</Form.Label>
               <Form.Select value={selectedProgram} onChange={handleProgramChange} className="border-success"
                 disabled={!selectedAcademicYear}>
                 <option value="">Select Program</option>
@@ -518,9 +519,9 @@ const Sections = () => {
               </Form.Select>
             </Form.Group>
           </Col>
-          <Col xs={12} sm={6} md={4} lg={2} className='mb-3'>
-            <Form.Group controlId="yearLevel">
-              <Form.Label>Year Level</Form.Label>
+          <Col sm={12} md={6} lg={2} className='mb-3'>
+            <Form.Group className='w-100' controlId="yearLevel">
+              <Form.Label className="custom-color-green-font text-nowrap">Year Level</Form.Label>
               <Form.Select value={selectedYearLevel} onChange={handleYearLevelChange} className="border-success"
               disabled={!selectedAcademicYear || !selectedProgram}>
                 <option value="">Select Year Level</option>
@@ -533,9 +534,9 @@ const Sections = () => {
               </Form.Select>
             </Form.Group>
           </Col>
-          <Col xs={12} sm={6} md={4} lg={2} className='mb-3'>
-            <Form.Group controlId="semester">
-              <Form.Label>Semester</Form.Label>
+          <Col sm={12} md={6} lg={2} className='mb-3'>
+            <Form.Group className='w-100' controlId="semester">
+              <Form.Label className="custom-color-green-font text-nowrap">Semester</Form.Label>
               <Form.Select value={selectedSemester} onChange={handleSemesterChange} className="border-success"
                 disabled={!selectedYearLevel || !selectedAcademicYear || !selectedProgram}>
                 <option value="">Select Semester</option>
@@ -550,9 +551,9 @@ const Sections = () => {
           </Col>
           
           {/* Section Selection */}
-          <Col xs={12} sm={6} md={4} lg={2} className='mb-3'>
-            <Form.Group controlId="section">
-              <Form.Label>Section</Form.Label>
+          <Col sm={12} md={6} lg={2} className='mb-3'>
+            <Form.Group className='w-100' controlId="section">
+              <Form.Label className="custom-color-green-font text-nowrap">Section</Form.Label>
               <Form.Select value={selectedSection} onChange={handleSectionChange} className="border-success"
                 disabled={!selectedYearLevel || !selectedAcademicYear || !selectedSemester || !selectedProgram}>
                   <option value="">Select Section</option>
@@ -565,12 +566,12 @@ const Sections = () => {
               </Form.Select>
             </Form.Group>
           </Col>
-          <Col xs={12} sm={6} md={4} lg={2} className='mb-3'>
-          <Form.Group controlId="viewButton">
-            <Form.Label className="custom-color-green-font custom-font">Action</Form.Label>
+          <Col sm={12} md={6} lg={2} className='mb-3'>
+          <Form.Group className='w-100' controlId="viewButton">
+            <Form.Label className="custom-color-green-font text-nowrap">Action</Form.Label>
               <div className='d-flex'>
-              <Button className="btn-success w-50 me-2" onClick={handleView}>View</Button>        
-              <Button className="bg-white custom-color-green-font btn-outline-success w-50" onClick={addSection}>Add Section</Button>
+              <Button className="btn-success w-100" onClick={addSection}>Add Section</Button>        
+              
             </div>
             </Form.Group>
           </Col>
@@ -578,7 +579,7 @@ const Sections = () => {
         </Row>
       </Form>
 
-      <div className='card bg-white rounded px-3 pb-3 '>
+      <Card className='card bg-white rounded px-3 pb-3 '>
           
         {loading ? (
            <div className="text-center py-5 bg-white">
@@ -588,14 +589,14 @@ const Sections = () => {
         ): showTable ? (
           selectedSection && schedules.length > 0 ? (
             <Row>
-            <div className="card-header bg-white pt-4">
+            <CardHeader className="card-header bg-white pt-4">
               <h5>Section {selectedSection} <span className="text-muted">[Status: {sectionStatus}]</span></h5>
-            </div>
+            </CardHeader>
          
-                <div className="card-body mt-2 mx-1 mb-1">
+                <CardBody className="card-body mt-2 mb-1">
                   {/* Schedules Table */}
-                  <div className='mb-3 table-responsive'>
-                    <Table bordered hover className="text-center">
+                  <Container fluid className='table-responsive shadow-sm hide-scrollbar rounded'>
+                    <Table bordered hover className="text-center mt-4 mb-3 shadow-sm">
                       <thead className="table-success">
                         <tr>
                           <th>Subject Code</th>
@@ -652,12 +653,12 @@ const Sections = () => {
                         })}
                       </tbody>
                     </Table>
-                  </div>
+                  </Container>
 
                   {/* Students Table */}
-                  <div className='mt-2 table-responsive'>
+                  <Container fluid className='mt-4 table-responsive shadow-sm hide-scrollbar rounded'>
                     {students.length > 0 ? (
-                      <Table bordered hover className="text-center">
+                      <Table bordered hover className="text-center mt-4 mb-3 shadow-sm">
                         <thead className="table-info">
                           <tr>
                             <th>Student Number</th>
@@ -682,9 +683,9 @@ const Sections = () => {
                     ) : (
                       <div>No students found for the selected criteria.</div>
                     )}
-                  </div>
+                  </Container>
 
-                </div>
+                </CardBody>
 
             </Row>
             
@@ -704,7 +705,7 @@ const Sections = () => {
             <p className='fs-6'>Please ensure that all filters are applied or data is available to display.</p>
           </div>
         )}
-      </div>
+      </Card>
 
       
 

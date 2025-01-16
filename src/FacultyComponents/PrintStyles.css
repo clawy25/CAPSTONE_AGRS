@@ -1,4 +1,29 @@
 
+.rowBgColor {
+  background-color: #D1E7DD;
+}
+
+/* Keyframes animation for sliding in from the right */
+@keyframes slideInRightEnd {
+  0% {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Apply styles to the element */
+.slide-in {
+  position: absolute; /* or position: fixed; depending on need */
+  top: 0; /* or set your desired vertical positioning */
+  right: 0; /* or left: 0 for sliding from left */
+  animation: slideInRightEnd 0.5s ease-out; /* Animation for smooth sliding */
+}
+
+
 @media print {
     #printableContent {
       width: 90%; /* Set width to 90% of the printable area */

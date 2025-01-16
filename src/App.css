@@ -6,6 +6,12 @@
     box-sizing: border-box;
 }
 
+body {
+  min-width: 320px; 
+  min-height: 360px;/* Prevents shrinking below 320px */
+}
+
+
 .bg-custom-color-green {
     background-color: #004d00 !important; 
     

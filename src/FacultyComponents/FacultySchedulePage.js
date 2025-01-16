@@ -1,13 +1,15 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { Table, Form, Button, Row, Col, Alert } from 'react-bootstrap';
+import { Table, Form, Button, Row, Col, Alert, Spinner } from 'react-bootstrap';
 import { UserContext } from '../Context/UserContext';
 import ScheduleModel from '../ReactModels/ScheduleModel';
 import CourseModel from '../ReactModels/CourseModel';
 import AcademicYearModel from '../ReactModels/AcademicYearModel';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import '../App.css'
 
 
 export default function FacultySchedulePage() {
+  const [loading, setLoading] = useState(false);
   const { user } = useContext(UserContext); // Access user context
   const [semester, setSemester] = useState('');  // Store semester as a string initially
   const [academicYear, setAcademicYear] = useState([]);
@@ -74,8 +76,10 @@ export default function FacultySchedulePage() {
   }, []);
 
   // Handle Class Schedule fetch
+
   const handleClassSchedule = async () => {
-    if (program) {
+    if (program && selectedAcademicYear && semester) {
+      setLoading(true); // Start loading
       try {
         console.log('Fetching schedules with:', {
           academicYear: selectedAcademicYear,
@@ -83,25 +87,34 @@ export default function FacultySchedulePage() {
           semester: semester,
           personnelNumber: user?.personnelNumber,
         });
-
+  
         const fetchedSchedules = await ScheduleModel.fetchAllSchedules(selectedAcademicYear); // Fetch all schedules by academic year
         console.log('Fetched Schedules:', fetchedSchedules); // Log the fetched schedules
-
+  
         if (fetchedSchedules && fetchedSchedules.length > 0) {
-          setSchedule(fetchedSchedules);
-          setErrorMessage(''); // Clear any error messages
+          setSchedule(fetchedSchedules); // Set fetched schedules
+          setErrorMessage(''); // Clear error messages
         } else {
-          setErrorMessage('No schedules available for the selected academic year.');
+          setErrorMessage('No schedules available for the selected academic year.'); // Set no data message
         }
       } catch (error) {
         console.error('Error fetching schedules:', error);
-        setErrorMessage('Failed to fetch schedules.');
+        setErrorMessage('Failed to fetch schedules.'); // Set fetch error message
+      } finally {
+        setLoading(false); // Stop loading
       }
     } else {
-      console.error('User has no assigned program.');
-      setErrorMessage('You do not have an assigned program. Please contact the administrator.');
+      setErrorMessage('Please select both academic year and semester to fetch schedules.'); // Prompt selection
     }
   };
+  
+  // useEffect to trigger fetching when academic year or semester changes
+  useEffect(() => {
+    if (selectedAcademicYear && semester) {
+      handleClassSchedule(); // Fetch data when fields are selected
+    }
+  }, [selectedAcademicYear, semester]); // Dependencies for academic year and semester
+  
 
   // Filter schedules based on selected academic year, semester, and personnelNumber
   useEffect(() => {
@@ -156,16 +169,16 @@ const formatTimeTo12Hour = (timeStr) => {
 
   return (
     <section>
-      {errorMessage && <Alert variant="danger">{errorMessage}</Alert>}
-
-      <Row className="p-3 bg-white border border-success rounded mb-4 m-1">
-        <Col>
-          <Form.Group controlId="academicYear">
-            <Form.Label className="custom-color-green-font custom-font">Academic Year</Form.Label>
-            <Form.Control
-              as="select"
+      <h2 className="custom-font custom-color-green-font mb-3 mt-2"> Schedule</h2>
+      <Form className="p-3 mb-4 bg-white border border-success rounded">
+      <Row className="align-items-center justify-content-between gx-3 gy-2">
+        <Col sm={12} md={6} className="mb-3">
+          <Form.Group controlId="academicYear" className='w-100'>
+            <Form.Label className="custom-color-green-font custom-font text-nowrap">Academic Year</Form.Label>
+            <Form.Select
               value={selectedAcademicYear}
               onChange={(e) => setSelectedAcademicYear(e.target.value)}
+              className="border-success w-100"
             >
               <option value="">Select an Academic Year</option>
               {academicYear
@@ -179,69 +192,79 @@ const formatTimeTo12Hour = (timeStr) => {
                     {year.academicYear}
                   </option>
                 ))}
-            </Form.Control>
+            </Form.Select>
           </Form.Group>
         </Col>
 
-        <Col>
-          <Form.Group controlId="semester">
-            <Form.Label className="custom-color-green-font custom-font">Semester</Form.Label>
-            <Form.Control as="select" value={semester} onChange={(e) => setSemester(e.target.value)}>
+        <Col sm={12} md={6} className="mb-3">
+          <Form.Group controlId="semester" className='w-100'> 
+            <Form.Label className="custom-color-green-font custom-font text-nowrap">Semester</Form.Label>
+            <Form.Select value={semester} onChange={(e) => setSemester(e.target.value)} className="border-success w-100" disabled={!selectedAcademicYear}>
               <option value="">Select a Semester</option>
               <option value="1">First</option>
               <option value="2">Second</option>
               <option value="3">Summer</option>
-            </Form.Control>
+            </Form.Select>
           </Form.Group>
         </Col>
 
-        <Col className="d-flex align-items-end">
-          <Button variant="success" className="w-100" onClick={handleClassSchedule}>
-            Schedule List
-          </Button>
-        </Col>
       </Row>
-
+      </Form>
       <div className="card rounded bg-white px-3 pb-3 pt-4">
-        <Table className="table">
-          <thead className="table-success">
-            <tr>
-              <th className="text-success custom-font">Course Code</th>
-              <th className="text-success custom-font">Course Description</th>
-              <th className="text-success custom-font">Lec</th>
-              <th className="text-success custom-font">Lab</th>
-              <th className="text-success custom-font">Unit</th>
-              <th className="text-success custom-font">Class</th>
-              <th className="text-success custom-font">Schedule</th>
+  {/* Loading State */}
+  {loading ? (
+    <div className="text-center py-5 bg-white">
+      <Spinner animation="border" variant="success" />
+      <p className="mt-3">Loading data, please wait...</p>
+    </div>
+  ) : filteredSchedules.length > 0 ? (
+    // Schedule Table
+    <Table bordered responsive className="table">
+      <thead className="table-success">
+        <tr>
+          <th className="custom-color-green-font text-center">Course Code</th>
+          <th className="custom-color-green-font text-center">Course Description</th>
+          <th className="custom-color-green-font text-center">Lec</th>
+          <th className="custom-color-green-font text-center">Lab</th>
+          <th className="custom-color-green-font text-center">Unit</th>
+          <th className="custom-color-green-font text-center">Class</th>
+          <th className="custom-color-green-font text-center">Schedule</th>
+        </tr>
+      </thead>
+      <tbody>
+        {filteredSchedules.map((sched) => {
+          const courseDetails = getCourseDetails(sched.courseCode);
+          const totalUnits =
+            (parseFloat(courseDetails.courseLecture) || 0) +
+            (parseFloat(courseDetails.courseLaboratory) || 0);
+          return (
+            <tr key={sched.id}>
+              <td className="text-center">{sched.courseCode}</td>
+              <td className="text-center">{courseDetails.courseDescriptiveTitle || "N/A"}</td>
+              <td className="text-center">{courseDetails.courseLecture || "N/A"}</td>
+              <td className="text-center">{courseDetails.courseLaboratory || "N/A"}</td>
+              <td className="text-center">{totalUnits || "N/A"}</td>
+              <td className="text-center">{sched.sectionNumber || "N/A"}</td>
+              <td className="text-center">
+                {sched.scheduleDay}, {formatTimeTo12Hour(sched.startTime)} -{" "}
+                {formatTimeTo12Hour(sched.endTime)}
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            {filteredSchedules.length > 0 ? (
-              filteredSchedules.map((sched) => {
-                const courseDetails = getCourseDetails(sched.courseCode);
-                const totalUnits = (parseFloat(courseDetails.courseLecture) || 0) + (parseFloat(courseDetails.courseLaboratory) || 0);
-                return (
-                  <tr key={sched.id}>
-                    <td className="custom-font">{sched.courseCode}</td>
-                    <td className="custom-font">{courseDetails.courseDescriptiveTitle || "N/A"}</td>
-                    <td className="custom-font">{courseDetails.courseLecture || "N/A"}</td>
-                    <td className="custom-font">{courseDetails.courseLaboratory || "N/A"}</td>
-                    <td className="custom-font">{totalUnits || "N/A"}</td>
-                    <td className="custom-font">{sched.sectionNumber || "N/A"}</td>
-                    <td className="custom-font">
-                      {sched.scheduleDay}, {formatTimeTo12Hour(sched.startTime)} - {formatTimeTo12Hour(sched.endTime)}
-                    </td>
-                  </tr>
-                );
-              })
-            ) : (
-              <tr>
-                <td colSpan="7" className="text-center custom-font">No schedules found</td>
-              </tr>
-            )}
-          </tbody>
-        </Table>
-      </div>
+          );
+        })}
+      </tbody>
+    </Table>
+  ) : (
+    // No Data Available
+    <div className="text-center py-5 bg-white rounded pt-5 px-4 pb-5">
+    <h5 className="custom-color-green-font mt-5 fs-5">No Schedule Available</h5>
+    <p className="fs-6 mb-4">
+        No data found for the selected filters. Please adjust your filters and try again.
+    </p>
+  </div>
+  )}
+</div>
+
     </section>
   );
 }

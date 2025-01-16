@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { Table, Form, Button, Row, Col, Modal, FormControl, Container, Spinner } from 'react-bootstrap';
+import { Table, Form, Button, Row, Col, Container, Spinner } from 'react-bootstrap';
+import 'bootstrap/dist/css/bootstrap.min.css';
 import AcademicYearModel from '../ReactModels/AcademicYearModel';
 import YearLevelModel from '../ReactModels/YearLevelModel';
 import ProgramModel from '../ReactModels/ProgramModel';
@@ -464,10 +465,11 @@ const ProgramHeadClassDesig = () => {
   return (
     <div>
       <h2 className="custom-font custom-color-green-font mb-3 mt-2">Class Scheduling</h2>
-      <Row className="mb-4 bg-white rounded p-3 m-1 d-flex justify-items-center align-items-center">
-      <Col>
+      <Form className="p-3 mb-4 bg-white border border-success rounded">
+      <Row className="align-items-center justify-content-between gx-3 gy-2">
+      <Col xs={12} sm={12} md={2} className="mb-3">
           <Form.Group controlId="academicYear">
-            <Form.Label className="custom-color-green-font custom-font">Academic Year</Form.Label>
+            <Form.Label className="custom-color-green-font custom-font text-nowrap">Academic Year</Form.Label>
             <Form.Select className='border-success' value={selectedAcademicYear} onChange={handleAcademicYearChange}>
               <option value="">Select Academic Year</option>
               {academicYears.sort((a, b) => {
@@ -483,9 +485,9 @@ const ProgramHeadClassDesig = () => {
             </Form.Select>
           </Form.Group>
         </Col>
-        <Col>
+        <Col xs={12} sm={12} md={2} className="mb-3">
           <Form.Group controlId="program">
-            <Form.Label className="custom-color-green-font custom-font">Program</Form.Label>
+            <Form.Label className="custom-color-green-font custom-font text-nowrap">Program</Form.Label>
             <Form.Select className='border-success' value={selectedProgram} onChange={handleProgramChange}
               disabled={!selectedAcademicYear}>
             <option value="">Select Program</option>
@@ -500,9 +502,9 @@ const ProgramHeadClassDesig = () => {
             </Form.Select>
           </Form.Group>
         </Col>
-        <Col>
+        <Col xs={12} sm={12} md={2} className="mb-3">
           <Form.Group controlId="yearLevel">
-            <Form.Label className="custom-color-green-font custom-font">Year Level</Form.Label>
+            <Form.Label className="custom-color-green-font custom-font text-nowrap">Year Level</Form.Label>
             <Form.Select className='border-success' value={selectedYearLevel} onChange={handleYearLevelChange}
               disabled={!selectedAcademicYear || !selectedProgram}>
               <option value="">Select Year Level</option>
@@ -515,9 +517,9 @@ const ProgramHeadClassDesig = () => {
             </Form.Select>
           </Form.Group>
         </Col>
-        <Col>
+        <Col xs={12} sm={12} md={2} className="mb-3">
           <Form.Group controlId="semester">
-            <Form.Label className="custom-color-green-font custom-font">Semester</Form.Label>
+            <Form.Label className="custom-color-green-font custom-font text-nowrap">Semester</Form.Label>
             <Form.Select className='border-success' value={selectedSemester} onChange={handleSemesterChange}
               disabled={!selectedYearLevel || !selectedAcademicYear || !selectedProgram}>
             <option value="">Select Semester</option>
@@ -530,9 +532,9 @@ const ProgramHeadClassDesig = () => {
             </Form.Select>
           </Form.Group>
         </Col>
-        <Col>
+        <Col xs={12} sm={12} md={2} className="mb-3">
           <Form.Group controlId="section">
-          <Form.Label className="custom-color-green-font custom-font">Section</Form.Label>
+          <Form.Label className="custom-color-green-font custom-font text-nowrap">Section</Form.Label>
             <Form.Select className='border-success' value={selectedSection} onChange={handleSectionChange}
               disabled={!selectedYearLevel || !selectedAcademicYear || !selectedSemester || !selectedProgram}>
                 <option value="">Select Section</option>
@@ -546,7 +548,7 @@ const ProgramHeadClassDesig = () => {
           </Form.Group>
         </Col>
       </Row>
-
+      </Form>
       {/* Table for Subjects */}
       {loading ? (
   <div className="text-center py-5 bg-white mt-4">
@@ -555,16 +557,16 @@ const ProgramHeadClassDesig = () => {
   </div>
 ) : showTable ? (
   <Container fluid className="bg-white mt-3 pt-4 pb-2 rounded">
-    <Row className="mb-3 mx-2 mt-4">
+    <Row className="mb-3 mx-2 mt-4 table-responsive overflow-auto hide-scrollbar">
       <Table bordered hover className="text-center">
         <thead className="table-success">
           <tr>
-            <th>Subject Code</th>
-            <th>Subject Description</th>
-            <th>Lecture Units</th>
-            <th>Lab Units</th>
-            <th>Schedule</th>
-            <th>Professor</th>
+            <th className='custom-color-green-font'>Subject Code</th>
+            <th className='custom-color-green-font'>Subject Description</th>
+            <th className='custom-color-green-font'>Lecture Units</th>
+            <th className='custom-color-green-font'>Lab Units</th>
+            <th className='custom-color-green-font'>Schedule</th>
+            <th className='custom-color-green-font'>Professor</th>
           </tr>
         </thead>
         <tbody>
@@ -644,14 +646,16 @@ const ProgramHeadClassDesig = () => {
           )}
         </tbody>
       </Table>
-      {schedules.length > 0 && (
-        <Container fluid >
+      
+    </Row>
+
+    {schedules.length > 0 && (
+        <Container fluid className='mb-3'>
           <Button className="btn-success" onClick={updateSchedules}>
             Save Schedule
           </Button>
         </Container>
       )}
-    </Row>
   </Container>
 ) : (
   <div className="text-center py-5 bg-white rounded pt-5 px-4 pb-5">

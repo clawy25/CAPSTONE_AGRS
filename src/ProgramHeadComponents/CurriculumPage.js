@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { Table, Form, Button, Row, Col, Modal, Spinner, Container } from 'react-bootstrap';
+import 'bootstrap/dist/css/bootstrap.min.css';
 import AcademicYearModel from '../ReactModels/AcademicYearModel';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faEdit, faTrashAlt } from '@fortawesome/free-solid-svg-icons';
 import CourseModel from '../ReactModels/CourseModel';
 import ProgramModel from '../ReactModels/ProgramModel';
 import { UserContext } from '../Context/UserContext'; // Assuming CourseModel handles fetching courses based on academic year, year level, and semester.
@@ -124,20 +127,25 @@ const CurriculumPage = () => {
     }
   }, [selectedAcademicYear, selectedYearLevel, selectedSemester]);
 
-  const handleView = async () => {
-    if (selectedAcademicYear && selectedYearLevel && selectedSemester) {
-      setLoading(true); // Set loading to true
-      try {
-        // Simulate a delay for fetching or processing data if necessary
-        await new Promise((resolve) => setTimeout(resolve, 1000)); // Example: Simulating a fetch or operation
-        setShowTable(true); // Show the table once data or filters are ready
-      } catch (error) {
-        console.error("Error occurred while handling view:", error);
-      } finally {
-        setLoading(false); // Set loading to false after operation
+  useEffect(() => {
+    const handleView = async () => {
+      if (selectedAcademicYear && selectedYearLevel && selectedSemester) {
+        setLoading(true); // Start loading state
+        try {
+          // Simulate a delay for fetching or processing data if necessary
+          await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulating fetch delay
+          setShowTable(true); // Show table after data is ready
+        } catch (error) {
+          console.error("Error occurred while handling view:", error);
+        } finally {
+          setLoading(false); // End loading state
+        }
       }
-    }
-  };
+    };
+  
+    handleView(); // Call the async function
+  }, [selectedAcademicYear, selectedYearLevel, selectedSemester]); // Add dependencies
+  
   
 
   const handleAcademicYearChange = (e) => {
@@ -258,10 +266,11 @@ const CurriculumPage = () => {
   return (
     <div>
       <h2 className="custom-font custom-color-green-font mb-3 mt-2">Curriculum</h2>
-      <Row className="mb-4 bg-white rounded p-3 m-1">
-        <Col>
+      <Form className="p-3 mb-4 bg-white border border-success rounded">
+      <Row className="align-items-center justify-content-between gx-3 gy-2">
+        <Col sm={12} md={4}>
           <Form.Group controlId="academicYear">
-            <Form.Label className="custom-color-green-font custom-font">Academic Year</Form.Label>
+            <Form.Label className="custom-color-green-font text-nowrap">Academic Year</Form.Label>
             <Form.Select name ="acad" as="select" value={selectedAcademicYear} onChange={handleAcademicYearChange} className="border-success">
             <option value="">Select Academic Year</option>
             {program
@@ -279,9 +288,9 @@ const CurriculumPage = () => {
             </Form.Select>
           </Form.Group>
         </Col>
-        <Col>
+        <Col sm={12} md={4}>
           <Form.Group controlId="selectedYearLevel">
-            <Form.Label className="custom-color-green-font custom-font">Year Level</Form.Label>
+            <Form.Label className="custom-color-green-font text-nowrap">Year Level</Form.Label>
             <Form.Select
             name="year"
             value={selectedYearLevel}
@@ -300,9 +309,9 @@ const CurriculumPage = () => {
             </Form.Select>
           </Form.Group>
         </Col>
-        <Col>
+        <Col sm={12} md={4}>
         <Form.Group controlId="semester">
-          <Form.Label className="custom-color-green-font custom-font">Semester</Form.Label>
+          <Form.Label className="custom-color-green-font text-nowrap">Semester</Form.Label>
           <Form.Select 
           name="sem" 
           value={selectedSemester} 
@@ -318,10 +327,9 @@ const CurriculumPage = () => {
           </Form.Select>
         </Form.Group>
         </Col>
-        <Col className="d-flex align-items-end">
-          <Button className="w-100 btn-success" onClick={handleView}>View</Button>
-        </Col>
       </Row>
+      </Form>
+
 
       {loading ? (
         <div className="text-center py-5 bg-white mt-4">
@@ -332,16 +340,17 @@ const CurriculumPage = () => {
         <>
           {courses.length > 0 ? (
             <Container fluid className='bg-white mt-3 pt-4 px-3 rounded'>
+            <Container fluid className='table-responsive overflow-auto hide-scrollbar'>
               <Table bordered className="text-center mt-4">
                 <thead className="table-success">
                   <tr>
-                    <th>Course Code</th>
-                    <th>Descriptive Title</th>
-                    <th>Lecture Units</th>
-                    <th>Laboratory Units</th>
-                    <th>Pre-requisite</th>
-                    <th>Bridging Course?</th>
-                    <th>Actions</th>
+                    <th className='custom-color-green-font'>Course Code</th>
+                    <th className='custom-color-green-font'>Descriptive Title</th>
+                    <th className='custom-color-green-font'>Lecture Units</th>
+                    <th className='custom-color-green-font'>Laboratory Units</th>
+                    <th className='custom-color-green-font'>Pre-requisite</th>
+                    <th className='custom-color-green-font'>Bridging Course?</th>
+                    <th className='custom-color-green-font'>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -353,30 +362,30 @@ const CurriculumPage = () => {
                       <td>{course.courseLaboratory}</td>
                       <td>{course.coursePreRequisite}</td>
                       <td>{course.isBridgingCourse ? 'Yes' : 'No'}</td>
-                      <td>
+                      <td className='d-flex m-2'>
                         <Button
-                          variant="success"
-                          className="me-2"
+                          variant="warning"
+                          className="me-2 text-white"
                           onClick={() => handleEditCourse(course)}
                         >
-                          Edit
+                          <FontAwesomeIcon icon={faEdit} />
                         </Button>
                         <Button variant="danger" onClick={() => handleDeleteCourse(course)}>
-                          Delete
+                        <FontAwesomeIcon icon={faTrashAlt} />
                         </Button>
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </Table>
-
-              <Row className="mt-3 mb-3">
+            </Container>
+            <Container fluid className="mt-3 mb-3">
                 <Col>
                   <Button className="btn-success w-auto mb-3" onClick={handleAddCourse}>
                     Add Course
                   </Button>
                 </Col>
-              </Row>
+              </Container>
             </Container>
           ) : (
             <div className="text-center py-5 bg-white rounded pt-5 px-4 pb-5">

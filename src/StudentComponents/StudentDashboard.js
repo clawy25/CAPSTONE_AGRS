@@ -71,8 +71,14 @@ export default function StudentDashboard() {
         >
           &times;
         </button>
-              <img src="/pcc.png" alt="Logo" className="college-logo align-items-center ms-5 mb-3" />
-              <div className="welcome-message mb-3 text-center">Hello, {user ? user.studentNameFirst : 'Student'}!</div>
+        <div className='d-block align-items-center justify-content-center'>
+          <div className='d-flex align-items-center justify-content-center'>
+          <img src="/pcc.png" alt="Logo" className="img-fluid mb-3 college-logo" />
+          </div>
+          <p className="welcome-message mb-3 text-center">Hello, {user ? user.studentNameFirst : 'Student'}!</p>
+        </div>
+              
+              
               <nav className="menu mb-3">
                 <Link
                     to="/student-dashboard/enrollment" 
