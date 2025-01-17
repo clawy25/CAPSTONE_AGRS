@@ -79,12 +79,12 @@ export default class TimelineModel {
         }
     }
 
-    // New method to create and insert timeline data
+    // New method to update timeline data
     static async updateTimeline(timelineData) {
         try {
             const apiUrl = process.env.REACT_APP_API_URL;
             const response = await fetch(`${apiUrl}/timeline/update`, {
-                method: 'POST',
+                method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                 },

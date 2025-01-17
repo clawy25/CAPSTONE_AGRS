@@ -70,4 +70,46 @@ router.post('/upload', async (req, res) => {
     }
 });
 
+router.put('/update', async (req, res) => {
+    try {
+        const timelineData = req.body.data;
+
+        // Validate timelineData
+        if (!timelineData || !Array.isArray(timelineData)) {
+            return res.status(400).json({ success: false, message: 'Invalid data format or missing timeline data' });
+        }
+
+        // Perform updates for each row
+        const updatePromises = timelineData.map(async (item) => {
+            const { id, ...updateFields } = item;
+
+            if (!id) {
+                throw new Error(`Missing id for item: ${JSON.stringify(item)}`);
+            }
+
+            const { error } = await supabase
+                .from('timeline')
+                .update(updateFields)
+                .eq('id', id);
+
+            if (error) {
+                throw new Error(`Failed to update timelineData with id: ${id}`);
+            }
+
+            // Return updated item for confirmation, if needed
+            return { id, updatedFields: updateFields };
+        });
+
+        // Wait for all updates to complete
+        const updatedData = await Promise.all(updatePromises);
+
+        res.status(200).json({ success: true, updatedData });
+    } catch (error) {
+        console.error('Error updating timeline:', error);
+        res.status(500).json({ success: false, message: `Error updating timeline: ${error.message || 'Unknown error'}` });
+    }
+});
+
+
+
 module.exports = router;
