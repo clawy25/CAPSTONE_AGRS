@@ -185,6 +185,6 @@ export default class StudentModel {
           console.error('Error updating student:', error);
           throw error;
         }
-      }
+    }
   }
   

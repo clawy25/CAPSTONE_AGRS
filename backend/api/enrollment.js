@@ -64,4 +64,43 @@ router.post('/upload', async (req, res) => {
     }
 });
 
+router.put('/update', async (req, res) => {
+    const updatedEnrollmentData = req.body; // Expecting an array of objects
+
+    try {
+        // Validate that the input is an array
+        if (!Array.isArray(updatedEnrollmentData)) {
+            return res.status(400).json({ error: 'Input data must be an array of enrollment updates' });
+        }
+
+        // Perform updates for each row
+        const updatePromises = updatedEnrollmentData.map(async (item) => {
+            const { studentNumber, scheduleNumber, ...updateFields } = item;
+
+            if (!studentNumber || !scheduleNumber) {
+                throw new Error(`Missing studentNumber or scheduleNumber for item: ${JSON.stringify(item)}`);
+            }
+
+            const { error } = await supabase
+                .from('enrollment')
+                .update(updateFields)
+                .eq('studentNumber', studentNumber)
+                .eq('scheduleNumber', scheduleNumber);
+
+            if (error) {
+                throw new Error(`Failed to update studentNumber: ${studentNumber}, scheduleNumber: ${scheduleNumber}`);
+            }
+        });
+
+        // Wait for all updates to complete
+        await Promise.all(updatePromises);
+
+        res.status(200).json({ message: 'Successfully updated enrollment data' });
+    } catch (error) {
+        console.error('Error updating enrollment data:', error);
+        res.status(500).json({ error: error.message || 'Internal server error' });
+    }
+});
+
+
 module.exports = router;

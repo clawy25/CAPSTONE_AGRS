@@ -78,4 +78,25 @@ export default class TimelineModel {
             throw error;
         }
     }
+
+    // New method to create and insert timeline data
+    static async updateTimeline(timelineData) {
+        try {
+            const apiUrl = process.env.REACT_APP_API_URL;
+            const response = await fetch(`${apiUrl}/timeline/update`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ data: timelineData })
+            });
+            if (!response.ok) {
+                throw new Error('Error updating timeline data');
+            }
+            return await response.json(); // Return the response if needed
+        } catch (error) {
+            console.error('Error updating timeline data:', error);
+            throw error;
+        }
+    }
 }

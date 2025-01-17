@@ -67,5 +67,28 @@ export default class EnrollmentModel {
             console.error('Error inserting enrollment:', error);
             throw error;
         }
-    }    
+    }
+
+    static async updateEnrollment(updatedEnrollmentData) {
+        const apiUrl = process.env.REACT_APP_API_URL;
+          try {
+  
+            const response = await fetch(`${apiUrl}/enrollment/update`, {
+              method: 'PUT',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(updatedEnrollmentData),
+            });
+      
+            if (!response.ok) {
+              throw new Error('Failed to update enrollment data');
+            }
+      
+            return await response.json();
+          } catch (error) {
+            console.error('Error updating enrollment:', error);
+            throw error;
+          }
+    }
 }
