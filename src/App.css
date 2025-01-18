@@ -7,10 +7,21 @@
 }
 
 body {
-  min-width: 320px; 
-  min-height: 360px;/* Prevents shrinking below 320px */
+  z-index: 1;
 }
 
+body.modal-open {
+  overflow: auto !important; /* Override the overflow: */
+  padding-right: 0 !important; /* This is often also added by bootstrap and may need overriding */
+}
+.modal {
+  z-index: 1060 !important; /* Ensure the modal is on top */
+}
+
+.modal-backdrop {
+  z-index: 1050 !important;
+  opacity: 0.5 !important;
+}
 
 .bg-custom-color-green {
     background-color: #004d00 !important; 
@@ -139,6 +150,11 @@ tbody {
 .modal-xxl .modal-dialog {
   max-width: 90%;
   width: 90%;
+  display: block !important;
+visibility: visible !important;
+opacity: 1 !important;
+z-index: 1050 !important; /* Ensure it's above other elements */
+
 }
 
 .modal-xxl .modal-content {
@@ -147,6 +163,31 @@ tbody {
 .custom-modal-dialog .modal-dialog {
   max-width: 90% !important; /* Set the desired width */
   width: 100% !important; /* Ensure it takes the full width */
+}
+
+.image-container {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+}
+
+.fade {
+  opacity: 0;
+  transition: opacity 3s ease-in-out;
+}
+
+.image-container img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: opacity 3s ease-in-out;
+}
+
+.image-container img.fade {
+  opacity: 1;
 }
 
 /* COGModalPrint.css */

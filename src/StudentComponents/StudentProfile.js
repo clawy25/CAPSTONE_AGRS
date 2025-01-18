@@ -1,6 +1,6 @@
 import React, { useContext, useState, useEffect } from 'react';
 import { Form, Table, Button, Card } from 'react-bootstrap';
-import 'bootstrap/dist/css/bootstrap.min.css'; 
+
 import '../App.css';
 import { UserContext } from '../Context/UserContext';
 import StudentModel from '../ReactModels/StudentModel';

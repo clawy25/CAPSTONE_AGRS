@@ -10,6 +10,7 @@ import ScheduleModel from '../ReactModels/ScheduleModel'
 import AcademicYearModel from '../ReactModels/AcademicYearModel';
 import PersonnelModel from '../ReactModels/PersonnelModel';
 import ProgramModel from '../ReactModels/ProgramModel';
+import '../App.css';
 
 export default function RegistrarIrregularStudents() {
     const [loading, setLoading] = useState(false); 
@@ -51,7 +52,6 @@ export default function RegistrarIrregularStudents() {
             }
         ]);
     };
-
 
     const fetchCurriculum = async (programNumber, studentNumber) => {
         console.log("Fetching curriculum for Program:", programNumber, "Student:", studentNumber);
@@ -305,6 +305,7 @@ export default function RegistrarIrregularStudents() {
 
     // Handle click on "Academic Record" button
     const handleAcademicRecordClick = (student) => {
+        console.log("Opening Academic Record Modal for:", student); // Added log
         setSelectedStudent(student); // Set the selected student
         setShowAcademicRecordModal(true); // Show the academic record modal
         fetchCurriculum(student.studentProgramNumber, student.studentNumber); // Pass studentNumber to fetchCurriculum
@@ -312,6 +313,7 @@ export default function RegistrarIrregularStudents() {
 
     // Handle click on "Enrollment" button
     const handleEnrollmentClick = (student) => {
+        console.log("Opening Enrollment Modal for:", student); // Added log
         setSelectedStudent(student); // Set the selected student
         setShowEnrollmentModal(true); // Show the enrollment modal
         fetchCoursesAndSchedules(student.studentProgramNumber, student.studentNumber)
@@ -428,7 +430,7 @@ export default function RegistrarIrregularStudents() {
 
             </Container>
             {/* Academic Record Modal */}
-            <Modal show={showAcademicRecordModal} size='lg' onHide={handleCloseAcademicRecordModal}>
+            <Modal show={showAcademicRecordModal} size='lg' className='modal' onHide={handleCloseAcademicRecordModal}>
                 <Modal.Header closeButton>
                     <Modal.Title>Student Record</Modal.Title>
                 </Modal.Header>
@@ -491,7 +493,7 @@ export default function RegistrarIrregularStudents() {
 
             {/* Enrollment Modal */}
             
-            <Modal show={showEnrollmentModal} size="xl" onHide={handleCloseEnrollmentModal}>
+            <Modal show={showEnrollmentModal} size="xl" onHide={handleCloseEnrollmentModal} className='h-100'>
                 <Modal.Header closeButton>
                     <Modal.Title>Enrollment Details</Modal.Title>
                 </Modal.Header>
@@ -589,7 +591,6 @@ export default function RegistrarIrregularStudents() {
                                                                             ...r,
                                                                             scheduleNumber: selectedSchedule?.scheduleNumber || '',
                                                                             schedule: selectedSchedule?.schedule || '',
-                                                                            professorNumber: selectedSchedule?.personnelNumber || '',
                                                                             professorName: selectedSchedule?.personnelName || '',
                                                                             section: selectedSchedule?.sectionNumber || '',
                                                                         }

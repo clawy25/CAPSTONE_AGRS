@@ -4,7 +4,7 @@ import { UserContext } from '../Context/UserContext';
 import ScheduleModel from '../ReactModels/ScheduleModel';
 import CourseModel from '../ReactModels/CourseModel';
 import AcademicYearModel from '../ReactModels/AcademicYearModel';
-import 'bootstrap/dist/css/bootstrap.min.css';
+
 import '../App.css'
 
 

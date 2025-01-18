@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react'; 
 import { useLocation } from 'react-router-dom';
 import { Table, Form, Button, Row, Col, Modal, Container, Spinner } from 'react-bootstrap';
-import 'bootstrap/dist/css/bootstrap.min.css'; 
+ 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPrint, faCheckCircle } from '@fortawesome/free-solid-svg-icons';
 import { UserContext } from '../Context/UserContext';

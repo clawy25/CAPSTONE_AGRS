@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext, useCallback } from 'react';
 import { Button, Modal, Table,Spinner } from 'react-bootstrap';
-import 'bootstrap/dist/css/bootstrap.min.css'; 
+
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBook } from '@fortawesome/free-solid-svg-icons';
 import { UserContext } from '../Context/UserContext';
@@ -58,14 +58,15 @@ export default function Grades() {
             semGrade.scheduleNumber === enrollment.scheduleNumber &&
             semGrade.studentNumber === studentNumber
         );
-
+      
         const totalUnits =
           (course?.courseLaboratory || 0) + (course?.courseLecture || 0);
-
+      
         return {
           courseCode: enrollment.courseCode,
           courseDescriptiveTitle: course?.courseDescriptiveTitle || "",
           scheduleNumber: enrollment.scheduleNumber,
+          academicYear: extractAcademicYear(enrollment.scheduleNumber), // Extract academic year
           yearLevel: course?.courseYearLevel || "",
           semester: course?.courseSemester || "",
           courseLaboratoryUnits: course?.courseLaboratory || 0,
@@ -75,6 +76,7 @@ export default function Grades() {
           completion: gradeData?.completionStatus || "-",
         };
       });
+      
 
       const currentStudentData = {
         studentNumber: student.studentNumber,
@@ -210,6 +212,32 @@ export default function Grades() {
 
   const handleCloseModal = () => setShowModal(false);
 
+  const groupByAcademicYearAndSemester = (courses) => {
+    return courses.reduce((acc, course) => {
+      const { academicYear, semester } = course;
+      if (!acc[academicYear]) {
+        acc[academicYear] = {};
+      }
+      if (!acc[academicYear][semester]) {
+        acc[academicYear][semester] = [];
+      }
+      acc[academicYear][semester].push(course);
+      return acc;
+    }, {});
+  };
+  
+  
+  const extractAcademicYear = (scheduleNumber) => {
+    const match = scheduleNumber.match(/-(\d{2})(\d{2})-/);
+    if (match) {
+      const startYear = `20${match[1]}`;
+      const endYear = `20${match[2]}`;
+      return `${startYear}-${endYear}`;
+    }
+    return "Unknown Academic Year";
+  };
+  
+
   return (
     // Your existing JSX structure remains the same
     <>
@@ -237,47 +265,61 @@ export default function Grades() {
               <FontAwesomeIcon icon={faBook} /> Curriculum
             </Button>
           </div>
-            <div className="card">
-            <div className="card-header bg-custom-color-green d-flex">
-              <p className="text-white mt-1 fs-6 gw-semibold custom-color">
-                Academic Year ({studentData.studentCurrentYearLevel}) First Semester ({studentData.studentCurrentProgram}) 
-              </p>
-            </div>
-            <div className="card-body">
-              <Table bordered className="table">
-                <thead className="table-success">
-                  <tr>
-                    <th className="text-success custom-fon text-center">Code</th>
-                    <th className="text-success custom-font text-center">Subject</th>
-                    <th className="text-success custom-font text-center">Total Units</th>
-                    <th className="text-success custom-font text-center">Grade</th>
-                    <th className="text-success custom-font text-center">Remarks</th>
-      
-                  </tr>
-                </thead>
-                <tbody>
-                  {studentData.courses && studentData.courses.length > 0 ? (
-                    studentData.courses.map((course, index) => (
-                      <tr key={index}>
-                        <td className="custom-font text-center">{course.courseCode}</td>
-                        <td className="custom-font">{course.courseDescriptiveTitle}</td>
-                        <td className="custom-font text-center">{course.unitOfCredits}</td>
-                        <td className="custom-font text-center">{course.finalGrade}</td>
-                        <td className="custom-font text-center">{getGradeDescription(course.finalGrade)}</td>
-                        
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan="5" className="text-center custom-font">
-                        No courses available.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </Table>
-            </div>
-          </div>
+          <div>
+          {studentData.courses && studentData.courses.length > 0 ? (
+            Object.entries(groupByAcademicYearAndSemester(studentData.courses)).map(([academicYear, semesters], index) => (
+              <div key={index} className="card mb-3">
+                {Object.entries(semesters).map(([semester, courses], semesterIndex) => (
+                  <div key={semesterIndex} className="card">
+                    <div className="card-header bg-custom-color-green d-flex">
+                      <p className="text-white mt-1 fs-6 gw-semibold custom-color">
+                        Academic Year {academicYear} {getSemesterText(semester)} Semester
+                      </p>
+                    </div>
+                    <div className="card-body">
+                      <Table bordered className="table">
+                        <thead className="table-success">
+                          <tr>
+                            <th className="text-success custom-font text-center">Code</th>
+                            <th className="text-success custom-font text-center">Subject</th>
+                            <th className="text-success custom-font text-center">Total Units</th>
+                            <th className="text-success custom-font text-center">Grade</th>
+                            <th className="text-success custom-font text-center">Remarks</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {courses.length > 0 ? (
+                            courses.map((course, index) => (
+                              <tr key={index}>
+                                <td className="custom-font text-center">{course.courseCode}</td>
+                                <td className="custom-font text-center">{course.courseDescriptiveTitle}</td>
+                                <td className="custom-font text-center">{course.unitOfCredits}</td>
+                                <td className="custom-font text-center">{course.finalGrade}</td>
+                                <td className="custom-font text-center">{getGradeDescription(course.finalGrade)}</td>
+                              </tr>
+                            ))
+                          ) : (
+                            <tr>
+                              <td colSpan="5" className="text-center custom-font">
+                                No courses available.
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </Table>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ))
+          ) : (
+            <div className="text-center custom-font">No courses available.</div>
+          )}
+
+</div>
+
+
+
           </>
     )}
 
@@ -296,23 +338,23 @@ export default function Grades() {
                 <Table striped bordered hover>
                   <thead>
                     <tr>
-                      <th>Course Code</th>
-                      <th>Course Title</th>
-                      <th>Lecture Hours</th>
-                      <th>Laboratory Hours</th>
-                      <th>Unit Credits</th>
-                      <th>Pre Requisite</th>
+                      <th className='text-center text-success custom-font'>Course Code</th>
+                      <th className='text-center text-success custom-font'>Course Title</th>
+                      <th className='text-center text-success custom-font'>Lecture Hours</th>
+                      <th className='text-center text-success custom-font'>Laboratory Hours</th>
+                      <th className='text-center text-success custom-font'>Unit Credits</th>
+                      <th className='text-center text-success custom-font'>Pre Requisite</th>
                     </tr>
                   </thead>
                   <tbody>
                     {curriculum[yearLevel][semester].map((course, index) => (
                       <tr key={index}>
-                        <td>{course.courseCode}</td>
-                        <td>{course.courseDescriptiveTitle}</td>
-                        <td>{course.courseLecture}</td>
-                        <td>{course.courseLaboratory}</td>
-                        <td>{course.unitOfCredits}</td>
-                        <td className="custom-font">{course.coursePreRequisite}</td>
+                        <td className="custom-font text-center">{course.courseCode}</td>
+                        <td className="custom-font text-center">{course.courseDescriptiveTitle}</td>
+                        <td className="custom-font text-center">{course.courseLecture}</td>
+                        <td className="custom-font text-center">{course.courseLaboratory}</td>
+                        <td className="custom-font text-center">{course.unitOfCredits}</td>
+                        <td className="custom-font text-center">{course.coursePreRequisite}</td>
                       </tr>
                     ))}
                   </tbody>

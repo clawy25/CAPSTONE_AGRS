@@ -5,7 +5,7 @@ import { faSearch, faPlus, faMinus, faMapMarkerAlt,  faEnvelope, faPhoneAlt } fr
 import '../StudentComponents/Dashboard.css';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import 'bootstrap/dist/css/bootstrap.min.css';
+
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { faBars } from '@fortawesome/free-solid-svg-icons'; // Import menu icon

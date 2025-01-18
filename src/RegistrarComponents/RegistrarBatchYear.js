@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import 'bootstrap/dist/css/bootstrap.min.css'; // Import Bootstrap for styling
+
 import { useNavigate } from 'react-router-dom'; // Assuming you're using react-router for navigation
 import { Tabs, Tab, Table } from 'react-bootstrap'; // Import Tabs and Table from react-bootstrap
 import YearLevelModel from '../ReactModels/YearLevelModel';

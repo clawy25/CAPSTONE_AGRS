@@ -1,20 +1,24 @@
-import React, { useState, useContext } from 'react'; //Added useContext here
+import React, { useState, useContext, useEffect } from 'react'; //Added useContext here
 import { useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 import PersonnelModel from '../ReactModels/PersonnelModel'; // Adjust the path as necessary
 import '../App.css';
-import 'bootstrap/dist/css/bootstrap.min.css';
+
 import { UserContext } from '../Context/UserContext';
 
 
 export default function FacultyPage() {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false)
   const [accountNumber, setAccountNumber] = useState('0000-000-PCC-0');
   const [password, setAccountPassword] = useState('Agrspcc2024');
   const { setUser } = useContext(UserContext);
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [currentImage, setCurrentImage] = useState('pccCover.png');
+  const images = ['pccCover.png', 'pccCover1.png', 'pccCover2.png']; // list of images
+  const timeLimit = 5000;
 
   const handleForgotpassword = () => {
     navigate('/ForgotPassword');
@@ -26,7 +30,7 @@ export default function FacultyPage() {
     
     // Reset error message
     setError('');
-
+      setLoading(true);
     // Student ID validation
     const personnelNumberPattern = /^\d{4}-\d{3}-PCC-\d{1}$/;
     if (!personnelNumberPattern.test(accountNumber)) {
@@ -38,18 +42,22 @@ export default function FacultyPage() {
     if (/\s/.test(password)) {
       // If password contains any space, prevent form submission
       setError('Password must not have spaces.');
+      setLoading(false);
       return;
     }
     if (password.length < 8) {
       setError('Password must be at least 8 characters long.');
+      setLoading(false);
       return;
     }
     if (!/\d/.test(password)) {
       setError('Password must contain at least one digit.');
+      setLoading(false);
       return;
     }
     if (!/[A-Z]/.test(password)) {
       setError('Password must contain at least one uppercase letter.');
+      setLoading(false);
       return;
     }
     
@@ -99,15 +107,32 @@ export default function FacultyPage() {
     setShowPassword(!showPassword); // Toggle the password visibility
   };
 
+  useEffect(() => {
+    const imageSwitchInterval = setInterval(() => {
+      setCurrentImage((prevImage) => {
+        // Find current image index and get next image in array
+        const currentIndex = images.indexOf(prevImage);
+        const nextIndex = (currentIndex + 1) % images.length;
+        return images[nextIndex];
+      });
+    }, timeLimit);
+
+    // Cleanup the interval on component unmount
+    return () => clearInterval(imageSwitchInterval);
+  }, []);
+
   return (
     <div className="container-fluid hide-scrollbar">
         <div className="row no-gutters">
             <div className="col-12 col-md-6 p-0 position-relative d-none d-md-block">
-                <img 
-                    className="img-fluid w-100 h-100" 
-                    src='pccCover.jpg' 
-                    alt="PCC Building" 
-                    style={{ objectFit: 'cover', minHeight: '100vh' }} />
+            <div className="image-container">
+            <img
+              className="img-fluid w-100 h-100 fade"
+              src={currentImage}
+              alt="Image Switcher"
+              style={{ objectFit: "cover", minHeight: "100vh" }}
+            />
+          </div>
                 <img 
                     src='pcc.png' 
                     alt="PCC Logo" 
@@ -163,8 +188,9 @@ export default function FacultyPage() {
 
                 <button
                     className="btn bg-custom-color-yellow custom-font custom-button fs-5 fw-semibold"
-                    type="submit">
-                        Login
+                    type="submit"
+                    disabled={loading}>
+                        {loading ? 'Logging In...' : 'Login'}
                 </button>
 
                 <span

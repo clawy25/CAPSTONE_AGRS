@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { Table, Form, Button, Row, Col, Modal, Spinner, Container } from 'react-bootstrap';
-import 'bootstrap/dist/css/bootstrap.min.css';
+
 import AcademicYearModel from '../ReactModels/AcademicYearModel';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faTrashAlt } from '@fortawesome/free-solid-svg-icons';

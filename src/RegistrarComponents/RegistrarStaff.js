@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, Routes, Route } from 'react-router-dom';
-import 'bootstrap/dist/css/bootstrap.min.css';
+
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons'; // Import back icon
 import RegistrarProgramHead from './RegistrarProgramHead';

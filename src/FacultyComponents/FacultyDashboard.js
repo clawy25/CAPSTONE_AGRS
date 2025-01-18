@@ -18,7 +18,7 @@ import EnrollmentModel from '../ReactModels/EnrollmentModel'
 import NewPassword from '../RegistrarComponents/NewPassword';
 import RegistrarProfile from '../RegistrarComponents/RegistrarProfile';
 import './PrintStyles.css';
-import 'bootstrap/dist/css/bootstrap.min.css';
+
 import { UserContext } from '../Context/UserContext';
 import { Row, Col, Form, Table, Spinner, Container, Toast, ToastContainer } from 'react-bootstrap';
 

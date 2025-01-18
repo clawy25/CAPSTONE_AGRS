@@ -459,9 +459,9 @@ console.log('Filtered Students:', filteredStudents);
 
                                         return (
                                             <tr key={student.id}>
-                                                <td className='custom-color-green-font'>{student.studentNumber}</td>
-                                                <td className='custom-color-green-font'>{student.studentNameLast || ''}, {student.studentNameFirst || ''} {student.studentNameMiddle || ''}</td>
-                                                <td className='custom-color-green-font'>{student.studentPccEmail}</td>
+                                                <td className='custom-color-green-font text-center'>{student.studentNumber}</td>
+                                                <td className='custom-color-green-font text-center'>{student.studentNameLast || ''}, {student.studentNameFirst || ''} {student.studentNameMiddle || ''}</td>
+                                                <td className='custom-color-green-font text-center'>{student.studentPccEmail}</td>
                                                 <td className='custom-color-green-font text-center'>
                                                     {programs.find(program => program.programNumber === student.studentProgramNumber)?.programName || 'No Program Assigned'}
                                                 </td>
@@ -469,9 +469,7 @@ console.log('Filtered Students:', filteredStudents);
                                                {student.studentType}
                                                 </td>
                                                 <td className='d-flex align-itmes-cneter justify-content-center'>
-                                                    <button className="btn btn-success btn-sm me-2">
-                                                        <FontAwesomeIcon icon={faCog} /> COG {/* Font Awesome settings icon */}
-                                                    </button>
+                                                    
                                                     <button className="btn btn-success btn-sm">
                                                         <FontAwesomeIcon icon={faFileSignature} /> TOR {/* Font Awesome signature icon */}
                                                     </button>
