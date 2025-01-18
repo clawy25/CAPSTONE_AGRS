@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { Form, Row, Col, Button, Modal, Table, Spinner, Container } from 'react-bootstrap';
+import { Form, Row, Col, Button, Modal, Table, Spinner } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css'; 
 import * as XLSX from 'sheetjs-style'; // Use sheetjs-style for formatting
 import ProgramModel from '../ReactModels/ProgramModel'; // Ensure this path is correct
@@ -307,37 +307,7 @@ const fetchCurriculum = async (programNumber, batchYear) => {
     }
   };
   
-  useEffect(() => {
-    const handleView = async () => {
-      if (programCode && batchYear) {
-        // Reset previous state
-        setSemestersData({});
-        setStudents([]);
-        setAcademicYears([]);
-        setLoading(true); // Start loading indicator
-  
-        try {
-          // Fetch curriculum and students in parallel
-          const [curriculumData, filteredStudents] = await Promise.all([
-            fetchCurriculum(programCode, batchYear),
-            fetchStudentData(programCode, batchYear),
-          ]);
-  
-          // Update students and other states after fetching data
-          setStudents(filteredStudents);
-          // Optionally process curriculumData here if needed
-        } catch (error) {
-          console.error("Error fetching data:", error);
-          // Optionally display an error modal or message here
-        } finally {
-          setLoading(false); // Stop loading indicator after all fetches complete
-        }
-      } 
-    };
-  
-    handleView();
-  }, [programCode, batchYear]); // Add dependencies to run the effect when these values change
-  
+
   const handleProgramNameChange = (e) => {
     const selectedProgramName = e.target.value;
     setProgramName(selectedProgramName);
@@ -423,7 +393,7 @@ const fetchCurriculum = async (programNumber, batchYear) => {
   @page {
     size: legal;
     margin: 10mm; /* Keep margins small */
-    scale: 99;
+    scale: 97;
   }
 
   body {
@@ -588,17 +558,17 @@ const fetchCurriculum = async (programNumber, batchYear) => {
       <h2 className="custom-font custom-color-green-font mb-3 mt-2">MOG</h2>
       {/* Program Filter Component */}
       <Form className="p-3 mb-4 bg-white border border-success rounded">
-      <Row className="align-items-center justify-content-between gx-3 gy-2">
+      <Row className="align-items-center">
 
-      <Col sm={12} md={6} lg={3}>
-          <Form.Group className='w-100' controlId="batchYear">
-            <Form.Label className="custom-color-green-font custom-font text-nowrap">
+      <Col xs={12} sm={6} md={2} lg={2}>
+          <Form.Group controlId="batchYear">
+            <Form.Label className="custom-color-green-font custom-font">
               Batch Year
             </Form.Label>
             <Form.Select
               value={batchYear}
               onChange={handleBatchYearSelected}
-              className="border-success "
+              className="border-success"
             >
               <option value="">Select Batch Year</option>
               {admissionYears.map((year) => (
@@ -610,13 +580,13 @@ const fetchCurriculum = async (programNumber, batchYear) => {
 
           </Form.Group>
         </Col>
-        <Col sm={12} md={6} lg={3}>
-          <Form.Group className='w-100' controlId="programName">
-            <Form.Label className="custom-color-green-font custom-font text-nowrap">Program Name</Form.Label>
+        <Col xs={12} sm={6} md={2} lg={2}>
+          <Form.Group controlId="programName">
+            <Form.Label className="custom-color-green-font custom-font">Program Name</Form.Label>
             <Form.Select 
               value={programName} 
               onChange={handleProgramNameChange} 
-              className="border-success "
+              className="border-success"
               disabled={!batchYear}
             >
               <option value="">Select Program Name</option>
@@ -629,26 +599,27 @@ const fetchCurriculum = async (programNumber, batchYear) => {
           </Form.Group>
         </Col>
 
-        <Col sm={12} md={6} lg={3}>
-        <Form.Group className='w-100' controlId="programCode">
-          <Form.Label className="custom-color-green-font custom-font text-nowrap">Program Code</Form.Label>
+        <Col xs={12} sm={6} md={2} lg={2}>
+        <Form.Group controlId="programCode">
+          <Form.Label className="custom-color-green-font custom-font">Program Code</Form.Label>
           <Form.Control 
             type="text"
             value={programCode}
             readOnly
             disabled
-            className="border-success bg-white "
+            className="border-success bg-white"
             placeholder="Select Program Name first"
           />
         </Form.Group>
       </Col>
 
 
-        <Col sm={12} md={6} lg={3}>
-          <Form.Group className='w-100'>
-            <Form.Label className="custom-color-green-font custom-font text-nowrap">Action</Form.Label>
+        <Col xs={12} sm={6} md={6} lg={6}>
+          <Form.Group>
+            <Form.Label className="custom-color-green-font custom-font">Action</Form.Label>
             <div className="d-flex">
-              <Button className="w-100 btn-success me-2" onClick={downloadExcel}>Download Excel</Button>
+              <Button className="w-50 btn-success me-2" onClick={handleView}>View</Button>
+              <Button className="bg-white custom-color-green-font btn-outline-success w-50 me-2" onClick={downloadExcel}>Download Excel</Button>
             </div>
           </Form.Group>
         </Col>
@@ -669,12 +640,11 @@ const fetchCurriculum = async (programNumber, batchYear) => {
             <div className="text-center py-5 bg-white rounded pt-5 px-4 pb-5">
               <h5 className="custom-color-green-font mt-5 fs-5">No Data Available</h5>
               <p className="fs-6 mb-4">
-              Please ensure that all filters are applied or data is available to display.
+                Please ensure that all filters are applied then click "View" to display the data.
               </p>
             </div>
           ) : (
-            <Container fluid className='table-response mt-4 mx-auto mb-3 bg-white rounded'>
-              <Table bordered responsive hover className="table-success mt-5 mx-auto mb-4 rounded shadow-sm">
+            <Table bordered responsive hover className="table-success mt-2 mb-4">
               <thead className="table-success">
                 {/* Row for Year Levels */}
                 <tr>
@@ -810,7 +780,6 @@ const fetchCurriculum = async (programNumber, batchYear) => {
                 )}
               </tbody>
             </Table>
-            </Container>
           )}
         </>
       )}
@@ -1116,308 +1085,355 @@ style={{
   </div>
 
 
-  {/* Rows of Data */}
-  {Object.keys(semestersData).map((yearLevel, idx) =>
-    [1, 2].map((semester) => {
-      const courses = semestersData[yearLevel][semester] || [];
-      const academicYear = getAcademicYear(batchYear, idx + 1);
-      return (
-        <>
-          {courses.length > 0 ? (
-            courses.map((course, subIdx) => (
-              <>
-                {subIdx === 0 && (
-                  <div
-                    style={{
-                      gridColumn: '1',
-                      gridRow: `span ${courses.length}`,
-                      border: '1px solid black',
-                      padding: '8px',
-                      fontSize: '0.8rem', 
-                    }}
-                  ><strong>
+{/* Rows of Data */}
+{Object.keys(semestersData).map((yearLevel, idx) =>
+  [1, 2].map((semester) => {
+    const courses = semestersData[yearLevel][semester] || [];
+    const academicYear = getAcademicYear(batchYear, idx + 1);
+    return (
+      <>
+        {courses.length > 0 ? (
+          courses.map((course, subIdx) => (
+            <>
+              {subIdx === 0 && (
+                <div
+                  style={{
+                    gridColumn: '1',
+                    gridRow: `span ${courses.length}`,
+                    border: '1px solid black',
+                    padding: '4px 8px', // Reduced vertical padding
+                    fontSize: '0.8rem',
+                    lineHeight: '1.0', // Adjusted line height
+                  }}
+                >
+                  <strong>
                     {semester === 1 ? '1st' : '2nd'} Semester <br />
-                    {academicYear} </strong>
-                  </div>
+                    {academicYear}
+                  </strong>
+                </div>
+              )}
+              <div
+                style={{
+                  borderLeft: '1px solid black',
+                  borderRight: '1px solid black',
+                  padding: '4px 8px', // Reduced padding
+                  fontSize: '0.8rem',
+                  lineHeight: '0.9', // Smaller line height
+                }}
+              >
+                {course.courseCode}
+              </div>
+              <div
+                style={{
+                  borderLeft: '1px solid black',
+                  borderRight: '1px solid black',
+                  padding: '4px 8px', // Reduced padding
+                  fontSize: '0.8rem',
+                  lineHeight: '0.9', // Smaller line height
+                  width: '400px', 
+                  textAlign: 'left',
+                }}
+              >
+                {course.courseDescriptiveTitle}
+              </div>
+              <div
+                style={{
+                  borderLeft: '1px solid black',
+                  borderRight: '1px solid black',
+                  padding: '4px 8px', // Reduced padding
+                  fontSize: '0.8rem',
+                  lineHeight: '0.9', // Smaller line height
+                }}
+              >
+                {selectedStudent?.courses.find(
+                  (c) => c.courseCode === course.courseCode
+                )?.grade || '-'}
+              </div>
+              <div
+                style={{
+                  borderLeft: '1px solid black',
+                  borderRight: '1px solid black',
+                  padding: '4px 8px', // Reduced padding
+                  fontSize: '0.8rem',
+                  lineHeight: '0.9', // Smaller line height
+                }}
+              >
+                {getGradeDescription(
+                  selectedStudent?.courses.find(
+                    (c) => c.courseCode === course.courseCode
+                  )?.grade || '-'
                 )}
-<div style={{ borderLeft: '1px solid black', borderRight: '1px solid black', padding: '8px', fontSize: '0.8rem', lineHeight: '1.0'}}>
-  {course.courseCode}
+              </div>
+              <div
+                style={{
+                  borderLeft: '1px solid black',
+                  borderRight: '1px solid black',
+                  padding: '4px 8px', // Reduced padding
+                  fontSize: '0.8rem',
+                  lineHeight: '0.9', // Smaller line height
+                }}
+              >
+                {course.unitOfCredits}
+              </div>
+            </>
+          ))
+        ) : (
+          <div
+            style={{
+              gridColumn: 'span 6',
+              border: '1px solid black',
+              padding: '4px', // Reduced padding
+              textAlign: 'center',
+              fontSize: '0.8rem',
+              lineHeight: '0.9', // Smaller line height
+            }}
+          >
+            No courses available
+          </div>
+        )}
+      </>
+    );
+  })
+)}
 </div>
-<div style={{ borderLeft: '1px solid black', borderRight: '1px solid black', padding: '8px', fontSize: '0.8rem', lineHeight: '1.0'  }}>
-  {course.courseDescriptiveTitle}
-</div>
-<div style={{ borderLeft: '1px solid black', borderRight: '1px solid black', padding: '8px', fontSize: '0.8rem', lineHeight: '1.0'  }}>
-  {selectedStudent?.courses.find(
-    (c) => c.courseCode === course.courseCode
-  )?.grade || '-'}
-</div>
-<div style={{ borderLeft: '1px solid black', borderRight: '1px solid black', padding: '8px', fontSize: '0.8rem', lineHeight: '1.0'  }}>
-  {getGradeDescription(
-    selectedStudent?.courses.find(
-      (c) => c.courseCode === course.courseCode
-    )?.grade || '-'
-  )}
-</div>
-<div style={{ borderLeft: '1px solid black', borderRight: '1px solid black', padding: '8px', fontSize: '0.8rem', lineHeight: '1.0' }}>
-  {course.unitOfCredits}
-</div>
-
-
-              </>
-            ))
-          ) : (
-            <div
-              style={{
-                gridColumn: 'span 6',
-                border: '1px solid black',
-                padding: '8px',
-                textAlign: 'center',
-                fontSize: '0.8rem',
-              }}
-            >
-              No courses available
-            </div>
-          )}
-        </>
-      );
-    })
-  )}
-</div>
-
 
 <div
   style={{
     display: 'grid',
     gridTemplateColumns: 'repeat(8, 1fr)',
     width: '100%',
-    gap: '0px',  // Set gap to 0 for shared borders
+    gap: '0px', // Set gap to 0 for shared borders
     textAlign: 'center',
     border: '1px solid black', // Outer border
   }}
 >
   {/* Header Row */}
   <div style={{ gridColumn: 'span 1', border: '1px solid black', padding: '8px' }}>
-    <p className="fs-6 text-start mb-1">REMARKS:</p>
+    <p style={{ fontSize: '0.7rem', marginBottom: '2px', textAlign: 'start' }}>REMARKS:</p>
   </div>
   <div style={{ gridColumn: 'span 7', border: '1px solid black', padding: '8px' }}>
-    <p className="fs-6 text-start mb-1"><strong>CLEARED OF ALL PROPERTY AND MONEY ACCOUNTABILITIES</strong></p>
+    <p style={{ fontSize: '0.7rem', marginBottom: '2px', textAlign: 'start' }}>
+      <strong>CLEARED OF ALL PROPERTY AND MONEY ACCOUNTABILITIES</strong>
+    </p>
   </div>
 
   {/* Grading System Header */}
-  <div style={{ gridColumn: 'span 3', border: '1px solid black', padding: '8px' }}>
-    <p style={{ fontSize: '0.9rem' }}><strong>GRADING SYSTEM</strong></p>
+  <div style={{ gridColumn: 'span 3', border: '1px solid black', padding: '4px' }}>
+    <p style={{ fontSize: '0.6rem', margin: '0' }}><strong>GRADING SYSTEM</strong></p>
   </div>
   <div
     style={{
       gridColumn: 'span 5',
       gridRow: 'span 2',
       border: '1px solid black',
-      padding: '8px',
+      padding: '4px',
+      fontSize: '0.5rem',
+      fontStyle: 'italic',
+      textAlign: 'start',
     }}
   >
-<p style={{ paddingTop: '10px' ,textAlign: 'left', fontSize: '0.8rem', fontStyle: 'italic' }}>
-  This Transcript is valid only when it bears the school seal and the original signature of the
-  Registrar. Any erasure or alteration made on this document renders it void unless initialed
-  by the foregoing official.
-</p>
-
-
+    <p style={{ margin: '0' }}>
+      This Transcript is valid only when it bears the school seal and the original signature of the
+      Registrar. Any erasure or alteration made on this document renders it void unless initialed
+      by the foregoing official.
+    </p>
   </div>
 
   {/* Sub-Headers */}
-  <div style={{ border: '1px solid black', padding: '8px' }}>
-    <p style={{ fontSize: '0.7rem' }}>GRADE</p>
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem' }}>
+    <p style={{ margin: '0' }}>GRADE</p>
   </div>
-  <div style={{ border: '1px solid black', padding: '8px' }}>
-    <p style={{ fontSize: '0.7rem' }}>EQUIVALENCE</p>
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem' }}>
+    <p style={{ margin: '0' }}>EQUIVALENCE</p>
   </div>
-  <div style={{ border: '1px solid black', padding: '8px' }}>
-    <p style={{ fontSize: '0.7rem' }}>DESCRIPTION</p>
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem' }}>
+    <p style={{ margin: '0' }}>DESCRIPTION</p>
   </div>
 
   {/* Body Rows */}
-  <div style={{ border: '1px solid black', padding: '8px', fontSize: '0.7rem', lineHeight: '1.0' }}>1.00</div>
-  <div style={{ border: '1px solid black', padding: '8px', fontSize: '0.7rem', lineHeight: '1.0' }}>99-100%</div>
-  <div style={{ border: '1px solid black', padding: '8px', fontSize: '0.7rem', lineHeight: '1.0' }}>EXCELLENT</div>
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}>1.00</div>
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}>99-100%</div>
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}>EXCELLENT</div>
   <div
     style={{
       gridColumn: 'span 3',
       border: '1px solid black',
-      padding: '8px',
+      padding: '4px',
       textAlign: 'left',
-      fontSize: '0.7rem', 
-      lineHeight: '1.0'
+      fontSize: '0.5rem',
+      lineHeight: '1.2',
     }}
   >
     Prepared by:
   </div>
+
   <div
-  style={{
-    gridColumn: 'span 2',
-    gridRow: 'span 14',
-    border: '1px solid black',
-    textAlign: 'center',
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'flex-end', // Aligns content to the bottom
-    height: '100%', // Ensures the div takes up the full height
-    fontSize: '0.7rem', 
-  }}
->
-  <p style={{ fontSize: '0.7rem' }}>
-    Transcript is <strong>NOT</strong> valid without PCC seal
-  </p>
-</div>
+    style={{
+      gridColumn: 'span 2',
+      gridRow: 'span 14',
+      border: '1px solid black',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'flex-end',
+      textAlign: 'center',
+      height: '100%',
+      fontSize: '0.5rem',
+    }}
+  >
+    <p>
+      Transcript is <strong>NOT</strong> valid without PCC seal
+    </p>
+  </div>
 
-
-  {/* Repeat for remaining rows */}
-  <div style={{ border: '1px solid black', padding: '8px' , fontSize: '0.7rem', lineHeight: '1.0' }}>1.25</div>
-  <div style={{ border: '1px solid black', padding: '8px', fontSize: '0.7rem', lineHeight: '1.0' }}>96-98%</div>
-  <div style={{ border: '1px solid black', padding: '8px', fontSize: '0.7rem', lineHeight: '1.0' }}>SUPERIOR</div>
+  {/* Remaining Rows */}
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}>1.25</div>
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}>96-98%</div>
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}>SUPERIOR</div>
   <div
     style={{
       gridColumn: 'span 3',
       border: '1px solid black',
-      padding: '8px',
+      padding: '4px',
       textAlign: 'center',
-      fontSize: '0.7rem', lineHeight: '1.0'
+      fontSize: '0.5rem',
+      lineHeight: '1.2',
     }}
   >
-    <strong>
-      <big>{`${user.personnelNameFirst} ${user.personnelNameMiddle} ${user.personnelNameLast}`}</big>
-    </strong>
+    <strong> <big>
+      {`${user.personnelNameFirst} ${user.personnelNameMiddle} ${user.personnelNameLast}`}
+      </big></strong>
   </div>
 
     {/* Repeat for remaining rows */}
-    <div style={{ border: '1px solid black', padding: '8px', fontSize: '0.7rem', lineHeight: '1.0' }}>1.50</div>
-  <div style={{ border: '1px solid black', padding: '8px', fontSize: '0.7rem', lineHeight: '1.0' }}>93-95%</div>
-  <div style={{ border: '1px solid black', padding: '8px', fontSize: '0.7rem', lineHeight: '1.0' }}>VERY GOOD</div>
+    <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}>1.50</div>
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}>93-95%</div>
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}>VERY GOOD</div>
   <div
     style={{
       gridColumn: 'span 3',
       border: '1px solid black',
-      padding: '8px',
+      padding: '4px',
       textAlign: 'center',
-      fontSize: '0.7rem', lineHeight: '1.0'
+      fontSize: '0.5rem', lineHeight: '1.2'
     }}
   >
     Program Records-In-Charge
   </div>
 
-  <div style={{ border: '1px solid black', padding: '8px', fontSize: '0.7rem', lineHeight: '1.0' }}>1.75</div>
-  <div style={{ border: '1px solid black', padding: '8px', fontSize: '0.7rem', lineHeight: '1.0' }}>90-92%</div>
-  <div style={{ border: '1px solid black', padding: '8px', fontSize: '0.7rem', lineHeight: '1.0' }}>GOOD</div>
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}>1.75</div>
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}>90-92%</div>
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}>GOOD</div>
   <div
     style={{
       gridColumn: 'span 3',
       border: '1px solid black',
-      padding: '8px',
+      padding: '4px',
       textAlign: 'left',
-      fontSize: '0.7rem', lineHeight: '1.0'
+      fontSize: '0.5rem', lineHeight: '1.2'
     }}
   >
     Checked & Verified by:
   </div>
 
-  <div style={{ border: '1px solid black', padding: '8px', fontSize: '0.7rem', lineHeight: '1.0' }}>2.00</div>
-  <div style={{ border: '1px solid black', padding: '8px', fontSize: '0.7rem', lineHeight: '1.0' }}>87-89%</div>
-  <div style={{ border: '1px solid black', padding: '8px', fontSize: '0.7rem', lineHeight: '1.0' }}>MERITORIOUS</div>
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}>2.00</div>
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}>87-89%</div>
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}>MERITORIOUS</div>
   <div
     style={{
       gridColumn: 'span 3',
       border: '1px solid black',
-      padding: '8px',
+      padding: '4px',
       textAlign: 'left',
-      fontSize: '0.7rem', lineHeight: '1.0'
+      fontSize: '0.5rem', lineHeight: '1.2'
     }}
   >
 
   </div>
 
-  <div style={{ border: '1px solid black', padding: '8px', fontSize: '0.7rem', lineHeight: '1.0' }}>2.25</div>
-  <div style={{ border: '1px solid black', padding: '8px', fontSize: '0.7rem', lineHeight: '1.0' }}>84-86%</div>
-  <div style={{ border: '1px solid black', padding: '8px', fontSize: '0.7rem', lineHeight: '1.0' }}>VERY SATISFACTORY</div>
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}>2.25</div>
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}>84-86%</div>
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}>VERY SATISFACTORY</div>
   <div
     style={{
       gridColumn: 'span 3',
       border: '1px solid black',
-      padding: '8px',
+      padding: '4px',
       textAlign: 'center',
-      fontSize: '0.7rem', lineHeight: '1.0'
+      fontSize: '0.5rem', lineHeight: '1.2'
     }}
   >
     Registrar 1
   </div>
 
-  <div style={{ border: '1px solid black', padding: '8px', fontSize: '0.7rem', lineHeight: '1.0' }}>2.50</div>
-  <div style={{ border: '1px solid black', padding: '8px', fontSize: '0.7rem', lineHeight: '1.0' }}>81-83%</div>
-  <div style={{ border: '1px solid black', padding: '8px', fontSize: '0.7rem', lineHeight: '1.0' }}>SATISFACTORY</div>
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}>2.50</div>
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}>81-83%</div>
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}>SATISFACTORY</div>
   <div
     style={{
       gridColumn: 'span 3',
       border: '1px solid black',
-      padding: '8px',
+      padding: '4px',
       textAlign: 'left',
-      fontSize: '0.7rem', lineHeight: '1.0'
+      fontSize: '0.5rem', lineHeight: '1.2'
     }}
   >
     Date Issued
   </div>
 
-  <div style={{ border: '1px solid black', padding: '8px', fontSize: '0.7rem', lineHeight: '1.0' }}>2.75</div>
-  <div style={{ border: '1px solid black', padding: '8px', fontSize: '0.7rem', lineHeight: '1.0' }}>76-80%</div>
-  <div style={{ border: '1px solid black', padding: '8px', fontSize: '0.7rem', lineHeight: '1.0' }}>FAIRLY SATISFACTORY</div>
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}>2.75</div>
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}>76-80%</div>
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}>FAIRLY SATISFACTORY</div>
   <div
     style={{
       gridColumn: 'span 3',
       border: '1px solid black',
-      padding: '8px',
+      padding: '4px',
       textAlign: 'center',
-      fontSize: '0.7rem', lineHeight: '1.0'
+      fontSize: '0.5rem', lineHeight: '1.2'
     }}
   >
     <big>{formattedDate}</big>
   </div>
 
-  <div style={{ border: '1px solid black', padding: '8px', fontSize: '0.7rem', lineHeight: '1.0' }}>3.00</div>
-  <div style={{ border: '1px solid black', padding: '8px', fontSize: '0.7rem', lineHeight: '1.0' }}>75-77%</div>
-  <div style={{ border: '1px solid black', padding: '8px', fontSize: '0.7rem', lineHeight: '1.0' }}>PASSING</div>
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}>3.00</div>
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}>75-77%</div>
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}>PASSING</div>
   <div
     style={{
       gridColumn: 'span 3',
       gridRow: 'span 4',
       border: '1px solid black',
-      padding: '8px',
+      padding: '4px',
       textAlign: 'center',
-      fontSize: '0.7rem', lineHeight: '1.0'
+      fontSize: '0.5rem', lineHeight: '1.2'
     }}
   >
     
   </div>
 
-  <div style={{ border: '1px solid black', padding: '8px', fontSize: '0.7rem', lineHeight: '1.0' }}>5.00</div>
-  <div style={{ border: '1px solid black', padding: '8px', fontSize: '0.7rem', lineHeight: '1.0' }}>Below 50</div>
-  <div style={{ border: '1px solid black', padding: '8px', fontSize: '0.7rem', lineHeight: '1.0' }}>FAILED</div>
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}>5.00</div>
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}>Below 50</div>
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}>FAILED</div>
 
-  <div style={{ border: '1px solid black', padding: '8px', fontSize: '0.7rem', lineHeight: '1.0' }}>INC</div>
-  <div style={{ border: '1px solid black', padding: '8px', fontSize: '0.7rem', lineHeight: '1.0' }}></div>
-  <div style={{ border: '1px solid black', padding: '8px', fontSize: '0.7rem', lineHeight: '1.0' }}>INCOMPLETE</div>
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}>INC</div>
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}></div>
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}>INCOMPLETE</div>
 
-  <div style={{ border: '1px solid black', padding: '8px', fontSize: '0.7rem', lineHeight: '1.0' }}>OD</div>
-  <div style={{ border: '1px solid black', padding: '8px', fontSize: '0.7rem', lineHeight: '1.0' }}></div>
-  <div style={{ border: '1px solid black', padding: '8px', fontSize: '0.7rem', lineHeight: '1.0' }}>OFFICIALY DROPPED</div>
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}>OD</div>
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}></div>
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}>OFFICIALY DROPPED</div>
 
 
-  <div style={{ border: '1px solid black', padding: '8px', fontSize: '0.7rem', lineHeight: '1.0' }}>UD</div>
-  <div style={{ border: '1px solid black', padding: '8px', fontSize: '0.7rem', lineHeight: '1.0' }}></div>
-  <div style={{ border: '1px solid black', padding: '8px', fontSize: '0.7rem', lineHeight: '1.0' }}>UNOFICIALLY DROPPED</div>
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}>UD</div>
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}></div>
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}>UNOFICIALLY DROPPED</div>
   <div
     style={{
       gridColumn: 'span 3',
       border: '1px solid black',
-      padding: '8px',
+      padding: '4px',
       textAlign: 'center',
-      fontSize: '0.7rem', lineHeight: '1.0'
+      fontSize: '0.5rem', lineHeight: '1.2'
     }}
   >
       <strong>
@@ -1425,16 +1441,16 @@ style={{
     </strong>
   </div>
 
-  <div style={{ border: '1px solid black', padding: '8px' , fontSize: '0.7rem', lineHeight: '1.0'}}>FA</div>
-  <div style={{ border: '1px solid black', padding: '8px' , fontSize: '0.7rem', lineHeight: '1.0'}}></div>
-  <div style={{ border: '1px solid black', padding: '8px' , fontSize: '0.7rem', lineHeight: '1.0'}}>FAILURE DUE TO EXCESSIVE ABSENCES</div>
+  <div style={{ border: '1px solid black', padding: '4px' , fontSize: '0.5rem', lineHeight: '1.2'}}>FA</div>
+  <div style={{ border: '1px solid black', padding: '4px' , fontSize: '0.5rem', lineHeight: '1.2'}}></div>
+  <div style={{ border: '1px solid black', padding: '4px' , fontSize: '0.5rem', lineHeight: '1.2'}}>FAILURE DUE TO EXCESSIVE ABSENCES</div>
   <div
     style={{
       gridColumn: 'span 3',
       border: '1px solid black',
-      padding: '8px',
+      padding: '4px',
       textAlign: 'center',
-      fontSize: '0.7rem', lineHeight: '1.0'
+      fontSize: '0.5rem', lineHeight: '1.2'
     }}
   >
   College Registrar
