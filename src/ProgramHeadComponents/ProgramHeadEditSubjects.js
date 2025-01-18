@@ -115,7 +115,7 @@ export default function ProgramHeadEditCourses({ onBack }) {
 
   const handleEditCourse = async () => {
     try {
-      await CourseModel.updateCourse(editCourse.id, editCourse);
+      await CourseModel.updateCourse(editCourse);
 
       setYearData((prevState) => {
         const updatedYear = prevState['First Year'].map((course) =>

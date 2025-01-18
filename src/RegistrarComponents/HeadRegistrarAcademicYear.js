@@ -236,7 +236,7 @@ export default function HeadRegistrarAcademicYear() {
         };
 
         console.log(updateCurrent.academicYear); //Old row
-        console.log(newAcademicYear.academicYear); //New row
+        console.log(newAcademicYear); //New row
 
         //Fetch all movable rows of the old academicYear
         const [timelines, personnels, courses, programs, students, semGrades, enrollments] = await Promise.all([
@@ -249,69 +249,232 @@ export default function HeadRegistrarAcademicYear() {
           EnrollmentModel.fetchAllEnrollment()
         ]);
 
-
-        // //Update the Academic Year for each row
-        // enrollments.forEach(item => {
-        //   delete item.id;
-        //   const [startYear, endYear] = item.academicYear.split('-').map(Number);
-        //   item.academicYear = `${startYear + 1}-${endYear + 1}`;
-        // });
-        
-        // personnels.forEach(item => {
-        //   delete item.id;
-        //   const [startYear, endYear] = item.academicYear.split('-').map(Number);
-        //   item.academicYear = `${startYear + 1}-${endYear + 1}`;
-        // });
-
-        // courses.forEach(item => {
-        //   delete item.id;
-        //   const [startYear, endYear] = item.academicYear.split('-').map(Number);
-        //   item.academicYear = `${startYear + 1}-${endYear + 1}`;
-        // });
-
-        // programs.forEach(item => {
-        //   delete item.id;
-        //   const [startYear, endYear] = item.academicYear.split('-').map(Number);
-        //   item.academicYear = `${startYear + 1}-${endYear + 1}`;
-        // });
-
-
-
-
-
-
-        
-        // const update = await AcademicYearModel.updateAcademicYear(updateCurrent.id, updateCurrent);
-
-        // After updating the old row, insert the new row AND start making duplicate copies of the old rows from other tables
-        // if (update) {
-        //   await AcademicYearModel.createAndInsertAcademicYear(newAcademicYear);
-        // }
-
         if(action ==='newAcad' && currentSemester === 3){
 
+          //Get the list of enrolled students FETCH BOTH 2nd and 3rd sem
+          const filteredTimelines = timelines.filter((enrollment) => 
+            (enrollment.semester === 2 || 
+             (enrollment.semester === 3 && enrollment.endEnroll === null)) &&
+            enrollment.isLeaving === false
+          );          
+
+          console.log(filteredTimelines);
+
+          const uniqueTimelines = Array.from(
+            filteredTimelines.reduce((map, enrollment) => {
+              const { studentNumber, semester } = enrollment;
+          
+              // If no entry for the student or the current semester is higher, update the map
+              if (!map.has(studentNumber) || map.get(studentNumber).semester < semester) {
+                map.set(studentNumber, enrollment);
+              }
+          
+              return map;
+            }, new Map()).values()
+          );
+
+          console.log(uniqueTimelines);
+          
+                                                                  
+          const studentNumbers = uniqueTimelines.map((enrollment) => enrollment.studentNumber);
+
+          //Filter the object by the list
+          const enrolledStudents = students.filter((student) =>
+            studentNumbers.includes(student.studentNumber)
+          );
+
+          const filteredSemGrades = semGrades.filter((student) =>
+            studentNumbers.includes(student.studentNumber)
+          );
+
+          const programRegex = /^([A-Za-z]+)(\d)(\d)(.)$/;
+
+          const studentGrades = filteredSemGrades.reduce((student, record) => {
+            const key = record.studentNumber; // Group by the `studentNumbers` column
+            if (!student[key]) {
+              student[key] = []; // Initialize an array for this student if it doesn't exist
+            }
+
+            const [course, , programData] = record.scheduleNumber.split('-');
+            const match = programData.match(programRegex);
+
+            student[key].push({
+              class: record.scheduleNumber,
+              course: course,
+              grade: record.numEq,
+              remarks: record.remarks,
+              program: `${match[1]}`,
+              yearLevel: parseInt(match[2]),
+              semester: parseInt(match[3]),
+              section: match[4]
+            }); // Add the record to the appropriate student
+            return student;
+          }, {});
+
+          console.log("Student Grades: ",studentGrades);
+
+          //FUNCTION FOR UPDATING RELATIVE ROWS IN RESPECT TO THEIR GRADE PERFORMANCE IN THE SEMESTER
+          Object.entries(studentGrades).forEach(([studentNumber, student]) => {
+
+            // 1. FOR UPDATING ROWS IN ENROLLMENT TABLE
+            student.map((student) => {
+              //Find the student in the enrollments for the selective update
+              const studentEnrollment = enrollments.filter(record => record.studentNumber === studentNumber
+                && record.scheduleNumber === student.class
+                && record.courseCode === student.course);
+
+              //console.log("Student's course details:", studentEnrollment);
+
+              if (studentEnrollment && studentEnrollment.length > 0) {
+                studentEnrollment.forEach(record => {
+                  if (student.remarks === 'PASSED') {
+                    record.status = 'Passed';
+                  } else if (student.remarks === 'FAILED') {
+                    record.status = 'Failed';
+                  } else if (student.remarks === 'INC') {
+                    record.status = 'Incomplete';
+                  }
+                });
+              }
+
+              //
+            });
 
 
+            // 2. FOR UPDATING ROWS IN STUDENT TABLE
 
+            //Find the student in the enrolledStudents for the selective update
+            const studentStatus = enrolledStudents.filter(student => student.studentNumber === studentNumber);
+            //Finding a failed, incomplete, withdrawn course
+            const failed = student.find(student => student.remarks !== 'PASSED');
+            if (failed){
+              studentStatus.forEach(record => {
+                record.studentType = 'Irregular';
+              });
+            }
 
+            //Calculating the GWA
+            const totalGrades = student.reduce((total, record) => total + record.grade, 0);
+            const averageGrade = totalGrades / student.length;
+            
+            if (averageGrade > 3) {
+              if (studentStatus) {
+                studentStatus.forEach(record => {
+                  record.studentType = 'Irregular';
+                });
+              }
+            }
+          });
 
+          // 3. FOR UPDATING OLD ROWS IN TIMELINE TABLE
+          uniqueTimelines.forEach(item => {
+            if(item.endEnroll === null){
+              item.endEnroll = new Date();
+            }
+          });
 
+          // 4. FOR CREATING NEW ROWS IN TIMELINE TABLE
+          const newTimelines = uniqueTimelines.map(item => {
+            // Create a new object to avoid mutating the original
+            const duplicatedItem = { ...item };
+          
+            // Remove the id
+            delete duplicatedItem.id;
 
+            // Check if the row has semester 2 or 3
+            if (duplicatedItem.semester === 2 || duplicatedItem.semester === 3) {
+              duplicatedItem.semester = 1; // Start new academic year
 
+              //Confirm if student is repeating or not
+              if(duplicatedItem.isRepeating === false){
+                duplicatedItem.yearLevel += 1;
+              }
+              const [startYear, endYear] = duplicatedItem.academicYear.split('-').map(Number);
+              duplicatedItem.academicYear = `${startYear + 1}-${endYear + 1}`;
+              
+              // Reset dates for the new timeline
+              duplicatedItem.startEnroll = new Date();
+              duplicatedItem.endEnroll = null;
+            }
+            
+            return duplicatedItem; // Return the new timeline
+          });
 
+          //5. FOR UPDATING ROWS ON THE PERSONNEL TABLE
+          personnels.forEach(item => { //personnel table (yearly)
+            delete item.id;
+            const [startYear, endYear] = item.academicYear.split('-').map(Number);
+            item.academicYear = `${startYear + 1}-${endYear + 1}`;
+          });
 
+          //6. FOR UPDATING ROWS IN PROGRAM TABLE
+          programs.forEach(item => { //program table (yearly)
+            delete item.id;
+            const [startYear, endYear] = item.academicYear.split('-').map(Number);
+            item.academicYear = `${startYear + 1}-${endYear + 1}`;
+          });
 
+          // 7. FOR UPDATING ROWS IN COURSE TABLE
+          courses.forEach(item => { //course table (yearly)
+            delete item.id;
+            const [startYear, endYear] = item.academicYear.split('-').map(Number);
+            item.academicYear = `${startYear + 1}-${endYear + 1}`;
+          });
 
+          //UPDATED ROWS
+          console.log("Students: ",enrolledStudents);// student
+          console.log("Old Timelines: ",uniqueTimelines);// timeline
+          console.log("New Timelines:", newTimelines); //timeline
+          console.log("Personnels: ",personnels);// personnel
+          console.log("Courses: ",courses);// course 
+          console.log("Programs: ",programs);// program 
+          console.log("Enrollments: ",enrollments);// enrollment
+          console.log("Old Acad Year", updateCurrent); //old acadYear
+          console.log("New Acad Year", newAcademicYear); //new acadYear
 
+          //UPDATING THE RELEVANT ROWS FOR THIS SEM AND PROCEED TO THE NEXT //DO NOT USE YET
+          try {
+            const nextAcademicYear = await Promise.all([
+                ...enrolledStudents.map(async (item) => {
+                    const studentData = { ...item }; // Avoid mutating the original
+                    delete studentData.id; // Removing ids without modifying the enrolledStudents
+                    return StudentModel.updateStudent(studentData.studentNumber, studentData);
+                }),
+                TimelineModel.updateTimeline(uniqueTimelines),
+                TimelineModel.createAndInsertTimeline(newTimelines),
+                PersonnelModel.insertPersonnel(personnels),
+                ...courses.map(async (courseData) => {
+                  return CourseModel.createAndInsertCourse(courseData);
+                }),
+                ...programs.map(async (programData) => {
+                  return ProgramModel.createAndInsertProgram(programData);
+                }),
+                EnrollmentModel.updateEnrollment(enrollments),
+                AcademicYearModel.updateAcademicYear(updateCurrent.id, updateCurrent),
+                AcademicYearModel.createAndInsertAcademicYear(newAcademicYear)
+                
 
+            ]);
+        
+            // If Promise.all resolves, this block will execute
+            console.log('All updates succeeded:', nextAcademicYear);
+        
+            if (nextAcademicYear.length > 0) {
+              // Perform actions based on the resolved results
+              console.log('New academic year completed.');
 
+              //Fetch the newest timeline to up date the currentSemester
+              fetchAcademicYears();
+              //CLOSE MODAL
+              handleCloseAddAcadYear();
 
-
-          fetchAcademicYears();
-          handleCloseAddAcadYear();
+            }
+          } catch (error) {
+            // If any Promise fails, this block will execute
+            console.error('Error updating for the next semester:', error);
+          }
         } else if (action === 'newSem' && currentSemester !== 3){
           //Get the list of enrolled students
-
           const filteredTimelines = timelines.filter((enrollment) => enrollment.semester === currentSemester
                                                                   && enrollment.endEnroll === null 
                                                                   && enrollment.isLeaving === false);
@@ -327,23 +490,6 @@ export default function HeadRegistrarAcademicYear() {
           const filteredSemGrades = semGrades.filter((student) =>
             studentNumbers.includes(student.studentNumber)
           );
-
-          const filteredCourses = courses.filter((course) =>
-            course.courseSemester === currentSemester
-          );
-
-          // console.log(enrolledStudents);//Filtered list of enrolled students in old acadYear (StudentModel)
-          // console.log(timelines);// List of timelines in old acadYear (TimelineModel)
-          // console.log(personnels);// List of personnels in old acadYear (PersonnelModel) Standalone
-          // console.log(filteredCourses);// List of courses in old acadYear (CourseModel) Standalone
-          // console.log(programs);// List of programs in old acadYear (ProgramModel) Standalone
-          // console.log(filteredSemGrades); // List of grades in old acadYear (SemGradeModel)
-          // console.log(currentSemester);
-
-          //PROCEDURE
-
-          //1. Get the grades (semGrades) for each enrolled students (enrolledStudents)
-          //2. Check if they passed for this sem or not, then reflect it on the timeline, enrollments and update the status of (students)
 
           const programRegex = /^([A-Za-z]+)(\d)(\d)(.)$/;
 
@@ -472,8 +618,8 @@ export default function HeadRegistrarAcademicYear() {
                     return StudentModel.updateStudent(studentData.studentNumber, studentData);
                 }),
                 EnrollmentModel.updateEnrollment(enrollments),
-                TimelineModel.createAndInsertTimeline(newTimelines),
                 TimelineModel.updateTimeline(filteredTimelines),
+                TimelineModel.createAndInsertTimeline(newTimelines)
             ]);
         
             // If Promise.all resolves, this block will execute
@@ -483,6 +629,9 @@ export default function HeadRegistrarAcademicYear() {
               // Perform actions based on the resolved results
               console.log('Next semester updates completed.');
 
+              //Fetch the newest timeline to up date the currentSemester
+              fetchAcademicYears();
+              
               //CLOSE MODAL
               handleCloseNextSem();
 
@@ -491,35 +640,6 @@ export default function HeadRegistrarAcademicYear() {
             // If any Promise fails, this block will execute
             console.error('Error updating for the next semester:', error);
           }
-        
-
-
-          //TO BE IMPLEMENTED ON PROCESSION OF NEW ACAD YEAR
-          personnels.forEach(item => { //personnel table (yearly)
-            delete item.id;
-            //const [startYear, endYear] = item.academicYear.split('-').map(Number);
-            //item.academicYear = `${startYear + 1}-${endYear + 1}`;
-          });
-
-          courses.forEach(item => { //course table (yearly)
-            delete item.id;
-            //const [startYear, endYear] = item.academicYear.split('-').map(Number);
-            //item.academicYear = `${startYear + 1}-${endYear + 1}`;
-          });
-
-          programs.forEach(item => { //program table (yearly)
-            delete item.id;
-            //const [startYear, endYear] = item.academicYear.split('-').map(Number);
-            //item.academicYear = `${startYear + 1}-${endYear + 1}`;
-          });
-
-          
-          // console.log("Students: ",enrolledStudents);// student
-          // console.log("Timelines: ",timelines);// timeline
-          // console.log("Personnels: ",personnels);// personnel NOT NEEDED
-          // console.log("Courses: ",filteredCourses);// course NOT NEEDED
-          // console.log("Programs: ",programs);// program NOT NEEDED
-          // console.log("Enrollments: ",enrollments);// enrollment 
         }
       }
     } catch (error) {
@@ -731,7 +851,10 @@ export default function HeadRegistrarAcademicYear() {
 
   return (
       <div className='container-fluid bg-white p-4 rounded mt-3'>
-       <h3 className="mt-2 custom-color-green-font custom-font" >Programs</h3>
+        <div className="d-flex justify-content-between align-items-center mt-2">
+          <h3 className="custom-color-green-font custom-font">Programs</h3>
+          <h4 className="custom-color-green-font custom-font">{getSemesterText(currentSemester)}</h4>
+        </div>
     <Row>
       <Col>
       <Form.Group className="align-items-center">

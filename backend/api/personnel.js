@@ -225,7 +225,7 @@ router.delete('/:personnelNumber', async (req, res) => {
 });
 
 // Insert new personnel
-router.post('/personnel/upload', async (req, res) => {
+router.post('/upload', async (req, res) => {
     try {
         const personnelData = req.body.data;
 
