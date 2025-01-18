@@ -763,7 +763,7 @@ const fetchDeadline = async () => {
         </div>
         )}
 
-      <Modal show={showModal} onHide={handleCloseModal}>
+      <Modal show={showModal} onHide={handleCloseModal} animation={false}>
         <Modal.Header closeButton>
           <Modal.Title>Edit Deadlines</Modal.Title>
         </Modal.Header>
@@ -857,7 +857,7 @@ const fetchDeadline = async () => {
       </Modal>
 
 
-      <Modal show={showModalAlertView} onHide={closeShowModalAlertView} centered>
+      <Modal show={showModalAlertView} onHide={closeShowModalAlertView} centered animation={false}>
         <Modal.Header closeButton>
           <Modal.Title>Action Required</Modal.Title>
         </Modal.Header>

@@ -1443,7 +1443,7 @@ const MasterlistOfGradesTable = () => {
   
 
        {/* Modal for COG */}
-       <Modal show={showModal} onHide={closeModal} className="modal-xxl" centered>
+       <Modal show={showModal} onHide={closeModal} className="modal-xxl" centered animation={false} >
         <Modal.Header closeButton>
         <FontAwesomeIcon icon="certificate" style={{ marginRight: '8px' }} />
           <Modal.Title className='custom-color-green-font'>Certificate of Grades</Modal.Title>

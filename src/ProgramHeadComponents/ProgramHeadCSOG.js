@@ -1049,7 +1049,7 @@ const printTable = () => {
       )}
 
       {/* Validation Modal */}
-      <Modal show={showModal} onHide={handleCloseModal} centered>
+      <Modal show={showModal} onHide={handleCloseModal} centered animation={false}>
         <Modal.Header closeButton>
           <Modal.Title>Verification Section</Modal.Title>
         </Modal.Header>
@@ -1067,7 +1067,7 @@ const printTable = () => {
       </Modal>
       </div>
 
-      <Modal show={showModalAlert} onHide={closeShowModalAlert} centered>
+      <Modal show={showModalAlert} onHide={closeShowModalAlert} centered animation={false}>
         <Modal.Header closeButton>
           <Modal.Title>Action Required</Modal.Title>
         </Modal.Header>
@@ -1081,7 +1081,7 @@ const printTable = () => {
         </Modal.Footer>
       </Modal>
 
-      <Modal show={showModalAlertView} onHide={closeShowModalAlertView} centered>
+      <Modal show={showModalAlertView} onHide={closeShowModalAlertView} centered animation={false}>
         <Modal.Header closeButton>
           <Modal.Title>Action Required</Modal.Title>
         </Modal.Header>

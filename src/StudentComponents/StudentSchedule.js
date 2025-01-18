@@ -159,26 +159,26 @@ export default function Schedule() {
             <table className="table table-bordered">
               <thead className="table-success text-center">
                 <tr>
-                  <th className="text-success custom-font">Course Code</th>
-                  <th className="text-success custom-font">Course Desc</th>
-                  <th className="text-success custom-font">Lecture Units</th>
-                  <th className="text-success custom-font">Lab Units</th>
-                  <th className="text-success custom-font">Total Units</th>
-                  <th className="text-success custom-font">Schedule</th>
-                  <th className="text-success custom-font">Professor</th>
+                  <th className="text-success text-center">Course Code</th>
+                  <th className="text-success text-center">Course Desc</th>
+                  <th className="text-success text-center">Lecture Units</th>
+                  <th className="text-success text-center">Lab Units</th>
+                  <th className="text-success text-center">Total Units</th>
+                  <th className="text-success text-center">Schedule</th>
+                  <th className="text-success text-center">Professor</th>
                 </tr>
               </thead>
               <tbody className="bg-white">
                 {studentSchedules.length > 0 ? (
                   studentSchedules.map((schedule, index) => (
                     <tr key={index}>
-                      <td className="custom-font">{schedule.courseCode}</td>
-                      <td className="custom-font">{schedule.courseDesc}</td>
-                      <td className="custom-font">{schedule.lectureUnits}</td>
-                      <td className="custom-font">{schedule.labUnits}</td>
-                      <td className="custom-font">{schedule.totalUnits}</td>
-                      <td className="custom-font">{schedule.scheduleTime}</td>
-                      <td className="custom-font">{schedule.professorName}</td>
+                      <td className="text-center">{schedule.courseCode}</td>
+                      <td className="text-center">{schedule.courseDesc}</td>
+                      <td className="text-center">{schedule.lectureUnits}</td>
+                      <td className="text-center">{schedule.labUnits}</td>
+                      <td className="text-center">{schedule.totalUnits}</td>
+                      <td className="text-center">{schedule.scheduleTime}</td>
+                      <td className="text-center">{schedule.professorName}</td>
                     </tr>
                   ))
                 ) : (

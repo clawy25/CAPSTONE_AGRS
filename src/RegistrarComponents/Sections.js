@@ -710,7 +710,7 @@ const Sections = () => {
       
 
       {/* Add Section Modal */}
-      <Modal show={showModal} onHide={closeModal}>
+      <Modal show={showModal} onHide={closeModal} animation={false}>
         <Modal.Header closeButton>
           <Modal.Title>Add Section</Modal.Title>
         </Modal.Header>
@@ -751,7 +751,7 @@ const Sections = () => {
         </Modal.Footer>
       </Modal>
 
-      <Modal show={showModalAlertView} onHide={closeShowModalAlertView} centered>
+      <Modal show={showModalAlertView} onHide={closeShowModalAlertView} centered animation={false}>
         <Modal.Header closeButton>
           <Modal.Title>Action Required</Modal.Title>
         </Modal.Header>

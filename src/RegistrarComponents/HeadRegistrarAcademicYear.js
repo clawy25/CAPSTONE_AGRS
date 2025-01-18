@@ -961,7 +961,7 @@ export default function HeadRegistrarAcademicYear() {
       </Modal>*/}
 
       {/* Modals for Program */}
-      <Modal show={showProgramAddModal} onHide={handleCloseProgramAdd}>
+      <Modal show={showProgramAddModal} onHide={handleCloseProgramAdd} animation={false}>
         <Modal.Header closeButton>
           <Modal.Title>Add Program</Modal.Title>
         </Modal.Header>
@@ -1027,7 +1027,7 @@ export default function HeadRegistrarAcademicYear() {
         </Modal.Footer>
       </Modal>
 
-      <Modal show={showProgramEditModal} onHide={handleCloseProgramEdit}>
+      <Modal show={showProgramEditModal} onHide={handleCloseProgramEdit} animation={false}>
         <Modal.Header closeButton>
           <Modal.Title>Edit Program</Modal.Title>
         </Modal.Header>
@@ -1091,7 +1091,7 @@ export default function HeadRegistrarAcademicYear() {
       </Modal>
 
       {/*ADD ACADEMIC YEAR CONFIRMATION */}
-      <Modal show={showAcademicYearConfirmationModal} size="lg" onHide={handleCloseAddAcadYear}>
+      <Modal show={showAcademicYearConfirmationModal} size="lg" onHide={handleCloseAddAcadYear} animation={false}>
         <Modal.Header closeButton>
           <Modal.Title className="custom-color-green-font">Confirmation</Modal.Title>
         </Modal.Header>

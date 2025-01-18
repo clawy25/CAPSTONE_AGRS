@@ -4760,7 +4760,7 @@ const handlePercentageChange = (setter, value) => {
       </div>
 
       {/* Confirmation Modal */}
-      <Modal show={showModal} onHide={handleModalClose}>
+      <Modal show={showModal} onHide={handleModalClose} animation={false}>
         <Modal.Header closeButton>
           <Modal.Title>Confirmation</Modal.Title>
         </Modal.Header>

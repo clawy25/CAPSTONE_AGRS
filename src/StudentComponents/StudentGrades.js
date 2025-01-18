@@ -291,16 +291,16 @@ export default function Grades() {
                           {courses.length > 0 ? (
                             courses.map((course, index) => (
                               <tr key={index}>
-                                <td className="custom-font text-center">{course.courseCode}</td>
-                                <td className="custom-font text-center">{course.courseDescriptiveTitle}</td>
-                                <td className="custom-font text-center">{course.unitOfCredits}</td>
-                                <td className="custom-font text-center">{course.finalGrade}</td>
-                                <td className="custom-font text-center">{getGradeDescription(course.finalGrade)}</td>
+                                <td className="text-center">{course.courseCode}</td>
+                                <td className="text-center">{course.courseDescriptiveTitle}</td>
+                                <td className="text-center">{course.unitOfCredits}</td>
+                                <td className="text-center">{course.finalGrade}</td>
+                                <td className="text-center">{getGradeDescription(course.finalGrade)}</td>
                               </tr>
                             ))
                           ) : (
                             <tr>
-                              <td colSpan="5" className="text-center custom-font">
+                              <td colSpan="5" className="text-center ">
                                 No courses available.
                               </td>
                             </tr>
@@ -323,7 +323,7 @@ export default function Grades() {
           </>
     )}
 
-    <Modal show={showModal} onHide={handleCloseModal} size='lg'centered>
+    <Modal show={showModal} onHide={handleCloseModal} size='lg'centered animation={false}>
     <Modal.Header closeButton>
       <Modal.Title>Action Required</Modal.Title>
     </Modal.Header>

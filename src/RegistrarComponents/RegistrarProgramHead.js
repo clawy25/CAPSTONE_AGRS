@@ -231,7 +231,7 @@ export default function RegistrarProgramHead({ onBack }) {
       </Container>
 
       {/* Add Program Head Modal */}
-      <Modal show={showAddModal} onHide={handleCloseAdd}>
+      <Modal show={showAddModal} onHide={handleCloseAdd} animation={false}>
         <Modal.Header closeButton>
           <Modal.Title>Add Program Head</Modal.Title>
         </Modal.Header>
@@ -301,7 +301,7 @@ export default function RegistrarProgramHead({ onBack }) {
       </Modal>
 
       {/* Edit Program Head Modal */}
-      <Modal show={showEditModal} onHide={handleCloseEdit}>
+      <Modal show={showEditModal} onHide={handleCloseEdit} animation={false}>
         <Modal.Header closeButton>
           <Modal.Title>Edit Program Head</Modal.Title>
         </Modal.Header>

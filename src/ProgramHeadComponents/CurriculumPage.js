@@ -407,7 +407,7 @@ const CurriculumPage = () => {
 
 
       {/* Modal for Add/Edit Course */}
-      <Modal show={showModal} onHide={() => setShowModal(false)}>
+      <Modal show={showModal} onHide={() => setShowModal(false)} animation={false}>
         <Modal.Header closeButton>
           <Modal.Title>{currentCourse ? 'Edit Course' : 'Add New Course'}</Modal.Title>
         </Modal.Header>

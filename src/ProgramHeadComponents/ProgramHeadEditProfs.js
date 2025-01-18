@@ -231,7 +231,7 @@ const handleAddProf = async () => {
       {renderTable()}
 
       {/* Modal for adding a professor */}
-      <Modal show={showAddModal} onHide={handleCloseAdd}>
+      <Modal show={showAddModal} onHide={handleCloseAdd} animation={false}>
         <Modal.Header closeButton>
           <Modal.Title>Add Professor</Modal.Title>
         </Modal.Header>
@@ -342,7 +342,7 @@ const handleAddProf = async () => {
       </Modal>
 
       {/* Modal for editing a professor */}
-      <Modal show={showEditModal} onHide={handleCloseEdit}>
+      <Modal show={showEditModal} onHide={handleCloseEdit} animation={false}>
         <Modal.Header closeButton>
           <Modal.Title>Edit Professor</Modal.Title>
         </Modal.Header>

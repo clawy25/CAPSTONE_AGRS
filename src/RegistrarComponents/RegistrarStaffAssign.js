@@ -208,7 +208,7 @@ export default function RegistrarStaffAssign({ onBack }) {
         </Button>
       </Container>
       {/* Add Registrar Staff Modal */}
-      <Modal show={showAddModal} onHide={handleCloseAdd}>
+      <Modal show={showAddModal} onHide={handleCloseAdd} animation={false}>
         <Modal.Header closeButton>
           <Modal.Title>Add Registrar Staff</Modal.Title>
         </Modal.Header>
@@ -268,7 +268,7 @@ export default function RegistrarStaffAssign({ onBack }) {
       </Modal>
 
       {/* Edit Registrar Staff Modal */}
-      <Modal show={showEditModal} onHide={handleCloseEdit}>
+      <Modal show={showEditModal} onHide={handleCloseEdit} animation={false}>
         <Modal.Header closeButton>
           <Modal.Title>Edit Registrar Staff</Modal.Title>
         </Modal.Header>

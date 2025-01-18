@@ -458,7 +458,7 @@ useEffect(() => {
      
 
       {/* Modal for confirming the selected number of courses */}
-      <Modal size="lg"show={showModal} onHide={handleCloseModal}>
+      <Modal size="lg"show={showModal} onHide={handleCloseModal} animation={false}>
         <Modal.Header closeButton>
           <Modal.Title>Confirmation of Enrollment</Modal.Title>
         </Modal.Header>

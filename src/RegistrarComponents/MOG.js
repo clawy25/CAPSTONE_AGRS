@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { Form, Row, Col, Button, Modal, Table, Spinner } from 'react-bootstrap';
-import 'bootstrap/dist/css/bootstrap.min.css'; 
 import * as XLSX from 'sheetjs-style'; // Use sheetjs-style for formatting
 import ProgramModel from '../ReactModels/ProgramModel'; // Ensure this path is correct
 import jsPDF from "jspdf";
@@ -785,7 +784,7 @@ const fetchCurriculum = async (programNumber, batchYear) => {
       )}
 
       {/* Modal for displaying student's TOR */}
-      <Modal show={showModal} onHide={handleCloseModal} size="xl"  className="custom-modal-width">
+      <Modal show={showModal} onHide={handleCloseModal} size="xl"  className="custom-modal-width" animation={false}>
         <Modal.Header closeButton>
           <Modal.Title className="custom-color-green-font">Transcription of Records (TOR) - {selectedStudent?.studentName}</Modal.Title>
         </Modal.Header>

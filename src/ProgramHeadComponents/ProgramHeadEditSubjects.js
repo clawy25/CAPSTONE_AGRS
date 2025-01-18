@@ -186,7 +186,7 @@ export default function ProgramHeadEditCourses({ onBack }) {
       {renderTable('First Year')}
       
       {/* Add Modal */}
-      <Modal show={showAddModal} onHide={handleCloseAdd}>
+      <Modal show={showAddModal} onHide={handleCloseAdd} animation={false}>
         <Modal.Header closeButton>
           <Modal.Title>Add Course</Modal.Title>
         </Modal.Header>
@@ -265,7 +265,7 @@ export default function ProgramHeadEditCourses({ onBack }) {
       </Modal>
       
       {/* Edit Modal */}
-      <Modal show={showEditModal} onHide={handleCloseEdit}>
+      <Modal show={showEditModal} onHide={handleCloseEdit} animation={false}>
         <Modal.Header closeButton>
           <Modal.Title>Edit Course</Modal.Title>
         </Modal.Header>
@@ -338,7 +338,7 @@ export default function ProgramHeadEditCourses({ onBack }) {
       </Modal>
 
       {/* Delete Modal */}
-      <Modal show={showDeleteModal} onHide={handleCloseDelete}>
+      <Modal show={showDeleteModal} onHide={handleCloseDelete}animation={false}>
         <Modal.Header closeButton>
           <Modal.Title>Delete Course</Modal.Title>
         </Modal.Header>
