@@ -533,7 +533,7 @@ export default function ClassList() {
       <Toast.Body>Please select all required filters before proceeding to the grade sheet.</Toast.Body>
     </Toast>
   </ToastContainer>
-
+  <h2 className="custom-font custom-color-green-font mb-3 mt-2"> Class List</h2>
 <Form className="p-3 mb-4 bg-white border border-success rounded">
 <Row className="align-items-center justify-content-between gx-3 gy-2">
 {/* Academic Year */}

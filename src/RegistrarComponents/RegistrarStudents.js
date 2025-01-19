@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import '../App.css'; // Custom styling
-import {Spinner, Modal, Button} from 'react-bootstrap'
+import {Spinner, Modal, Button, Table, Container} from 'react-bootstrap'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSearch, faFileAlt, faCog, faFileSignature, faFilter } from '@fortawesome/free-solid-svg-icons'; // Import the icons you want to use
 import * as XLSX from 'xlsx';
@@ -643,10 +643,10 @@ console.log('Filtered Students:', filteredStudents);
 
     //Page Layout
     return (
-        <div className="container-fluid">
+        <Container fluid className="container-fluid">
             <h2 className="custom-font custom-color-green-font mb-3 mt-2">Students Masterlist</h2>
         
-            <section className='container-fluid bg-white p-2 px-4 rounded'>
+            <section className='container-fluid bg-white p-2 px-4 rounded table-responsive hide-scrollbar'>
             <div className="d-flex align-items-center justify-content-between gap-2 w-100 mt-4">
                 {/* Upper left: Search input with icon on the right side */}
                 <div className="mb-2 mb-md-0 w-100 w-md-auto">
@@ -689,8 +689,9 @@ console.log('Filtered Students:', filteredStudents);
                                         <p className="mt-3">Loading data, please wait...</p>
                                     </div>
                                     ):(
-                                <table className="table table-hover ">
-                                <thead className="table-success">
+                                      <Container fluid className='mx-auto mb-3 shadow-sm hide-scrollbar'>
+                               <Table hover className="table table-hover success-border mt-4 shadow-sm hide-scrollbar" style={{tableLayout:'fixed'}}>
+                                <thead className="table-success" style={{ position: 'sticky', top: 0, backgroundColor: 'white', zIndex: 1 }}>
                                     <tr>
                                         <th className='custom-color-green-font custom-font text-center pt-3'>Student Number</th>
                                         <th className='custom-color-green-font custom-font text-center pt-3'>Name</th>
@@ -717,14 +718,15 @@ console.log('Filtered Students:', filteredStudents);
                                                 <td className='d-flex align-itmes-cneter justify-content-center'>
                                                     
                                                     <button className="btn btn-success btn-sm" onClick={() => handleTORClick(student)}>
-                                                        <FontAwesomeIcon icon={faFileSignature} /> TOR {/* Font Awesome signature icon */}
+                                                        <FontAwesomeIcon icon={faFileSignature} /> View TOR {/* Font Awesome signature icon */}
                                                     </button>
                                                 </td>
                                             </tr>
                                         );
                                     })}
                                 </tbody>
-                            </table>
+                            </Table>
+                            </Container>
                             )}
                         </div>
                     </div>
@@ -1127,7 +1129,7 @@ style={{
                     fontSize: '0.8rem',
                   }}
                 >
-                  {course.numEq.toFixed(2) || '0.00'}
+                  {course.numEq || '0.00'}
                 </div>
               </React.Fragment>
             ))}
@@ -1425,6 +1427,6 @@ style={{
 
         </Modal.Footer>
       </Modal>
-        </div>
+        </Container>
     );
 }

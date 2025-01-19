@@ -566,15 +566,16 @@ const ProgramHeadClassDesig = () => {
 ) : showTable ? (
   <Container fluid className="bg-white mt-3 pt-4 pb-2 rounded">
     <Row className="mb-3 mx-2 mt-4 table-responsive overflow-auto hide-scrollbar">
-      <Table bordered hover className="text-center">
+    <Container fluid className='mx-auto mb-3 shadow-sm hide-scrollbar'>
+      <Table bordered hover className="table table-hover success-border mt-4 shadow-sm hide-scrollbar">
         <thead className="table-success">
           <tr>
-            <th className='custom-color-green-font'>Subject Code</th>
-            <th className='custom-color-green-font'>Subject Description</th>
-            <th className='custom-color-green-font'>Lecture Units</th>
-            <th className='custom-color-green-font'>Lab Units</th>
-            <th className='custom-color-green-font'>Schedule</th>
-            <th className='custom-color-green-font'>Professor</th>
+            <th className='custom-color-green-font text-center'>Subject Code</th>
+            <th className='custom-color-green-font text-center'>Subject Description</th>
+            <th className='custom-color-green-font text-center'>Lecture Units</th>
+            <th className='custom-color-green-font text-center'>Lab Units</th>
+            <th className='custom-color-green-font text-center'>Schedule</th>
+            <th className='custom-color-green-font text-center'>Professor</th>
           </tr>
         </thead>
         <tbody>
@@ -593,10 +594,10 @@ const ProgramHeadClassDesig = () => {
               );
               return (
                 <tr key={index}>
-                  <td>{schedule.courseCode}</td>
-                  <td>{courseDetails?.courseDescriptiveTitle || 'N/A'}</td>
-                  <td>{courseDetails?.courseLecture || 'N/A'}</td>
-                  <td>{courseDetails?.courseLaboratory || 'N/A'}</td>
+                  <td className='text-center'>{schedule.courseCode}</td>
+                  <td className='text-center'>{courseDetails?.courseDescriptiveTitle || 'N/A'}</td>
+                  <td className='text-center'>{courseDetails?.courseLecture || 'N/A'}</td>
+                  <td className='text-center'>{courseDetails?.courseLaboratory || 'N/A'}</td>
                   <td>
                     <div className="d-flex justify-content-start align-items-center">
                       <Form.Control
@@ -638,7 +639,7 @@ const ProgramHeadClassDesig = () => {
                       as="select"
                       value={schedule.personnelNumber || ''}
                       onChange={(e) => handleProfessorChange(index, e.target.value)}
-                      className="mr-2"
+                      className="mr-2 text-center"
                     >
                       <option value="">Select Professor</option>
                       {professors.map((prof) => (
@@ -654,7 +655,7 @@ const ProgramHeadClassDesig = () => {
           )}
         </tbody>
       </Table>
-      
+      </Container>
     </Row>
 
     {schedules.length > 0 && (

@@ -611,9 +611,9 @@ export default function RegistrarIrregularStudents() {
     }, []);
 
     return (
-    <>
+    <Container fluid>
     <h2 className="custom-font custom-color-green-font mb-3 mt-2">Irregular Students</h2>
-        <Container fluid className="bg-white py-5 rounded">
+        <Container fluid className="bg-white py-5 rounded hide-scrollbar table-responsive" style={{height: '70vh'}}>
             
             <Container fluid className="input-group">
                 <input
@@ -628,7 +628,7 @@ export default function RegistrarIrregularStudents() {
                 </span>
             </Container>
 
-            <Container fluid className="mt-4 table-responsive">
+       
 
             {loading ? (
             <div className="text-center py-5 bg-white">
@@ -636,65 +636,67 @@ export default function RegistrarIrregularStudents() {
                 <p className="mt-3">Loading data, please wait...</p>
             </div>
             ) : (
-            <Table responsive hover>
-                <thead className='table-success rounded'>
-                <tr>
-                    <th className='custom-color-green-font custom-font text-center pt-3'>Student Number</th>
-                    <th className='custom-color-green-font custom-font text-center pt-3'>Student Name</th>
-                    <th className='custom-color-green-font custom-font text-center pt-3'>Program Name</th>
-                    <th className='custom-color-green-font custom-font text-center pt-3'>Admission Year</th>
-                    <th className='custom-color-green-font custom-font text-center pt-3'>Actions</th>
-                </tr>
-                </thead>
-                <tbody>
-                {filteredStudent.length !== 0 ? (
-                    filteredStudent.map((student) => (
-                    <tr key={student.id}>
-                        <td className='text-center'>{student.studentNumber}</td>
-                        <td className='text-center'>
-                        {student.studentNameLast}, {student.studentNameFirst} {student.studentNameMiddle || ''}
-                        </td>
-                        <td className='text-center'>{student.programName}</td>
-                        <td className='text-center'>{student.studentYrLevel}</td>
-                        <td className='text-center'>
-                        <Dropdown align="end" className='h-100 w-100'>
-                            <Dropdown.Toggle
-                            variant="link"
-                            className="p-0 border-0"
-                            style={{ color: '#000' }}
-                            >
-                            <i className="fas fa-ellipsis-v"></i>
-                            </Dropdown.Toggle>
-                            <Dropdown.Menu>
-                            <Dropdown.Item onClick={() => handleEnrollmentClick(student)}>
-                                Enrollment
-                            </Dropdown.Item>
-                            
-                            <Dropdown.Item onClick={() => handleTORClick(student)}>View TOR</Dropdown.Item>
-                            <Dropdown.Item onClick={() => handleAcademicRecordClick(student)}>
-                                Academic Record
-                            </Dropdown.Item>
 
-                            
-                            </Dropdown.Menu>
-                        </Dropdown>
-                        </td>
-                    </tr>
-                    ))
-                ) : (
-                    <tr>
-                    <td colSpan="5" className="text-center fst-italic">
-                        No students found
-                    </td>
-                    </tr>
-                )}
-                </tbody>
-            </Table>
+              <Table hover className="table table-hover success-border mt-4 mx-auto shadow-sm hide-scrollbar">
+                  <thead className='table-success rounded'>
+                  <tr>
+                      <th className='custom-color-green-font custom-font text-center pt-3'>Student Number</th>
+                      <th className='custom-color-green-font custom-font text-center pt-3'>Student Name</th>
+                      <th className='custom-color-green-font custom-font text-center pt-3'>Program Name</th>
+                      <th className='custom-color-green-font custom-font text-center pt-3'>Admission Year</th>
+                      <th className='custom-color-green-font custom-font text-center pt-3'>Actions</th>
+                  </tr>
+                  </thead>
+                  <tbody>
+                  {filteredStudent.length !== 0 ? (
+                      filteredStudent.map((student) => (
+                      <tr key={student.id}>
+                          <td className='text-center'>{student.studentNumber}</td>
+                          <td className='text-center'>
+                          {student.studentNameLast}, {student.studentNameFirst} {student.studentNameMiddle || ''}
+                          </td>
+                          <td className='text-center'>{student.programName}</td>
+                          <td className='text-center'>{student.studentYrLevel}</td>
+                          <td className='text-center'>
+                          <Dropdown align="end" className='h-100 w-100'>
+                              <Dropdown.Toggle
+                              variant="link"
+                              className="p-0 border-0"
+                              style={{ color: '#000' }}
+                              >
+                              <i className="fas fa-ellipsis-v"></i>
+                              </Dropdown.Toggle>
+                              <Dropdown.Menu>
+                              <Dropdown.Item onClick={() => handleEnrollmentClick(student)}>
+                                  Enrollment
+                              </Dropdown.Item>
+                              
+                              <Dropdown.Item onClick={() => handleTORClick(student)}>View TOR</Dropdown.Item>
+                              <Dropdown.Item onClick={() => handleAcademicRecordClick(student)}>
+                                  Academic Record
+                              </Dropdown.Item>
+
+                              
+                              </Dropdown.Menu>
+                          </Dropdown>
+                          </td>
+                      </tr>
+                      ))
+                  ) : (
+                      <tr>
+                      <td colSpan="5" className="text-center fst-italic">
+                          No students found
+                      </td>
+                      </tr>
+                  )}
+                  </tbody>
+              </Table>
+
             )}
 
 
 
-            </Container>
+     
             {/* Academic Record Modal */}
             <Modal show={showAcademicRecordModal} size="xl" onHide={handleCloseAcademicRecordModal} animation={false}>
                 <Modal.Header closeButton>
@@ -1604,6 +1606,6 @@ style={{
         </Modal.Footer>
       </Modal>
      </Container>
-    </>
+    </Container>
     );
 }

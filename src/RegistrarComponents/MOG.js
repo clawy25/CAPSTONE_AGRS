@@ -49,39 +49,35 @@ function MasterlistOfGradesTable() {
 
  
   useEffect(() => {
-    const fetchPrograms = async () => {
+    const fetchData = async () => {
       try {
-        const allPrograms = await ProgramModel.fetchAllPrograms(user.programNumber);
-        const distinctPrograms = allPrograms.filter((program, index, self) =>
-          index === self.findIndex((p) => p.programNumber === program.programNumber)
-      );
-        setPrograms(distinctPrograms);
+        const [allPrograms, allStudents] = await Promise.all([
+          ProgramModel.fetchAllPrograms(user.programNumber),
+          StudentModel.fetchExistingStudents()
+        ]);
+  
+        setPrograms(
+          allPrograms.filter((program, index, self) =>
+            index === self.findIndex((p) => p.programNumber === program.programNumber)
+          )
+        );
+  
+        const admissionYears = [...new Set(allStudents.map((s) => s.studentAdmissionYr))].sort((a, b) => b - a);
+        setAdmissionYears(admissionYears);
       } catch (error) {
-        console.error("Error fetching programs:", error);
+        console.error("Error fetching data:", error);
       }
     };
-
-    const fetchAdmissionYears = async () => {
-      try {
-        const allAdmissionYear = await StudentModel.fetchExistingStudents();
-        const admissionYr = allAdmissionYear.map((admission) => admission.studentAdmissionYr);
-        const distinctAdmissionYr = [...new Set(admissionYr)];
-        const sortedAdmissionYears = distinctAdmissionYr.sort((a, b) => b - a);
-        setAdmissionYears(sortedAdmissionYears);
-
-      }catch(error){
-        console.error("Error fetching admission years:", error);
-      }
-    }
-    fetchPrograms();
-    fetchAdmissionYears()
-   
-    
+  
+    fetchData();
     fetchStudentData().then(() => setLoading(false));
   }, [user.programNumber]);
+  
 
   
-  const generateAcademicYears = (startYear) => Array.from({ length: 4 }, (_, i) => `${startYear + i}-${startYear + i + 1}`);
+  const generateAcademicYears = (startYear, numOfYears = 4) => 
+    Array.from({ length: numOfYears }, (_, i) => `${startYear + i}-${startYear + i + 1}`);
+  
 
   const fetchStudentData = async (programNumber, batchYear) => {
    

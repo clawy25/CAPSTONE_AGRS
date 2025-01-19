@@ -606,29 +606,29 @@ const fetchDeadline = async () => {
               {schedules.length > 0 ? (
                 schedules.map((schedule, index) => (
                   <tr key={index}>
-                    <td>{schedule.scheduleNumber}</td>
-                    <td>{schedule.courseCode}</td>
-                    <td>{schedule.personnelNumber}</td>
+                    <td className='text-center'>{schedule.scheduleNumber}</td>
+                    <td className='text-center'>{schedule.courseCode}</td>
+                    <td className='text-center'>{schedule.personnelNumber}</td>
 
                     {/* Date Input */}
-                    <td>
+                    <td className='text-center'>
                       {schedule.date}
                     </td>
 
                     {/* Time Input */}
-                    <td>
+                    <td className='text-center'>
                       {schedule.time}
                     </td>
 
                     {/* Submission Status Dropdown */}
-                    <td>
+                    <td className='text-center'>
                       {schedule.submissionStatus}
                     </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="8" className="text-center">
+                  <td className='text-center' colSpan="8">
                     No Schedules Available
                   </td>
                 </tr>
@@ -670,12 +670,12 @@ const fetchDeadline = async () => {
 
                   return (
                     <tr key={index}>
-                      <td>{deadline.scheduleNumber}</td>
-                      <td>{startedAtDate}</td>
-                      <td>{startedAtTime}</td>
-                      <td>{endedAtDate}</td>
-                      <td>{endedAtTime}</td>
-                      <td>
+                      <td className='text-center'>{deadline.scheduleNumber}</td>
+                      <td className='text-center'>{startedAtDate}</td>
+                      <td className='text-center'>{startedAtTime}</td>
+                      <td className='text-center'>{endedAtDate}</td>
+                      <td className='text-center'>{endedAtTime}</td>
+                      <td className='text-center'>
                         <Button variant="warning" onClick={() => handleEditDeadline(index)}>
                         <FontAwesomeIcon icon={faEdit} className='text-white'/>
                         </Button>
@@ -688,10 +688,10 @@ const fetchDeadline = async () => {
                   { schedules.length > 0 ? (
                   schedules.map((schedule, index) => (
                     <tr key={index}>
-                      <td>{schedule.scheduleNumber}</td>
+                      <td className='text-center'>{schedule.scheduleNumber}</td>
                       
                       {/* Start Date */}
-                      <td>
+                      <td className='text-center'>
                         <Form.Control
                           type="date"
                           value={formData[schedule.scheduleNumber]?.startDate || ''}
@@ -703,7 +703,7 @@ const fetchDeadline = async () => {
                       </td>
                       
                       {/* Start Time */}
-                      <td>
+                      <td className='text-center'>
                         <Form.Control
                           type="time"
                           value={formData[schedule.scheduleNumber]?.startTime || ''}
@@ -715,7 +715,7 @@ const fetchDeadline = async () => {
                       </td>
                       
                       {/* End Date */}
-                      <td>
+                      <td className='text-center'>
                         <Form.Control
                           type="date"
                           value={formData[schedule.scheduleNumber]?.endDate || ''}
@@ -727,7 +727,7 @@ const fetchDeadline = async () => {
                       </td>
                       
                       {/* End Time */}
-                      <td>
+                      <td className='text-center'>
                         <Form.Control
                           type="time"
                           value={formData[schedule.scheduleNumber]?.endTime || ''}
@@ -739,7 +739,7 @@ const fetchDeadline = async () => {
                       </td>
                       
                       {/* Save Button */}
-                      <td>
+                      <td className='text-center'>
                         <Button variant="warning" onClick={() => handleEditDeadline(index)} disabled>
                         <FontAwesomeIcon icon={faEdit} className='text-white'/> 
                           </Button>
@@ -748,7 +748,7 @@ const fetchDeadline = async () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="6" className="text-center">
+                    <td className='text-center' colSpan="6">
                       No schedules available
                     </td>
                   </tr>

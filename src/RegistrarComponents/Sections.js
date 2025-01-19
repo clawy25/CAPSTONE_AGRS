@@ -704,12 +704,12 @@ const Sections = () => {
             <div className="text-center py-5 bg-white rounded pt-5 px-4 pb-5">
             <h5 className="custom-color-green-font mt-5 fs-5 pt-5">No Data Available</h5>
             <p className="fs-6 mb-2">
-              Please ensure that all filters are applied then click "View" to display the data.
+            Please ensure that all filters are applied or data is available to display.
             </p>
           </div>
           )
         ) : (
-          <div className="text-center">
+          <div className="text-center py-5 bg-white rounded pt-5 px-4 pb-5">
             <h5 className='custom-color-green-font fs-5 pt-5'>No Data Available</h5>
             <p className='fs-6'>Please ensure that all filters are applied or data is available to display.</p>
           </div>
