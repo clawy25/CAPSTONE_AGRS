@@ -5,9 +5,12 @@ import { faEdit} from '@fortawesome/free-solid-svg-icons';
 import PersonnelModel from '../ReactModels/PersonnelModel';
 import ProgramModel from '../ReactModels/ProgramModel';
 import { UserContext } from '../Context/UserContext';
+import { useNavigate } from 'react-router-dom';
+
 
 export default function RegistrarStaffAssign({ onBack }) {
   const { user } = useContext(UserContext);
+  const navigate = useNavigate();
   const [programHeads, setProgramHeads] = useState([]);
   const [personnelList, setPersonnelList] = useState([]);
   const [programNumbers, setProgramNumbers] = useState([]);
@@ -20,6 +23,15 @@ export default function RegistrarStaffAssign({ onBack }) {
   const currentAcadYear = sessionStorage.getItem('currentAcadYear');
   const personnelType = 'Registrar';
   const personnelTypes = ['Head', 'Registrar', 'Faculty', 'Admin'];
+
+  //On loading the page
+  useEffect(() => {
+    if (!user) {
+      navigate('/'); // Redirect to login if user is not present
+    }
+  }, [user, navigate]);
+
+
   const fetchRegistrarStaff = async () => {
     try {
       const personnelData = await PersonnelModel.fetchAllPersonnel(currentAcadYear);

@@ -10,11 +10,13 @@ import ScheduleModel from '../ReactModels/ScheduleModel'
 import AcademicYearModel from '../ReactModels/AcademicYearModel';
 import PersonnelModel from '../ReactModels/PersonnelModel';
 import ProgramModel from '../ReactModels/ProgramModel';
-import { UserContext } from '../Context/UserContext'; 
+import { UserContext } from '../Context/UserContext';
+import { useNavigate } from 'react-router-dom';
 import '../App.css';
 
 export default function RegistrarIrregularStudents() {
     const { user } = useContext(UserContext);
+    const navigate = useNavigate();
     const [loading, setLoading] = useState(false); 
     const [irregularStudent, setIrregularStudent] = useState([]); // Full list of irregular students
     const [searchQuery, setSearchQuery] = useState(''); // Search query
@@ -48,6 +50,13 @@ export default function RegistrarIrregularStudents() {
       day: 'numeric'
     });
     const [batchYear, setBatchYear] = useState("");
+
+    //On loading the page
+    useEffect(() => {
+      if (!user) {
+        navigate('/'); // Redirect to login if user is not present
+      }
+    }, [user, navigate]);
 
     const handlePrint = () => {
         const contentElement = document.getElementById('modalContent');

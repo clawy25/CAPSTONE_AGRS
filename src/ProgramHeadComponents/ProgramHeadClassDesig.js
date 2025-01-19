@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { Table, Form, Button, Row, Col, Container, Spinner } from 'react-bootstrap';
-
+import { Link, useNavigate, Routes, Route, useLocation } from 'react-router-dom';
 import AcademicYearModel from '../ReactModels/AcademicYearModel';
 import YearLevelModel from '../ReactModels/YearLevelModel';
 import ProgramModel from '../ReactModels/ProgramModel';
@@ -13,6 +13,7 @@ import { UserContext } from '../Context/UserContext';
 const ProgramHeadClassDesig = () => {
   const [loading, setLoading] = useState(false);
   const { user } = useContext(UserContext);
+  const navigate = useNavigate();
   const [selectedAcademicYear, setSelectedAcademicYear] = useState('');
   const [selectedProgram, setSelectedProgram] = useState('');
   const [selectedYearLevel, setSelectedYearLevel] = useState('');
@@ -29,6 +30,13 @@ const ProgramHeadClassDesig = () => {
   const [schedules, setSchedules] = useState([]);
   const [showTable, setShowTable] = useState(false);
   const [professors, setProfessors] = useState([]);
+
+  //On loading the page
+      useEffect(() => {
+        if (!user) {
+          navigate('/'); // Redirect to login if user is not present
+        }
+      }, [user, navigate]);
 
   const fetchAcademicYearsAndPrograms = async () => {
     try {

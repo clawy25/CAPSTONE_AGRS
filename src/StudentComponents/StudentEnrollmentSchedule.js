@@ -10,11 +10,13 @@ import AcademicYearModel from '../ReactModels/AcademicYearModel';
 import ScheduleModel from '../ReactModels/ScheduleModel';
 import EnrollmentModel from '../ReactModels/EnrollmentModel';
 import { UserContext } from '../Context/UserContext';
+import { useNavigate } from 'react-router-dom';
 
 
 const ScheduleTable = () => {
   
   const { user } = useContext(UserContext);
+  const navigate = useNavigate();
   const [studentInfo, setStudentInfo] = useState([]);
   const [yearLevel, setYearLevel] = useState("");  // Placeholder value for year level
   const [semester, setSemester] = useState("");  // Placeholder value for semester  
@@ -35,7 +37,12 @@ const ScheduleTable = () => {
   const [userSelectedCount, setUserSelectedCount] = useState(null);
   const [isEnrolled, setIsEnrolled] = useState(false);
 
-  
+  //On loading the page
+  useEffect(() => {
+    if (!user) {
+      navigate('/'); // Redirect to login if user is not present
+    }
+  }, [user, navigate]);
 
   const fetchAcademicYearsAndPrograms = async () => {
     try {

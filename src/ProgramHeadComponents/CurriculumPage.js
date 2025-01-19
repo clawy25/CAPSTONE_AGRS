@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { Table, Form, Button, Row, Col, Modal, Spinner, Container } from 'react-bootstrap';
-
+import { Link, useNavigate, Routes, Route, useLocation } from 'react-router-dom';
 import AcademicYearModel from '../ReactModels/AcademicYearModel';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faTrashAlt } from '@fortawesome/free-solid-svg-icons';
@@ -10,6 +10,7 @@ import { UserContext } from '../Context/UserContext'; // Assuming CourseModel ha
 
 const CurriculumPage = () => {
   const { user } = useContext(UserContext);
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [program, setPrograms] = useState([]);
   const [selectedAcademicYear, setSelectedAcademicYear] = useState('');
@@ -21,6 +22,13 @@ const CurriculumPage = () => {
   const [courses, setCourses] = useState([]); // State to hold course data for the selected academic year, year level, and semester
   const [showModal, setShowModal] = useState(false); // State to toggle Add/Edit modal
   const [currentCourse, setCurrentCourse] = useState(null); // Track the course being edited
+
+  //On loading the page
+      useEffect(() => {
+        if (!user) {
+          navigate('/'); // Redirect to login if user is not present
+        }
+      }, [user, navigate]);
 
   
   const fetchAcademicYearsAndPrograms = async () => {

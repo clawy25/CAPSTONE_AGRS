@@ -10,11 +10,13 @@ import PersonnelModel from '../ReactModels/PersonnelModel';
 import EnrollmentModel from '../ReactModels/EnrollmentModel';
 import StudentModel from '../ReactModels/StudentModel'
 import { UserContext } from '../Context/UserContext';
+import { useNavigate } from 'react-router-dom';
 import '../App.css'
 
 const Sections = () => {
   const [loading, setLoading] = useState(false); 
   const { user } = useContext(UserContext);
+  const navigate = useNavigate();
   const [selectedAcademicYear, setSelectedAcademicYear] = useState('');
   const [selectedProgram, setSelectedProgram] = useState('');
   const [selectedYearLevel, setSelectedYearLevel] = useState('');
@@ -36,6 +38,13 @@ const Sections = () => {
   const [showModal, setShowModal] = useState(false);
   const [showModalAlertView, setShowModalAlertView] =useState(false);
   const [showModalAlert, setShowModalAlert] =useState(false);
+
+  //On loading the page
+  useEffect(() => {
+    if (!user) {
+      navigate('/'); // Redirect to login if user is not present
+    }
+  }, [user, navigate]);
 
   const fetchAcademicYearsAndPrograms = async () => {
     try {

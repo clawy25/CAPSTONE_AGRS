@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react'; 
 import { Table, Form, Button, Row, Col, Modal, Spinner, Container } from 'react-bootstrap';
-
+import { useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPrint} from '@fortawesome/free-solid-svg-icons';
 import { UserContext } from '../Context/UserContext';
@@ -35,6 +35,7 @@ const MasterlistOfGradesTable = () => {
   const [showModalAlert, setShowModalAlert] =useState(false);
   const [showModalAlertView, setShowModalAlertView] =useState(false);
   const { user } = useContext(UserContext);
+  const navigate = useNavigate();
   const [selectedAcademicYear, setSelectedAcademicYear] = useState('');
   const [selectedProgram, setSelectedProgram] = useState('');
   const [selectedYearLevel, setSelectedYearLevel] = useState('');
@@ -45,7 +46,14 @@ const MasterlistOfGradesTable = () => {
   const [mappedData, setMappedData] = useState([]);
   const [combinedData, setCombinedData] = useState([]);
   const [dataFetched, setDataFetched] = useState(false);
-  const [groupedData, setGroupedData] = useState({});  
+  const [groupedData, setGroupedData] = useState({});
+
+  //On loading the page
+    useEffect(() => {
+      if (!user) {
+        navigate('/'); // Redirect to login if user is not present
+      }
+    }, [user, navigate]);
 
   const fetchAcademicYearsAndPrograms = async () => {
     try {

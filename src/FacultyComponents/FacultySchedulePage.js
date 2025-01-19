@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
+import { Link, useNavigate, Routes, Route, useLocation } from 'react-router-dom';
 import { Table, Form, Button, Row, Col, Alert, Spinner } from 'react-bootstrap';
 import { UserContext } from '../Context/UserContext';
 import ScheduleModel from '../ReactModels/ScheduleModel';
@@ -11,6 +12,7 @@ import '../App.css'
 export default function FacultySchedulePage() {
   const [loading, setLoading] = useState(false);
   const { user } = useContext(UserContext); // Access user context
+  const navigate = useNavigate();
   const [semester, setSemester] = useState('');  // Store semester as a string initially
   const [academicYear, setAcademicYear] = useState([]);
   const [schedule, setSchedule] = useState([]);
@@ -21,9 +23,12 @@ export default function FacultySchedulePage() {
 
   const program = user?.programNumber || null; // Safely access programNumber from user
 
-  useEffect(() => {
-    console.log('User Data:', user);
-  }, [user]);
+  //On loading the page
+    useEffect(() => {
+      if (!user) {
+        navigate('/'); // Redirect to login if user is not present
+      }
+    }, [user, navigate]);
 
   // Fetch Academic Years
   useEffect(() => {

@@ -20,6 +20,13 @@ export default function StudentDashboard() {
   const dropdownRef = useRef(null);
   const location = useLocation();
 
+  //On loading the page
+  useEffect(() => {
+    if (!user) {
+      navigate('/'); // Redirect to login if user is not present
+    }
+  }, [user, navigate]);
+
   const handleLogout = () => {
     navigate('/login');
   };

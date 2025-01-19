@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useContext } from 'react'; 
-import { useLocation } from 'react-router-dom';
+import React, { useState, useEffect, useContext } from 'react';
 import { Table, Form, Button, Row, Col, Modal, Container, Spinner } from 'react-bootstrap';
- 
+import { Link, useNavigate, Routes, Route, useLocation } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPrint, faCheckCircle } from '@fortawesome/free-solid-svg-icons';
 import { UserContext } from '../Context/UserContext';
@@ -36,6 +35,7 @@ const MasterlistOfGradesTable = () => {
   const [showModalAlert, setShowModalAlert] =useState(false);
   const [showModalAlertView, setShowModalAlertView] =useState(false);
   const { user } = useContext(UserContext);
+  const navigate = useNavigate();
   const [selectedAcademicYear, setSelectedAcademicYear] = useState('');
   const [selectedProgram, setSelectedProgram] = useState('');
   const [selectedYearLevel, setSelectedYearLevel] = useState('');
@@ -52,7 +52,12 @@ const MasterlistOfGradesTable = () => {
   const [expandedSection, setExpandedSection] = useState(null);
   const [verifiedSections, setVerifiedSections] = useState({});
 
-  console.log(verifiedSections);
+  //On loading the page
+  useEffect(() => {
+    if (!user) {
+      navigate('/'); // Redirect to login if user is not present
+    }
+  }, [user, navigate]);
 
 const handleShowModal = (section) => {
   setCurrentSection(section); // Set the section being validated

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
+import { Link, useNavigate, Routes, Route, useLocation } from 'react-router-dom';
 import { Table, Modal, Button, Form } from 'react-bootstrap';
 import CourseModel from '../ReactModels/CourseModel'; 
 import '../App.css';
@@ -8,6 +9,7 @@ export default function ProgramHeadEditCourses({ onBack }) {
   const [yearData, setYearData] = useState({ 'First Year': [] });
   const [loading, setLoading] = useState(true);
   const { user } = useContext(UserContext);
+  const navigate = useNavigate();
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -31,7 +33,14 @@ export default function ProgramHeadEditCourses({ onBack }) {
     
   });
 
-  const [courseToDelete, setCourseToDelete] = useState(null); 
+  const [courseToDelete, setCourseToDelete] = useState(null);
+
+  //On loading the page
+  useEffect(() => {
+    if (!user) {
+      navigate('/'); // Redirect to login if user is not present
+    }
+  }, [user, navigate]);
 
   useEffect(() => {
     const fetchCourses = async () => {

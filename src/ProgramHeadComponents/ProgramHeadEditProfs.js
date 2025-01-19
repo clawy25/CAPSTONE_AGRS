@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Table, Modal, Button, Form } from 'react-bootstrap';
 import '../App.css';
 import PersonnelModel from '../ReactModels/PersonnelModel';
@@ -12,8 +13,16 @@ export default function ProgramHeadEditProfs({ onBack }) {
   const [editProf, setEditProf] = useState({ number: '', firstname: '', middlename: '', lastname: '', email: '', phone: '', sex: '', address: '', birthDate: '' });
   const [activeProfIndex, setActiveProfIndex] = useState(null);
   const { user } = useContext(UserContext);
+  const navigate = useNavigate();
   const [existingPersonnelNumbers, setExistingPersonnelNumbers] = useState([]);
   const [generatedPersonnelNumber, setGeneratedPersonnelNumber] = useState('');
+
+  //On loading the page
+  useEffect(() => {
+    if (!user) {
+      navigate('/'); // Redirect to login if user is not present
+    }
+  }, [user, navigate]);
 
 
   // Fetch professors from PersonnelModel when the component mounts

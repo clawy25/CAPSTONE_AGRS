@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext, useCallback } from 'react';
 import { Spinner } from 'react-bootstrap';
 import { UserContext } from '../Context/UserContext';
+import { useNavigate } from 'react-router-dom';
 import ScheduleModel from '../ReactModels/ScheduleModel';
 import CourseModel from '../ReactModels/CourseModel';
 import PersonnelModel from '../ReactModels/PersonnelModel';
@@ -17,10 +18,18 @@ const dataCache = new Map();
 export default function Schedule() {
   const [loading, setLoading] = useState(false);
   const { user } = useContext(UserContext);
+  const navigate = useNavigate();
   const [studentSchedules, setStudentSchedules] = useState([]);
   const [studentName, setStudentName] = useState("");
   const [error, setError] = useState(null);
   const [currentAcadYear, setCurrentAcadYear] = useState("");
+
+  //On loading the page
+  useEffect(() => {
+    if (!user) {
+      navigate('/'); // Redirect to login if user is not present
+    }
+  }, [user, navigate]);
 
   const fetchData = useCallback(async () => {
     setLoading(true);

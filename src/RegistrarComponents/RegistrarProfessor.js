@@ -10,12 +10,15 @@ import SectionModel from '../ReactModels/SectionModel';
 import ScheduleModel from '../ReactModels/ScheduleModel';
 import SubmissionModel from '../ReactModels/SubmissionModel';
 import { UserContext } from '../Context/UserContext';
+import { useNavigate } from 'react-router-dom';
+
 import DeadlineModel from '../ReactModels/DeadlineModel';
 import '../App.css';
 
 export default function RegistrarProfessor() {
   const [loading, setLoading] = useState(false); 
   const { user } = useContext(UserContext);
+  const navigate = useNavigate();
   const [academicYears, setAcademicYears] = useState([]);
   const [programs, setPrograms] = useState([]);
   const [selectedAcademicYear, setSelectedAcademicYear] = useState('');
@@ -34,7 +37,14 @@ export default function RegistrarProfessor() {
   const [deadlines, setDeadlines] = useState([]);
   const [selectedDeadline, setSelectedDeadline] = useState(null);
   const [formData, setFormData] = useState({});
-    
+  
+  //On loading the page
+  useEffect(() => {
+    if (!user) {
+      navigate('/'); // Redirect to login if user is not present
+    }
+  }, [user, navigate]);
+  
   useEffect(() => {
     fetchAcademicYearsAndPrograms();
   }, [user.programNumber]);

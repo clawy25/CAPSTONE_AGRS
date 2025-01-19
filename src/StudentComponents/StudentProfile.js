@@ -3,15 +3,24 @@ import { Form, Table, Button, Card } from 'react-bootstrap';
 
 import '../App.css';
 import { UserContext } from '../Context/UserContext';
+import { useNavigate } from 'react-router-dom';
 import StudentModel from '../ReactModels/StudentModel';
 import AcademicYearModel from '../ReactModels/AcademicYearModel';
 
 export default function StudentProfile() {
   const { user } = useContext(UserContext);
+  const navigate = useNavigate();
   const [isSaving, setIsSaving] = useState(false);
   const [isUnchanged, setIsUnchanged] = useState(true); // To track changes
   const [studentInfo, setStudentInfo] = useState({});
   const [editableStudentInfo, setEditableStudentInfo] = useState({});
+
+  //On loading the page
+  useEffect(() => {
+    if (!user) {
+      navigate('/'); // Redirect to login if user is not present
+    }
+  }, [user, navigate]);
 
   const fetchStudentData = async () => {
     try {

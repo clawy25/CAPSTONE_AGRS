@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useContext, useCallback } from 'react';
 import { Button, Modal, Table,Spinner } from 'react-bootstrap';
-
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBook } from '@fortawesome/free-solid-svg-icons';
 import { UserContext } from '../Context/UserContext';
+import { useNavigate } from 'react-router-dom';
 import StudentModel from '../ReactModels/StudentModel';
 import CourseModel from '../ReactModels/CourseModel';
 import SemGradeModel from '../ReactModels/SemGradeModel';
@@ -17,10 +17,18 @@ const curriculumCache = new Map();
 export default function Grades() {
   const [loading, setLoading] = useState(false);
   const { user } = useContext(UserContext); // Get the logged-in user from context
+  const navigate = useNavigate();
   const [error, setError] = useState(null);
   const [studentData, setStudentData] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [curriculum, setCurriculum] = useState([]);
+
+  //On loading the page
+  useEffect(() => {
+    if (!user) {
+      navigate('/'); // Redirect to login if user is not present
+    }
+  }, [user, navigate]);
 
   const fetchStudentData = useCallback(async (studentNumber) => {
     if (studentCache.has(studentNumber)) {

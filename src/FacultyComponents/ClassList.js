@@ -81,6 +81,13 @@ export default function ClassList() {
       PROFILE: 'profile',
       CHANGE_PASSWORD: 'change-password',
     };
+
+    //On loading the page
+    useEffect(() => {
+      if (!user) {
+        navigate('/'); // Redirect to login if user is not present
+      }
+    }, [user, navigate]);
   
     const fetchAcademicYearsAndPrograms = async () => {
       try {

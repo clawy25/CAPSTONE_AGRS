@@ -1,15 +1,23 @@
 import { useContext, useState, useEffect } from 'react';
 import { Form, Table, Button, Card } from 'react-bootstrap';
-
+import { useNavigate } from 'react-router-dom';
 import { UserContext } from '../Context/UserContext';
 import PersonnelModel from '../ReactModels/PersonnelModel';
 import AcademicYearModel from '../ReactModels/AcademicYearModel';
 
 export default function RegistrarProfile() {
     const { user } = useContext(UserContext);
+    const navigate = useNavigate();
     const [personnelInfo, setPersonnelInfo] = useState({});
     const [editablePersonnelInfo, setEditablePersonnelInfo] = useState({});
     const [isSaving, setIsSaving] = useState(false);
+
+    //On loading the page
+    useEffect(() => {
+        if (!user) {
+            navigate('/'); // Redirect to login if user is not present
+        }
+    }, [user, navigate]);
 
     // Synchronize editablePersonnelInfo with personnelInfo
     useEffect(() => {

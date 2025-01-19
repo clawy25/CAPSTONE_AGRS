@@ -27,6 +27,13 @@ export default function ProgramHeadDashboard() {
   const [personnelInfo, setPersonnelInfo] = useState([]);
   const location = useLocation();
 
+  //On loading the page
+  useEffect(() => {
+    if (!user) {
+      navigate('/'); // Redirect to login if user is not present
+    }
+  }, [user, navigate]);
+
     const fetchPersonnelData = async () => {
         try {
             // Fetch all academic years

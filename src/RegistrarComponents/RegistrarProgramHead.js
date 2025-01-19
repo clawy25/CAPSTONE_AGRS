@@ -5,10 +5,12 @@ import { faEdit} from '@fortawesome/free-solid-svg-icons';
 import PersonnelModel from '../ReactModels/PersonnelModel';
 import ProgramModel from '../ReactModels/ProgramModel';
 import { UserContext } from '../Context/UserContext';
+import { useNavigate } from 'react-router-dom';
 import AcademicYearModel from '../ReactModels/AcademicYearModel';
 
 export default function RegistrarProgramHead({ onBack }) {
   const { user } = useContext(UserContext);
+  const navigate = useNavigate();
   const [programHeads, setProgramHeads] = useState([]);
   const [personnelList, setPersonnelList] = useState([]);
   const [programNumbers, setProgramNumbers] = useState([]);
@@ -19,6 +21,13 @@ export default function RegistrarProgramHead({ onBack }) {
   const [activeProgramHeadIndex, setActiveProgramHeadIndex] = useState(null);
   const personnelTypes = ['Head', 'Faculty'];
   const currentAcadYear = sessionStorage.getItem('currentAcadYear');
+
+  //On loading the page
+  useEffect(() => {
+    if (!user) {
+      navigate('/'); // Redirect to login if user is not present
+    }
+  }, [user, navigate]);
 
 
   const fetchProgramHeads = async () => {

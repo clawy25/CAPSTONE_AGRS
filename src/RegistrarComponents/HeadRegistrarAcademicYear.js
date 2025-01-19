@@ -9,8 +9,6 @@ import StudentModel from '../ReactModels/StudentModel';
 import SemGradeModel from '../ReactModels/SemGradeModel';
 import EnrollmentModel from '../ReactModels/EnrollmentModel';
 import '../App.css';
-import { UserContext } from '../Context/UserContext';
-
 export default function HeadRegistrarAcademicYear() {
   
   const [academicYears, setAcademicYears] = useState([]);

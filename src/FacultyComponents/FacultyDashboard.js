@@ -197,7 +197,7 @@ export default function FacultyDashboard () {
   //On loading the dashboard
   useEffect(() => {
     if (!user) {
-      navigate('/login'); // Redirect to login if user is not present
+      navigate('/'); // Redirect to login if user is not present
     } else {
       fetchAcademicYearsAndPrograms();
       setUserProgram(user.programNumber);

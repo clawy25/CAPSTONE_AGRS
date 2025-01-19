@@ -10,7 +10,8 @@ import ScheduleModel from '../ReactModels/ScheduleModel';
 import CourseModel from '../ReactModels/CourseModel';
 import SemGradeModel from '../ReactModels/SemGradeModel';
 import SubmissionModel from '../ReactModels/SubmissionModel';
-import { UserContext } from '../Context/UserContext'; 
+import { UserContext } from '../Context/UserContext';
+import { useNavigate } from 'react-router-dom';
 import '../App.css'
 
 // MasterlistOfGradesTable Component
@@ -25,6 +26,7 @@ function MasterlistOfGradesTable() {
   const [showPrintModal, setShowPrintModal] = useState(false);
   const [tableContent, setTableContent] = useState("");
   const { user } = useContext(UserContext);
+  const navigate = useNavigate();
   const [admissionYears, setAdmissionYears] = useState([]);
   const [students, setStudents] = useState([]);
   const [semestersData, setSemestersData] = useState([]);
@@ -36,6 +38,13 @@ function MasterlistOfGradesTable() {
     month: 'long',
     day: 'numeric'
   });
+
+  //On loading the page
+  useEffect(() => {
+    if (!user) {
+      navigate('/'); // Redirect to login if user is not present
+    }
+  }, [user, navigate]);
 
 
  
