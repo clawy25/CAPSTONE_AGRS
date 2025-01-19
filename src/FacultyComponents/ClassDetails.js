@@ -4641,25 +4641,25 @@ const handlePercentageChange = (setter, value) => {
           {/* Left Section: Period Buttons */}
           <div style={{ display: 'flex', gap: '10px' }}>
             <Button
-              className={`period-button ${selectedPeriod === 'midterm' ? 'active' : ''}`}
+              className={`period-button bg-custom-color-green-btn   ${selectedPeriod === 'midterm' ? 'active' : ''}`}
               onClick={() => handlePeriodChange('midterm')}
             >
               Midterm
             </Button>
             <Button
-              className={`period-button ${selectedPeriod === 'finals' ? 'active' : ''}`}
+              className={`period-button bg-custom-color-green-btn  ${selectedPeriod === 'finals' ? 'active' : ''}`}
               onClick={() => handlePeriodChange('finals')}
             >
               Finals
             </Button>
             <Button
-              className={`period-button ${selectedPeriod === 'summary' ? 'active' : ''}`}
+              className={`period-button bg-custom-color-green-btn  ${selectedPeriod === 'summary' ? 'active' : ''}`}
               onClick={() => handlePeriodChange('summary')}
             >
               Summary
             </Button>
             <Button
-              className={`period-button ${selectedPeriod === 'gradeSheet' ? 'active' : ''}`}
+              className={`period-button bg-custom-color-green-btn  ${selectedPeriod === 'gradeSheet' ? 'active' : ''}`}
               onClick={() => handlePeriodChange('gradeSheet')}
             >
               Grade Sheet
@@ -4713,7 +4713,7 @@ const handlePercentageChange = (setter, value) => {
 
       {/* Button Container */}
       <div className='d-flex justify-content-end mt-4 me-3 w-100'>
-        <Button
+        <Button 
           disabled={pendingStatus}
           style={{
             backgroundColor: '#004d00',

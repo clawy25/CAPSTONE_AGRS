@@ -558,7 +558,7 @@ export default function RegistrarIrregularStudents() {
     const handleAcademicRecordClick = (student) => {
         console.log("Opening Academic Record Modal for:", student); // Added log
         setSelectedStudent(student); // Set the selected student
-        setShowAcademicRecordModal(false); // Show the academic record modal
+        setShowAcademicRecordModal(true); // Show the academic record modal
         fetchCurriculum(student.studentProgramNumber, student.studentNumber); // Pass studentNumber to fetchCurriculum
         fetchCourseDetails(student.studentNumber);
     };
@@ -687,7 +687,7 @@ export default function RegistrarIrregularStudents() {
 
             </Container>
             {/* Academic Record Modal */}
-            <Modal show={showAcademicRecordModal} size="xl" onHide={handleCloseEnrollmentModal} animation={false}>
+            <Modal show={showAcademicRecordModal} size="xl" onHide={handleCloseAcademicRecordModal} animation={false}>
                 <Modal.Header closeButton>
                     <Card.Title>Student Record</Card.Title>
                 </Modal.Header>

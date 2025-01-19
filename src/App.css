@@ -28,6 +28,20 @@ body.modal-open {
     
 }
 
+.bg-custom-color-green-btn {
+  background-color: #004d00 !important; 
+  
+}
+
+.bg-custom-color-green-btn:hover {
+  background-color: #0d650d !important; 
+  
+}
+
+.bg-custom-color-green-btn:focus {
+  background-color: #0d650d !important;
+}
+
 .bg-custom-color-yellow {
     background-color: #F7FE28 !important; 
 }

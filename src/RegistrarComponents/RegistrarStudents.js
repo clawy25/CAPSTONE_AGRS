@@ -1,15 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import '../App.css'; // Custom styling
-import {Spinner} from 'react-bootstrap'
+import {Spinner, Modal, Button} from 'react-bootstrap'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSearch, faFileAlt, faCog, faFileSignature, faFilter } from '@fortawesome/free-solid-svg-icons'; // Import the icons you want to use
 import * as XLSX from 'xlsx';
+
+import CourseModel from '../ReactModels/CourseModel';
+import SemGradeModel from '../ReactModels/SemGradeModel';
+import EnrollmentModel from '../ReactModels/EnrollmentModel';
 import StudentModel from '../ReactModels/StudentModel';
 import TimelineModel from '../ReactModels/TimelineModel';
 import ProgramModel from '../ReactModels/ProgramModel';
 import AcademicYearModel from '../ReactModels/AcademicYearModel';
+import { UserContext } from '../Context/UserContext'; 
 
 export default function RegistrarStudents() {
+    const { user } = useContext(UserContext);
     const [loading, setLoading] = useState(false); 
     const [searchQuery, setSearchQuery] = useState('');
     const [filterOption, setFilterOption] = useState('All');
@@ -17,6 +23,129 @@ export default function RegistrarStudents() {
     const [students, setStudents] = useState([]);
     const [programs, setPrograms] = useState([]);
     const [currentAcademicYear, setcurrentAcademicYear] = useState(null);
+    const [selectedStudent, setSelectedStudent] = useState(null); 
+    const [showModal, setShowModal] = useState(false);
+    const [programName, setProgramName] = useState("");
+    const currentDate = new Date();
+    const formattedDate = currentDate.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+    const [groupedCourseDetails, setGroupedCourseDetails] = useState({});
+
+    const getAcademicYear = (studentAdmissionYr, yearIdx) => {
+        return `${studentAdmissionYr + yearIdx}-${studentAdmissionYr + yearIdx + 1}`;
+      };
+
+      const handlePrint = () => {
+        const contentElement = document.getElementById('modalContent');
+    
+        if (!contentElement) {
+            console.error("Modal content not found. Ensure the modal is open before printing.");
+            return;
+        }
+    
+        const content = contentElement.innerHTML;
+        const logoURL = '/pcc.png'; // Ensure the image path is correct and accessible.
+    
+        const printWindow = window.open('', '', 'width=800,height=600');
+        printWindow.document.write(`
+          <html>
+            <head>
+              <title>Print TOR</title>
+    <style>
+    @media print {
+      @page {
+        size: legal;
+        margin: 10mm; /* Keep margins small */
+        scale: 97;
+      }
+    
+      body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+      }
+    
+      .content {
+        page-break-inside: avoid; /* Prevent unnecessary page breaks */
+        overflow: visible;
+      }
+    
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+        page-break-inside: auto; /* Allow tables to split naturally across pages */
+        page-break-after: auto;
+      }
+    
+      th, td {
+        border: 1px solid black;
+        padding: 5px;
+        text-align: left;
+      }
+    
+      tr {
+        page-break-inside: avoid; /* Prevent breaking rows */
+      }
+    
+      thead {
+        display: table-header-group; /* Repeat headers on each page */
+      }
+    
+      tfoot {
+        display: table-footer-group; /* Repeat footers on each page */
+      }
+    
+      .watermark {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+        background-image: url('${logoURL}');
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: 500px 500px;
+        opacity: 0.1;
+      }
+    }
+    </style>
+    
+    
+    
+    
+    
+            </head>
+            <body>
+              <!-- Watermark -->
+              <div class="watermark"></div>
+    
+              <!-- Content -->
+              <div class="content">
+                ${content}
+              </div>
+              <script>
+                window.onload = function() {
+                  window.print();
+                  window.close();
+                };
+              </script>
+            </body>
+          </html>
+        `);
+    
+        printWindow.document.close();
+    };
+
+    const handleTORClick = (students) => {
+        setSelectedStudent(students);
+        setShowModal(true);
+      };
+    
+      const handleCloseModal = () => setShowModal(false);
 
     const fetchCurrentAcadYear = async () => {
         try {
@@ -275,6 +404,123 @@ export default function RegistrarStudents() {
         const password = `${FirstName.replace(/\s+/g, "")}${admissionYear}${LastName.replace(/\s+/g, "")}`;
         return password;
     };
+
+    useEffect(() => {
+        const fetchAndDisplayCourseDetails = async () => {
+          const courseDetails = await fetchCourseDetails(selectedStudent.studentNumber);
+    
+          if (courseDetails) {
+            setGroupedCourseDetails(courseDetails);
+          }
+        };
+    
+        if (selectedStudent?.studentNumber) {
+          fetchAndDisplayCourseDetails();
+        }
+      }, [selectedStudent]);
+
+    const fetchSemGrade = async (scheduleNumber, studentNumber) => {
+        try {
+          const semGrades = await SemGradeModel.fetchSemGradeData(scheduleNumber);
+          const findgrades = semGrades.find((grade) => grade.studentNumber === studentNumber) || {};
+      
+          return findgrades;
+        } catch (error) {
+          console.error("Error fetching SemGrade:", error);
+          return {};
+        }
+      };
+      
+
+    const fetchCourseDetails = async (studentNumber) => {
+        console.log("Fetching course details for Student:", studentNumber);
+      
+        // Validate input
+        if (!studentNumber) {
+          console.error("Student number is required.");
+          return;
+        }
+      
+        try {
+          // Step 1: Fetch all courses, enrollments, and grades in parallel
+          const [allCourses, allEnrollments] = await Promise.all([
+            CourseModel.fetchAllCourses(),
+            EnrollmentModel.fetchAllEnrollment(),
+          ]);
+      
+          console.log("Fetched courses and enrollments");
+      
+          // Step 2: Filter enrollments for the given student
+          const studentEnrollments = allEnrollments.filter(
+            (enrollment) => String(enrollment.studentNumber) === String(studentNumber)
+          );
+      
+          if (studentEnrollments.length === 0) {
+            console.log(`No enrollments found for student ${studentNumber}`);
+            return;
+          }
+      
+          console.log(`Filtered ${studentEnrollments.length} enrollments for student ${studentNumber}`);
+      
+          // Step 3: Create an index of enrollments by courseCode for quick lookup
+          const enrollmentIndex = studentEnrollments.reduce((acc, enrollment) => {
+            acc[enrollment.courseCode] = enrollment.scheduleNumber;
+            return acc;
+          }, {});
+      
+          console.log("Created enrollment index");
+      
+          // Step 4: Map through courses and fetch grades and curriculum info
+          const courseDetailsPromises = allCourses.map(async (course) => {
+            const { courseCode, courseDescriptiveTitle, academicYear, courseSemester, courseLecture, courseLaboratory } = course;
+            const scheduleNumber = enrollmentIndex[courseCode];
+      
+            if (!scheduleNumber) {
+              console.log(`No scheduleNumber found for courseCode: ${courseCode}`);
+              return null;
+            }
+      
+            // Fetch semGrade data for this course's schedule
+            const semGradeData = await fetchSemGrade(scheduleNumber, studentNumber);
+            const numEq = semGradeData?.numEq || "N/A";
+            const remarks = semGradeData?.remarks || "N/A";
+      
+            // Add course details to return object, including numEq and credits (if available)
+            return {
+              courseCode,
+              courseDescriptiveTitle,
+              academicYear,
+              courseSemester,
+              numEq,
+              remarks,
+              credits: courseLecture + courseLaboratory || "N/A",  // Assuming the course has a 'credits' property
+            };
+          });
+      
+          // Step 5: Resolve all promises and filter out nulls
+          const resolvedCourseDetails = (await Promise.all(courseDetailsPromises)).filter(Boolean);
+      
+          console.log("Resolved course details:", resolvedCourseDetails);
+      
+          // Step 6: Group courses by academicYear and courseSemester
+          const groupedCourseDetails = resolvedCourseDetails.reduce((acc, course) => {
+            const { academicYear, courseSemester } = course;
+      
+            acc[academicYear] = acc[academicYear] || {};
+            acc[academicYear][courseSemester] =
+              acc[academicYear][courseSemester] || [];
+            acc[academicYear][courseSemester].push(course);
+      
+            return acc;
+          }, {});
+      
+          console.log("Grouped Course Details:", groupedCourseDetails);
+      
+          return groupedCourseDetails;
+        } catch (error) {
+          console.error("Failed to fetch course details:", error);
+        }
+      };
     
     
     // Modify the generateNextStudentNumber function to accept a year parameter
@@ -470,7 +716,7 @@ console.log('Filtered Students:', filteredStudents);
                                                 </td>
                                                 <td className='d-flex align-itmes-cneter justify-content-center'>
                                                     
-                                                    <button className="btn btn-success btn-sm">
+                                                    <button className="btn btn-success btn-sm" onClick={() => handleTORClick(student)}>
                                                         <FontAwesomeIcon icon={faFileSignature} /> TOR {/* Font Awesome signature icon */}
                                                     </button>
                                                 </td>
@@ -484,6 +730,701 @@ console.log('Filtered Students:', filteredStudents);
                     </div>
                 </div>
             </section>
+
+            <Modal show={showModal} onHide={handleCloseModal} size="xl"  className="custom-modal-width" animation={false}>
+        <Modal.Header closeButton>
+          <Modal.Title className="custom-color-green-font">Transcription of Records (TOR) - {selectedStudent?.studentName}</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {/* Your modal content goes here */}
+          <div id="modalContent">
+          {selectedStudent && (
+            <div>
+<table className="table table-white" style={{ borderCollapse: 'collapse', border: '2px solid black' }}>
+  <thead className="no-border">
+    <tr>
+      <th
+        className="text-center"
+        style={{ width: '25%', border: 'none' }}
+      >
+        <img
+          src="/pcc.png"
+          alt="Logo"
+          className="img-fluid"
+          style={{ width: '110px' }}
+        />
+      </th>
+      <th
+        className="text-center"
+        style={{ width: '50%', border: 'none' }}
+      >
+        <p className="fs-6 mb-0 fw-semibold">
+          PARAÑAQUE CITY COLLEGE
+        </p>
+        <p className="fs-5 mb-0">Office of the College Registrar</p>
+        <p
+          style={{ fontSize: '0.9rem' }}
+          className="mb-0"
+        >
+          Parañaque City, Philippines
+        </p>
+        <p className="fs-4 mb-0">
+          OFFICIAL TRANSCRIPT OF RECORDS
+        </p>
+      </th>
+      <th
+        className="text-center"
+        style={{ width: '25%', border: 'none' }}
+      >
+        <p className="fs-6">UF-REG-018</p>
+        <p className="fs-6">Rev.0</p>
+        <p className="fs-6">03/01/2022</p>
+      </th>
+    </tr>
+  </thead>
+</table>
+
+
+                        
+              <table
+                style={{ border: "1px solid black", width: "100%", borderCollapse: "collapse" }}
+                className="mb-2"
+              >
+                <thead className="no-border">
+                  <tr>
+                    <td
+                      className="no-border"
+                      colSpan="2"
+                      style={{ border: "none" }}
+                    >
+                      <p
+                        className="fw-bold m-0 px-2 py-1"
+                        style={{
+                          display: "inline-block",
+                          border: "5px solid #F7FE28",
+                          backgroundColor: "#004d00",
+                          color: "white",
+                        }}
+                      >
+                        PERSONAL DATA
+                      </p>
+                    </td>
+                    <td style={{ border: "none" }}>
+                      <p style={{ fontSize: "0.7rem" }}>STUDENT NUMBER: </p>
+                    </td>
+                    <td style={{ border: "none" }}>
+                      <p style={{ fontSize: "0.7rem" }}>
+                        {selectedStudent?.studentNumber}
+                      </p>
+                    </td>
+                  </tr>
+                </thead>
+                <tbody className="no-border">
+                  <tr>
+                    <td style={{ border: "none" }}>
+                      <p style={{ fontSize: "0.7rem" }}>NAME</p>
+                    </td>
+                    <td style={{ border: "none" }}>
+                      <p style={{ fontSize: "0.7rem" }}>{selectedStudent?.studentName}</p>
+                    </td>
+                    <td style={{ border: "none" }}>
+                      <p style={{ fontSize: "0.7rem" }}>SEX:</p>
+                    </td>
+                    <td style={{ border: "none" }}>
+                      <p style={{ fontSize: "0.7rem" }}>{selectedStudent?.studentGender}</p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td
+                      style={{
+                        border: "none",
+                      }}
+                      rowSpan={2}
+                    >
+                      <p style={{ fontSize: "0.7rem" }}>PERMANENT ADDRESS:</p>
+                    </td>
+                    <td style={{ border: "none" }} rowSpan={2}>
+                      <p style={{ fontSize: "0.7rem" }}>{selectedStudent?.studentAddress}</p>
+                    </td>
+                    <td style={{ border: "none" }}>
+                      <p style={{ fontSize: "0.7rem" }}>GR NO.:</p>
+                    </td>
+                    <td style={{ border: "none" }}>
+                      <p style={{ fontSize: "0.7rem" }}>{selectedStudent?.studentGrNumber}</p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style={{ border: "none" }}>
+                      <p style={{ fontSize: "0.7rem" }}>SPECIAL ORDER NO.:</p>
+                    </td>
+                    <td style={{ border: "none" }}>
+                      <p style={{ fontSize: "0.7rem" }}>
+                        {selectedStudent?.studentspecielaNumber}
+                      </p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style={{ border: "none" }}>
+                      <p style={{ fontSize: "0.7rem" }}>DATE OF BIRTH</p>
+                    </td>
+                    <td style={{ border: "none" }}>
+                      <p style={{ fontSize: "0.7rem" }}>{selectedStudent?.studentBirthDate}</p>
+                    </td>
+                    <td style={{ border: "none" }}>
+                      <p style={{ fontSize: "0.7rem" }}>ACADEMIC PROGRAM:</p>
+                    </td>
+                    <td style={{ border: "none" }}>
+                      <p style={{ fontSize: "0.7rem" }}>{programName}</p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style={{ border: "none" }}>
+                      <p style={{ fontSize: "0.7rem" }}>PLACE OF BIRTH</p>
+                    </td>
+                    <td style={{ border: "none" }}>
+                      <p style={{ fontSize: "0.7rem" }}>{selectedStudent?.studentBirthPlace}</p>
+                    </td>
+                    <td style={{ border: "none" }}>
+                      <p style={{ fontSize: "0.7rem" }}>ATTENDED:</p>
+                    </td>
+                    <td style={{ border: "none" }}>
+                      <p style={{ fontSize: "0.7rem" }}>
+                        {selectedStudent?.studentNumberOdSemesterAttended}
+                      </p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style={{ border: "none" }}>
+                      <p style={{ fontSize: "0.7rem" }}>NATIONALITY</p>
+                    </td>
+                    <td style={{ border: "none" }}>
+                      <p style={{ fontSize: "0.7rem" }}>{selectedStudent?.studentnationality}</p>
+                    </td>
+                    <td style={{ border: "none" }}>
+                      <p style={{ fontSize: "0.7rem" }}>DATE GRADUATED:</p>
+                    </td>
+                    <td style={{ border: "none" }}>
+                      <p style={{ fontSize: "0.7rem" }}>{selectedStudent?.studentDateGraduated}</p>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+
+
+
+              <table
+                style={{ border: "1px solid black", width: "100%", borderCollapse: "collapse" }}
+                className="p-2 mb-0"
+              >
+                <thead className="no-border">
+                  <tr>
+                    <td colSpan="1" style={{ border: "none" }}>
+                      <p
+                        className="fw-bold m-0 px-2 py-1"
+                        style={{
+                          display: "inline-block",
+                          border: "5px solid #F7FE28",
+                          backgroundColor: "#004d00",
+                          color: "white",
+                        }}
+                      >
+                        ENTRANCE DATA
+                      </p>
+                    </td>
+                    <td style={{ border: "none" }}>
+                      <p style={{ fontSize: "0.7rem" }}>ADMISSION CREDENTIALS</p>
+                    </td>
+                    <td style={{ border: "none" }}>
+                      <p style={{ fontSize: "0.7rem" }}>
+                        {selectedStudent?.studentAdmissionCredentials}
+                      </p>
+                    </td>
+                    <td style={{ border: "none" }}></td>
+                  </tr>
+                </thead>
+                <tbody className="no-border">
+                  <tr>
+                    <td style={{ border: "none" }}>
+                      <p style={{ fontSize: "0.7rem" }}>DATE GRADUATED/LAST ATTENDED:</p>
+                    </td>
+                    <td style={{ border: "none" }}>
+                      <p style={{ fontSize: "0.7rem" }}>{selectedStudent?.studentAdmissionYr}</p>
+                    </td>
+                    <td style={{ border: "none" }}>
+                      <p style={{ fontSize: "0.7rem" }}>SCHOOL LAST ATTENDED:</p>
+                    </td>
+                    <td style={{ border: "none" }}>
+                      <p style={{ fontSize: "0.7rem" }}>
+                        {selectedStudent?.studentSchoolLastAttended}
+                      </p>
+                    </td>
+                    <td style={{ border: "none" }}></td>
+                  </tr>
+                  <tr>
+                    <td style={{ border: "none" }}>
+                      <p style={{ fontSize: "0.7rem" }}>CATEGORY:</p>
+                    </td>
+                    <td style={{ border: "none" }}>
+                      <p style={{ fontSize: "0.7rem" }}>{selectedStudent?.studentCategoryStarnd}</p>
+                    </td>
+                    <td style={{ border: "none" }}>
+                      <p style={{ fontSize: "0.7rem" }}>DATE/SEMESTER ADMITTED: </p>
+                    </td>
+                    <td style={{ border: "none" }}>
+                      <p style={{ fontSize: "0.7rem" }}>
+                        {selectedStudent?.studentDateSemesterAdmitted}
+                      </p>
+                    </td>
+                    <td style={{ border: "none" }}></td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <div
+style={{
+  display: 'grid',
+  gridTemplateColumns: 'repeat(6, 1fr)',
+  width: '100%',
+  gap: '0px',  // Set gap to 0 for shared borders
+  textAlign: 'center',
+  border: '1px solid black', // Outer border
+}}
+>
+  {/* Header Row */}
+  <div style={{ gridColumn: 'span 6', borderBottom: '1px solid black' , fontSize: '0.8rem',}}>
+    <p className="fs-6 text-start mb-1"><strong>ACADEMIC RECORD</strong></p>
+  </div>
+  {/* Column Headers */}
+  <div style={{ border: '1px solid black', padding: '8px', fontWeight: 'bold', gridRow: 'span 2', fontSize: '0.8rem', }}>
+    TERM & SCHOOL YEAR
+  </div>
+  <div style={{ border: '1px solid black', padding: '8px', fontWeight: 'bold', gridRow: 'span 2', fontSize: '0.8rem',  }}>
+    SUBJECT CODE
+  </div>
+  <div style={{ border: '1px solid black', padding: '8px', fontWeight: 'bold', gridRow: 'span 2', fontSize: '0.8rem',  }}>
+    DESCRIPTIVE TITLE
+  </div>
+  
+  {/* Final Header that spans two columns */}
+  <div
+    style={{
+      gridColumn: 'span 2',  // Spans across "FINAL GRADES" and "COMPLETION"
+      border: '1px solid black',
+      padding: '8px',
+      fontWeight: 'bold',
+      fontSize: '0.8rem',
+    }}
+  >
+    FINAL
+  </div>
+
+  {/* FINAL GRADES and COMPLETION Column Headers */}
+  <div style={{ border: '1px solid black', padding: '8px', fontWeight: 'bold', gridRow: 'span 2', fontSize: '0.8rem', }}>
+  UNITS OF CREDIT
+  </div>
+  <div style={{ border: '1px solid black', padding: '8px', fontWeight: 'bold', fontSize: '0.8rem', }}>
+    GRADES
+  </div>
+
+  <div style={{ border: '1px solid black', padding: '8px', fontWeight: 'bold', fontSize: '0.8rem', }}>
+    COMPLETION
+  </div>
+
+
+ 
+
+                  {/* Rows of Data */}
+                  {Object.keys(groupedCourseDetails).map((academicYear, idx) =>
+  Object.keys(groupedCourseDetails[academicYear]).map((semesterKey) => {
+    const semester = parseInt(semesterKey, 10); // Convert the semester key to a number
+    const courses = groupedCourseDetails[academicYear][semester] || [];
+    const academicYearLabel = getAcademicYear(selectedStudent.studentAdmissionYr, idx);
+
+    return (
+      <>
+        {courses.length > 0 ? (
+          <>
+            {/* Render Courses for the Current Semester */}
+            {courses.map((course, subIdx) => (
+              <React.Fragment key={subIdx}>
+                {/* TERM & SCHOOL YEAR */}
+                {subIdx === 0 && (
+                  <div
+                    style={{
+                      gridColumn: '1',
+                      gridRow: `span ${courses.length}`,
+                      border: '1px solid black',
+                      padding: '8px',
+                      fontSize: '0.8rem',
+                    }}
+                  >
+                    <strong>
+                      {semester === 1
+                        ? '1st'
+                        : semester === 2
+                        ? '2nd'
+                        : '3rd'}{' '}
+                      Semester
+                    </strong>
+                    <br />
+                    {academicYearLabel}
+                  </div>
+                )}
+                {/* SUBJECT CODE */}
+                <div
+                  style={{
+                    borderLeft: '1px solid black',
+                    borderRight: '1px solid black',
+                    padding: '8px',
+                    fontSize: '0.8rem',
+                  }}
+                >
+                  {course.courseCode}
+                </div>
+
+                {/* DESCRIPTIVE TITLE */}
+                <div
+                  style={{
+                    borderLeft: '1px solid black',
+                    borderRight: '1px solid black',
+                    padding: '8px',
+                    fontSize: '0.8rem',
+                  }}
+                >
+                  {course.courseDescriptiveTitle}
+                </div>
+
+                {/* GRADES */}
+                <div
+                  style={{
+                    borderLeft: '1px solid black',
+                    borderRight: '1px solid black',
+                    padding: '8px',
+                    fontSize: '0.8rem',
+                  }}
+                >
+                  {course.credits || '-'}
+                </div>
+
+                {/* COMPLETION */}
+                <div
+                  style={{
+                    borderLeft: '1px solid black',
+                    borderRight: '1px solid black',
+                    padding: '8px',
+                    fontSize: '0.8rem',
+                  }}
+                >
+                  {course.remarks || '-'}
+                </div>
+
+                {/* UNITS OF CREDIT */}
+                <div
+                  style={{
+                    borderLeft: '1px solid black',
+                    borderRight: '1px solid black',
+                    padding: '8px',
+                    fontSize: '0.8rem',
+                  }}
+                >
+                  {course.numEq.toFixed(2) || '0.00'}
+                </div>
+              </React.Fragment>
+            ))}
+          </>
+        ) : (
+          <div
+            style={{
+              gridColumn: 'span 6',
+              border: '1px solid black',
+              padding: '8px',
+              textAlign: 'center',
+              fontSize: '0.8rem',
+            }}
+          >
+            No courses available
+          </div>
+        )}
+      </>
+    );
+  })
+)}
+
+</div>
+
+<div
+  style={{
+    display: 'grid',
+    gridTemplateColumns: 'repeat(8, 1fr)',
+    width: '100%',
+    gap: '0px', // Set gap to 0 for shared borders
+    textAlign: 'center',
+    border: '1px solid black', // Outer border
+  }}
+>
+  {/* Header Row */}
+  <div style={{ gridColumn: 'span 1', border: '1px solid black', padding: '8px' }}>
+    <p style={{ fontSize: '0.7rem', marginBottom: '2px', textAlign: 'start' }}>REMARKS:</p>
+  </div>
+  <div style={{ gridColumn: 'span 7', border: '1px solid black', padding: '8px' }}>
+    <p style={{ fontSize: '0.7rem', marginBottom: '2px', textAlign: 'start' }}>
+      <strong>CLEARED OF ALL PROPERTY AND MONEY ACCOUNTABILITIES</strong>
+    </p>
+  </div>
+
+  {/* Grading System Header */}
+  <div style={{ gridColumn: 'span 3', border: '1px solid black', padding: '4px' }}>
+    <p style={{ fontSize: '0.6rem', margin: '0' }}><strong>GRADING SYSTEM</strong></p>
+  </div>
+  <div
+    style={{
+      gridColumn: 'span 5',
+      gridRow: 'span 2',
+      border: '1px solid black',
+      padding: '4px',
+      fontSize: '0.5rem',
+      fontStyle: 'italic',
+      textAlign: 'start',
+    }}
+  >
+    <p style={{ margin: '0' }}>
+      This Transcript is valid only when it bears the school seal and the original signature of the
+      Registrar. Any erasure or alteration made on this document renders it void unless initialed
+      by the foregoing official.
+    </p>
+  </div>
+
+  {/* Sub-Headers */}
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem' }}>
+    <p style={{ margin: '0' }}>GRADE</p>
+  </div>
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem' }}>
+    <p style={{ margin: '0' }}>EQUIVALENCE</p>
+  </div>
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem' }}>
+    <p style={{ margin: '0' }}>DESCRIPTION</p>
+  </div>
+
+  {/* Body Rows */}
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}>1.00</div>
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}>99-100%</div>
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}>EXCELLENT</div>
+  <div
+    style={{
+      gridColumn: 'span 3',
+      border: '1px solid black',
+      padding: '4px',
+      textAlign: 'left',
+      fontSize: '0.5rem',
+      lineHeight: '1.2',
+    }}
+  >
+    Prepared by:
+  </div>
+
+  <div
+    style={{
+      gridColumn: 'span 2',
+      gridRow: 'span 14',
+      border: '1px solid black',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'flex-end',
+      textAlign: 'center',
+      height: '100%',
+      fontSize: '0.5rem',
+    }}
+  >
+    <p>
+      Transcript is <strong>NOT</strong> valid without PCC seal
+    </p>
+  </div>
+
+  {/* Remaining Rows */}
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}>1.25</div>
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}>96-98%</div>
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}>SUPERIOR</div>
+  <div
+    style={{
+      gridColumn: 'span 3',
+      border: '1px solid black',
+      padding: '4px',
+      textAlign: 'center',
+      fontSize: '0.5rem',
+      lineHeight: '1.2',
+    }}
+  >
+    <strong> <big>
+      {`${user.personnelNameFirst} ${user.personnelNameMiddle} ${user.personnelNameLast}`}
+      </big></strong>
+  </div>
+
+    {/* Repeat for remaining rows */}
+    <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}>1.50</div>
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}>93-95%</div>
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}>VERY GOOD</div>
+  <div
+    style={{
+      gridColumn: 'span 3',
+      border: '1px solid black',
+      padding: '4px',
+      textAlign: 'center',
+      fontSize: '0.5rem', lineHeight: '1.2'
+    }}
+  >
+    Program Records-In-Charge
+  </div>
+
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}>1.75</div>
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}>90-92%</div>
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}>GOOD</div>
+  <div
+    style={{
+      gridColumn: 'span 3',
+      border: '1px solid black',
+      padding: '4px',
+      textAlign: 'left',
+      fontSize: '0.5rem', lineHeight: '1.2'
+    }}
+  >
+    Checked & Verified by:
+  </div>
+
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}>2.00</div>
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}>87-89%</div>
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}>MERITORIOUS</div>
+  <div
+    style={{
+      gridColumn: 'span 3',
+      border: '1px solid black',
+      padding: '4px',
+      textAlign: 'left',
+      fontSize: '0.5rem', lineHeight: '1.2'
+    }}
+  >
+
+  </div>
+
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}>2.25</div>
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}>84-86%</div>
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}>VERY SATISFACTORY</div>
+  <div
+    style={{
+      gridColumn: 'span 3',
+      border: '1px solid black',
+      padding: '4px',
+      textAlign: 'center',
+      fontSize: '0.5rem', lineHeight: '1.2'
+    }}
+  >
+    Registrar 1
+  </div>
+
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}>2.50</div>
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}>81-83%</div>
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}>SATISFACTORY</div>
+  <div
+    style={{
+      gridColumn: 'span 3',
+      border: '1px solid black',
+      padding: '4px',
+      textAlign: 'left',
+      fontSize: '0.5rem', lineHeight: '1.2'
+    }}
+  >
+    Date Issued
+  </div>
+
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}>2.75</div>
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}>76-80%</div>
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}>FAIRLY SATISFACTORY</div>
+  <div
+    style={{
+      gridColumn: 'span 3',
+      border: '1px solid black',
+      padding: '4px',
+      textAlign: 'center',
+      fontSize: '0.5rem', lineHeight: '1.2'
+    }}
+  >
+    <big>{formattedDate}</big>
+  </div>
+
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}>3.00</div>
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}>75-77%</div>
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}>PASSING</div>
+  <div
+    style={{
+      gridColumn: 'span 3',
+      gridRow: 'span 4',
+      border: '1px solid black',
+      padding: '4px',
+      textAlign: 'center',
+      fontSize: '0.5rem', lineHeight: '1.2'
+    }}
+  >
+    
+  </div>
+
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}>5.00</div>
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}>Below 50</div>
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}>FAILED</div>
+
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}>INC</div>
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}></div>
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}>INCOMPLETE</div>
+
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}>OD</div>
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}></div>
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}>OFFICIALY DROPPED</div>
+
+
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}>UD</div>
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}></div>
+  <div style={{ border: '1px solid black', padding: '4px', fontSize: '0.5rem', lineHeight: '1.2' }}>UNOFICIALLY DROPPED</div>
+  <div
+    style={{
+      gridColumn: 'span 3',
+      border: '1px solid black',
+      padding: '4px',
+      textAlign: 'center',
+      fontSize: '0.5rem', lineHeight: '1.2'
+    }}
+  >
+      <strong>
+      <big>{`${user.personnelNameFirst} ${user.personnelNameMiddle} ${user.personnelNameLast}`}</big>
+    </strong>
+  </div>
+
+  <div style={{ border: '1px solid black', padding: '4px' , fontSize: '0.5rem', lineHeight: '1.2'}}>FA</div>
+  <div style={{ border: '1px solid black', padding: '4px' , fontSize: '0.5rem', lineHeight: '1.2'}}></div>
+  <div style={{ border: '1px solid black', padding: '4px' , fontSize: '0.5rem', lineHeight: '1.2'}}>FAILURE DUE TO EXCESSIVE ABSENCES</div>
+  <div
+    style={{
+      gridColumn: 'span 3',
+      border: '1px solid black',
+      padding: '4px',
+      textAlign: 'center',
+      fontSize: '0.5rem', lineHeight: '1.2'
+    }}
+  >
+  College Registrar
+  </div>
+  {/* Add other rows in similar fashion */}
+</div>
+
+           </div>
+          )}
+          </div>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="success" onClick={handleCloseModal}>
+            Close
+          </Button>
+          <Button onClick={handlePrint} variant="success" >Print</Button>
+
+        </Modal.Footer>
+      </Modal>
         </div>
     );
 }
