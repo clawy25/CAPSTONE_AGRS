@@ -11,63 +11,72 @@ export default function ResetPassword() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [accessToken, setAccessToken] = useState('');
 
+    // Extract access token from URL query parameters
     useEffect(() => {
         const queryParams = new URLSearchParams(location.search);
         const token = queryParams.get('access_token');
+        console.log('Access Token:', token);
         setAccessToken(token || '');
     }, [location]);
+    
 
+    // Handle password reset form submission
     const handlePasswordReset = async (e) => {
         e.preventDefault();
-
+    
         if (newPassword !== confirmPassword) {
             setError('Passwords do not match.');
             return;
         }
-
+    
         if (!accessToken) {
             setError('Access token is missing. Please use the password reset link again.');
             return;
         }
-
+    
         setIsSubmitting(true);
         setError('');
         setSuccess('');
-
+    
         try {
-            const response = await fetch(`${process.env.REACT_APP_API_URL}/auth/v1/user`, {
-                method: 'PUT',
+            const response = await fetch(`${process.env.REACT_APP_API_URL}/reset-password`, {
+                method: 'POST', // Change from PUT to POST
                 headers: {
                     'Content-Type': 'application/json',
                     Authorization: `Bearer ${accessToken}`,
                 },
-                body: JSON.stringify({ password: newPassword }),
+                body: JSON.stringify({ token: accessToken, newPassword }),
             });
-
-            if (response.ok) {
+            
+    
+            const contentType = response.headers.get('Content-Type');
+            if (!response.ok) {
+                const responseText = await response.text();
+                console.error('Error response:', responseText);
+                setError('Failed to reset password. ' + responseText);
+            } else if (contentType && contentType.includes('application/json')) {
+                const data = await response.json();
                 setSuccess('Password has been successfully reset!');
                 setTimeout(() => navigate('/login'), 3000);
             } else {
-                const data = await response.json();
-                setError(data.error_description || 'Failed to reset password.');
+                setError('Unexpected response format.');
             }
         } catch (err) {
             console.error('Error resetting password:', err);
-            setError('An unexpected error occurred.');
+            setError('An unexpected error occurred. Please try again later.');
         } finally {
             setIsSubmitting(false);
         }
     };
+    
 
     return (
         <div className="container-fluid hide-scrollbar">
             <div className="row d-flex flex-column flex-md-row">
                 <div className="col-12 col-md-6 bg-custom-color-green d-flex flex-column justify-content-center align-items-center min-vh-100 order-1 order-md-2">
-                    <p className="custom-font text-light fs-1 fw-bold text-center mb-4">
-                        Reset Your Password
-                    </p>
+                    <p className="custom-font text-light fs-1 fw-bold text-center mb-4">Reset Password</p>
 
-                    <form className="d-grid gap-2 col-8 mx-auto mt-2" onSubmit={handlePasswordReset}>
+                    <form onSubmit={handlePasswordReset} className="d-grid gap-2 col-8 mx-auto mt-2">
                         <input
                             type="password"
                             className="form-control custom-input custom-font fs-5"
@@ -79,15 +88,11 @@ export default function ResetPassword() {
                         <input
                             type="password"
                             className="form-control custom-input custom-font fs-5"
-                            placeholder="Confirm Password"
+                            placeholder="Confirm New Password"
                             value={confirmPassword}
                             onChange={(e) => setConfirmPassword(e.target.value)}
                             required
                         />
-
-                        {error && <p className="text-danger mt-2">{error}</p>}
-                        {success && <p className="text-success mt-2">{success}</p>}
-
                         <button
                             className="btn bg-custom-color-yellow custom-font custom-button fs-5 fw-semibold"
                             type="submit"
@@ -96,6 +101,8 @@ export default function ResetPassword() {
                             {isSubmitting ? 'Resetting...' : 'Reset Password'}
                         </button>
                     </form>
+                    {error && <p className="mt-3 text-center text-danger">{error}</p>}
+                    {success && <p className="mt-3 text-center text-success">{success}</p>}
                 </div>
             </div>
         </div>
