@@ -1172,7 +1172,7 @@ export default function HeadRegistrarAcademicYear() {
         </Modal.Footer>
       </Modal>
 
-      <Modal show={showNextSemesterConfirmationModal} size="lg" onHide={handleCloseNextSem}>
+      <Modal show={showNextSemesterConfirmationModal} size="lg" onHide={handleCloseNextSem} animation={false}>
         <Modal.Header closeButton>
           <Modal.Title className="custom-color-green-font">Confirmation</Modal.Title>
         </Modal.Header>
