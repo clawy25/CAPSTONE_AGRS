@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { Table, Modal, Button, Form, Spinner, Alert, Row, Col } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
 import AcademicYearModel from '../ReactModels/AcademicYearModel';
 import ProgramModel from '../ReactModels/ProgramModel';
 import PersonnelModel from '../ReactModels/PersonnelModel';
@@ -11,20 +12,18 @@ import EnrollmentModel from '../ReactModels/EnrollmentModel';
 import '../App.css';
 export default function HeadRegistrarAcademicYear() {
   
+  const navigate = useNavigate();
   const [academicYears, setAcademicYears] = useState([]);
-  
   const [currentAcademicYear, setCurrentAcademicYear] = useState([]);
   const [newAcademicYear, setNewAcademicYear] = useState({
     academicYear: '',
     isCurrent: false,
   });
-
   const [verify, setVerify] = useState({
     personnelNumber: '',
     password: '',
   });
   const [program, setPrograms] = useState([]);
-
   const [currentSemester, setCurrentSemester] = useState();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -400,17 +399,44 @@ export default function HeadRegistrarAcademicYear() {
 
           //5. FOR UPDATING ROWS ON THE PERSONNEL TABLE
           personnels.forEach(item => { //personnel table (yearly)
+            delete item.programName
             delete item.id;
             const [startYear, endYear] = item.academicYear.split('-').map(Number);
             item.academicYear = `${startYear + 1}-${endYear + 1}`;
           });
 
           //6. FOR UPDATING ROWS IN PROGRAM TABLE
-          programs.forEach(item => { //program table (yearly)
+          programs.forEach(item => {
             delete item.id;
+          
+            // Increment academic year
             const [startYear, endYear] = item.academicYear.split('-').map(Number);
             item.academicYear = `${startYear + 1}-${endYear + 1}`;
+          
+            // Update programNumber based on startYear and endYear
+            const start = `${startYear + 1}`.slice(-2);
+            const end = `${endYear + 1}`.slice(-2);
+
+            const prefix = `${String(startYear).slice(-2)}${String(endYear).slice(-2)}`;
+            const newPrefix = `${start}${end}`;
+          
+            if (String(item.programNumber).startsWith(prefix)) {
+              item.programNumber = parseInt(
+                String(item.programNumber).replace(prefix, newPrefix),
+                10
+              );
+            }
           });
+          const updatedPrograms = programs.map(program => {
+            return {
+              programName: program.programName,
+              programNumber: String(program.programNumber),
+              noOfYears: String(program.programNumOfYear),
+              yearLevelwithSummer: program.programYrLvlSummer,
+              academicYear: program.academicYear
+            };
+          });
+          
 
           // 7. FOR UPDATING ROWS IN COURSE TABLE
           courses.forEach(item => { //course table (yearly)
@@ -425,12 +451,12 @@ export default function HeadRegistrarAcademicYear() {
           console.log("New Timelines:", newTimelines); //timeline
           console.log("Personnels: ",personnels);// personnel
           console.log("Courses: ",courses);// course 
-          console.log("Programs: ",programs);// program 
+          console.log("Programs: ",updatedPrograms);// program 
           console.log("Enrollments: ",enrollments);// enrollment
           console.log("Old Acad Year", updateCurrent); //old acadYear
           console.log("New Acad Year", newAcademicYear); //new acadYear
 
-          //UPDATING THE RELEVANT ROWS FOR THIS SEM AND PROCEED TO THE NEXT //DO NOT USE YET
+          //UPDATING THE RELEVANT ROWS FOR THIS SEM AND PROCEED TO THE NEXT
           try {
             const nextAcademicYear = await Promise.all([
                 ...enrolledStudents.map(async (item) => {
@@ -440,11 +466,13 @@ export default function HeadRegistrarAcademicYear() {
                 }),
                 TimelineModel.updateTimeline(uniqueTimelines),
                 TimelineModel.createAndInsertTimeline(newTimelines),
-                PersonnelModel.insertPersonnel(personnels),
+                ...personnels.map(async (personnelData) => {
+                  return PersonnelModel.duplicatePersonnel(personnelData);
+                }),
                 ...courses.map(async (courseData) => {
                   return CourseModel.createAndInsertCourse(courseData);
                 }),
-                ...programs.map(async (programData) => {
+                ...updatedPrograms.map(async (programData) => {
                   return ProgramModel.createAndInsertProgram(programData);
                 }),
                 EnrollmentModel.updateEnrollment(enrollments),
@@ -465,6 +493,9 @@ export default function HeadRegistrarAcademicYear() {
               fetchAcademicYears();
               //CLOSE MODAL
               handleCloseAddAcadYear();
+              sessionStorage.clear();
+
+              navigate('/'); // Redirect to login
 
             }
           } catch (error) {
@@ -608,7 +639,7 @@ export default function HeadRegistrarAcademicYear() {
           console.log(enrolledStudents);// Update students
 
           //UPDATING THE RELEVANT ROWS FOR THIS SEM AND PROCEED TO THE NEXT
-          try {
+          /*try {
             const nextSemester = await Promise.all([
                 ...enrolledStudents.map(async (item) => {
                     const studentData = { ...item }; // Avoid mutating the original
@@ -637,7 +668,7 @@ export default function HeadRegistrarAcademicYear() {
           } catch (error) {
             // If any Promise fails, this block will execute
             console.error('Error updating for the next semester:', error);
-          }
+          }*/
         }
       }
     } catch (error) {
@@ -664,6 +695,8 @@ export default function HeadRegistrarAcademicYear() {
         yearLevelwithSummer: level,
         academicYear: selectedAcademicYear
       }));
+
+      console.log(newProgramsData);
 
       try {
 
@@ -1101,7 +1134,8 @@ export default function HeadRegistrarAcademicYear() {
             The system will proceed from <strong>{currentAcademicYear?.academicYear}</strong> to{' '}
           <strong>{newAcademicYear?.academicYear}</strong>. WARNING! THIS ACTION IS IRREVERSIBLE!
           </p>
-          <p><i>This action requires verification. To proceed, please provide your details to authorize this action.</i></p>
+          <p><i>This action requires verification. To proceed, please provide your details to authorize this action. <u>You will be
+            forced to log out of the system upon confirmation</u></i></p>
 
         <Form>
           <Form.Group className="mb-3">

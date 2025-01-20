@@ -93,7 +93,8 @@ useEffect(() => {
       const current = fetchedAcademicYears.filter(acadYears => acadYears.isCurrent === true);
       setCurrentAcadYear(current);
   
-      const fetchedProgram = await ProgramModel.fetchAllPrograms(user.programNumber);
+      const allProgram = await ProgramModel.fetchAllPrograms();
+      const fetchedProgram = allProgram.filter(program => program.programNumber === user.programNumber);
 
       setPrograms(fetchedProgram);
   

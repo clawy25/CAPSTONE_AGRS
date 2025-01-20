@@ -257,5 +257,30 @@ router.post('/upload', async (req, res) => {
     }
 });
 
+// Insert new personnel
+router.post('/duplicate', async (req, res) => {
+    try {
+        const personnelData = req.body.data;
+
+        // Check if personnelData is defined and is an array
+        if (!personnelData || !Array.isArray(personnelData) || personnelData.length === 0) {
+            return res.status(400).json({ message: 'Invalid data format or no personnel to insert' });
+        }
+
+        const { data, error } = await supabase
+            .from('personnel')
+            .insert(personnelData);
+
+        if (error) {
+            throw error; // Log the error for debugging
+        }
+
+        res.status(200).json(data);
+    } catch (error) {
+        console.error('Error inserting personnel:', error);
+        res.status(500).json({ message: `Error inserting personnel: ${error.message || 'Unknown error'}` });
+    }
+});
+
 
 module.exports = router;
