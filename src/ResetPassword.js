@@ -38,12 +38,12 @@ export default function ResetPassword() {
         setError('');
         setSuccess('');
     
-        console.log('API URL:', process.env.REACT_APP_API_URL);
         try {
             const response = await fetch(`${process.env.REACT_APP_API_URL}/reset-password`, {
-                method: 'POST',
+                method: 'POST', // Change from PUT to POST
                 headers: {
                     'Content-Type': 'application/json',
+                    Authorization: `Bearer ${accessToken}`,
                 },
                 body: JSON.stringify({ token: accessToken, newPassword }),
             });
