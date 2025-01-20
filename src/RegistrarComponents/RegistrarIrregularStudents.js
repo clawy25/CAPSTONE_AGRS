@@ -613,7 +613,7 @@ export default function RegistrarIrregularStudents() {
     return (
     <Container fluid>
     <h2 className="custom-font custom-color-green-font mb-3 mt-2">Irregular Students</h2>
-        <Container fluid className="bg-white py-5 rounded hide-scrollbar table-responsive" style={{height: '70vh'}}>
+        <Container fluid className="bg-white py-5 rounded hide-scrollbar table-responsive">
             
             <Container fluid className="input-group">
                 <input

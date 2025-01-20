@@ -26,6 +26,7 @@ const ScheduleTable = () => {
   const [professors, setProfessors] = useState([]);
   const [sections, setSections] = useState([]);
   const [studentName, setStudentName] = useState("");
+  const [studentType, setstudentType] = useState('');
   
   const [selectedSection, setSelectedSection] = useState('');
 
@@ -70,9 +71,11 @@ const ScheduleTable = () => {
       const studentData = await StudentModel.fetchExistingStudents();
   
       const student = studentData.find(student => student.studentNumber === studentNumber);
-      
+      console.log(student.studentType)
+      setstudentType(student.studentType);
       if (student.length > 0) {
         setStudentInfo(student);
+        
         //fetchEnrollment(studentNumber);
       }
   
@@ -335,7 +338,11 @@ useEffect(() => {
         <p className='custom-color-green-font mt-3 ms-1 fs-6 custom-color-green-font fw-bold'>{studentName}</p>
         <p className='custom-color-green-font mt-3 ms-1 fs-6 custom-color-green-font fw-bold'>  ({user.studentNumber})</p>
         </div>
-      {!isEnrolled && (
+
+        {studentType !== 'Regular' ? (<div class="mt-4  mx- auto alert alert-warning text-center px-auto" role="alert">
+  Attention! Non-regular students are required to coordinate with their respective faculties to complete the enrollment process.
+</div>
+):       !isEnrolled && (
         <div className='card-body '>
           <div 
             className="class-info-row mb-4 p-3 border border-success rounded"
@@ -387,7 +394,7 @@ useEffect(() => {
     width: '100%',
   }}
 >
-  <span><strong>Student Name:</strong> {studentInfo.length > 0 ? `${studentInfo[0]?.studentNameLast}, ${studentInfo[0]?.studentNameFirst} ${studentInfo[0]?.studentNameMiddle}` : ''}</span>
+  
   <span><strong>Program:</strong> {program.length > 0 ? program[0]?.programName : ''}</span>
   <span><strong>Year Level:</strong> {yearLevel || 'Loading...'}</span> {/* Display 'Loading...' if yearLevel is empty */}
   <span><strong>Semester:</strong> {semester || 'Loading...'}</span> {/* Display 'Loading...' if semester is empty */}
@@ -461,6 +468,7 @@ useEffect(() => {
       </Button>
   </div>
 )}
+
 
      
 

@@ -264,7 +264,7 @@ export default function Grades() {
           <p className="mt-3">Loading data, please wait...</p>
       </div>
         ):(
-          <>
+          <div>
           <div className="d-flex justify-content-end">
             <Button 
               className='text-success bg-white border-0 fs-6 fw-semibold' 
@@ -273,12 +273,12 @@ export default function Grades() {
               <FontAwesomeIcon icon={faBook} /> Curriculum
             </Button>
           </div>
-          <div>
+      
           {studentData.courses && studentData.courses.length > 0 ? (
             Object.entries(groupByAcademicYearAndSemester(studentData.courses)).map(([academicYear, semesters], index) => (
-              <div key={index} className="card mb-3">
+              <div key={index} >
                 {Object.entries(semesters).map(([semester, courses], semesterIndex) => (
-                  <div key={semesterIndex} className="card">
+                  <div key={semesterIndex} className="card mt-4">
                     <div className="card-header bg-custom-color-green d-flex">
                       <p className="text-white mt-1 fs-6 gw-semibold custom-color">
                         Academic Year {academicYear} {getSemesterText(semester)} Semester
@@ -324,11 +324,11 @@ export default function Grades() {
             <div className="text-center custom-font">No courses available.</div>
           )}
 
-</div>
 
 
 
-          </>
+
+          </div>
     )}
 
     <Modal show={showModal} onHide={handleCloseModal} size='lg'centered animation={false}>
