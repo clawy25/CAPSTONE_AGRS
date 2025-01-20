@@ -20,7 +20,6 @@ export default function ResetPassword() {
     }, [location]);
     
 
-    // Handle password reset form submission
     const handlePasswordReset = async (e) => {
         e.preventDefault();
     
@@ -40,26 +39,19 @@ export default function ResetPassword() {
     
         try {
             const response = await fetch(`${process.env.REACT_APP_API_URL}/reset-password`, {
-                method: 'POST', // Change from PUT to POST
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${accessToken}`,
-                },
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ token: accessToken, newPassword }),
             });
-            
     
-            const contentType = response.headers.get('Content-Type');
+            const data = await response.json();
+    
             if (!response.ok) {
-                const responseText = await response.text();
-                console.error('Error response:', responseText);
-                setError('Failed to reset password. ' + responseText);
-            } else if (contentType && contentType.includes('application/json')) {
-                const data = await response.json();
+                console.error('Error response:', data);
+                setError(data.error || 'Failed to reset password.');
+            } else {
                 setSuccess('Password has been successfully reset!');
                 setTimeout(() => navigate('/login'), 3000);
-            } else {
-                setError('Unexpected response format.');
             }
         } catch (err) {
             console.error('Error resetting password:', err);
@@ -68,6 +60,7 @@ export default function ResetPassword() {
             setIsSubmitting(false);
         }
     };
+    
     
 
     return (
