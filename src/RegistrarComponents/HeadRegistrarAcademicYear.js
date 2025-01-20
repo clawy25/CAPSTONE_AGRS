@@ -431,8 +431,8 @@ export default function HeadRegistrarAcademicYear() {
           const updatedPrograms = programs.map(program => {
             return {
               programName: program.programName,
-              programNumber: String(program.programNumber),
-              noOfYears: String(program.programNumOfYear),
+              programNumber: program.programNumber,
+              noOfYears: program.programNumOfYear,
               yearLevelwithSummer: program.programYrLvlSummer,
               academicYear: program.academicYear
             };
@@ -461,8 +461,7 @@ export default function HeadRegistrarAcademicYear() {
           try {
             const nextAcademicYear = await Promise.all([
               ...updatedPrograms.map(async (programData) => {
-                const response = await ProgramModel.createAndInsertProgram(programData);
-                return response;
+                return ProgramModel.createAndInsertProgram([programData]);
               }),
               console.log('END OF DEBUGGING'),
               ...enrolledStudents.map(async (item) => {
