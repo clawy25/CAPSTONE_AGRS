@@ -636,7 +636,7 @@ export default function RegistrarIrregularStudents() {
                 <p className="mt-3">Loading data, please wait...</p>
             </div>
             ) : (
-
+              <Container fluid className='mx-auto mb-3 shadow-sm hide-scrollbar'>
               <Table hover className="table table-hover success-border mt-4 mx-auto shadow-sm hide-scrollbar">
                   <thead className='table-success rounded'>
                   <tr>
@@ -658,7 +658,7 @@ export default function RegistrarIrregularStudents() {
                           <td className='text-center'>{student.programName}</td>
                           <td className='text-center'>{student.studentYrLevel}</td>
                           <td className='text-center'>
-                          <Dropdown align="end" className='h-100 w-100'>
+                          <Dropdown align="end" className='h-100 w-100 '>
                               <Dropdown.Toggle
                               variant="link"
                               className="p-0 border-0"
@@ -691,7 +691,7 @@ export default function RegistrarIrregularStudents() {
                   )}
                   </tbody>
               </Table>
-
+                  </Container>
             )}
 
 

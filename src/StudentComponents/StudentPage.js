@@ -77,7 +77,7 @@ export default function StudentPage() {
   
         // Set user credentials and navigate to dashboard
         setUser(credentials);
-        navigate('/student-dashboard');
+        navigate('/student-dashboard/enrollment');
         console.log('Login successful:', user);
       } else {
         setError('Invalid credentials.');

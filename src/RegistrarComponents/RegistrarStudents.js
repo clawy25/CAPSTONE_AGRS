@@ -683,13 +683,13 @@ console.log('Filtered Students:', filteredStudents);
                 {/* Student list table */}
                 <div className="row mt-3">
                     <div className="col-md-12">
-                        <div className="table-responsive"> {/* Add table-responsive class for responsive scrolling */}
+                        <div className=""> {/* Add table-responsive class for responsive scrolling */}
                             {loading ? ( <div className="text-center py-5 bg-white mt-4">
                                         <Spinner animation="border" variant="success" />
                                         <p className="mt-3">Loading data, please wait...</p>
                                     </div>
                                     ):(
-                                      <Container fluid className='mx-auto mb-3 shadow-sm hide-scrollbar'>
+                                      <Container fluid className='mx-auto mb-3 table-responsive shadow-sm hide-scrollbar'>
                                <Table hover className="table table-hover success-border mt-4 shadow-sm hide-scrollbar" style={{tableLayout:'fixed'}}>
                                 <thead className="table-success" style={{ position: 'sticky', top: 0, backgroundColor: 'white', zIndex: 1 }}>
                                     <tr>

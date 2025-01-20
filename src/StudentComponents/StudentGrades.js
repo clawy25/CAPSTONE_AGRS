@@ -284,7 +284,7 @@ export default function Grades() {
                         Academic Year {academicYear} {getSemesterText(semester)} Semester
                       </p>
                     </div>
-                    <div className="card-body">
+                    <div className="card-body table-responsive">
                       <Table bordered className="table">
                         <thead className="table-success">
                           <tr>

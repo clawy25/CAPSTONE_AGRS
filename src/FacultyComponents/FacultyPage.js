@@ -82,11 +82,11 @@ export default function FacultyPage() {
 
       // Navigate based on personnel type
       if (user.personnelType === 'Faculty') {
-        navigate('/faculty-dashboard');
+        navigate('/faculty-dashboard/classes');
       } else if (user.personnelType === 'Head') {
-        navigate('/programHead-dashboard');
+        navigate('/programHead-dashboard/csog');
       } else if (user.personnelType === 'Registrar' || user.personnelType === 'Admin') {
-        navigate('/registrar-dashboard');
+        navigate('/registrar-dashboard/students');
       } else {
         setError('Unauthorized personnel type.');
       }
@@ -95,6 +95,8 @@ export default function FacultyPage() {
     }
     } catch (error) {
       setError('Account does not exist. Try again.');
+    } finally {
+      setLoading(false);
     }
     };
 
