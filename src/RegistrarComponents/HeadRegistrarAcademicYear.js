@@ -427,6 +427,7 @@ export default function HeadRegistrarAcademicYear() {
               );
             }
           });
+
           const updatedPrograms = programs.map(program => {
             return {
               programName: program.programName,
@@ -459,25 +460,27 @@ export default function HeadRegistrarAcademicYear() {
           //UPDATING THE RELEVANT ROWS FOR THIS SEM AND PROCEED TO THE NEXT
           try {
             const nextAcademicYear = await Promise.all([
-                ...enrolledStudents.map(async (item) => {
+              ...updatedPrograms.map(async (programData) => {
+                const response = await ProgramModel.createAndInsertProgram(programData);
+                return response;
+              }),
+              console.log('END OF DEBUGGING'),
+              ...enrolledStudents.map(async (item) => {
                     const studentData = { ...item }; // Avoid mutating the original
                     delete studentData.id; // Removing ids without modifying the enrolledStudents
                     return StudentModel.updateStudent(studentData.studentNumber, studentData);
                 }),
-                TimelineModel.updateTimeline(uniqueTimelines),
-                TimelineModel.createAndInsertTimeline(newTimelines),
-                ...personnels.map(async (personnelData) => {
-                  return PersonnelModel.duplicatePersonnel(personnelData);
-                }),
-                ...courses.map(async (courseData) => {
-                  return CourseModel.createAndInsertCourse(courseData);
-                }),
-                ...updatedPrograms.map(async (programData) => {
-                  return ProgramModel.createAndInsertProgram(programData);
-                }),
-                EnrollmentModel.updateEnrollment(enrollments),
-                AcademicYearModel.updateAcademicYear(updateCurrent.id, updateCurrent),
-                AcademicYearModel.createAndInsertAcademicYear(newAcademicYear)
+              TimelineModel.updateTimeline(uniqueTimelines),
+              TimelineModel.createAndInsertTimeline(newTimelines),
+              ...personnels.map(async (personnelData) => {
+                return PersonnelModel.updatePersonnel(personnelData.personnelNumber, personnelData);
+              }),
+              ...courses.map(async (courseData) => {
+                return CourseModel.createAndInsertCourse(courseData);
+              }),
+              EnrollmentModel.updateEnrollment(enrollments),
+              AcademicYearModel.updateAcademicYear(updateCurrent.id, updateCurrent),
+              AcademicYearModel.createAndInsertAcademicYear(newAcademicYear)
                 
 
             ]);

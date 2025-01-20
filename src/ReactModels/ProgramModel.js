@@ -65,7 +65,7 @@ export default class ProgramModel {
         }
     }
 
-    // New method to create and insert a program
+    
     static async createAndInsertProgram(newProgramsData) {
         try {
             const apiUrl = process.env.REACT_APP_API_URL;

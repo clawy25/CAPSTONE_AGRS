@@ -224,30 +224,6 @@ static async insertPersonnel(personnelData) {
   }
 }
 
-static async duplicatePersonnel(personnelData) {
-  try {
-
-      const apiUrl = process.env.REACT_APP_API_URL;
-      // Wrap personnelData in an array
-      const response = await fetch(`${apiUrl}/personnel/duplicate`, {
-          method: 'POST',
-          headers: {
-              'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ data: [personnelData] }), // Send data as an array
-      });
-
-      if (!response.ok) {
-          throw new Error('Error creating personnel');
-      }
-
-      const data = await response.json();
-      return data; // Return the response or any necessary data
-  } catch (error) {
-      console.error('Error creating personnel:', error);
-      throw error;
-  }
-}
   // Update personnel data
 static async updatePersonnel(personnelNumber, updatedData) {
   try {

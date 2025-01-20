@@ -65,27 +65,29 @@ router.delete('/:programNumber', async (req, res) => {
 
 router.post('/upload', async (req, res) => {
     try {
-        const newProgramData = req.body.data;//This is in array format
-  
+        const newProgramData = req.body.data;
+
         // Validate newProgramData
         if (!Array.isArray(newProgramData) || newProgramData.length === 0) {
             return res.status(400).json({ message: 'Invalid data format or no students to insert' });
         }
-  
+
         // Perform bulk insertion using Supabase
         const { data, error } = await supabase
-            .from('program') // Replace with your table name
+            .from('program')
             .insert(newProgramData);
-  
+
         if (error) {
+            console.error('Supabase error:', error);
             throw error;
         }
-  
+
         res.status(200).json(data);
     } catch (error) {
         console.error('Error inserting programs:', error);
         res.status(500).json({ message: `Error inserting programs: ${error.message || 'Unknown error'}` });
     }
 });
+
 
 module.exports = router;
