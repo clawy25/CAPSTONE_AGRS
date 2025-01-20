@@ -57,6 +57,7 @@ router.post('/set', async (req, res) => {
 });
 
 router.post('/reset-password', async (req, res) => {
+    console.log(req.body);  // Log request body
     const { token, newPassword } = req.body;
 
     if (!token || !newPassword) {

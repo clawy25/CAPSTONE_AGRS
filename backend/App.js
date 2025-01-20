@@ -49,7 +49,7 @@ app.use('/submission', submissionRoutes);
 app.use('/timeline', timelineRoutes);
 app.use('/deadline', deadlineRoutes);
 app.use('/semgrade', semgradeRoutes);
-app.use('/forgot-password', passRoutes);
+app.use('/reset-password', passRoutes);
 
 // Start the server
 app.listen(port, () => console.log(`Server running on port ${port}`));
