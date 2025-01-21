@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext, useCallback } from 'react';
-import { Button, Modal, Table,Spinner } from 'react-bootstrap';
+import { Button, Modal, Table,Spinner, Container } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBook } from '@fortawesome/free-solid-svg-icons';
 import { UserContext } from '../Context/UserContext';
@@ -251,8 +251,8 @@ export default function Grades() {
     <>
     <div className='card bg-white'>
       <div className='card-header bg-white d-flex'>
-        <p className='custom-color-green-font mt-3 ms-1 fs-6 custom-color-green-font fw-bold'>{user.studentNameFirst} {user.studentNameMiddle || ''} {user.studentNameLast}</p>
-        <p className='custom-color-green-font mt-3 ms-1 fs-6 custom-color-green-font fw-bold'>  ({user.studentNumber})</p>
+        <p className='custom-color-green-font mt-3 ms-1 fs-6 custom-color-green-font fw-bold text-nowrap'>{user.studentNameLast}, {user.studentNameFirst} {user.studentNameMiddle || ''} ({user.studentNumber})</p>
+ 
       </div>
       <div className='card-body card-success border-success rounded'>
         
@@ -273,12 +273,16 @@ export default function Grades() {
               <FontAwesomeIcon icon={faBook} /> Curriculum
             </Button>
           </div>
+
+          <div class="mt-4  mx- auto alert alert-warning text-center px-auto" role="alert">
+          <span className='fw-bold fs-6'>Note: </span> Please be advised that you are required to visit the Registrar's Office to obtain a copy of your Certificate of Grades.
+</div>
       
           {studentData.courses && studentData.courses.length > 0 ? (
             Object.entries(groupByAcademicYearAndSemester(studentData.courses)).map(([academicYear, semesters], index) => (
               <div key={index} >
                 {Object.entries(semesters).map(([semester, courses], semesterIndex) => (
-                  <div key={semesterIndex} className="card mt-4">
+                  <div key={semesterIndex} className="card mt-2">
                     <div className="card-header bg-custom-color-green d-flex">
                       <p className="text-white mt-1 fs-6 gw-semibold custom-color">
                         Academic Year {academicYear} {getSemesterText(semester)} Semester
@@ -333,36 +337,39 @@ export default function Grades() {
 
     <Modal show={showModal} onHide={handleCloseModal} size='lg'centered animation={false}>
     <Modal.Header closeButton>
-      <Modal.Title>Action Required</Modal.Title>
+      <Modal.Title>Prospectus</Modal.Title>
     </Modal.Header>
     <Modal.Body>
+    <div class="mt-4  mx- auto alert alert-warning text-center px-auto" role="alert">
+    This is the list of courses you need to take in order to complete your program.
+          </div>
      
         {Object.keys(curriculum).map((yearLevel) => (
-          <div key={yearLevel}>
-            <h4>Year Level {yearLevel}</h4>
+          <div key={yearLevel} className='mt-2'>
+            <h4 className='text-success'>Year Level {yearLevel}</h4>
             {Object.keys(curriculum[yearLevel]).map((semester) => (
-              <div key={semester} className='table-responsive'>
-                <h5>{getSemesterText(semester)} Semester</h5>
-                <Table striped bordered hover>
+              <div key={semester} className='table-responsive mt-2 mb-3'>
+                <h5 className='mt-2 text-success'>{getSemesterText(semester)} Semester</h5>
+                <Table bordered hover>
                   <thead>
                     <tr>
-                      <th className='text-center text-success custom-font'>Course Code</th>
-                      <th className='text-center text-success custom-font'>Course Title</th>
-                      <th className='text-center text-success custom-font'>Lecture Hours</th>
-                      <th className='text-center text-success custom-font'>Laboratory Hours</th>
-                      <th className='text-center text-success custom-font'>Unit Credits</th>
-                      <th className='text-center text-success custom-font'>Pre Requisite</th>
+                      <th className='fs-6 text-center text-success custom-font'>Course Code</th>
+                      <th className='fs-6 text-center text-success custom-font'>Course Title</th>
+                      <th className='fs-6 text-center text-success custom-font'>Lecture Hours</th>
+                      <th className='fs-6 text-center text-success custom-font'>Laboratory Hours</th>
+                      <th className='fs-6 text-center text-success custom-font'>Unit Credits</th>
+                      <th className='fs-6 text-center text-success custom-font'>Pre Requisite</th>
                     </tr>
                   </thead>
                   <tbody>
                     {curriculum[yearLevel][semester].map((course, index) => (
                       <tr key={index}>
-                        <td className="custom-font text-center">{course.courseCode}</td>
-                        <td className="custom-font text-center">{course.courseDescriptiveTitle}</td>
-                        <td className="custom-font text-center">{course.courseLecture}</td>
-                        <td className="custom-font text-center">{course.courseLaboratory}</td>
-                        <td className="custom-font text-center">{course.unitOfCredits}</td>
-                        <td className="custom-font text-center">{course.coursePreRequisite}</td>
+                        <td className="fs-6 text-center">{course.courseCode}</td>
+                        <td className="fs-6 text-center">{course.courseDescriptiveTitle}</td>
+                        <td className="fs-6 text-center">{course.courseLecture}</td>
+                        <td className="fs-6 text-center">{course.courseLaboratory}</td>
+                        <td className="fs-6 text-center">{course.unitOfCredits}</td>
+                        <td className="fs-6 text-center">{course.coursePreRequisite}</td>
                       </tr>
                     ))}
                   </tbody>

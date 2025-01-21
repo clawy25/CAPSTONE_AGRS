@@ -645,6 +645,8 @@ console.log('Filtered Students:', filteredStudents);
     return (
         <Container fluid className="container-fluid">
             <h2 className="custom-font custom-color-green-font mb-3 mt-2">Students Masterlist</h2>
+            <div class="mt-4  mx- auto alert alert-warning text-center px-auto" role="alert">
+            <span className='fw-bold fs-6'>Note: </span> The master list enables users to search for students based on criteria such as student number, name, program, or student type. The available search filters facilitate the efficient retrieval of relevant information. </div>
         
             <section className='container-fluid bg-white p-2 px-4 rounded table-responsive hide-scrollbar'>
             <div className="d-flex align-items-center justify-content-between gap-2 w-100 mt-4">

@@ -215,7 +215,7 @@ const ProgramHeadClassDesig = () => {
         );
         return;
       }
-  
+      setLoading(true)
       // Call the update function with the modified schedules
       await ScheduleModel.updateSchedules(schedules);
   
@@ -223,6 +223,8 @@ const ProgramHeadClassDesig = () => {
       await fetchSchedules();
     } catch (error) {
       console.error("Error updating schedules:", error);
+    } finally {
+      setLoading(false);
     }
   };
   
@@ -472,7 +474,7 @@ const ProgramHeadClassDesig = () => {
                                      ?.flatMap(p => p.semesters);
   return (
     <div>
-      <h2 className="custom-font custom-color-green-font mb-3 mt-2">Class Scheduling</h2>
+      <h2 className="custom-font custom-color-green-font mb-3 mt-2">Class schedule</h2>
       <Form className="p-3 mb-4 bg-white border border-success rounded">
       <Row className="align-items-center justify-content-between gx-3 gy-2">
       <Col xs={12} sm={12} md={2} className="mb-3">
@@ -557,6 +559,10 @@ const ProgramHeadClassDesig = () => {
         </Col>
       </Row>
       </Form>
+
+      <div class=" mx- auto alert alert-warning text-center px-auto" role="alert">
+      <span className='fw-bold fs-6'>Note: </span> Class Schedule allows users to set up class schedules for each course and section by filling in all the required fields. It ensures that the courses are properly scheduled and assigned to the correct sections.
+                  </div>
       {/* Table for Subjects */}
       {loading ? (
   <div className="text-center py-5 bg-white mt-4">
@@ -581,7 +587,11 @@ const ProgramHeadClassDesig = () => {
         <tbody>
           {schedules.length === 0 ? (
             <tr>
+              
               <td colSpan="6">
+              <div className=" mx- auto alert alert-warning text-center px-auto" role="alert">
+                 Please click the 'Generate List' button to generate schedules for the section.
+                  </div>
                 <Button className="btn-success w-100" onClick={createSchedules}>
                   Generate List
                 </Button>
@@ -593,6 +603,8 @@ const ProgramHeadClassDesig = () => {
                 (course) => course.courseCode === schedule.courseCode
               );
               return (
+               <>
+                
                 <tr key={index}>
                   <td className='text-center'>{schedule.courseCode}</td>
                   <td className='text-center'>{courseDetails?.courseDescriptiveTitle || 'N/A'}</td>
@@ -649,7 +661,7 @@ const ProgramHeadClassDesig = () => {
                       ))}
                     </Form.Control>
                   </td>
-                </tr>
+                </tr></>
               );
             })
           )}
@@ -661,7 +673,7 @@ const ProgramHeadClassDesig = () => {
     {schedules.length > 0 && (
         <Container fluid className='mb-3'>
           <Button className="btn-success" onClick={updateSchedules}>
-            Save Schedule
+            {loading ? 'Saving': 'Save Schedule'}
           </Button>
         </Container>
       )}
@@ -670,7 +682,7 @@ const ProgramHeadClassDesig = () => {
   <div className="text-center py-5 bg-white rounded pt-5 px-4 pb-5">
     <h5 className="custom-color-green-font mt-5 fs-5">No Data Available</h5>
     <p className="fs-6 mb-4">
-      Please ensure that all filters are applied then click "View" to display the data.
+    Please ensure that all filters are applied or data is available to display.
     </p>
   </div>
 )}

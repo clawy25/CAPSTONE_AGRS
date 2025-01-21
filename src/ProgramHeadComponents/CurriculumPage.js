@@ -220,17 +220,24 @@ const CurriculumPage = () => {
     if (currentCourse) {
 
       try {
+        setLoading(true);
         await CourseModel.updateCourse(updatedCourse);
         
     } catch (error) {
         console.error("Error updating course:", error);
     }
+    finally {
+      setLoading(false);
+    }
     } else {
       try{
+        setLoading(true);
         await CourseModel.createAndInsertCourse(updatedCourse);
       }
       catch (error){
         console.error("Error creating course:", error);
+      } finally {
+        setLoading(false);
       }
     }
     fetchCourses(); //Update the Courses
@@ -337,7 +344,8 @@ const CurriculumPage = () => {
         </Col>
       </Row>
       </Form>
-
+      <div class=" mx- auto alert alert-warning text-center px-auto" role="alert">
+      <span className='fw-bold fs-6'>Note: </span> The curriculum outlines the required sequence of courses for program completion. Use the available options to add, edit, or delete courses.          </div>
 
       {loading ? (
         <div className="text-center py-5 bg-white mt-4">
@@ -370,7 +378,7 @@ const CurriculumPage = () => {
                       <td>{course.courseLaboratory}</td>
                       <td>{course.coursePreRequisite}</td>
                       <td>{course.isBridgingCourse ? 'Yes' : 'No'}</td>
-                      <td className='d-flex m-2'>
+                      <td className='d-flex m-2 justify-content-center align-items-center'>
                         <Button
                           variant="warning"
                           className="me-2 text-white"
@@ -408,7 +416,7 @@ const CurriculumPage = () => {
         <div className="text-center py-5 bg-white rounded pt-5 px-4 pb-5">
         <h5 className="custom-color-green-font mt-5 fs-5">No Data Available</h5>
         <p className="fs-6 mb-4">
-          Please ensure that all filters are applied then click "View" to display the data.
+        Please ensure that all filters are applied or data is available to display.
         </p>
       </div>
       )}
@@ -420,6 +428,10 @@ const CurriculumPage = () => {
           <Modal.Title>{currentCourse ? 'Edit Course' : 'Add New Course'}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
+        <div class=" mx- auto alert alert-warning text-center px-auto" role="alert">
+        <span className='fw-bold fs-6'>Note: </span> Ensure all fields are filled out to add or modify course data.
+                  </div>
+
           <Form onSubmit={handleCourseSubmit}>
             <Form.Group controlId="courseCode">
               <Form.Label>Course Code</Form.Label>
@@ -471,7 +483,8 @@ const CurriculumPage = () => {
                 />
             </Form.Group>
             <Button type="submit" variant="primary" className="mt-3 w-100">
-              {currentCourse ? 'Save Changes' : 'Add Course'}
+            {loading ? 'Saving' : (currentCourse ? 'Save Changes' : 'Add Course')}
+
             </Button>
           </Form>
         </Modal.Body>

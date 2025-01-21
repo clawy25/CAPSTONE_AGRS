@@ -1228,7 +1228,7 @@ const MasterlistOfGradesTable = () => {
         <Form.Group controlId="viewButton">
             <Form.Label className="custom-color-green-font custom-font text-nowrap">Action</Form.Label>
               <div className='d-flex'>
-                  <Button className="w-100 btn-success me-2" onClick={printTable}>PDF</Button>
+                  <Button className="w-100 btn-success me-2" onClick={printTable}>Download PDF</Button>
               </div>
           </Form.Group>
         </Col>

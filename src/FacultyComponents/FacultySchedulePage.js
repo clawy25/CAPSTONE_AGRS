@@ -215,7 +215,14 @@ const formatTimeTo12Hour = (timeStr) => {
 
       </Row>
       </Form>
+      
+    
+                     <div class="mt-4  mx- auto alert alert-warning text-center px-auto" role="alert">
+                     <span className='fw-bold fs-6'>Note: </span>  Please be informed that this is your schedule for the semester based on the selected fields.
+          </div>
+      
       <div className="card rounded bg-white px-3 pb-3 pt-4">
+
   {/* Loading State */}
   {loading ? (
     <div className="text-center py-5 bg-white">

@@ -1,5 +1,5 @@
 import { useEffect, useState, useContext } from 'react';
-import { Table, Form, Button, Modal, Card } from 'react-bootstrap';
+import { Table, Form, Button, Modal, Card, Row, Col, Container } from 'react-bootstrap';
 import StudentModel from '../ReactModels/StudentModel';
 import ProgramModel from '../ReactModels/ProgramModel';
 import CourseModel from '../ReactModels/CourseModel';
@@ -81,7 +81,7 @@ const ScheduleTable = () => {
   
       if (student) {
         // Set the student's full name
-        const fullName = `${student.studentNameLast}, ${student.studentNameFirst} ${student.studentNameMiddle || ''}`;
+        const fullName = `${student.studentNameLast}, ${student.studentNameFirst}`;
         setStudentName(fullName.trim());
       } else {
         throw new Error("Student not found.");
@@ -335,12 +335,11 @@ useEffect(() => {
   return (
     <section className='card bg-white'>
       <div className='card-header bg-white d-flex'>
-        <p className='custom-color-green-font mt-3 ms-1 fs-6 custom-color-green-font fw-bold'>{studentName}</p>
-        <p className='custom-color-green-font mt-3 ms-1 fs-6 custom-color-green-font fw-bold'>  ({user.studentNumber})</p>
+        <p className='custom-color-green-font mt-3 ms-1 fs-6 custom-color-green-font fw-bold text-nowrap'>{studentName} ({user.studentNumber})</p>
         </div>
 
         {studentType !== 'Regular' ? (<div class="mt-4  mx- auto alert alert-warning text-center px-auto" role="alert">
-  Attention! Non-regular students are required to coordinate with their respective faculties to complete the enrollment process.
+          <span className='fw-bold fs-6'>Note: </span> Attention! Non-regular students are required to coordinate with their respective faculties to complete the enrollment process.
 </div>
 ):       !isEnrolled && (
         <div className='card-body '>
@@ -353,36 +352,33 @@ useEffect(() => {
             }}
           >
             <h3 className="mb-3">Enrollment is now open.</h3> 
-            <div 
-              className="d-flex justify-content-between align-items-center"
-              style={{
-                backgroundColor: '#e9f5ea',
-                borderRadius: '5px',
-                width: '100%',
-              }}
-            >
-              <span className="text-muted" style={{ flex: 1 }}>
-                <strong>Select a section to review a schedule that is favorable to you.</strong>
-              </span>
-              <Form.Select
-                aria-label="Select Section"
-                value={selectedSection}
-                onChange={handleSectionChange}
-                className="form-select-sm"
-                style={{ width: '200px' }}
-              >
-                <option value="">Select a section</option>
-                {sections.map((section) => (
-                  <option key={section.id} value={section.sectionNumber}>
-                    {section.sectionNumber}
-                  </option>
-                ))}
-              </Form.Select>
+  
+            <Container fluid className="d-flex flex-wrap justify-content-between align-items-center rounded p-3 w-100">
+  <Col xs={12} md={6} className="mb-3 mb-md-0">
+    <p className="fw-bold text-muted fs-6">
+      Select a section to review a schedule that is favorable to you.
+    </p>
+  </Col>
+  <Col xs={12} md={6}>
+    <Form.Select
+      aria-label="Select Section"
+      value={selectedSection}
+      onChange={handleSectionChange}
+    >
+      <option value="">Select a section</option>
+      {sections.map((section) => (
+        <option key={section.id} value={section.sectionNumber}>
+          {section.sectionNumber}
+        </option>
+      ))}
+    </Form.Select>
+  </Col>
+</Container>
+      
 
 
 
 
-            </div>
           </div>
 
 {/* New Display Bar for Student Name, Program, Year Level, and Semester */}
@@ -540,13 +536,16 @@ useEffect(() => {
             <strong>You are qualified for Free Higher Education Act.</strong>
           </Card.Header>
           <Card.Body className="text-center">
-            <h5 className="text-success fs-3 custom-font">
+          <div class="mt-4  mx- auto alert alert-warning text-center px-auto" role="alert">
+          Please be informed that you need to visit the Registrar's Office to obtain a copy of your Certificate of Registration.
+</div>
+            <div className='mt-3 text-center'>
+            <h3 className="text-success fs-3 custom-font mt-2">
               You are officially enrolled.
-            </h5>
+            </h3>
             <p>(S.Y. 2425 - First Semester)</p>
-            <Button className='bg-custom-color-green'>
-              Certificate of Registration
-            </Button>
+            </div>
+            
           </Card.Body>
         </Card>
       )}

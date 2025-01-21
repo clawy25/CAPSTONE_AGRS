@@ -407,30 +407,40 @@ const Sections = () => {
 
 
   const handleAddSection = async () => {
-    
-    const program = programs.find(
-      (p) => p.academicYear === selectedAcademicYear && p.programName === selectedProgram
-    );
-
-    const selectedProgramNumber = program ? program.programNumber : null;
-
-    const section = {
-      sectionNumber: String(newSection),
-      programNumber: parseInt(selectedProgramNumber),
-      yearLevel: parseInt(selectedYearLevel),
-      sectionSemester: parseInt(selectedSemester),
-      academicYear: selectedAcademicYear
-    };
-
-    SectionModel.createAndInsertSection(section);
-
-    
-    setSections((prevSections) => [...prevSections, section]);
-    setSelectedSection('');
-    setShowModal(false);
-    setFunctionCalled(true);
-    setSectionStatus('Pending'); // Reset status to Pending
+    // Set loading state to true
+    setLoading(true);
+  
+    try {
+      const program = programs.find(
+        (p) => p.academicYear === selectedAcademicYear && p.programName === selectedProgram
+      );
+  
+      const selectedProgramNumber = program ? program.programNumber : null;
+  
+      const section = {
+        sectionNumber: String(newSection),
+        programNumber: parseInt(selectedProgramNumber),
+        yearLevel: parseInt(selectedYearLevel),
+        sectionSemester: parseInt(selectedSemester),
+        academicYear: selectedAcademicYear
+      };
+  
+      await SectionModel.createAndInsertSection(section); // Ensure this is an async function if necessary
+  
+      // Update sections and reset states
+      setSections((prevSections) => [...prevSections, section]);
+      setSelectedSection('');
+      setShowModal(false);
+      setFunctionCalled(true);
+      setSectionStatus('Pending'); // Reset status to Pending
+    } catch (error) {
+      console.error("Error adding section:", error);
+    } finally {
+      // Set loading state to false
+      setLoading(false);
+    }
   };
+  
 
   const printCSOG = () => {
     window.open('/SOG.pdf', '_blank');
@@ -579,7 +589,7 @@ const Sections = () => {
           <Form.Group className='w-100' controlId="viewButton">
             <Form.Label className="custom-color-green-font text-nowrap">Action</Form.Label>
               <div className='d-flex'>
-              <Button className="btn-success w-100" onClick={addSection}>Add Section</Button>        
+              <Button className="btn-success w-100" onClick={addSection}>{loading ? 'Adding Section...' : 'Add Section'}</Button>        
               
             </div>
             </Form.Group>

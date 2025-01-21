@@ -407,6 +407,7 @@ const fetchDeadline = async () => {
     });
   
     try {
+      setLoading(true)
       // Batch add the deadlines (assuming API can handle an array of deadlines)
       const response = await DeadlineModel.createAndInsertDeadline(formattedDeadlines);
   
@@ -420,6 +421,8 @@ const fetchDeadline = async () => {
     } catch (error) {
       alert("An error occurred while adding deadlines. Please try again.");
       console.error("Error adding deadlines:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -581,7 +584,8 @@ const fetchDeadline = async () => {
 
       {/* Table */}
   
-      
+      <div class="mt-4 fs-6  mx- auto alert alert-warning text-center px-auto" role="alert">
+      <span className='fw-bold fs-6'>Note: </span> Grade submission allows users to create and view deadlines for grade submissions. It provides a way to monitor whether professors have submitted their grades on time.  </div>
 
         {loading ? (
           <div className="text-center py-5 bg-white">
@@ -755,7 +759,7 @@ const fetchDeadline = async () => {
                 )}
 
           <Button className="btn-success mt-3" onClick={() => handleSaveDeadlines(schedules)}>
-            Save All Deadlines
+           {loading ? 'Saving...' : 'Save All Deadlines'}
           </Button>
                 </>   
               )}

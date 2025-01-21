@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { Button, Table, Container, Modal, Form, Dropdown, Spinner, Card } from 'react-bootstrap';
+import { Button, Table, Container, Modal, Form, Dropdown, Spinner, Card, Row, Col } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import StudentModel from '../ReactModels/StudentModel';
@@ -17,7 +17,8 @@ import '../App.css';
 export default function RegistrarIrregularStudents() {
     const { user } = useContext(UserContext);
     const navigate = useNavigate();
-    const [loading, setLoading] = useState(false); 
+    const [loading, setLoading] = useState(false);
+    const [loadingStudent, setLoadingStudent] = useState(false); 
     const [irregularStudent, setIrregularStudent] = useState([]); // Full list of irregular students
     const [searchQuery, setSearchQuery] = useState(''); // Search query
     const [filteredStudent, setFilteredStudent] = useState([]); // Filtered students for display
@@ -185,7 +186,7 @@ export default function RegistrarIrregularStudents() {
     //curriculum that student must take
     const fetchCurriculum = async (programNumber, studentNumber) => {
         console.log("Fetching curriculum for Program:", programNumber, "Student:", studentNumber);
-    
+        setLoadingStudent(true);
         // Validate inputs
         if (!programNumber || !studentNumber) {
             console.error("Program number and student number are required.");
@@ -265,6 +266,8 @@ export default function RegistrarIrregularStudents() {
             setCurriculum(groupedCurriculum);
         } catch (error) {
             console.error("Failed to fetch curriculum:", error);
+        } finally {
+         setLoadingStudent(false)
         }
     };
 
@@ -464,6 +467,7 @@ export default function RegistrarIrregularStudents() {
         }
     
         try {
+          setLoadingStudent(true)
             // Fetch all enrollments from the database
             const existingEnrollments = await EnrollmentModel.fetchAllEnrollment();
     
@@ -497,6 +501,8 @@ export default function RegistrarIrregularStudents() {
             console.error("Error enrolling students:", error);
             alert("Failed to enroll students. Please try again.");
             throw error;
+        } finally {
+          setLoadingStudent(false);
         }
     };
     
@@ -613,6 +619,8 @@ export default function RegistrarIrregularStudents() {
     return (
     <Container fluid>
     <h2 className="custom-font custom-color-green-font mb-3 mt-2">Irregular Students</h2>
+    <div class="mt-4  mx- auto alert alert-warning text-center px-auto" role="alert">
+    <span className='fw-bold fs-6'>Note: </span> The list of irregular students allows users to enroll students, monitor their academic progress, and track their completion of the program. The provided tools should be utilized to manage enrollment and progress effectively. </div>
         <Container fluid className="bg-white py-5 rounded hide-scrollbar table-responsive">
             
             <Container fluid className="input-group">
@@ -703,7 +711,11 @@ export default function RegistrarIrregularStudents() {
                     <Card.Title>Student Record</Card.Title>
                 </Modal.Header>
                 <Modal.Body>
-                    {selectedStudent ? (
+                   {loadingStudent ? (
+                    <div className="text-center py-5 bg-white mt-4">
+            <Spinner animation="border" variant="success" />
+            <p className="mt-3">Loading data, please wait...</p>
+          </div>) :  selectedStudent ? (
                         <div>
                             <h5>{selectedStudent.studentNameFirst} {selectedStudent.studentNameLast}</h5>
                             <p><strong>Student Number:</strong> {selectedStudent.studentNumber}</p>
@@ -761,41 +773,51 @@ export default function RegistrarIrregularStudents() {
 
             {/* Enrollment Modal */}
             
-            <Modal show={showEnrollmentModal} size="xl" onHide={handleCloseEnrollmentModal} animation={false} >
+            <Modal show={showEnrollmentModal} size="xl" onHide={handleCloseEnrollmentModal} animation={false} className='modal-xxl'>
                 <Modal.Header closeButton>
                     <Modal.Title>Enrollment Details</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     {selectedStudent ? (
                         <div>
+                              <div class="mt-4 fs-6  mx- auto alert alert-warning text-center px-auto" role="alert">
+                             <span className='fw-bold fs-6'>Instructions: </span> To enroll a student, users must first select the course and preferred time. Then click 'Add Row' to include additional courses if necessary. After selecting all courses, clicking 'Enroll Student' will finalize the enrollment process.  </div>
                             {/* Student Information */}
-                            <h5>
-                                {selectedStudent.studentNameFirst} {selectedStudent.studentNameLast}
-                            </h5>
-                            <p>
+                            <Row fluid className='d-flex w-100'>
+                            <Col fluid className='w-50 d-block'>
+                            <p className='fs-5'>
                                 <strong>Student Number:</strong> {selectedStudent.studentNumber}
                             </p>
-                            <p>
+                            <p className='fs-5'>
+                                <strong>Student Name:</strong>  {selectedStudent.studentNameFirst} {selectedStudent.studentNameLast}
+                            </p>
+                            
+
+                            </Col>
+                            <Col fluid className='w-50 d-block'>
+                            <p className='fs-5'>
                                 <strong>Program:</strong> {selectedStudent.studentProgramNumber}
                             </p>
-                            <p>
+                            <p className='fs-5'>
                                 <strong>Admission Year:</strong> {selectedStudent.studentAdmissionYr}
                             </p>
+                            </Col>
 
+                            </Row>
                             {/* Enrollment Details Table */}
-                            <div className="table-responsive">
+                            <Container fluid className="mt-4 shadow-sm table-responsive">
                                 <Table hover className="mt-2">
                                     <thead>
                                         <tr className="text-center">
-                                            <th className="text-success custom-font">#</th>
-                                            <th className="text-success custom-font">Course Code</th>
-                                            <th className="text-success custom-font">Course Description</th>
-                                            <th className="text-success custom-font">Lecture Units</th>
-                                            <th className="text-success custom-font">Lab Units</th>
-                                            <th className="text-success custom-font">Schedule</th>
-                                            <th className="text-success custom-font">Professor</th>
-                                            <th className="text-success custom-font">Section</th>
-                                            <th className="text-success custom-font">Schedule Number</th>
+                                            <th className="text-success custom-font fs-6">#</th>
+                                            <th className="text-success custom-font fs-6">Course Code</th>
+                                            <th className="text-success custom-font fs-6">Course Description</th>
+                                            <th className="text-success custom-font fs-6">Lecture Units</th>
+                                            <th className="text-success custom-font fs-6">Lab Units</th>
+                                            <th className="text-success custom-font fs-6">Schedule</th>
+                                            <th className="text-success custom-font fs-6">Professor</th>
+                                            <th className="text-success custom-font fs-6">Section</th>
+                                            <th className="text-success custom-font fs-6">Schedule Number</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -891,7 +913,7 @@ export default function RegistrarIrregularStudents() {
                                         ))}
                                     </tbody>
                                 </Table>
-                            </div>
+                            </Container>
 
                             {/* Add Row Button */}
                             <div className="d-flex justify-content-left mt-3">
@@ -906,7 +928,7 @@ export default function RegistrarIrregularStudents() {
                 </Modal.Body>
                 <Modal.Footer>
                     <Button variant="success" onClick={handleEnrollStudents}>
-                        Enroll
+                    {console.log(loadingStudent) ? 'Enrolling...' : 'Enroll Student'}
                     </Button>
                 </Modal.Footer>
             </Modal>

@@ -803,7 +803,9 @@ const printTable = () => {
 
 </Form>
 
-      
+<div class=" mx- auto alert alert-warning text-center px-auto" role="alert">
+<span className='fw-bold fs-6'>Note: </span> Grades verification enables the program head to review and confirm students' grades by course and section.
+                  </div>
 
       <div id="printableTable" className="bg-white rounded pt-5 px-3 pb-3 table-responsive">
       {loading ? (
@@ -820,6 +822,7 @@ const printTable = () => {
         </div>
       ) : (
         <>
+                 
           {(selectedSection && selectedSection !== '' && groupedData[selectedSection] ? [[selectedSection, groupedData[selectedSection]]] : Object.entries(groupedData))
             .filter(([sectionNumber]) => sectionNumber)
             .map(([sectionNumber, sectionData], sectionIndex) => (
@@ -1055,7 +1058,9 @@ const printTable = () => {
       )}
 
       {/* Validation Modal */}
-      <Modal show={showModal} onHide={handleCloseModal} centered animation={false}>
+   
+      </div>
+         <Modal show={showModal} onHide={handleCloseModal} centered animation={false}>
         <Modal.Header closeButton>
           <Modal.Title>Verification Section</Modal.Title>
         </Modal.Header>
@@ -1071,7 +1076,6 @@ const printTable = () => {
           </Button>
         </Modal.Footer>
       </Modal>
-      </div>
 
       <Modal show={showModalAlert} onHide={closeShowModalAlert} centered animation={false}>
         <Modal.Header closeButton>

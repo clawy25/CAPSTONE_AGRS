@@ -154,8 +154,7 @@ export default function Schedule() {
   return (
     <div className="card card-success rounded">
       <div className='card-header bg-white d-flex'>
-        <p className='custom-color-green-font mt-3 ms-1 fs-6 custom-color-green-font fw-bold'>{studentName}</p>
-        <p className='custom-color-green-font mt-3 ms-1 fs-6 custom-color-green-font fw-bold'>  ({user.studentNumber})</p>
+      <p className='custom-color-green-font mt-3 ms-1 fs-6 custom-color-green-font fw-bold text-nowrap'>{studentName} ({user.studentNumber})</p>
       </div>
       <div className="card-body table-container">
         {loading ? (
@@ -165,6 +164,9 @@ export default function Schedule() {
           </div>
         ) : (
           <div className="table-responsive">
+                     <div class="mt-4  mx- auto alert alert-warning text-center px-auto" role="alert">
+                     <span className='fw-bold fs-6'>Note: </span> Please be informed that this is your schedule for the current semester.
+          </div>
             <table className="table table-bordered">
               <thead className="table-success text-center">
                 <tr>
