@@ -30,12 +30,9 @@ export default function ForgotPassword() {
     
             setMessage({ type: 'success', text: data.message });
         } catch (error) {
-            // Display specific rate limit messages or general errors
             setMessage({
                 type: 'error',
-                text: error.message.includes('429')
-                    ? 'Too many requests. Please try again later.'
-                    : error.message || 'An error occurred.',
+                text: error.message || 'An error occurred.',
             });
         } finally {
             setIsSubmitting(false);
