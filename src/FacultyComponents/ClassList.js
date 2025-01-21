@@ -682,7 +682,8 @@ export default function ClassList() {
         <Button
           variant="success"
           className="w-100 w-md-auto mb-2 mb-md-0 me-md-2 text-nowrap px-2 py-2"
-          onClick={(e) => {handleClassClick(selectedCourse);}}
+          onClick={(e) => {handleClassClick(selectedCourse)}}
+          disabled={classListData.length === 0}
         >
           Grade Sheet
         </Button>
@@ -691,6 +692,7 @@ export default function ClassList() {
         <Button
           className="btn bg-white border-white w-100 w-md-auto d-flex justify-content-center align-items-center"
           onClick={() => printTableContent("printableContent")}
+          disabled={classListData.length === 0}
         >
           <FontAwesomeIcon icon={faPrint} className="fa-2x text-success" />
         </Button>

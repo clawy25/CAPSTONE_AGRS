@@ -18,6 +18,8 @@ import PBAModel from '../ReactModels/PBAModel.js';
 import ExamModel from '../ReactModels/ExamModel.js';
 import ComponentModel from '../ReactModels/ComponentModel.js';
 import SemGradeModel from '../ReactModels/SemGradeModel.js';
+import AcademicYearModel from '../ReactModels/AcademicYearModel.js';
+import TimelineModel from '../ReactModels/TimelineModel.js';
 import { Modal, Button, Container } from 'react-bootstrap';
 import * as XLSX from 'xlsx';
 
@@ -27,9 +29,15 @@ const ClassDetails = ({classList , classDetails}) => {
   const navigate = useNavigate();
   const [students, setStudents] = useState(classList);
 
-  //console.log("List of Students:", students);
+  console.log("List of Students:", students);
   const [classInfo, setClassInfo] = useState(classDetails[0]);
+  console.log("Class Details:", classInfo);
+  console.log(classInfo.semester);
+  console.log(classInfo.academicYear);
+  
 
+  const [currentAcademicYear, setCurrentAcademicYear] = useState();
+  const [currentSemester, setCurrentSemester] = useState();
   const [classGradeData, setClassGradeData] = useState([]);
   const [attendanceLabelData, setAttendanceLabelData] = useState([]);
   const [quizMaxData, setQuizMaxData] = useState([]);
@@ -63,6 +71,24 @@ const ClassDetails = ({classList , classDetails}) => {
     navigate(-1); // Navigate to the previous page
   };
 
+  const fetchAcademicYears = async () => {
+      try {
+        const years = await AcademicYearModel.fetchExistingAcademicYears();
+        const isCurrent = years.find(year => year.isCurrent === true);
+        setCurrentAcademicYear(isCurrent);
+        const check = await TimelineModel.fetchTimelineByAcademicYear(isCurrent.academicYear);
+  
+        const highestSemester = check.reduce((max, row) => Math.max(max, row.semester), 0);
+        console.log(isCurrent);
+        console.log(highestSemester);
+        // Set the current semester based on the highest value found
+        setCurrentSemester(highestSemester || 1); // Default to 1 if no rows are present
+  
+      } catch (err) {
+        console.error(err);
+      }
+  };
+
 
   useEffect(() => {
     students.sort((a, b) => {
@@ -80,6 +106,8 @@ const ClassDetails = ({classList , classDetails}) => {
     setStudents(studentsWithIds);
 
     if (students && classInfo){
+      
+      fetchAcademicYears();
       handleFetchGrades();
     }
   }, []);
@@ -100,7 +128,11 @@ const ClassDetails = ({classList , classDetails}) => {
       const myClass = classInfo.scheduleNumber;
       const isSubmitted = await SubmissionModel.fetchSubmissionBySchedule(myClass);
 
-      if (isSubmitted && isSubmitted[0]?.submissionStatus === 'Pending'){
+      if (!isSubmitted || isSubmitted.length === 0){// Not yet saved or submitted (EDITABLE)
+        setPending(false);
+      } else if (isSubmitted && isSubmitted[0]?.submissionStatus === 'Pending'){ //Submitted but not verified (UNEDITABLE)
+        setPending(true);
+      } else if (isSubmitted && isSubmitted[0]?.submissionStatus === 'Verified'){ //Verified (UNEDITABLE)
         setPending(true);
       };
 
@@ -1009,7 +1041,7 @@ const ClassDetails = ({classList , classDetails}) => {
         return;
       } else {
         //Save the changes first
-        const saveState = await handleSave();
+        const saveState = await handleSave('submit');
         console.log(semesterGradeData);
 
         const semgrades = await SemGradeModel.updateSemGradeData(semesterGradeData);
@@ -1034,7 +1066,7 @@ const ClassDetails = ({classList , classDetails}) => {
     }
   };
 
-  const handleSave = async () => {
+  const handleSave = async (action) => {
     try{
       const [grade, attendance, quiz, pba, exam, weight] = await Promise.all([
         GradeModel.updateGradeData(classGradeData),
@@ -1046,7 +1078,9 @@ const ClassDetails = ({classList , classDetails}) => {
       ]);
 
       if (grade && attendance && quiz && pba && exam && weight){
-        handleModalShow('saved');
+        if (action === 'save'){
+          handleModalShow('saved');
+        }
         return true;
       } else {
         return false;
@@ -3233,7 +3267,7 @@ const handlePercentageChange = (setter, value) => {
                   <div style={{ display: 'flex', alignItems: 'center' }}>
                   {index === midtermAttendanceColumns.length - 1 && ( // Show button only for the last column
                     <button
-                      disabled = {midtermAttendanceColumns.length === 1 || pendingStatus}
+                      disabled = {midtermAttendanceColumns.length === 1 || pendingStatus || currentSemester !== classInfo.semester}
                       onClick={() => removeAttendanceColumn(index, setmidtermAttendanceColumns, setmidtermAttendanceData)}
                       style={{ background: 'none', border: 'none', marginRight: '10px' }}
                     >
@@ -3242,7 +3276,7 @@ const handlePercentageChange = (setter, value) => {
                   )}
                   <DatePicker
                     selected={column.date}
-                    disabled={pendingStatus}
+                    disabled={pendingStatus || currentSemester !== classInfo.semester}
                     onChange={(date) => {
                       const formattedDate = date.toLocaleDateString('en-CA');
                       setmidtermAttendanceColumns((prevColumns) =>
@@ -3257,7 +3291,7 @@ const handlePercentageChange = (setter, value) => {
 
               <th rowSpan="3" style={{ background: '#d1e7dd', position: 'sticky',left: 0,top: 42,padding: '0px',zIndex: 1,boxShadow: '1px 0 0 rgba(0, 0, 0, 0.1)', }}>
                 <button 
-                  disabled={midtermAttendanceColumns[midtermAttendanceColumns.length - 1]?.grade.length === 0 || pendingStatus}
+                  disabled={midtermAttendanceColumns[midtermAttendanceColumns.length - 1]?.grade.length === 0 || pendingStatus || currentSemester !== classInfo.semester}
                   onClick={() => addColumn(setmidtermAttendanceColumns)} style={{background: 'none', border: 'none'}}>
                   <FontAwesomeIcon icon={faPlus} />
                 </button>
@@ -3266,7 +3300,7 @@ const handlePercentageChange = (setter, value) => {
               <th colSpan="2" className='sticky-top-left'>No of Days</th>
               <th colSpan="2" className='sticky-top-left'>
                 <input
-                  disabled={pendingStatus}
+                  disabled={pendingStatus || currentSemester !== classInfo.semester}
                   type="text"
                   style={{ width: '60px', marginLeft: '10px' }}
                   value={midtermTotalAttendanceDays}
@@ -3284,7 +3318,7 @@ const handlePercentageChange = (setter, value) => {
                   <div style={{ display: 'flex', alignItems: 'center' }}> 
                     {index === midtermQuizColumns.length - 1 && ( // Show button only for the last column
                       <button
-                        disabled = {midtermQuizColumns.length === 1 || pendingStatus}
+                        disabled = {midtermQuizColumns.length === 1 || pendingStatus || currentSemester !== classInfo.semester}
                         onClick={() => removeQuizColumn(index, setmidtermQuizColumns, setmidtermQuizScores, setmidtermQuizMaxScores)} 
                         style={{ background: 'none', border: 'none', marginRight: '5px' }} // Add margin-right for spacing
                       >
@@ -3296,7 +3330,7 @@ const handlePercentageChange = (setter, value) => {
                   <input
                     type="number"
                     value={column.max || ""}
-                    disabled={pendingStatus}
+                    disabled={pendingStatus || currentSemester !== classInfo.semester}
                     onChange={(e) => {
                       const maxScore = parseFloat(e.target.value) || 0;
                       // Update midtermQuizColumns
@@ -3319,7 +3353,7 @@ const handlePercentageChange = (setter, value) => {
 
               <th rowSpan={2} style={{ background: '#d1e7dd', position: 'sticky',left: 0,top: 105,padding: '0px',zIndex: 1,boxShadow: '1px 0 0 rgba(0, 0, 0, 0.1)', }}>
                           <button
-                            disabled={midtermQuizColumns[midtermQuizColumns.length - 1]?.grade.length === 0 || pendingStatus}
+                            disabled={midtermQuizColumns[midtermQuizColumns.length - 1]?.grade.length === 0 || pendingStatus || currentSemester !== classInfo.semester}
                             onClick={addMidtermQuizColumn} style={{ background: 'none', border: 'none' }}>
                             <FontAwesomeIcon icon={faPlus} />
                           </button>
@@ -3328,7 +3362,7 @@ const handlePercentageChange = (setter, value) => {
                     <th rowSpan={2} className='sticky-top-left-offset'>
                     <input
                     type="number"
-                    disabled={pendingStatus}
+                    disabled={pendingStatus || currentSemester !== classInfo.semester}
                     value={midtermQuizPercentage || ""}
                     onChange={(e) => setmidtermQuizPercentage(e.target.value)}
                     style={{ width: '60px' }}
@@ -3341,7 +3375,7 @@ const handlePercentageChange = (setter, value) => {
                     <div style={{ display: 'flex', alignItems: 'center' }}>
                       {index === midtermPBAColumns.length - 1 && (
                         <button 
-                          disabled = {midtermPBAColumns.length === 1 || pendingStatus}
+                          disabled = {midtermPBAColumns.length === 1 || pendingStatus || currentSemester !== classInfo.semester}
                           onClick={() => removeColumn(index, setmidtermPBAColumns)} 
                           style={{ background: 'none', border: 'none', marginRight: '8px' }} // Adjust margin as needed
                         >
@@ -3354,7 +3388,7 @@ const handlePercentageChange = (setter, value) => {
                     <select
                       style={{ marginTop: '20px' }}
                       value={column.label || "Select"}
-                      disabled={pendingStatus}
+                      disabled={pendingStatus || currentSemester !== classInfo.semester}
                       onChange={(e) => { 
                         const PBA = e.target.value; 
                         setmidtermPBAColumns((prevColumns) =>
@@ -3374,7 +3408,7 @@ const handlePercentageChange = (setter, value) => {
                   ))}
                   <th rowSpan={2} style={{ background: '#d1e7dd', position: 'sticky',left: 0,top: 105,padding: '0px',zIndex: 1,boxShadow: '1px 0 0 rgba(0, 0, 0, 0.1)', }}>
                     <button 
-                      disabled={midtermPBAColumns[midtermPBAColumns.length - 1]?.grade.length === 0 || pendingStatus}
+                      disabled={midtermPBAColumns[midtermPBAColumns.length - 1]?.grade.length === 0 || pendingStatus || currentSemester !== classInfo.semester}
                       onClick={() => addColumn(setmidtermPBAColumns)} style={{ background: 'none', border: 'none' }}>
                       <FontAwesomeIcon icon={faPlus} />
                     </button>
@@ -3389,7 +3423,7 @@ const handlePercentageChange = (setter, value) => {
               <th colSpan="1" className='sticky-top-left-offset-168'>A</th>
               <th colSpan="2" className='sticky-top-left-offset-168'>
                 <input
-                  disabled={pendingStatus}
+                  disabled={pendingStatus || currentSemester !== classInfo.semester}
                   type="number"
                   value={midtermAttendancePercentage || ""}
                   onChange={(e) => setmidtermAttendancePercentage(e.target.value)}
@@ -3403,7 +3437,7 @@ const handlePercentageChange = (setter, value) => {
                   <div style={{ display: 'flex', alignItems: 'center' }}>
                   {index === midtermAssignmentColumns.length - 1 && (
                     <button
-                      disabled = {midtermAssignmentColumns.length === 1 || pendingStatus}
+                      disabled = {midtermAssignmentColumns.length === 1 || pendingStatus || currentSemester !== classInfo.semester}
                       onClick={() => removeAssignmentColumn(index, setmidtermAssignmentColumns, setmidtermAssignmentScores)} 
                       style={{ background: 'none', border: 'none', marginRight: '8px' }}
                     >
@@ -3417,7 +3451,7 @@ const handlePercentageChange = (setter, value) => {
 
                 <th style={{ background: '#d1e7dd', position: 'sticky',left: 0,top: 168,padding: '0px',zIndex: 1,boxShadow: '1px 0 0 rgba(0, 0, 0, 0.1)', }}>
                   <button
-                    disabled={midtermAssignmentColumns[midtermAssignmentColumns.length - 1]?.grade.length === 0 || pendingStatus}
+                    disabled={midtermAssignmentColumns[midtermAssignmentColumns.length - 1]?.grade.length === 0 || pendingStatus || currentSemester !== classInfo.semester}
                     onClick={() => addColumn(setmidtermAssignmentColumns)} style={{ background: 'none', border: 'none' }}>
                     <FontAwesomeIcon icon={faPlus} />
                   </button>
@@ -3427,7 +3461,7 @@ const handlePercentageChange = (setter, value) => {
                 <th className='sticky-top-left-offset-168'>
             <input
               type="number"
-              disabled={pendingStatus}
+              disabled={pendingStatus || currentSemester !== classInfo.semester}
               value={midtermAssignmentPercentage || ""}
               onChange={(e) => setmidtermAssignmentPercentage(e.target.value)}
               style={{ width: '60px' }}
@@ -3439,7 +3473,7 @@ const handlePercentageChange = (setter, value) => {
                   <div style={{ display: 'flex', alignItems: 'center' }}>
                   {index === midtermRecitationColumns.length - 1 && (
                     <button
-                      disabled = {midtermRecitationColumns.length === 1 || pendingStatus}
+                      disabled = {midtermRecitationColumns.length === 1 || pendingStatus || currentSemester !== classInfo.semester}
                       onClick={() => removeAssignmentColumn(index, setmidtermRecitationColumns, setmidtermRecitationScores)} 
                       style={{ background: 'none', border: 'none', marginRight: '8px' }}
                     >
@@ -3453,7 +3487,7 @@ const handlePercentageChange = (setter, value) => {
 
                 <th style={{ background: '#d1e7dd', position: 'sticky',left: 0,top: 168,padding: '0px',zIndex: 1,boxShadow: '1px 0 0 rgba(0, 0, 0, 0.1)', }}>
                   <button
-                    disabled={midtermRecitationColumns[midtermRecitationColumns.length - 1]?.grade.length === 0 || pendingStatus}
+                    disabled={midtermRecitationColumns[midtermRecitationColumns.length - 1]?.grade.length === 0 || pendingStatus || currentSemester !== classInfo.semester}
                     onClick={() => addColumn(setmidtermRecitationColumns)} style={{ background: 'none', border: 'none' }}>
                     <FontAwesomeIcon icon={faPlus} />
                   </button>
@@ -3462,7 +3496,7 @@ const handlePercentageChange = (setter, value) => {
                 <th className='sticky-top-left-offset-168'>
                 <input
                 type="number"
-                disabled={pendingStatus}
+                disabled={pendingStatus || currentSemester !== classInfo.semester}
                 value={midtermRecitationPercentage || ""}
                 onChange={(e) => setmidtermRecitationPercentage(e.target.value)}
                 style={{ width: '60px' }}
@@ -3476,7 +3510,7 @@ const handlePercentageChange = (setter, value) => {
                 <th className='sticky-top-left-offset-168'>
                   <input
                     type="number"
-                    disabled={pendingStatus}
+                    disabled={pendingStatus || currentSemester !== classInfo.semester}
                     value={midtermPBAGradePercentage || ""}
                     onChange={(e) => setmidtermPBAGradePercentage(e.target.value)}
                     style={{ width: '60px' }}
@@ -3488,7 +3522,7 @@ const handlePercentageChange = (setter, value) => {
                 <th className='sticky-top-left-offset-168'>
                 <input
                   type="number"
-                  disabled={pendingStatus}
+                  disabled={pendingStatus || currentSemester !== classInfo.semester}
                   value={midtermTotalItems || ''}
                   onChange={(e) => setmidtermTotalItems(parseInt(e.target.value) || 0)} // Update total items
                   style={{ width: '60px' }}
@@ -3498,7 +3532,7 @@ const handlePercentageChange = (setter, value) => {
                   <th colSpan="2" className='sticky-top-left-offset-168'>
                     <input
                       type="number"
-                      disabled={pendingStatus}
+                      disabled={pendingStatus || currentSemester !== classInfo.semester}
                       value={midtermExamPercentage || ""}
                       onChange={(e) => setMidtermExamPercentage(e.target.value)}
                       style={{ width: '60px' }}
@@ -3547,7 +3581,7 @@ const handlePercentageChange = (setter, value) => {
                     {midtermAttendanceColumns.map((dateColumn, dateIndex) => (
                       <td key={dateColumn.id}>
                         <select
-                          disabled={!dateColumn?.date || pendingStatus}
+                          disabled={!dateColumn?.date || pendingStatus || currentSemester !== classInfo.semester}
                           value={dateColumn?.grade?.find((entry) => entry.studentNumber === student.studentNumber)?.status || "Select"}
                           onChange={(e) => {handleMidtermAttendanceChange(student.id, student.studentNumber, dateIndex, e.target.value);}}>
                           <option value="Select">Select</option>
@@ -3591,7 +3625,7 @@ const handlePercentageChange = (setter, value) => {
                       <td key={assignmentColumn.id}>
                         <input
                           type="number"
-                          disabled={pendingStatus}
+                          disabled={pendingStatus || currentSemester !== classInfo.semester}
                           style={{
                             width: '70px',
                             borderColor: invalidAssignmentScores[student.id]?.[assignmentIndex] ? 'red' : 'initial',
@@ -3630,7 +3664,7 @@ const handlePercentageChange = (setter, value) => {
                           type="number"
                           style={{ width: '70px' }}
                           placeholder="Score"
-                          disabled={!quizColumn?.max || pendingStatus}
+                          disabled={!quizColumn?.max || pendingStatus || currentSemester !== classInfo.semester}
                           value={quizColumn?.grade?.find((entry) => entry.studentNumber === student.studentNumber)?.score || ""}
                           onChange={(e) => {
                             const inputScore = parseFloat(e.target.value) || 0;
@@ -3665,7 +3699,7 @@ const handlePercentageChange = (setter, value) => {
                   {midtermRecitationColumns.map((recitationColumn, recitationIndex) => (
                       <td key={recitationColumn.id}>
                         <input
-                          disabled={pendingStatus}
+                          disabled={pendingStatus || currentSemester !== classInfo.semester}
                           type="number"
                           style={{
                             width: '70px',
@@ -3729,7 +3763,7 @@ const handlePercentageChange = (setter, value) => {
                   {midtermPBAColumns.map((PBAColumn, PBAIndex) => (
                       <td key={PBAColumn.id}>
                         <input
-                          disabled ={!PBAColumn.label || pendingStatus}
+                          disabled ={!PBAColumn.label || pendingStatus || currentSemester !== classInfo.semester}
                           type="number"
                           style={{
                             width: '70px',
@@ -3769,7 +3803,7 @@ const handlePercentageChange = (setter, value) => {
                     {/*MIDTERMS EXAM COMPONENT*/}
                     <td>
                     <input
-                      disabled={pendingStatus}
+                      disabled={pendingStatus || currentSemester !== classInfo.semester}
                       type="number"
                       style={{ width: '70px' }}
                       placeholder="Score"
@@ -3801,7 +3835,7 @@ const handlePercentageChange = (setter, value) => {
                     {/*REMARKS DROP-DOWN*/}
                     <td>
                       <select
-                        disabled={pendingStatus}
+                        disabled={pendingStatus || currentSemester !== classInfo.semester}
                         value={remarks[student.id] || autoRemarks} // Use manual selection or default to auto-calculated remarks
                         onChange={(e) => handleRemarksChange(student.id, e.target.value)}
                       >
@@ -3856,7 +3890,7 @@ const handlePercentageChange = (setter, value) => {
                   <div style={{ display: 'flex', alignItems: 'center' }}>
                   {index === finalsAttendanceColumns.length - 1 && ( // Show button only for the last column
                     <button
-                      disabled = {finalsAttendanceColumns.length === 1 || pendingStatus}
+                      disabled = {finalsAttendanceColumns.length === 1 || pendingStatus || currentSemester !== classInfo.semester}
                       onClick={() => removeAttendanceColumn(index, setfinalsAttendanceColumns, setfinalsAttendanceData)}
                       style={{ background: 'none', border: 'none', marginRight: '10px' }}
                     >
@@ -3864,7 +3898,7 @@ const handlePercentageChange = (setter, value) => {
                     </button>
                   )}
                   <DatePicker
-                    disabled={pendingStatus}
+                    disabled={pendingStatus || currentSemester !== classInfo.semester}
                     selected={column.date}
                     onChange={(date) => {
                       const formattedDate = date.toLocaleDateString('en-CA');
@@ -3879,7 +3913,7 @@ const handlePercentageChange = (setter, value) => {
   
                 <th rowSpan="3" style={{ background: '#d1e7dd', position: 'sticky',left: 0,top: 42,padding: '0px',zIndex: 1,boxShadow: '1px 0 0 rgba(0, 0, 0, 0.1)', }}>
                   <button
-                    disabled={finalsAttendanceColumns[finalsAttendanceColumns.length - 1]?.grade.length === 0 || pendingStatus}
+                    disabled={finalsAttendanceColumns[finalsAttendanceColumns.length - 1]?.grade.length === 0 || pendingStatus || currentSemester !== classInfo.semester}
                     onClick={() => addColumn(setfinalsAttendanceColumns)} style={{ background: 'none', border: 'none' }}>
                     <FontAwesomeIcon icon={faPlus} />
                   </button>
@@ -3888,7 +3922,7 @@ const handlePercentageChange = (setter, value) => {
                 <th colSpan="2" className='sticky-top-left'>No of Days</th>
                 <th colSpan="2" className='sticky-top-left'>
                   <input
-                    disabled={pendingStatus}
+                    disabled={pendingStatus || currentSemester !== classInfo.semester}
                     type="text"
                     style={{ width: '60px', marginLeft: '10px' }}
                     value={finalsTotalAttendanceDays}
@@ -3906,7 +3940,7 @@ const handlePercentageChange = (setter, value) => {
                     <div style={{ display: 'flex', alignItems: 'center' }}> 
                       {index === finalsQuizColumns.length - 1 && ( // Show button only for the last column
                         <button
-                          disabled = {finalsQuizColumns.length === 1 || pendingStatus}
+                          disabled = {finalsQuizColumns.length === 1 || pendingStatus || currentSemester !== classInfo.semester}
                           onClick={() => removeQuizColumn(index, setfinalsQuizColumns, setfinalsQuizScores, setfinalsQuizMaxScores)} 
                           style={{ background: 'none', border: 'none', marginRight: '5px' }} // Add margin-right for spacing
                         >
@@ -3916,7 +3950,7 @@ const handlePercentageChange = (setter, value) => {
                     <span>Quiz No. {index + 1}</span> 
                     </div>
                     <input
-                      disabled={pendingStatus}
+                      disabled={pendingStatus || currentSemester !== classInfo.semester}
                       type="number"
                       value={column.max || ""}
                       onChange={(e) => {
@@ -3935,7 +3969,7 @@ const handlePercentageChange = (setter, value) => {
                   ))}
                 <th rowSpan={2} style={{ background: '#d1e7dd', position: 'sticky',left: 0,top: 105,padding: '0px',zIndex: 1,boxShadow: '1px 0 0 rgba(0, 0, 0, 0.1)', }}>
                             <button
-                              disabled={finalsQuizColumns[finalsQuizColumns.length - 1]?.grade.length === 0 || pendingStatus}
+                              disabled={finalsQuizColumns[finalsQuizColumns.length - 1]?.grade.length === 0 || pendingStatus || currentSemester !== classInfo.semester}
                               onClick={addFinalQuizColumn} style={{ background: 'none', border: 'none' }}>
                               <FontAwesomeIcon icon={faPlus} />
                             </button>
@@ -3943,7 +3977,7 @@ const handlePercentageChange = (setter, value) => {
                       <th rowSpan={2} className='sticky-top-left-offset'>Total</th>
                       <th rowSpan={2} className='sticky-top-left-offset'>
                       <input
-                        disabled={pendingStatus}
+                        disabled={pendingStatus || currentSemester !== classInfo.semester}
                       type="number"
                       value={finalsQuizPercentage || ""}
                     onChange={(e) => setfinalsQuizPercentage(e.target.value)}
@@ -3957,7 +3991,7 @@ const handlePercentageChange = (setter, value) => {
                     <div style={{ display: 'flex', alignItems: 'center' }}>
                       {index === finalsPBAColumns.length - 1 && (
                         <button
-                          disabled = {finalsPBAColumns.length === 1 || pendingStatus}
+                          disabled = {finalsPBAColumns.length === 1 || pendingStatus || currentSemester !== classInfo.semester}
                           onClick={() => removeColumn(index, setfinalsPBAColumns)} 
                           style={{ background: 'none', border: 'none', marginRight: '8px' }} // Adjust margin as needed
                         >
@@ -3968,7 +4002,7 @@ const handlePercentageChange = (setter, value) => {
                     </div>
                   
                     <select
-                      disabled={pendingStatus}
+                      disabled={pendingStatus || currentSemester !== classInfo.semester}
                       style={{ marginTop: '20px' }}
                       value={column.label || "Select"}
                       onChange={(e) => { 
@@ -3990,7 +4024,7 @@ const handlePercentageChange = (setter, value) => {
                     ))}
                     <th rowSpan={2} style={{ background: '#d1e7dd', position: 'sticky',left: 0,top: 105,padding: '0px',zIndex: 1,boxShadow: '1px 0 0 rgba(0, 0, 0, 0.1)', }}>
                       <button 
-                        disabled={finalsPBAColumns[finalsPBAColumns.length - 1]?.grade.length === 0 || pendingStatus}
+                        disabled={finalsPBAColumns[finalsPBAColumns.length - 1]?.grade.length === 0 || pendingStatus || currentSemester !== classInfo.semester}
                         onClick={() => addColumn(setfinalsPBAColumns)} style={{ background: 'none', border: 'none' }}>
                         <FontAwesomeIcon icon={faPlus} />
                       </button>
@@ -4005,7 +4039,7 @@ const handlePercentageChange = (setter, value) => {
                 <th colSpan="1" className='sticky-top-left-offset-168'>A</th>
                 <th colSpan="2" className='sticky-top-left-offset-168'>
                   <input
-                    disabled={pendingStatus}
+                    disabled={pendingStatus || currentSemester !== classInfo.semester}
                     type="number"
                     value={finalsAttendancePercentage || ""}
                     onChange={(e) => setfinalsAttendancePercentage(e.target.value)}
@@ -4019,7 +4053,7 @@ const handlePercentageChange = (setter, value) => {
                     <div style={{ display: 'flex', alignItems: 'center' }}>
                     {index === finalsAssignmentColumns.length - 1 && (
                       <button
-                        disabled = {finalsAssignmentColumns.length === 1 || pendingStatus}
+                        disabled = {finalsAssignmentColumns.length === 1 || pendingStatus || currentSemester !== classInfo.semester}
                         onClick={() => removeAssignmentColumn(index, setfinalsAssignmentColumns, setfinalsAssignmentScores)} 
                         style={{ background: 'none', border: 'none', marginRight: '8px' }}
                       >
@@ -4033,7 +4067,7 @@ const handlePercentageChange = (setter, value) => {
 
                   <th style={{ background: '#d1e7dd', position: 'sticky',left: 0,top: 168,padding: '0px',zIndex: 1,boxShadow: '1px 0 0 rgba(0, 0, 0, 0.1)', }}>
                     <button
-                      disabled={finalsAssignmentColumns[finalsAssignmentColumns.length - 1]?.grade.length === 0 || pendingStatus}
+                      disabled={finalsAssignmentColumns[finalsAssignmentColumns.length - 1]?.grade.length === 0 || pendingStatus || currentSemester !== classInfo.semester}
                       onClick={() => addColumn(setfinalsAssignmentColumns)} style={{ background: 'none', border: 'none' }}>
                       <FontAwesomeIcon icon={faPlus} />
                     </button>
@@ -4042,7 +4076,7 @@ const handlePercentageChange = (setter, value) => {
                   {/* Use a `td` for the input field */}
                   <th className='sticky-top-left-offset-168'>
               <input
-                disabled={pendingStatus}
+                disabled={pendingStatus || currentSemester !== classInfo.semester}
                 type="number"
                 value={finalsAssignmentPercentage || ""}
                 onChange={(e) => setfinalsAssignmentPercentage(e.target.value)}
@@ -4055,7 +4089,7 @@ const handlePercentageChange = (setter, value) => {
                   <div style={{ display: 'flex', alignItems: 'center' }}>
                   {index === finalsRecitationColumns.length - 1 && (
                     <button
-                      disabled = {finalsRecitationColumns.length === 1 || pendingStatus}
+                      disabled = {finalsRecitationColumns.length === 1 || pendingStatus || currentSemester !== classInfo.semester}
                       onClick={() => removeAssignmentColumn(index, setfinalsRecitationColumns, setfinalsRecitationScores)} 
                       style={{ background: 'none', border: 'none', marginRight: '8px' }}
                     >
@@ -4068,7 +4102,7 @@ const handlePercentageChange = (setter, value) => {
                 ))}
                   <th style={{ background: '#d1e7dd', position: 'sticky',left: 0,top: 168,padding: '0px',zIndex: 1,boxShadow: '1px 0 0 rgba(0, 0, 0, 0.1)', }}>
                     <button
-                      disabled={finalsRecitationColumns[finalsRecitationColumns.length - 1]?.grade.length === 0 || pendingStatus}
+                      disabled={finalsRecitationColumns[finalsRecitationColumns.length - 1]?.grade.length === 0 || pendingStatus || currentSemester !== classInfo.semester}
                       onClick={() => addColumn(setfinalsRecitationColumns)} style={{ background: 'none', border: 'none' }}>
                       <FontAwesomeIcon icon={faPlus} />
                     </button>
@@ -4076,7 +4110,7 @@ const handlePercentageChange = (setter, value) => {
                   <th className='sticky-top-left-offset-168'>Total</th>
                   <th className='sticky-top-left-offset-168'>
                   <input
-                    disabled={pendingStatus}
+                    disabled={pendingStatus || currentSemester !== classInfo.semester}
                   type="number"
                   value={finalsRecitationPercentage || ""}
                   onChange={(e) => setfinalsRecitationPercentage(e.target.value)}
@@ -4089,7 +4123,7 @@ const handlePercentageChange = (setter, value) => {
       
                   <th className='sticky-top-left-offset-168'>
                     <input
-                      disabled={pendingStatus}
+                      disabled={pendingStatus || currentSemester !== classInfo.semester}
                       type="number"
                       value={finalsPBAGradePercentage || ""}
                       onChange={(e) => setfinalsPBAGradePercentage(parseFloat(e.target.value) || 0)}
@@ -4102,7 +4136,7 @@ const handlePercentageChange = (setter, value) => {
                   <th className='sticky-top-left-offset-168'>
                       <input
                         type="number"
-                        disabled={pendingStatus}
+                        disabled={pendingStatus || currentSemester !== classInfo.semester}
                         value={finalsTotalItems || ''}
                         onChange={(e) => setfinalsTotalItems(parseInt(e.target.value) || 0)}
                         style={{ width: '70px' }}
@@ -4111,7 +4145,7 @@ const handlePercentageChange = (setter, value) => {
                   </th>
                     <th colSpan="2" className='sticky-top-left-offset-168'>
                       <input
-                        disabled={pendingStatus}
+                        disabled={pendingStatus || currentSemester !== classInfo.semester}
                         type="number"
                         value={finalsExamPercentage || ""}
                         onChange={(e) => setfinalsExamPercentage(e.target.value)}
@@ -4159,7 +4193,7 @@ const handlePercentageChange = (setter, value) => {
                     {finalsAttendanceColumns.map((dateColumn, dateIndex) => (
                       <td key={dateColumn.id}>
                         <select
-                          disabled={!dateColumn?.date || pendingStatus}
+                          disabled={!dateColumn?.date || pendingStatus || currentSemester !== classInfo.semester}
                           value={dateColumn?.grade?.find((entry) => entry.studentNumber === student.studentNumber)?.status || "Select"}
                           onChange={(e) => {handleFinalsAttendanceChange(student.id, student.studentNumber, dateIndex, e.target.value);}}>
                           <option value="Select">Select</option>
@@ -4204,7 +4238,7 @@ const handlePercentageChange = (setter, value) => {
                     {finalsAssignmentColumns.map((assignmentColumn, assignmentIndex) => (//UNRESOLVED
                       <td key={assignmentColumn.id}>
                         <input
-                          disabled={pendingStatus}
+                          disabled={pendingStatus || currentSemester !== classInfo.semester}
                           type="number"
                           style={{
                             width: '70px',
@@ -4245,7 +4279,7 @@ const handlePercentageChange = (setter, value) => {
                           type="number"
                           style={{ width: '70px' }}
                           placeholder="Score"
-                          disabled={!quizColumn?.max || pendingStatus}
+                          disabled={!quizColumn?.max || pendingStatus || currentSemester !== classInfo.semester}
                           value={quizColumn?.grade?.find((entry) => entry.studentNumber === student.studentNumber)?.score || ""}
                           onChange={(e) => {
                             const inputScore = parseFloat(e.target.value) || 0;
@@ -4278,7 +4312,7 @@ const handlePercentageChange = (setter, value) => {
                     {finalsRecitationColumns.map((recitationColumn, recitationIndex) => (
                       <td key={recitationColumn.id}>
                         <input
-                          disabled={pendingStatus}
+                          disabled={pendingStatus || currentSemester !== classInfo.semester}
                           type="number"
                           style={{
                             width: '70px',
@@ -4339,7 +4373,7 @@ const handlePercentageChange = (setter, value) => {
                   {finalsPBAColumns.map((PBAColumn, PBAIndex) => (
                       <td key={PBAColumn.id}>
                         <input
-                          disabled ={!PBAColumn.label || pendingStatus}
+                          disabled ={!PBAColumn.label || pendingStatus || currentSemester !== classInfo.semester}
                           type="number"
                           style={{
                             width: '70px',
@@ -4376,7 +4410,7 @@ const handlePercentageChange = (setter, value) => {
                     {/*FINALS EXAM COMPONENT*/}
                   <td>
                     <input
-                      disabled={pendingStatus}
+                      disabled={pendingStatus || currentSemester !== classInfo.semester}
                       type="number"
                       value={finalsExamScores[student.id]?.score || ''}  // Ensure score is either the current value or an empty string
                       style={{ width: '70px' }}
@@ -4405,7 +4439,7 @@ const handlePercentageChange = (setter, value) => {
                       {/*REMARKS DROP-DOWN*/}
                       <td>
                         <select
-                          disabled={pendingStatus}
+                          disabled={pendingStatus || currentSemester !== classInfo.semester}
                           value={remarks[student.id] || autoRemarks} // Use manual selection or default to auto-calculated remarks
                           onChange={(e) => handleRemarksChange(student.id, e.target.value)}
                         >
@@ -4713,8 +4747,9 @@ const handlePercentageChange = (setter, value) => {
 
       {/* Button Container */}
       <div className='d-flex justify-content-end mt-4 me-3 w-100'>
-        <Button 
-          disabled={pendingStatus}
+        {currentAcademicYear && currentAcademicYear.academicYear === classInfo.academicYear && (
+          <Button 
+          disabled={pendingStatus || currentSemester !== classInfo.semester}
           style={{
             backgroundColor: '#004d00',
             color: 'white',
@@ -4722,12 +4757,14 @@ const handlePercentageChange = (setter, value) => {
             padding: '10px 20px',
             cursor: 'pointer',
           }}
-          onClick={handleSave} // Attach handler for Saving changes made in grades
+          onClick={() => handleSave('save')} // Attach handler for Saving changes made in grades
         >
           SAVE
         </Button>
+        )}
+        
         <Button
-          disabled={pendingStatus}
+          disabled={pendingStatus || currentSemester !== classInfo.semester}
           style={{
             backgroundColor: '#004d00',
             color: 'white',

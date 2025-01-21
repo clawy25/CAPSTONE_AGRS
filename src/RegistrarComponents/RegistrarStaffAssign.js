@@ -75,8 +75,14 @@ export default function RegistrarStaffAssign({ onBack }) {
         const programs = await ProgramModel.fetchAllPrograms();
         setPrograms(programs);
         const filteredProgrmByAcadYear = programs.filter(currentProgram => currentProgram.academicYear === filteredAcadYear.academicYear);
-        console.log(filteredProgrmByAcadYear);
-        setProgramNumbers(filteredProgrmByAcadYear);
+
+        // Removing duplicates based on 'programName'
+        const uniquePrograms = filteredProgrmByAcadYear.filter((program, index, self) =>
+          index === self.findIndex((p) => (
+              p.programName === program.programName
+          ))
+        );
+        setProgramNumbers(uniquePrograms);
       } catch (error) {
         console.error('Error fetching program numbers:', error);
       }
@@ -90,7 +96,17 @@ export default function RegistrarStaffAssign({ onBack }) {
 };
 
   const handleShowAdd = () => setShowAddModal(true);
-  const handleCloseAdd = () => setShowAddModal(false);
+  const handleCloseAdd = () => {
+    setFormData({
+      personnelNumber: '',
+      personnelNameFirst: '',
+      personnelNameMiddle: '',
+      personnelNameLast: '',
+      programNumber: '',
+      personnelType: '',
+    });
+    setShowAddModal(false)
+  };
 
   const handleShowEdit = (programHead, index) => {
     seteditRegistrar({
@@ -124,22 +140,106 @@ export default function RegistrarStaffAssign({ onBack }) {
     personnelType: '',
   });
 
+  const generateNextPersonnelNumber = (personnelType) => {
+    if (personnelType) {
+      const personnelNumbers = filteredPersonnel.map(personnel => personnel.personnelNumber);
+      console.log(personnelNumbers);
+  
+      const year = currentAcadYear.split('-')[0];
+      let typeNum;
+  
+      // Determine the personnel type number
+      switch (personnelType) {
+        case 'Admin':
+          typeNum = 0;
+          break;
+        case 'Registrar':
+          typeNum = 1;
+          break;
+        case 'Head':
+          typeNum = 2;
+          break;
+        case 'Faculty':
+          typeNum = 3;
+          break;
+        default:
+          typeNum = 4;
+      }
+  
+      // Filter personnel numbers matching the current year and type
+      const matchingNumbers = personnelNumbers
+        .filter(num => {
+          const [numYear, numId, , numType] = num.split('-');
+          return numYear === year && parseInt(numType, 10) === typeNum;
+        })
+        .map(num => parseInt(num.split('-')[1], 10)); // Extract the nextNumber part
+  
+      // Determine the next available number
+      let nextNumber = 1;
+      if (matchingNumbers.length > 0) {
+        matchingNumbers.sort((a, b) => a - b); // Sort numbers in ascending order
+        for (let i = 1; i <= matchingNumbers.length; i++) {
+          if (matchingNumbers[i - 1] !== i) {
+            nextNumber = i; // Find the first missing number
+            break;
+          }
+        }
+        if (nextNumber === 1) {
+          nextNumber = matchingNumbers.length + 1; // If no gaps, take the next number
+        }
+      }
+  
+      return `${year}-${String(nextNumber).padStart(3, '0')}-PCC-${typeNum}`;
+    }
+  };
+  
+
 
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prevData) => ({
-      ...prevData,
-      [name]: value,
-    }));
+
+    if (name === 'personnelType'){
+      const newPersonnelNumber = generateNextPersonnelNumber(value);
+
+      setFormData((prevData) => ({
+        ...prevData,
+        ['personnelNumber']: newPersonnelNumber,
+        [name]: value
+      }));
+    } else {
+      setFormData((prevData) => ({
+        ...prevData,
+        [name]: value,
+      }));
+    }
   };
 
   const handleSubmit = async () => {
     try {
       setLoading(true); // Start loading
-      const formattedData = [formData]; // Wrap formData in an array
+      
+      const personnelProgram = programNumbers.filter(program => program.programNumber === Number(formData.programNumber));
+      console.log(personnelProgram);
+      
+      const updatedFormData = {
+        ...formData,
+        programNumber: Number(formData.programNumber),
+        personnelPassword: `${formData.programNumber}${formData.personnelNameLast.toLowerCase()}${personnelProgram[0].academicYear.split('-')[0]}`,
+        personnelSex: '',
+        personnelEmail: null,
+        personnelContact: null,
+        personnelBirthDate: null,
+        personnelAddress: '',
+        academicYear: personnelProgram[0].academicYear,
+      };
+
+      const formattedData = [updatedFormData];
       console.log('Submitting data:', formattedData);
+
+
       await PersonnelModel.insertPersonnel(formattedData);
+      fetchRegistrarStaff();
       console.log('Personnel added successfully');
       handleCloseAdd();
     } catch (error) {
@@ -212,7 +312,7 @@ export default function RegistrarStaffAssign({ onBack }) {
                         <input
                             type="text"
                             className="form-control p-2"
-                            placeholder="Search student..."
+                            placeholder="Search personnel..."
                             value={searchQuery}
                             onChange={handleSearch}
                         />
@@ -271,7 +371,7 @@ export default function RegistrarStaffAssign({ onBack }) {
             ) : (
               <tr>
                 <td colSpan="7" className="text-center text-italic">
-                  No Registrar Staff available
+                  No Personnels available
                 </td>
               </tr>
             )}
@@ -287,7 +387,7 @@ export default function RegistrarStaffAssign({ onBack }) {
       {/* Add Registrar Staff Modal */}
       <Modal show={showAddModal} onHide={handleCloseAdd} animation={false}>
       <Modal.Header closeButton>
-        <Modal.Title>Add Registrar Staff</Modal.Title>
+        <Modal.Title>Add Personnel</Modal.Title>
       </Modal.Header>
       <Modal.Body>
         <Form>
@@ -298,6 +398,7 @@ export default function RegistrarStaffAssign({ onBack }) {
               name="personnelNumber"
               value={formData.personnelNumber}
               onChange={handleChange}
+              disabled
             />
           </Form.Group>
           <Form.Group>
@@ -328,7 +429,7 @@ export default function RegistrarStaffAssign({ onBack }) {
             />
           </Form.Group>
           <Form.Group>
-            <Form.Label>Program Number</Form.Label>
+            <Form.Label>Program</Form.Label>
             <Form.Control
           as="select"
           name="programNumber"
@@ -351,6 +452,7 @@ export default function RegistrarStaffAssign({ onBack }) {
               value={formData.personnelType}
               onChange={handleChange}
             >
+            <option value="">Select Role</option>
             {personnelTypes.map((type, index) => (
             <option key={index} value={type}>
               {type}
@@ -364,7 +466,7 @@ export default function RegistrarStaffAssign({ onBack }) {
         <Button variant="secondary" onClick={handleCloseAdd}>
           Close
         </Button>
-        <Button variant="primary" onClick={handleSubmit}>
+        <Button variant="primary" onClick={handleSubmit} disabled={Object.values(formData).some(value => value === '')}>
         {loading ? 'Saving...' : 'Add Personnel'}
         </Button>
       </Modal.Footer>
@@ -407,6 +509,7 @@ export default function RegistrarStaffAssign({ onBack }) {
       <Form.Group>
         <Form.Label>Personnel Type</Form.Label>
         <Form.Control as="select" name="personnelType" value={editRegistrar.personnelType} onChange={handleEditInputChange}>
+          <option value="">Select Role</option>
           {personnelTypes.map((type) => (
             <option key={type} value={type}>
               {type}

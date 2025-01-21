@@ -23,6 +23,7 @@ export default function RegistrarStudents() {
     const [students, setStudents] = useState([]);
     const [programs, setPrograms] = useState([]);
     const [currentAcademicYear, setcurrentAcademicYear] = useState(null);
+    const [currentSemester, setCurrentSemester] = useState();
     const [selectedStudent, setSelectedStudent] = useState(null); 
     const [showModal, setShowModal] = useState(false);
     const [programName, setProgramName] = useState("");
@@ -153,7 +154,11 @@ export default function RegistrarStudents() {
             console.log(years);
     
             const currentYear = years.find((year) => year.isCurrent === true); 
-            console.log("Current year found:", currentYear);
+            const check = await TimelineModel.fetchTimelineByAcademicYear(currentYear.academicYear);
+            const highestSemester = check.reduce((max, row) => Math.max(max, row.semester), 0);
+
+            // Set the current semester based on the highest value found
+            setCurrentSemester(highestSemester || 1);
     
             setcurrentAcademicYear(currentYear); // Update state with current year
         } catch (error) {
@@ -245,11 +250,9 @@ export default function RegistrarStudents() {
             const newStudents = [];
             const timelineData = [];
 
-            const currentMonth = new Date().getMonth() + 1;
             const academicYear = currentAcademicYear.academicYear;
-            //const startYear = parseInt(academicYear.trim().split('-')[0]);
             const [currentYear, nextYear] = academicYear.trim().split('-').map(year => parseInt(year));
-            const semester = currentMonth >= 7 && currentMonth <= 12 ? 1 : 2;
+
 
             for (const row of data) {
                 let studentPassword;
@@ -342,7 +345,7 @@ export default function RegistrarStudents() {
                             academicYear: academicYear,
                             studentNumber: studentNumber,
                             yearLevel: studentYrLevel,
-                            semester: semester,
+                            semester: currentSemester,
                             startEnroll: new Date(),
                             endEnroll: null,
                             isRepeating: false,
