@@ -10,6 +10,7 @@ export default function ResetPassword() {
     const [success, setSuccess] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [accessToken, setAccessToken] = useState('');
+    console.log(accessToken);
 
     // Extract access token from URL query parameters
     useEffect(() => {
