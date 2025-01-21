@@ -676,12 +676,12 @@ export default function RegistrarIrregularStudents() {
                               </Dropdown.Toggle>
                               <Dropdown.Menu>
                               <Dropdown.Item onClick={() => handleEnrollmentClick(student)}>
-                                  Enrollment
+                                  Enroll Student
                               </Dropdown.Item>
                               
                               <Dropdown.Item onClick={() => handleTORClick(student)}>View TOR</Dropdown.Item>
                               <Dropdown.Item onClick={() => handleAcademicRecordClick(student)}>
-                                  Academic Record
+                                  View Prospectus
                               </Dropdown.Item>
 
                               
@@ -708,7 +708,7 @@ export default function RegistrarIrregularStudents() {
             {/* Academic Record Modal */}
             <Modal show={showAcademicRecordModal} size="xl" onHide={handleCloseAcademicRecordModal} animation={false}>
                 <Modal.Header closeButton>
-                    <Card.Title>Student Record</Card.Title>
+                    <Card.Title>Prospectus</Card.Title>
                 </Modal.Header>
                 <Modal.Body>
                    {loadingStudent ? (
@@ -717,41 +717,57 @@ export default function RegistrarIrregularStudents() {
             <p className="mt-3">Loading data, please wait...</p>
           </div>) :  selectedStudent ? (
                         <div>
-                            <h5>{selectedStudent.studentNameFirst} {selectedStudent.studentNameLast}</h5>
-                            <p><strong>Student Number:</strong> {selectedStudent.studentNumber}</p>
-                            <p><strong>Program:</strong> {selectedStudent.studentProgramNumber}</p>
-                            <p><strong>Admission Year:</strong> {selectedStudent.studentAdmissionYr}</p>
-                            <h6>Curriculum:</h6>
+                            <Row fluid className='d-flex w-100'>
+                            <Col fluid className='w-50 d-block'>
+                            <p className='fs-5'>
+                                <strong>Student Number:</strong> {selectedStudent.studentNumber}
+                            </p>
+                            <p className='fs-5'>
+                                <strong>Student Name:</strong>  {selectedStudent.studentNameFirst} {selectedStudent.studentNameLast}
+                            </p>
+                            
+
+                            </Col>
+                            <Col fluid className='w-50 d-block'>
+                            <p className='fs-5'>
+                                <strong>Program:</strong> {selectedStudent.studentProgramNumber}
+                            </p>
+                            <p className='fs-5'>
+                                <strong>Admission Year:</strong> {selectedStudent.studentAdmissionYr}
+                            </p>
+                            </Col>
+
+                            </Row>
                             {Object.keys(curriculum).length > 0 ? (
                                 <div>
                                     {Object.keys(curriculum).map((yearLevel) => (
                                         <div key={yearLevel}>
-                                            <h6>Year Level: {yearLevel}</h6>
+                                            <h4 className='text-success'>Year Level: {yearLevel}</h4>
                                             {Object.keys(curriculum[yearLevel]).map((semester) => (
                                                 <div key={semester}>
-                                                    <h6>Semester: {semester}</h6>
-                                                    <Table responsive striped bordered hover>
+                                                    <h5 className='text-success'>Semester: {semester}</h5>
+                                                    <Table responsive bordered hover>
                                                         <thead>
                                                             <tr>
-                                                                <th>Course Code</th>
-                                                                <th>Course Title</th>
-                                                                <th>Lecture Hours</th>
-                                                                <th>Lab Hours</th>
-                                                                <th>Units</th>
-                                                                <th>Grade</th>
-                                                                <th>Remarks</th>
+                                                                <th className='fs-6 text-center text-success custom-font text-center'>Course Code</th>
+                                                                <th className='fs-6 text-center text-success custom-font text-center'>Course Title</th>
+                                                                <th className='fs-6 text-center text-success custom-font text-center'>Lecture Hours</th>
+                                                                <th className='fs-6 text-center text-success custom-font text-center'>Lab Hours</th>
+                                                                <th className='fs-6 text-center text-success custom-font text-center'>Units</th>
+                                                                <th className='fs-6 text-center text-success custom-font text-center'>Grade</th>
+                                                                <th className='fs-6 text-center text-success custom-font text-center'>Remarks</th>
                                                             </tr>
                                                         </thead>
                                                         <tbody>
                                                             {curriculum[yearLevel][semester].map((course, index) => (
                                                                 <tr key={index}>
-                                                                    <td>{course.courseCode}</td>
-                                                                    <td>{course.courseDescriptiveTitle}</td>
-                                                                    <td>{course.courseLecture}</td>
-                                                                    <td>{course.courseLaboratory}</td>
-                                                                    <td>{(course.courseLecture + course.courseLaboratory) || 0}</td>
-                                                                    <td>{course.numEq}</td>
-                                                                    <td>{course.remarks}</td>
+                                                                    <td className='fs-6 texxt-center'>{course.courseCode}</td>
+                                                                    <td className='fs-6 texxt-center'>{course.courseDescriptiveTitle}</td>
+                                                                    <td className='fs-6 texxt-center'>{course.courseLecture}</td>
+                                                                    <td className='fs-6 texxt-center'>{course.courseLaboratory}</td>
+                                                                    <td className='fs-6 texxt-center'>{(course.courseLecture + course.courseLaboratory) || 0}</td>
+                                                                    <td className='fs-6 texxt-center'>{course.numEq}</td>
+                                                                    <td className='fs-6 texxt-center'>{course.remarks}</td>
                                                                 </tr>
                                                             ))}
                                                         </tbody>
