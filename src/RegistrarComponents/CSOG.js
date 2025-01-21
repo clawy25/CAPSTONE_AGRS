@@ -1154,7 +1154,7 @@ const MasterlistOfGradesTable = () => {
   
   return (
     <div>
-      <h2 className="custom-font custom-color-green-font mb-3 mt-2"> CSOG</h2>
+      <h2 className="custom-font custom-color-green-font mb-3 mt-2"> Consolidated Summary of Grades</h2>
       <Form className="p-3 mb-4 bg-white border border-success rounded">
       <Row className="align-items-center justify-content-between gx-3 gy-2">
       <Col sm={12} md={2} className='mb-3'>
