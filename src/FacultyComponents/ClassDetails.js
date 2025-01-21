@@ -4668,6 +4668,10 @@ const handlePercentageChange = (setter, value) => {
 
     return (
       <Container fluid className="bg-white pt-4 px-3 pb-3 rounded">
+        <div class="mt-4 mx-auto alert alert-warning text-center px-auto" role="alert">
+    <span className='fw-bold fs-6'>Note: </span> The class details page enables professors to record student performance, including attendance, quizzes, PBAs, midterms, and finals, with an automated grade sheet and summary.
+</div>
+
         <div
           className="buttons-container"
           style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}

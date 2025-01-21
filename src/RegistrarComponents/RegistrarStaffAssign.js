@@ -304,6 +304,10 @@ export default function RegistrarStaffAssign({ onBack }) {
   return (
    <Container fluid>
      <h2 className="custom-font custom-color-green-font mb-3 mt-2">Staff Management</h2>
+     <div class="mt-4 mx-auto alert alert-warning text-center px-auto" role="alert">
+    <span className='fw-bold fs-6'>Note: </span> The personnel management enables users to search for personnel based on criteria such as personnel number, name, program, or personnel type. The available search filters facilitate the efficient retrieval of relevant information.
+</div>
+
      <Container fluid className="bg-white rounded pt-2 pb-2">
      
         <Container fluid className="d-flex justify-content-start mt-4 mx-auto">

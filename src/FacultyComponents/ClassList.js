@@ -656,6 +656,9 @@ export default function ClassList() {
 </Row>
 </Form>
 
+<div class="mt-4 mx-auto alert alert-warning text-center px-auto" role="alert">
+    <span className='fw-bold fs-6'>Note: </span> The class list displays the list of students per course assigned to professors. This feature allows users to efficiently view and manage student assignments based on courses and instructors, ensuring accurate tracking and organization of academic records.
+</div>
 
 {/* Table and printable content */}
 
