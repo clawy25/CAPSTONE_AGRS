@@ -15,12 +15,20 @@ export default function ResetPassword() {
     // Extract access token from URL query parameters
     useEffect(() => {
         const queryParams = new URLSearchParams(location.search);
-        const token = decodeURIComponent(queryParams.get('access_token'));
-
-        const tokenParams = new URLSearchParams(location.search);
-        const tokenValue = tokenParams.get('token');
-        console.log('Access Token:', token);
-        setAccessToken(tokenValue || '');
+        const accessToken = queryParams.get('access_token'); // Extract the encoded URL
+        
+        if (accessToken) {
+            // Decode the URL to get the actual verification URL
+            const decodedURL = decodeURIComponent(accessToken);
+            console.log('Decoded URL:', decodedURL);
+    
+            // Extract the token from the decoded URL
+            const tokenParams = new URLSearchParams(new URL(decodedURL).search);
+            const token = tokenParams.get('token');
+            console.log('Extracted Token:', token);
+            
+            setAccessToken(token || ''); // Set the token to state
+        }
     }, [location]);
     
 
