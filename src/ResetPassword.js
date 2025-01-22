@@ -16,8 +16,11 @@ export default function ResetPassword() {
     useEffect(() => {
         const queryParams = new URLSearchParams(location.search);
         const token = decodeURIComponent(queryParams.get('access_token'));
+
+        const tokenParams = new URLSearchParams(location.search);
+        const tokenValue = tokenParams.get('token');
         console.log('Access Token:', token);
-        setAccessToken(token || '');
+        setAccessToken(tokenValue || '');
     }, [location]);
     
 
