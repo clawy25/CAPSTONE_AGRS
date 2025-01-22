@@ -37,10 +37,7 @@ router.post('/reset-password', async (req, res) => {
     try {
       // Decode and validate the token to get user ID
 
-      const decodedToken = decodeURIComponent(token);
-
-      console.log('Decoded Token:', decodedToken);
-      const { data: user, error: tokenError } = await supabase.auth.getUser(decodedToken);
+      const { data: user, error: tokenError } = await supabase.auth.getUser(token);
   
       if (tokenError || !user) {
         console.error('Token validation error:', tokenError);
@@ -62,7 +59,7 @@ router.post('/reset-password', async (req, res) => {
       console.error('Unexpected server error:', err);
       res.status(500).json({ error: 'Internal server error. Please try again later.' });
     }
-  });
+});
 
 
 module.exports = router;
