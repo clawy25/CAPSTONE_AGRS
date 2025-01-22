@@ -55,11 +55,7 @@ export default function FacultyPage() {
       setLoading(false);
       return;
     }
-    if (!/[A-Z]/.test(password)) {
-      setError('Password must contain at least one uppercase letter.');
-      setLoading(false);
-      return;
-    }
+
     
     //Debugging
     console.log('Account Number:', accountNumber);
