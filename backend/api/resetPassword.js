@@ -29,6 +29,9 @@ router.post('/set', async (req, res) => {
 
 router.post('/reset-password', async (req, res) => {
     const { token, newPassword } = req.body;
+
+    console.log(token);
+    console.log(newPassword);
   
     if (!token || !newPassword) {
       return res.status(400).json({ error: 'Token and new password are required.' });
@@ -38,6 +41,7 @@ router.post('/reset-password', async (req, res) => {
       // Decode and validate the token to get user ID
 
       const { data: user, error: tokenError } = await supabase.auth.getUser(token);
+      console.log("Decoded token:", user);
   
       if (tokenError || !user) {
         console.error('Token validation error:', tokenError);
