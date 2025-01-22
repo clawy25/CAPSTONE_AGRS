@@ -19,7 +19,43 @@ export default function FacultyPage() {
   const [currentImage, setCurrentImage] = useState('pccCover.png');
   const images = ['pccCover.png', 'pccCover1.png', 'pccCover2.png']; // list of images
   const timeLimit = 5000;
+  document.addEventListener("contextmenu", (event) => event.preventDefault());
+  let devtoolsOpen = false;
 
+  const checkDevTools = () => {
+      const widthThreshold = window.outerWidth - window.innerWidth > 200;
+      const heightThreshold = window.outerHeight - window.innerHeight > 200;
+  
+      if (widthThreshold || heightThreshold) {
+          if (!devtoolsOpen) {
+              devtoolsOpen = true;
+              alert("DevTools is open! Please close it to continue.");
+          }
+      } else {
+          devtoolsOpen = false;
+      }
+  };
+  
+  setInterval(checkDevTools, 500);
+  document.addEventListener("keydown", (event) => {
+    if (
+        event.key === "F12" || 
+        (event.ctrlKey && event.shiftKey && event.key === "I") || 
+        (event.ctrlKey && event.key === "U")
+    ) {
+        event.preventDefault();
+        alert("Developer tools access is disabled.");
+    }
+});
+(function() {
+  const originalConsoleLog = console.log;
+  console.log = function(...args) {
+      if (args.includes("DevTools")) {
+          throw new Error("Access to console is restricted.");
+      }
+      originalConsoleLog(...args);
+  };
+})();
   const handleForgotpassword = () => {
     navigate('/ForgotPassword');
   }

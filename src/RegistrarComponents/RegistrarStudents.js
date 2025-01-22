@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import '../App.css'; // Custom styling
-import {Spinner, Modal, Button, Table, Container} from 'react-bootstrap'
+import {Spinner, Modal, Button, Table, Container, Dropdown} from 'react-bootstrap'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSearch, faFileAlt, faCog, faFileSignature, faFilter } from '@fortawesome/free-solid-svg-icons'; // Import the icons you want to use
 import * as XLSX from 'xlsx';
@@ -12,6 +12,8 @@ import StudentModel from '../ReactModels/StudentModel';
 import TimelineModel from '../ReactModels/TimelineModel';
 import ProgramModel from '../ReactModels/ProgramModel';
 import AcademicYearModel from '../ReactModels/AcademicYearModel';
+import ScheduleModel from '../ReactModels/ScheduleModel';
+import PersonnelModel from '../ReactModels/PersonnelModel';
 import { UserContext } from '../Context/UserContext'; 
 
 export default function RegistrarStudents() {
@@ -26,17 +28,217 @@ export default function RegistrarStudents() {
     const [currentSemester, setCurrentSemester] = useState();
     const [selectedStudent, setSelectedStudent] = useState(null); 
     const [showModal, setShowModal] = useState(false);
+    const [showModalCog, setShowModalCog] = useState(false); 
     const [programName, setProgramName] = useState("");
     const currentDate = new Date();
+    const [isProcessing, setIsProcessing] = useState(false);
     const formattedDate = currentDate.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric'
     });
     const [groupedCourseDetails, setGroupedCourseDetails] = useState({});
+    const openModal = (student) => {
+      setShowModalCog(true);
+      setSelectedStudent(student);
+    };
+  
+    const closeModal = () => {
+      setShowModalCog(false);
+      setSelectedStudent(null);
+    };
+  
 
     const getAcademicYear = (studentAdmissionYr, yearIdx) => {
         return `${studentAdmissionYr + yearIdx}-${studentAdmissionYr + yearIdx + 1}`;
+      };
+
+      const handlePrintCOR = () => {
+        const contentElement = document.getElementById('modalContent');
+      
+        if (!contentElement) {
+          console.error("Modal content not found. Ensure the modal is open before printing.");
+          return;
+        }
+      
+        const content = contentElement.innerHTML;
+        const logoURL = '/pcc.png'; 
+      
+        const printWindow = window.open('', '', 'width=800,height=600');
+        printWindow.document.write(`
+          <html>
+            <head>
+              <title>Print COG</title>
+              <style>
+                @media print {
+                  @page {
+                    size: legal;
+                    margin: 0;
+                  }
+      
+                  body {
+                    margin: 0;
+                    font-family: Arial, sans-serif;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    transform: scale(0.90);
+                    transform-origin: center center;
+                    width: 100%;
+                    height: 100%;
+                  }
+      
+                  .tableContainer {
+                    display: block;
+                    width: 100%;
+                    padding: 50px;
+                  }
+      
+                  .modalContent {
+                    width: 100%;
+                    padding: 10px;
+                    box-sizing: border-box;
+                    margin-bottom: 20px;
+                    border: 1px solid #ccc;
+                    background: #fff;
+                    position: relative;
+                  }
+    
+                  .modalContent::before {
+                    content: '';
+                    position: absolute;
+                    top: 100;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background-image: url('${logoURL}'), url('${logoURL}'), url('${logoURL}'),
+                                      url('${logoURL}'), url('${logoURL}'), url('${logoURL}');
+                    background-position: 16% 16%, 50% 16%, 84% 16%, 
+                                        16% 50%, 50% 50%, 84% 50%; /* Centered positions for six logos */
+                    background-repeat: no-repeat;
+                    background-size: 100px 100px; /* Adjust size of each logo */
+                    opacity: 0.15; /* Low opacity for watermark */
+                    z-index: 0;
+                  }
+    
+    
+                  .modalContent {
+                    position: relative;
+                    width: 100%;
+                    padding: 10px;
+                    box-sizing: border-box;
+                    margin-bottom: 20px;
+                    border: 1px solid #ccc;
+                    background: #fff;
+                  }
+    
+                  .modalContent .label {
+                    position: absolute;
+                    top: 0;
+                    left: -30px; /* Adjust the left positioning if needed */
+                    height: 100%; /* Match the height of the modalContent */
+                    writing-mode: vertical-rl; /* Text flows vertically, right to left */
+                    text-orientation: mixed; /* Ensures text is readable (not upside down) */
+                    text-align: center;
+                    font-size: 1.2rem;
+                    font-weight: bold;
+                    text-transform: uppercase;
+                    background-color: green;
+                    color: white;
+                    padding: 10px 5px;
+                    border-radius: 5px 0 0 5px; /* Rounded corners for the right side */
+                    white-space: nowrap; /* Prevent text from wrapping */
+                    width: 30px; /* Smaller width for the label */
+                    box-sizing: border-box;
+                  }
+    
+                  .modalContent .tableContainer {
+                    margin-left: 10px; /* Add space to accommodate the label */
+                  }
+    
+    
+    
+    
+      
+                  .modalContent:first-of-type .label {
+                    content: "STUDENT'S COPY";
+                  }
+      
+                  .modalContent:nth-of-type(2) .label {
+                    content: "REGISTRAR'S COPY";
+                  }
+      
+                  .modalContent table {
+                    width: 100%;
+                    border-collapse: collapse;
+                  }
+      
+                  .modalContent th, .modalContent td {
+                    border: none;
+                  }
+      
+                  .modalContent .grading-system th,
+                  .modalContent .grading-system td { 
+                    font-size: 0.5em; 
+                    font-style: italic;
+                  }
+      
+                  .modalContent .table-upper td { 
+                    font-size: 0.7rem; 
+                  }
+      
+                  .modalContent .table-upper th {
+                    font-size: 0.9rem; 
+                  }
+      
+                  .modalContent .bottom-part-print .certify-statement, 
+                  .modalContent .bottom-part-print .college-registrar-center {
+                    text-align: center;
+                    font-size: 0.7rem;
+                  }
+      
+                  .modalContent .bottom-part-print .prepared-by{
+                    font-size: 0.7rem;
+                  }
+      
+                  .modalContent .grades-table th, .modalContent .grades-table td {
+                    border: 1px solid black;
+                    font-size: 0.7rem; 
+                  }
+      
+                  .broken-line {
+                    border: none;
+                    border-top: 2px dashed black;
+                    margin: 20px 0;
+                  }
+                }
+              </style>
+            </head>
+            <body>
+              <div class="tableContainer">
+                <div class="modalContent">
+                  <div class="label">STUDENT'S COPY</div>
+                  ${content}
+                </div>
+                <br>
+                <hr class="broken-line">
+                <br>
+                <div class="modalContent">
+                  <div class="label">REGISTRAR'S COPY</div>
+                  ${content}
+                </div>
+              </div>
+              <script>
+                window.onload = function() {
+                  window.print();
+                  window.close();
+                };
+              </script>
+            </body>
+          </html>
+        `);
+      
+        printWindow.document.close();
       };
 
       const handlePrint = () => {
@@ -236,9 +438,12 @@ export default function RegistrarStudents() {
             console.error('No file selected');
             return; // Exit if no file is selected
         }
+
+        setIsProcessing(true);
         const reader = new FileReader();
 
         reader.onload = async (event) => {
+          try {
             const binaryStr = event.target.result;
             const workbook = XLSX.read(binaryStr, { type: 'binary' });
             const sheetName = workbook.SheetNames[0];
@@ -392,6 +597,12 @@ export default function RegistrarStudents() {
                 await insertStudents(newStudents, timelineData);
                 await fetchExistingStudents();
             }
+          } catch (error) {
+            console.error("Error processing file:", error);
+        } finally {
+            // Reset processing status
+            setIsProcessing(false);
+        }
         };
 
         reader.readAsArrayBuffer(file);
@@ -434,96 +645,137 @@ export default function RegistrarStudents() {
         }
       };
       
+const fetchCourseDetails = async (studentNumber) => {
+  console.log("Fetching course details for Student:", studentNumber);
 
-    const fetchCourseDetails = async (studentNumber) => {
-        console.log("Fetching course details for Student:", studentNumber);
-      
-        // Validate input
-        if (!studentNumber) {
-          console.error("Student number is required.");
-          return;
-        }
-      
-        try {
-          // Step 1: Fetch all courses, enrollments, and grades in parallel
-          const [allCourses, allEnrollments] = await Promise.all([
-            CourseModel.fetchAllCourses(),
-            EnrollmentModel.fetchAllEnrollment(),
-          ]);
-      
-          console.log("Fetched courses and enrollments");
-      
-          // Step 2: Filter enrollments for the given student
-          const studentEnrollments = allEnrollments.filter(
-            (enrollment) => String(enrollment.studentNumber) === String(studentNumber)
-          );
-      
-          if (studentEnrollments.length === 0) {
-            console.log(`No enrollments found for student ${studentNumber}`);
-            return;
-          }
-      
-          console.log(`Filtered ${studentEnrollments.length} enrollments for student ${studentNumber}`);
-      
-          // Step 3: Create an index of enrollments by courseCode for quick lookup
-          const enrollmentIndex = studentEnrollments.reduce((acc, enrollment) => {
-            acc[enrollment.courseCode] = enrollment.scheduleNumber;
-            return acc;
-          }, {});
-      
-          console.log("Created enrollment index");
-      
-          // Step 4: Map through courses and fetch grades and curriculum info
-          const courseDetailsPromises = allCourses.map(async (course) => {
-            const { courseCode, courseDescriptiveTitle, academicYear, courseSemester, courseLecture, courseLaboratory } = course;
-            const scheduleNumber = enrollmentIndex[courseCode];
-      
-            if (!scheduleNumber) {
-              console.log(`No scheduleNumber found for courseCode: ${courseCode}`);
-              return null;
-            }
-      
-            // Fetch semGrade data for this course's schedule
-            const semGradeData = await fetchSemGrade(scheduleNumber, studentNumber);
-            const numEq = semGradeData?.numEq || "N/A";
-            const remarks = semGradeData?.remarks || "N/A";
-      
-            // Add course details to return object, including numEq and credits (if available)
-            return {
-              courseCode,
-              courseDescriptiveTitle,
-              academicYear,
-              courseSemester,
-              numEq,
-              remarks,
-              credits: courseLecture + courseLaboratory || "N/A",  // Assuming the course has a 'credits' property
-            };
-          });
-      
-          // Step 5: Resolve all promises and filter out nulls
-          const resolvedCourseDetails = (await Promise.all(courseDetailsPromises)).filter(Boolean);
-      
-          console.log("Resolved course details:", resolvedCourseDetails);
-      
-          // Step 6: Group courses by academicYear and courseSemester
-          const groupedCourseDetails = resolvedCourseDetails.reduce((acc, course) => {
-            const { academicYear, courseSemester } = course;
-      
-            acc[academicYear] = acc[academicYear] || {};
-            acc[academicYear][courseSemester] =
-              acc[academicYear][courseSemester] || [];
-            acc[academicYear][courseSemester].push(course);
-      
-            return acc;
-          }, {});
-      
-          console.log("Grouped Course Details:", groupedCourseDetails);
-      
-          return groupedCourseDetails;
-        } catch (error) {
-          console.error("Failed to fetch course details:", error);
-        }
+  if (!studentNumber) {
+    console.error("Student number is required.");
+    return;
+  }
+
+  try {
+    // Step 1: Fetch all courses, enrollments, schedules, and program data in parallel
+    const [allCourses, allEnrollments, allSchedules, programData] = await Promise.all([
+      CourseModel.fetchAllCourses(),
+      EnrollmentModel.fetchAllEnrollment(),
+      ScheduleModel.fetchSchedules(),
+      ProgramModel.fetchAllPrograms(),
+    ]);
+
+    console.log("Fetched courses, enrollments, schedules, and program data");
+
+    // Step 2: Filter enrollments for the given student
+    const studentEnrollments = allEnrollments.filter(
+      (enrollment) => String(enrollment.studentNumber) === String(studentNumber)
+    );
+
+    if (studentEnrollments.length === 0) {
+      console.log(`No enrollments found for student ${studentNumber}`);
+      return;
+    }
+
+    console.log(`Filtered ${studentEnrollments.length} enrollments for student ${studentNumber}`);
+
+    // Step 3: Create an index of enrollments by courseCode for quick lookup
+    const enrollmentIndex = studentEnrollments.reduce((acc, enrollment) => {
+      acc[enrollment.courseCode] = enrollment.scheduleNumber;
+      return acc;
+    }, {});
+
+    console.log("Created enrollment index");
+
+    // Step 4: Map through courses and fetch additional details
+    const courseDetailsPromises = allCourses.map(async (course) => {
+      const {
+        courseCode,
+        courseDescriptiveTitle,
+        academicYear,
+        courseSemester,
+        courseLecture,
+        courseLaboratory,
+        programNumber, // Add programNumber from course
+      } = course;
+
+      const scheduleNumber = enrollmentIndex[courseCode];
+
+      if (!scheduleNumber) {
+        console.log(`No scheduleNumber found for courseCode: ${courseCode}`);
+        return null;
+      }
+
+      // Fetch semGrade data for this course's schedule
+      const semGradeData = await fetchSemGrade(scheduleNumber, studentNumber);
+      const numEq = semGradeData?.numEq || "N/A";
+      const remarks = semGradeData?.remarks || "N/A";
+
+      // Fetch schedule details for this course's scheduleNumber
+      const scheduleData = allSchedules.find(
+        (schedule) => schedule.scheduleNumber === scheduleNumber
+      );
+
+      if (!scheduleData) {
+        console.log(`No schedule found for scheduleNumber: ${scheduleNumber}`);
+        return null;
+      }
+
+      const { scheduleDay, startTime, endTime, personnelNumber, sectionNumber } = scheduleData;
+
+      // Fetch personnel details to get initials
+      const personnel = await PersonnelModel.getProfessorByPersonnelNumber(personnelNumber);
+      const personnelNameFirst = personnel?.firstName || "";
+      const personnelNameLast = personnel?.lastName || "";
+      const personnelInitials = `${personnelNameFirst.charAt(0)}. ${personnelNameLast.charAt(0)}.`.toUpperCase();
+
+      // Find the program title based on programNumber
+      const programDetails = programData.find((program) => program.programNumber === programNumber);
+      const programDescriptiveTitle = programDetails?.programDescriptiveTitle || "N/A";
+
+      // Add course details to return object
+      return {
+        courseCode,
+        courseDescriptiveTitle,
+        academicYear,
+        courseSemester,
+        numEq,
+        remarks,
+        credits: courseLecture + courseLaboratory || "N/A",
+        scheduleDay,
+        startTime,
+        endTime,
+        personnelInitials,
+        sectionNumber,
+        programNumber,
+        programName, // Include program title
       };
+    });
+
+    // Step 5: Resolve all promises and filter out nulls
+    const resolvedCourseDetails = (await Promise.all(courseDetailsPromises)).filter(Boolean);
+
+    console.log("Resolved course details:", resolvedCourseDetails);
+
+    // Step 6: Group courses by academicYear and courseSemester
+    const groupedCourseDetails = resolvedCourseDetails.reduce((acc, course) => {
+      const { academicYear, courseSemester } = course;
+
+      acc[academicYear] = acc[academicYear] || {};
+      acc[academicYear][courseSemester] =
+        acc[academicYear][courseSemester] || [];
+      acc[academicYear][courseSemester].push(course);
+
+      return acc;
+    }, {});
+
+    console.log("Grouped Course Details:", groupedCourseDetails);
+
+    return groupedCourseDetails;
+  } catch (error) {
+    console.error("Failed to fetch course details:", error);
+  }
+};
+
+      
+      
     
     
     // Modify the generateNextStudentNumber function to accept a year parameter
@@ -672,7 +924,7 @@ console.log('Filtered Students:', filteredStudents);
                 {/* Upper right: Import Student Classlist button */}
                 <div className="mb-2 mb-md-0 w-100 w-md-auto mx-md-2">
                     <button className="btn btn-success custom-font w-100 w-md-50" onClick={() => document.querySelector('input[type="file"]').click()}>
-                        <FontAwesomeIcon icon={faFileAlt} /> Import Students {/* Font Awesome file icon */}
+                        <FontAwesomeIcon icon={faFileAlt} /> {isProcessing ? 'Processing' : 'Import Students'} {/* Font Awesome file icon */}
                     </button>
                     <input 
                         type="file" 
@@ -721,10 +973,26 @@ console.log('Filtered Students:', filteredStudents);
                                                {student.studentType}
                                                 </td>
                                                 <td className='d-flex align-itmes-cneter justify-content-center'>
-                                                    
-                                                    <button className="btn btn-success btn-sm" onClick={() => handleTORClick(student)}>
-                                                        <FontAwesomeIcon icon={faFileSignature} /> View TOR {/* Font Awesome signature icon */}
-                                                    </button>
+                                                <Dropdown align="end" className='h-100 w-100 '>
+                              <Dropdown.Toggle
+                              variant="link"
+                              className="p-0 border-0"
+                              style={{ color: '#000' }}
+                              >
+                              <i className="fas fa-ellipsis-v"></i>
+                              </Dropdown.Toggle>
+                              <Dropdown.Menu>
+                              <Dropdown.Item onClick={() => handleTORClick(student)}>
+                              View TOR
+                              </Dropdown.Item>
+                              
+                              <Dropdown.Item onClick={() => openModal(student)}>View COR</Dropdown.Item>
+                          
+
+                              
+                              </Dropdown.Menu>
+                          </Dropdown>
+                                                   
                                                 </td>
                                             </tr>
                                         );
@@ -737,6 +1005,286 @@ console.log('Filtered Students:', filteredStudents);
                     </div>
                 </div>
             </section>
+
+
+                   {/* Modal for COG */}
+       <Modal show={showModalCog} onHide={closeModal} className="modal-xxl" centered animation={false} >
+        <Modal.Header closeButton>
+        <FontAwesomeIcon icon="certificate" style={{ marginRight: '8px' }} />
+          <Modal.Title className='custom-color-green-font'>Certificate of Registration</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+        <div id="modalContent">
+        <div className="d-flex justify-content-center">
+          <table
+            className="header-logo"
+            style={{
+              width: '100%',
+              maxWidth: '500px',
+              marginLeft: '100px',
+              marginRight: '100px',
+              paddingLeft: '200px',
+            }}
+          >
+          <tbody>
+            <tr>
+              {/* Logo Section */}
+              <td
+                style={{
+                  width: '80px',
+                  textAlign: 'center',
+                  verticalAlign: 'middle',
+                  padding: '0',
+                  margin: '0',
+                }}
+              >
+                <img
+                  src="/pcc.png"
+                  alt="Logo"
+                  className="img-fluid"
+                  style={{
+                    width: '70px',
+                    margin: '0',
+                  }}
+                />
+              </td>
+
+              {/* Text Section */}
+              <td
+                style={{
+                  textAlign: 'left',
+                  verticalAlign: 'middle',
+                  color: '#07770b', // Set text color to green
+                }}
+              >
+                <p
+                  className="fw-bold text-uppercase mb-0"
+                  style={{
+                    fontSize: '0.8rem',
+                    lineHeight: '1.2',
+                    margin: '0',
+                    padding: '0',
+                  }}
+                >
+                  Parañaque City <br />
+                  <span
+                    style={{
+                      fontSize: '1.5rem',
+                      fontWeight: 'bold',
+                      margin: '0',
+                      padding: '0',
+                    }}
+                  >
+                    College
+                  </span>
+                </p>
+              </td>
+
+              {/* Contact Information Section */}
+              <td
+                style={{
+                  verticalAlign: 'middle',
+                  borderLeft: '2px solid #07770b', // Set vertical line color to green
+                  paddingLeft: '10px', // Adjust this to control the space between the line and text
+                  marginLeft: '0',
+                  paddingRight: '0',
+                  color: '#07770b', // Set text color to green
+                }}
+              >
+                <p
+                  className="mb-0"
+                  style={{
+                    fontSize: '0.7rem',
+                    lineHeight: '1',
+                  }}
+                >
+                  <i
+                    className="fas fa-map-marker-alt"
+                    style={{ marginRight: '5px', color: '#07770b' }}
+                  ></i>
+                  Coastal Rd., cor. Victor Medina Street <br />
+                  <span style={{ paddingLeft: '14px' }}>
+                    San Dionisio, Parañaque City, Philippines
+                  </span>
+                </p>
+
+                <p
+                  className="mb-0"
+                  style={{
+                    fontSize: '0.7rem',
+                    lineHeight: '1',
+                  }}
+                >
+                  <i
+                    className="fas fa-envelope"
+                    style={{ marginRight: '5px', color: '#07770b' }}
+                  ></i>
+                  info@parañaquecitycollege.edu.ph
+                </p>
+                <p
+                  className="mb-0"
+                  style={{
+                    fontSize: '0.7rem',
+                    lineHeight: '1',
+                  }}
+                >
+                  <i
+                    className="fas fa-phone-alt"
+                    style={{ marginRight: '5px', color: '#07770b' }}
+                  ></i>
+                  (02) 85343321
+                </p>
+              </td>
+            </tr>
+          </tbody>
+
+
+          </table>
+          {/* Add the external stylesheet in the <head> of your HTML or as a global import */}
+          <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
+          />
+        </div>
+        <hr/>
+ <Table className="border-white table-upper">
+        <thead style={{textAlign: 'center' }}>
+          <tr>
+            <th colSpan="6" className="fs-5 text-center">OFFICE OF THE COLLEGE REGISTRAR</th>
+          </tr>
+          <tr>
+            <th colSpan="6" className="fs-4 text-center">CERTIFICATE OF REGISTRATION</th>
+          </tr>
+        </thead>
+        <tbody>
+  <tr>
+    <td className="fs-6 fw-bold" style={{ fontWeight: 'bold' }}>FULL NAME:</td>
+    <td className="fs-6">
+      {selectedStudent ? `${selectedStudent.studentNameLast}, ${selectedStudent.studentNameFirst} ${selectedStudent.studentNameMiddle}` : ""}
+    </td>
+    <td></td>
+    <td></td>
+    <td className="fs-6 fw-bold" style={{ fontWeight: 'bold' }}>SCHOOL YEAR:</td>
+    <td className="fs-6">{Object.keys(groupedCourseDetails)[0] || "(ACADEMIC)"}</td>
+  </tr>
+  <tr>
+    <td className="fs-6 fw-bold" style={{ fontWeight: 'bold' }}>STUDENT ID N#.:</td>
+    <td className="fs-6">
+      {selectedStudent ? selectedStudent.studentNumber : "(Student Number of the Student)"}
+    </td>
+    <td className="fs-6 fw-bold" style={{ fontWeight: 'bold' }}>SEX:</td>
+    <td className="fs-6">{selectedStudent ? selectedStudent.studentSex : ""}</td>
+    <td className="fs-6 fw-bold" style={{ fontWeight: 'bold' }}>SEMESTER:</td>
+    <td className="fs-6">
+      {Object.keys(groupedCourseDetails).length > 0
+        ? Object.keys(groupedCourseDetails[Object.keys(groupedCourseDetails)[0]])[0] || "(SEMESTER)"
+        : "(SEMESTER)"}
+    </td>
+  </tr>
+  <tr>
+    <td className="fs-6 fw-bold" style={{ fontWeight: 'bold' }}>PROGRAM:</td>
+  
+    <td>
+    {groupedCourseDetails && Object.keys(groupedCourseDetails).length > 0
+        ? groupedCourseDetails[Object.keys(groupedCourseDetails)[0]][
+            Object.keys(groupedCourseDetails[Object.keys(groupedCourseDetails)[0]])[0]
+          ][0]?.programName || ""
+        : ""}
+    </td>
+    <td colSpan="2"></td>
+    
+    <td className="fs-6 fw-bold" style={{ fontWeight: 'bold' }}>YEAR LEVEL & SECTION:</td>
+    <td className="fs-6" style={{ fontWeight: 'bold' }}>
+      {groupedCourseDetails && Object.keys(groupedCourseDetails).length > 0
+        ? groupedCourseDetails[Object.keys(groupedCourseDetails)[0]][
+            Object.keys(groupedCourseDetails[Object.keys(groupedCourseDetails)[0]])[0]
+          ][0]?.sectionNumber || "(3-A)"
+        : "(3-A)"}
+    </td>
+  </tr>
+  <tr>
+    <td className="fs-6 fw-bold" style={{ fontWeight: 'bold' }}>PROGRAM CODE:</td>
+    <td className="fs-6">{selectedStudent ? selectedStudent.studentProgramNumber : ""}</td>
+    <td></td>
+    <td></td>
+    <td className="fs-6 fw-bold" style={{ fontWeight: 'bold' }}>ADMISSION STATUS:</td>
+    <td className="fs-6">{selectedStudent ? selectedStudent.studentType : ""}</td>
+  </tr>
+</tbody>
+
+
+      </Table>
+
+      {/* Grades Table */}
+      <Table bordered className="text-center border-black grades-table">
+      <thead style={{ backgroundColor: 'green', textAlign: 'center' }}>
+
+  <tr>
+    <th className="fs-6">COURSE CODE</th>
+    <th colSpan="2" className="fs-6">DESCRIPTION</th>
+    <th className="fs-6 text-center">UNITS <br /> LEC LAB</th>  {/* Adjusted for colspan */}
+    <th className="fs-6">TIME</th>
+    <th className="fs-6">DAY/S</th>
+    <th className="fs-6">ROOM</th>
+    <th className="fs-6">PROF. INITIAL</th>
+  </tr>
+</thead>
+
+<tbody style={{textAlign: 'center' }}>
+  {Object.keys(groupedCourseDetails).length > 0 ? (
+    Object.keys(groupedCourseDetails).map((academicYear, yearIndex) => (
+      Object.keys(groupedCourseDetails[academicYear]).map((semester, semIndex) => (
+        groupedCourseDetails[academicYear][semester].map((course, courseIndex) => (
+          <tr key={`${yearIndex}-${semIndex}-${courseIndex}`}>
+            <td className="fs-6">{course.courseCode}</td>
+            <td colSpan="2" className="fs-6">{course.courseDescriptiveTitle}</td>
+            <td className="fs-6">
+              {`${course.credits || 'N/A'}`}
+            </td>
+            <td className="fs-6">
+              {`${course.startTime || 'N/A'} - ${course.endTime || 'N/A'}`}
+            </td>
+            <td className="fs-6">{course.scheduleDay || 'N/A'}</td>
+            <td className="fs-6">{course.room || 'N/A'}</td>
+            <td className="fs-6">{course.personnelInitials || 'N/A'}</td>
+          </tr>
+        ))
+      ))
+    ))
+  ) : (
+    <tr>
+      <td colSpan="7" className="fs-6">No data available</td>
+    </tr>
+  )}
+
+
+  {/* Registrar Evaluator/Print Row */}
+  <tr>
+    <td className='fs-6'>Registrar Evaluator/Print:</td>
+    <td colSpan="2" className='fs-6' style={{textAlign: 'left'}}>{`${user.personnelNameFirst} ${user.personnelNameMiddle} ${user.personnelNameLast}`}</td>
+    <td  className="fs-6">Total Unit {Object.keys(groupedCourseDetails).reduce((total, academicYear) => {
+        return total + Object.keys(groupedCourseDetails[academicYear]).reduce((semesterTotal, semester) => {
+          return semesterTotal + groupedCourseDetails[academicYear][semester].reduce((courseTotal, course) => {
+            return courseTotal + (parseFloat(course.credits) || 0); // Add up credits for each course
+          }, 0);
+        }, 0);
+      }, 0).toFixed(2)}</td>
+    <td className="fs-6 text-right">Date</td>
+    <td colSpan={3}></td>
+  </tr>
+</tbody>
+
+</Table>
+
+
+         </div>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={closeModal}>Close</Button>
+          <Button variant="primary" onClick={handlePrintCOR}>Download COR</Button>
+        </Modal.Footer>
+
+      </Modal>
 
             <Modal show={showModal} onHide={handleCloseModal} size="xl"  className="custom-modal-width" animation={false}>
         <Modal.Header closeButton>

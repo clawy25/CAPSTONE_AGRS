@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useContext } from 'react';
 import { Link, useNavigate, Routes, Route, useLocation } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUser, faUserTie, faGraduationCap, faBars, faChalkboardTeacher, faChevronDown, faChevronUp, faTable, faClipboardList } from '@fortawesome/free-solid-svg-icons'; // Import the necessary icons
+import { faUser, faUserTie, faGraduationCap, faSchool,faClock, faBars, faUserClock, faChalkboardTeacher, faChevronDown, faChevronUp, faTable, faClipboardList } from '@fortawesome/free-solid-svg-icons'; // Import the necessary icons
 import HeadRegistrarAcademicYear from './HeadRegistrarAcademicYear';
 import RegistrarStudents from './RegistrarStudents';
 import RegistrarGrades from './RegistrarGrades';
@@ -25,7 +25,46 @@ export default function RegistrarDashboard() {
   const [showStudentsSubMenu, setShowStudentsSubMenu] = useState(false); // State for showing Sections submenu
   const dropdownRef = useRef(null);
   const location = useLocation();
+/** 
+  document.addEventListener("contextmenu", (event) => event.preventDefault());
+  let devtoolsOpen = false;
 
+  const checkDevTools = () => {
+      const widthThreshold = window.outerWidth - window.innerWidth > 200;
+      const heightThreshold = window.outerHeight - window.innerHeight > 200;
+  
+      if (widthThreshold || heightThreshold) {
+          if (!devtoolsOpen) {
+              devtoolsOpen = true;
+              alert("DevTools is open! Please close it to continue.");
+          }
+      } else {
+          devtoolsOpen = false;
+      }
+  };
+  
+  setInterval(checkDevTools, 500);
+  document.addEventListener("keydown", (event) => {
+    if (
+        event.key === "F12" || 
+        (event.ctrlKey && event.shiftKey && event.key === "I") || 
+        (event.ctrlKey && event.key === "U")
+    ) {
+        event.preventDefault();
+        alert("Developer tools access is disabled.");
+    }
+});
+(function() {
+  const originalConsoleLog = console.log;
+  console.log = function(...args) {
+      if (args.includes("DevTools")) {
+          throw new Error("Access to console is restricted.");
+      }
+      originalConsoleLog(...args);
+  };
+})();
+
+*/
   //On loading the page
   useEffect(() => {
     if (!user) {
@@ -88,7 +127,7 @@ export default function RegistrarDashboard() {
           if (window.innerWidth <= 768) setShowSidebar(false); // Close sidebar on mobile
         }}
       >
-        <FontAwesomeIcon icon={faUser} className="me-2" />
+        <FontAwesomeIcon icon={faSchool} className="me-2" />
         STUDENTS
         <FontAwesomeIcon icon={showStudentsSubMenu ? faChevronUp : faChevronDown} className="ms-auto" />
       </div>
@@ -108,7 +147,7 @@ export default function RegistrarDashboard() {
             className={`submenu-item d-flex align-items-center mb-2 ${location.pathname === '/registrar-dashboard/irregular-students' ? 'active' : ''}`}
             onClick={() => { if (window.innerWidth <= 768) setShowSidebar(false); }}
           >
-            <FontAwesomeIcon icon={faTable} className="me-2" />
+           <FontAwesomeIcon icon={faUserClock} className='me-2'/>
             IRREGULAR
           </Link>
         </div>
@@ -171,7 +210,7 @@ export default function RegistrarDashboard() {
               if (window.innerWidth <= 768) setShowSidebar(false);
             }}
           >
-            <FontAwesomeIcon icon={faUserTie} className="me-2" />
+            <FontAwesomeIcon icon={faClock} className="me-2" />
             ACADEMIC YEAR
           </Link>
         </>
@@ -184,7 +223,7 @@ export default function RegistrarDashboard() {
         <header className="header d-flex justify-content-between align-items-center p-3 border-bottom rounded">
           <h1 className="m-0 custom-color-green-font custom-font d-none d-md-block">REGISTRAR</h1>
           <button className="btn btn-link custom-color-green-font d-md-none" onClick={toggleSidebar} aria-label="Toggle Sidebar">
-            <FontAwesomeIcon icon={faBars} size="lg" />
+            <FontAwesomeIcon icon={faBars} size="lg" /> 
           </button>
 
           <div className="user-info d-flex align-items-center position-relative" ref={dropdownRef}>

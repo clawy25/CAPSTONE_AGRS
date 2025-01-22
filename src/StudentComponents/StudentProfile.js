@@ -144,7 +144,7 @@ export default function StudentProfile() {
               <td>Email Address</td>
               <td>
                 <Form.Control
-                  type="text"
+                  type="email"
                   value={editableStudentInfo.studentEmail || ''}
                   onChange={(e) => handleInputChange('studentEmail', e.target.value)}
                   className='fs-6 fw-semibold'
@@ -155,7 +155,7 @@ export default function StudentProfile() {
               <td>Mobile No.</td>
               <td>
                 <Form.Control
-                  type="text"
+                  type="number"
                   value={editableStudentInfo.studentContact || ''}
                   onChange={(e) => handleInputChange('studentContact', e.target.value)}
                   className='fs-6 fw-semibold'

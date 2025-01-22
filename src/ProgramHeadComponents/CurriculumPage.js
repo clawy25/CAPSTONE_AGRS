@@ -396,11 +396,7 @@ const CurriculumPage = () => {
               </Table>
             </Container>
             <Container fluid className="mt-3 mb-3">
-                <Col>
-                  <Button className="btn-success w-auto mb-3" onClick={handleAddCourse}>
-                    Add Course
-                  </Button>
-                </Col>
+               
               </Container>
             </Container>
           ) : (
@@ -418,9 +414,15 @@ const CurriculumPage = () => {
         <p className="fs-6 mb-4">
         Please ensure that all filters are applied or data is available to display.
         </p>
+
+        
       </div>
       )}
-
+ <Col>
+                  <Button className="btn-success w-auto mb-3 mt-3" onClick={handleAddCourse}>
+                    Add Course
+                  </Button>
+                </Col>
 
       {/* Modal for Add/Edit Course */}
       <Modal show={showModal} onHide={() => setShowModal(false)} animation={false}>

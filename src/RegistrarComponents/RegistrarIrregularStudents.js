@@ -1345,7 +1345,7 @@ style={{
                     fontSize: '0.8rem',
                   }}
                 >
-                  {course.numEq.toFixed(2) || '-'}
+                  {course.numEq || '-'}
                 </div>
               </React.Fragment>
             ))}

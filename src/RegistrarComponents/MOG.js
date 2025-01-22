@@ -283,34 +283,36 @@ const fetchCurriculum = async (programNumber, batchYear) => {
     setShowModalAlertView(false);
   }
   
-  const handleView = async () => {
-    if (programCode && batchYear) {
-      // Reset previous state
-      setSemestersData({});
-      setStudents([]);
-      setAcademicYears([]);
-      setLoading(true); 
-      try {
-        // Start loading indicator
+  useEffect(() => {
+    const handleView = async () => {
+      if (programCode && batchYear) {
+        // Reset previous state
+        setSemestersData({});
+        setStudents([]);
+        setAcademicYears([]);
+        setLoading(true); // Start loading indicator
   
-        // Fetch curriculum and students in parallel
-        await Promise.all([
-          fetchCurriculum(programCode, batchYear),
-          fetchStudentData(programCode, batchYear).then((filteredStudents) => {
-            setStudents(filteredStudents); // Update students data
-          }),
-        ]);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-        // Optionally, display an error modal or message
-      } finally {
-        setLoading(false); // Stop loading indicator after all fetches complete
-      }
-    } else {
-      setShowModalAlertView(true); // Show alert for missing inputs
-    }
-  };
+        try {
+          // Fetch curriculum and students in parallel
+          const [curriculumData, filteredStudents] = await Promise.all([
+            fetchCurriculum(programCode, batchYear),
+            fetchStudentData(programCode, batchYear),
+          ]);
   
+          // Update students and other states after fetching data
+          setStudents(filteredStudents);
+          // Optionally process curriculumData here if needed
+        } catch (error) {
+          console.error("Error fetching data:", error);
+          // Optionally display an error modal or message here
+        } finally {
+          setLoading(false); // Stop loading indicator after all fetches complete
+        }
+      } 
+    };
+  
+    handleView();
+  }, [programCode, batchYear]); 
 
   const handleProgramNameChange = (e) => {
     const selectedProgramName = e.target.value;
@@ -564,9 +566,9 @@ const fetchCurriculum = async (programNumber, batchYear) => {
       <Form className="p-3 mb-4 bg-white border border-success rounded">
       <Row className="align-items-center">
 
-      <Col xs={12} sm={6} md={2} lg={2}>
-          <Form.Group controlId="batchYear">
-            <Form.Label className="custom-color-green-font custom-font">
+      <Col sm={12} md={6} lg={3}>
+          <Form.Group  className='w-100' controlId="batchYear">
+            <Form.Label className="custom-color-green-font custom-font text-nowrap">
               Batch Year
             </Form.Label>
             <Form.Select
@@ -584,9 +586,9 @@ const fetchCurriculum = async (programNumber, batchYear) => {
 
           </Form.Group>
         </Col>
-        <Col xs={12} sm={6} md={2} lg={2}>
-          <Form.Group controlId="programName">
-            <Form.Label className="custom-color-green-font custom-font">Program Name</Form.Label>
+        <Col sm={12} md={6} lg={3}>
+          <Form.Group  className='w-100' controlId="programName">
+            <Form.Label className="custom-color-green-font custom-fon text-nowrapt">Program Name</Form.Label>
             <Form.Select 
               value={programName} 
               onChange={handleProgramNameChange} 
@@ -603,9 +605,9 @@ const fetchCurriculum = async (programNumber, batchYear) => {
           </Form.Group>
         </Col>
 
-        <Col xs={12} sm={6} md={2} lg={2}>
-        <Form.Group controlId="programCode">
-          <Form.Label className="custom-color-green-font custom-font">Program Code</Form.Label>
+        <Col sm={12} md={6} lg={3}>
+        <Form.Group  className='w-100' controlId="programCode">
+          <Form.Label className="custom-color-green-font custom-font text-nowrap">Program Code</Form.Label>
           <Form.Control 
             type="text"
             value={programCode}
@@ -618,12 +620,12 @@ const fetchCurriculum = async (programNumber, batchYear) => {
       </Col>
 
 
-        <Col xs={12} sm={6} md={6} lg={6}>
-          <Form.Group>
-            <Form.Label className="custom-color-green-font custom-font">Action</Form.Label>
+        <Col sm={12} md={6} lg={3}>
+          <Form.Group  className='w-100'>
+            <Form.Label className="custom-color-green-font custom-font text-nowrap">Action</Form.Label>
             <div className="d-flex">
-              <Button className="w-50 btn-success me-2" onClick={handleView}>View</Button>
-              <Button className="bg-white custom-color-green-font btn-outline-success w-50 me-2" onClick={downloadExcel}>Download Excel</Button>
+             
+              <Button className="text-white  w-100 btn-success" onClick={downloadExcel}>Download Excel</Button>
             </div>
           </Form.Group>
         </Col>

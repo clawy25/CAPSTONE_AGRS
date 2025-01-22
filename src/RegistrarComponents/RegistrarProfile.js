@@ -135,7 +135,7 @@ export default function RegistrarProfile() {
                         <td>Mobile No.</td>
                         <td>
                             <Form.Control
-                                type="text"
+                                type="number"
                                 value={editablePersonnelInfo.personnelContact || ''}
                                 onChange={(e) => handleInputChange('personnelContact', e.target.value)}
                                 className='fs-6 fw-semibold'
@@ -146,7 +146,7 @@ export default function RegistrarProfile() {
                         <td>Email Address</td>
                         <td>
                             <Form.Control
-                                type="text"
+                                type="email"
                                 value={editablePersonnelInfo.personnelEmail || ''}
                                 onChange={(e) => handleInputChange('personnelEmail', e.target.value)}
                                 className='fs-6 fw-semibold'
