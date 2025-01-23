@@ -28,42 +28,33 @@ router.post('/set', async (req, res) => {
 });
 
 router.post('/reset-password', async (req, res) => {
-    const { token, newPassword } = req.body;
+  const { token, newPassword } = req.body;
 
-    console.log(token);
-    console.log(newPassword);
-  
-    if (!token || !newPassword) {
-      return res.status(400).json({ error: 'Token and new password are required.' });
+  console.log('Token:', token);
+  console.log('New Password:', newPassword);
+
+  if (!token || !newPassword) {
+    return res.status(400).json({ error: 'Token and new password are required.' });
+  }
+
+  try {
+    // Update the user's password using the recovery token
+    const { data, error } = await supabase.auth.api.updateUser(token, {
+      password: newPassword,
+    });
+
+    if (error || !data) {
+      console.error('Error updating password:', error);
+      return res.status(400).json({ error: error.message });
     }
-  
-    try {
-      // Decode and validate the token to get user ID
-      const { data, error } = await supabase.auth.api.verifyOTP({
-        token: token,
-        type: 'recovery',
-      });
-      
-      if (error || !data) {
-        return res.status(400).json({ error: 'Invalid or expired token.' });
-      }
-  
-      // Update the user's password
-      const { error: updateError } = await supabase.auth.updateUser({
-        password: newPassword,
-      });
-  
-      if (updateError) {
-        console.error('Error updating password:', updateError);
-        return res.status(400).json({ error: updateError.message });
-      }
-  
-      res.status(200).json({ message: 'Password updated successfully!' });
-    } catch (err) {
-      console.error('Unexpected server error:', err);
-      res.status(500).json({ error: 'Internal server error. Please try again later.' });
-    }
+
+    res.status(200).json({ message: 'Password updated successfully!' });
+  } catch (err) {
+    console.error('Unexpected server error:', err);
+    res.status(500).json({ error: 'Internal server error. Please try again later.' });
+  }
 });
+
 
 
 module.exports = router;
