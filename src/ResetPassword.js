@@ -7,30 +7,35 @@ export default function ResetPassword() {
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [error, setError] = useState('');
+    const [passwordError, setPasswordError] = useState('');
     const [success, setSuccess] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [accessToken, setAccessToken] = useState('');
     console.log(accessToken);
 
-    // Extract access token from URL query parameters
     useEffect(() => {
         const queryParams = new URLSearchParams(location.search);
-        const accessToken = queryParams.get('access_token'); // Extract the encoded URL
-        
-        if (accessToken) {
-            // Decode the URL to get the actual verification URL
-            const decodedURL = decodeURIComponent(accessToken);
-            console.log('Decoded URL:', decodedURL);
+        const token = queryParams.get('access_token'); // Directly extract token
     
-            // Extract the token from the decoded URL
-            const tokenParams = new URLSearchParams(new URL(decodedURL).search);
-            const token = tokenParams.get('token');
-            console.log('Extracted Token:', token);
-            
-            setAccessToken(token || ''); // Set the token to state
+        if (token) {
+            setAccessToken(token);
+        } else {
+            setError('Access token is missing or invalid.');
         }
     }, [location]);
     
+    const validatePassword = (password) => {
+        if (password.length < 8) {
+            return 'Password must be at least 8 characters long.';
+        }
+        if (!/[A-Z]/.test(password)) {
+            return 'Password must contain at least one uppercase letter.';
+        }
+        if (!/[!@#$%^&*]/.test(password)) {
+            return 'Password must contain at least one special character.';
+        }
+        return '';
+    };
 
     const handlePasswordReset = async (e) => {
         e.preventDefault();
@@ -72,6 +77,12 @@ export default function ResetPassword() {
             setIsSubmitting(false);
         }
     };
+
+    const handlePasswordChange = (e) => {
+        const newPassword = e.target.value;
+        setNewPassword(newPassword);
+        setPasswordError(validatePassword(newPassword));
+    };
     
     
 
@@ -87,7 +98,7 @@ export default function ResetPassword() {
                             className="form-control custom-input custom-font fs-5"
                             placeholder="New Password"
                             value={newPassword}
-                            onChange={(e) => setNewPassword(e.target.value)}
+                            onChange={handlePasswordChange}
                             required
                         />
                         <input
@@ -106,6 +117,7 @@ export default function ResetPassword() {
                             {isSubmitting ? 'Resetting...' : 'Reset Password'}
                         </button>
                     </form>
+                    <div className="invalid-feedback">{passwordError}</div>
                     {error && <p className="mt-3 text-center text-danger">{error}</p>}
                     {success && <p className="mt-3 text-center text-success">{success}</p>}
                 </div>
