@@ -111,15 +111,23 @@ const ProgramHeadClassDesig = () => {
     }
   };
 
-  const fetchPersonnelList = async () =>{
+  const fetchPersonnelList = async () => {
     try {
       const personnelData = await PersonnelModel.getProfessorsbyProgram(user.programNumber, selectedAcademicYear);
-      console.log(personnelData);
-      setProfessors(personnelData);
+  
+      // Filter out duplicates based on personnelNumber
+      const distinctPersonnelData = personnelData.filter(
+        (person, index, self) =>
+          index === self.findIndex((p) => p.personnelNumber === person.personnelNumber)
+      );
+  
+      console.log(distinctPersonnelData);
+      setProfessors(distinctPersonnelData);
     } catch (error) {
       console.error('Error fetching personnel list:', error);
     }
   };
+  
 
   const fetchCourses = async () => {
     try {
@@ -188,6 +196,7 @@ const ProgramHeadClassDesig = () => {
         yearLevel: course.courseYearLevel,
         semester: course.courseSemester,
         academicYear: course.academicYear,
+        room: course.room,
       }));
       
       await ScheduleModel.createAndInsertSchedules(newSchedules);
@@ -474,7 +483,7 @@ const ProgramHeadClassDesig = () => {
                                      ?.flatMap(p => p.semesters);
   return (
     <div>
-      <h2 className="custom-font custom-color-green-font mb-3 mt-2">Class schedule</h2>
+      <h2 className="custom-font custom-color-green-font mb-3 mt-2">Class Schedule</h2>
       <Form className="p-3 mb-4 bg-white border border-success rounded">
       <Row className="align-items-center justify-content-between gx-3 gy-2">
       <Col xs={12} sm={12} md={2} className="mb-3">
@@ -570,28 +579,28 @@ const ProgramHeadClassDesig = () => {
     <p className="mt-3">Loading data, please wait...</p>
   </div>
 ) : showTable ? (
-  <Container fluid className="bg-white mt-3 pt-4 pb-2 rounded">
-    <Row className="mb-3 mx-2 mt-4 table-responsive overflow-auto hide-scrollbar">
-    <Container fluid className='mx-auto mb-3 shadow-sm hide-scrollbar'>
+<Container fluid className="bg-white mt-3 pt-4 pb-2 rounded">
+  <Row className="mb-3 mx-2 mt-4 table-responsive overflow-auto hide-scrollbar">
+    <Container fluid className="mx-auto mb-3 shadow-sm hide-scrollbar">
       <Table bordered hover className="table table-hover success-border mt-4 shadow-sm hide-scrollbar">
         <thead className="table-success">
           <tr>
-            <th className='custom-color-green-font text-center'>Subject Code</th>
-            <th className='custom-color-green-font text-center'>Subject Description</th>
-            <th className='custom-color-green-font text-center'>Lecture Units</th>
-            <th className='custom-color-green-font text-center'>Lab Units</th>
-            <th className='custom-color-green-font text-center'>Schedule</th>
-            <th className='custom-color-green-font text-center'>Professor</th>
+            <th className="custom-color-green-font text-center">Subject Code</th>
+            <th className="custom-color-green-font text-center">Subject Description</th>
+            <th className="custom-color-green-font text-center">Lecture Units</th>
+            <th className="custom-color-green-font text-center">Lab Units</th>
+            <th className="custom-color-green-font text-center">Schedule</th>
+            <th className="custom-color-green-font text-center">Room</th>
+            <th className="custom-color-green-font text-center">Professor</th>
           </tr>
         </thead>
         <tbody>
           {schedules.length === 0 ? (
             <tr>
-              
-              <td colSpan="6">
-              <div className=" mx- auto alert alert-warning text-center px-auto" role="alert">
-                 Please click the 'Generate List' button to generate schedules for the section.
-                  </div>
+              <td colSpan="7">
+                <div className="mx-auto alert alert-warning text-center px-auto" role="alert">
+                  Please click the 'Generate List' button to generate schedules for the section.
+                </div>
                 <Button className="btn-success w-100" onClick={createSchedules}>
                   Generate List
                 </Button>
@@ -603,13 +612,13 @@ const ProgramHeadClassDesig = () => {
                 (course) => course.courseCode === schedule.courseCode
               );
               return (
-               <>
-                
                 <tr key={index}>
-                  <td className='text-center'>{schedule.courseCode}</td>
-                  <td className='text-center'>{courseDetails?.courseDescriptiveTitle || 'N/A'}</td>
-                  <td className='text-center'>{courseDetails?.courseLecture || 'N/A'}</td>
-                  <td className='text-center'>{courseDetails?.courseLaboratory || 'N/A'}</td>
+                  <td className="text-center">{schedule.courseCode}</td>
+                  <td className="text-center">
+                    {courseDetails?.courseDescriptiveTitle || 'N/A'}
+                  </td>
+                  <td className="text-center">{courseDetails?.courseLecture || 'N/A'}</td>
+                  <td className="text-center">{courseDetails?.courseLaboratory || 'N/A'}</td>
                   <td>
                     <div className="d-flex justify-content-start align-items-center">
                       <Form.Control
@@ -648,6 +657,15 @@ const ProgramHeadClassDesig = () => {
                   </td>
                   <td>
                     <Form.Control
+                      type="number"
+                      value={schedule.room || ''}
+                      onChange={(e) => handleScheduleChange(index, 'room', e.target.value)}
+                      placeholder="Enter room"
+                      className="mr-2 text-center"
+                    />
+                  </td>
+                  <td>
+                    <Form.Control
                       as="select"
                       value={schedule.personnelNumber || ''}
                       onChange={(e) => handleProfessorChange(index, e.target.value)}
@@ -661,23 +679,24 @@ const ProgramHeadClassDesig = () => {
                       ))}
                     </Form.Control>
                   </td>
-                </tr></>
+                </tr>
               );
             })
           )}
         </tbody>
       </Table>
-      </Container>
-    </Row>
+    </Container>
+  </Row>
 
-    {schedules.length > 0 && (
-        <Container fluid className='mb-3'>
-          <Button className="btn-success" onClick={updateSchedules}>
-            {loading ? 'Saving': 'Save Schedule'}
-          </Button>
-        </Container>
-      )}
-  </Container>
+  {schedules.length > 0 && (
+    <Container fluid className="mb-3">
+      <Button className="btn-success" onClick={updateSchedules}>
+        {loading ? 'Saving' : 'Save Schedule'}
+      </Button>
+    </Container>
+  )}
+</Container>
+
 ) : (
   <div className="text-center py-5 bg-white rounded pt-5 px-4 pb-5">
     <h5 className="custom-color-green-font mt-5 fs-5">No Data Available</h5>

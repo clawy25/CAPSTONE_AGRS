@@ -219,7 +219,7 @@ export default function RegistrarIrregularStudents() {
     
             // Step 4: Fetch grades in parallel and group curriculum
             const curriculumPromises = programCourses.map(async (course) => {
-                const { courseYearLevel, courseSemester, courseCode } = course;
+                const { courseYearLevel, courseSemester, courseCode, coursePreRequisite } = course;
     
                 // Find scheduleNumber for the course
                 const scheduleNumber = enrollmentIndex[courseCode];
@@ -240,6 +240,7 @@ export default function RegistrarIrregularStudents() {
                     remarks: studentGrade?.remarks || "N/A",
                     courseYearLevel,
                     courseSemester,
+                    coursePreRequisite,
                 };
             });
     
@@ -754,8 +755,8 @@ export default function RegistrarIrregularStudents() {
                                                                 <th className='fs-6 text-center text-success custom-font text-center'>Lecture Hours</th>
                                                                 <th className='fs-6 text-center text-success custom-font text-center'>Lab Hours</th>
                                                                 <th className='fs-6 text-center text-success custom-font text-center'>Units</th>
-                                                                <th className='fs-6 text-center text-success custom-font text-center'>Grade</th>
-                                                                <th className='fs-6 text-center text-success custom-font text-center'>Remarks</th>
+                                                                <th className='fs-6 text-center text-success custom-font text-center'>Prerequisite</th>
+                                                               
                                                             </tr>
                                                         </thead>
                                                         <tbody>
@@ -766,8 +767,7 @@ export default function RegistrarIrregularStudents() {
                                                                     <td className='fs-6 texxt-center'>{course.courseLecture}</td>
                                                                     <td className='fs-6 texxt-center'>{course.courseLaboratory}</td>
                                                                     <td className='fs-6 texxt-center'>{(course.courseLecture + course.courseLaboratory) || 0}</td>
-                                                                    <td className='fs-6 texxt-center'>{course.numEq}</td>
-                                                                    <td className='fs-6 texxt-center'>{course.remarks}</td>
+                                                                    <td className='fs-6 texxt-center'>{course.coursePreRequisite}</td>
                                                                 </tr>
                                                             ))}
                                                         </tbody>

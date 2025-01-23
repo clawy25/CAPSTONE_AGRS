@@ -1,7 +1,7 @@
 export default class ScheduleModel {
     constructor(id, scheduleNumber, scheduleDay, startTime, endTime,
                 sectionNumber, personnelNumber, courseCode,
-                yearLevel, semester, academicYear) {
+                yearLevel, semester, academicYear, room) {
         this.id = id;
         this.scheduleNumber = scheduleNumber;
         this.scheduleDay = scheduleDay;
@@ -13,6 +13,7 @@ export default class ScheduleModel {
         this.yearLevel = yearLevel;
         this.semester = semester;
         this.academicYear = academicYear;
+        this.room = room;
     }
 
     

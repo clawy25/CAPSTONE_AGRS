@@ -718,7 +718,7 @@ const fetchCourseDetails = async (studentNumber) => {
         return null;
       }
 
-      const { scheduleDay, startTime, endTime, personnelNumber, sectionNumber } = scheduleData;
+      const { scheduleDay, startTime, endTime, personnelNumber, sectionNumber, room } = scheduleData;
 
       // Fetch personnel details to get initials
       const personnel = await PersonnelModel.getProfessorByPersonnelNumber(personnelNumber);
@@ -728,7 +728,7 @@ const fetchCourseDetails = async (studentNumber) => {
 
       // Find the program title based on programNumber
       const programDetails = programData.find((program) => program.programNumber === programNumber);
-      const programDescriptiveTitle = programDetails?.programDescriptiveTitle || "N/A";
+      const programDescriptiveTitle = programDetails?.programName || "N/A";
 
       // Add course details to return object
       return {
@@ -745,7 +745,8 @@ const fetchCourseDetails = async (studentNumber) => {
         personnelInitials,
         sectionNumber,
         programNumber,
-        programName, // Include program title
+        room,
+        programName: programDescriptiveTitle, // Include program title
       };
     });
 
@@ -972,28 +973,24 @@ console.log('Filtered Students:', filteredStudents);
                                                 <td className='custom-color-green-font text-center'>
                                                {student.studentType}
                                                 </td>
-                                                <td className='d-flex align-itmes-cneter justify-content-center'>
-                                                <Dropdown align="end" className='h-100 w-100 '>
-                              <Dropdown.Toggle
-                              variant="link"
-                              className="p-0 border-0"
-                              style={{ color: '#000' }}
-                              >
-                              <i className="fas fa-ellipsis-v"></i>
-                              </Dropdown.Toggle>
-                              <Dropdown.Menu>
-                              <Dropdown.Item onClick={() => handleTORClick(student)}>
-                              View TOR
-                              </Dropdown.Item>
-                              
-                              <Dropdown.Item onClick={() => openModal(student)}>View COR</Dropdown.Item>
-                          
-
-                              
-                              </Dropdown.Menu>
-                          </Dropdown>
-                                                   
+                                                <td className="d-flex align-items-center justify-content-center">
+                                                  <Dropdown align="end" className="h-100 w-100 d-flex align-items-center justify-content-center">
+                                                    <Dropdown.Toggle
+                                                      variant="link"
+                                                      className="p-0 border-0"
+                                                      style={{ color: '#000' }}
+                                                    >
+                                                      <i className="fas fa-ellipsis-v"></i>
+                                                    </Dropdown.Toggle>
+                                                    <Dropdown.Menu>
+                                                      <Dropdown.Item onClick={() => handleTORClick(student)}>
+                                                        View TOR
+                                                      </Dropdown.Item>
+                                                      <Dropdown.Item onClick={() => openModal(student)}>View COR</Dropdown.Item>
+                                                    </Dropdown.Menu>
+                                                  </Dropdown>
                                                 </td>
+
                                             </tr>
                                         );
                                     })}
@@ -1184,7 +1181,7 @@ console.log('Filtered Students:', filteredStudents);
   <tr>
     <td className="fs-6 fw-bold" style={{ fontWeight: 'bold' }}>PROGRAM:</td>
   
-    <td>
+    <td className="fs-6">
     {groupedCourseDetails && Object.keys(groupedCourseDetails).length > 0
         ? groupedCourseDetails[Object.keys(groupedCourseDetails)[0]][
             Object.keys(groupedCourseDetails[Object.keys(groupedCourseDetails)[0]])[0]
