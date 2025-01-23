@@ -796,12 +796,7 @@ export default function HeadRegistrarAcademicYear() {
       finalizedPrograms: true
     };
     const update = await AcademicYearModel.updateAcademicYear(updateCurrent.id, updateCurrent);
-    alert(updateCurrent.id);
-    alert(updateCurrent.academicYear);
-    alert(updateCurrent.isCurrent);
-    alert(updateCurrent.finalizedPrograms);
     if(update){
-      
       fetchAcademicYears();
       handleCloseFinalize();
     }
@@ -889,7 +884,7 @@ export default function HeadRegistrarAcademicYear() {
         <td>
         {selectedAcademicYear === academicYears.find(year => year.isCurrent)?.academicYear && (
           <>
-          <Button variant="success" onClick={() => handleShowProgramEdit(program.programName, program.programNumOfYear, program.summerlevels, program.programNumber)}>Edit</Button>
+          <Button variant="success" onClick={() => handleShowProgramEdit(program.programName, program.programNumOfYear, program.summerlevels, program.programNumber)} disabled={currentAcademicYear.finalizedPrograms === true}>Edit</Button>
           </>
         )}
         </td>
@@ -977,11 +972,11 @@ export default function HeadRegistrarAcademicYear() {
     {renderProgramsTable()}
     {selectedAcademicYear === academicYears.find(year => year.isCurrent)?.academicYear && (
       <>
-      <Button variant="success" className="mt-3" onClick={handleShowProgramAdd}>
+      <Button variant="success" className="mt-3" onClick={handleShowProgramAdd} disabled={currentAcademicYear.finalizedPrograms === true}>
         Add Program
       </Button>
 
-      <Button variant="success" className="mt-3 ms-3" onClick={handleShowFinalize}>
+      <Button variant="success" className="mt-3 ms-3" onClick={handleShowFinalize} disabled={currentAcademicYear.finalizedPrograms === true}>
         Finalize
       </Button>
       </>
