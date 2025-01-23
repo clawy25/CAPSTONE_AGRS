@@ -11,7 +11,7 @@ import { UserContext } from '../Context/UserContext';
 export default function FacultyPage() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false)
-  const [accountNumber, setAccountNumber] = useState('0000-000-PCC-0');
+  const [accountNumber, setAccountNumber] = useState('0000-001-PCC-1');
   const [password, setAccountPassword] = useState('Agrspcc2024');
   const { setUser } = useContext(UserContext);
   const [error, setError] = useState('');

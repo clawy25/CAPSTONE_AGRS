@@ -1,8 +1,9 @@
 export default class AcademicYearModel {
-    constructor(id, academicYear, isCurrent) {
+    constructor(id, academicYear, isCurrent, finalizedPrograms) {
         this.id = id;
         this.academicYear = academicYear;
         this.isCurrent = isCurrent;
+        this.finalizedPrograms = finalizedPrograms;
     }
 
     // Function to fetch all academic years
@@ -18,7 +19,8 @@ export default class AcademicYearModel {
           return data.map(year => new AcademicYearModel(
             year.id,
             year.academicYear,
-            year.isCurrent
+            year.isCurrent,
+            year.finalizedPrograms
           ));
         } catch (error) {
           console.error('Error fetching academic years:', error);

@@ -19,6 +19,7 @@ export default function HeadRegistrarAcademicYear() {
   const [newAcademicYear, setNewAcademicYear] = useState({
     academicYear: '',
     isCurrent: false,
+    finalizedPrograms: false
   });
   const [verify, setVerify] = useState({
     personnelNumber: '',
@@ -35,6 +36,7 @@ export default function HeadRegistrarAcademicYear() {
   const [showProgramEditModal, setShowProgramEditModal] = useState(false);
   const [showAcademicYearConfirmationModal, setAcademicYearConfirmationModal] = useState(false);
   const [showNextSemesterConfirmationModal, setShowNextSemesterConfirmationModal] = useState(false);
+  const [showFinalizeProgramConfirmationModal, setShowFinalizeProgramConfirmationModal] = useState(false);
   const [showProgramConfirmationModal, setProgramConfirmationModal] = useState(false);
   const [selectedAcademicYear, setSelectedAcademicYear] = useState('');
   
@@ -230,7 +232,8 @@ export default function HeadRegistrarAcademicYear() {
         const updateCurrent = {//Set the current to false as new acad year is inserted
           id: currentAcademicYear.id,
           academicYear: currentAcademicYear.academicYear,
-          isCurrent: false
+          isCurrent: false,
+          finalizedPrograms: currentAcademicYear.finalizedPrograms
         };
 
         console.log(updateCurrent.academicYear); //Old row
@@ -781,6 +784,16 @@ export default function HeadRegistrarAcademicYear() {
     }
   };
 
+  const handleShowFinalize = () => setShowFinalizeProgramConfirmationModal(true);
+  const handleCloseFinalize = () => {
+    setShowFinalizeProgramConfirmationModal(false);
+    setVerify({ personnelNumber: '', password: ''});
+  };
+
+  const handleFinalizePrograms = () => {
+
+  };
+
   // Render loading and error messages
   if (loading) return (    <div className="text-center py-5 bg-white">
     <Spinner animation="border" variant="success" role='status' />
@@ -952,6 +965,10 @@ export default function HeadRegistrarAcademicYear() {
       <>
       <Button variant="success" className="mt-3" onClick={handleShowProgramAdd}>
         Add Program
+      </Button>
+
+      <Button variant="success" className="mt-3 ms-3" onclick={handleShowFinalize}>
+        Finalize
       </Button>
       </>
     )}
@@ -1202,6 +1219,7 @@ export default function HeadRegistrarAcademicYear() {
         </Modal.Footer>
       </Modal>
 
+      {/* NEXT SEMESTER CONFIRMATION */}
       <Modal show={showNextSemesterConfirmationModal} size="lg" onHide={handleCloseNextSem} animation={false}>
         <Modal.Header closeButton>
           <Modal.Title className="custom-color-green-font">Confirmation</Modal.Title>
@@ -1244,6 +1262,53 @@ export default function HeadRegistrarAcademicYear() {
             Close
           </Button>
           <Button variant="success" onClick={() => handleAddAcademicYear('newSem')}>
+            Confirm
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* FINALIZE PROGRAM CONFIRMATION */}
+      <Modal show={showFinalizeProgramConfirmationModal} size="lg" onHide={handleCloseFinalize} animation={false}>
+        <Modal.Header closeButton>
+          <Modal.Title className="custom-color-green-font">Confirmation</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p className="fs-6 fw-semibold text-justify">
+            Are you sure you want to finalize the list of programs for <strong>{currentAcademicYear?.academicYear}</strong>?
+          </p>
+          <p>
+            WARNING! THIS ACTION IS IRREVERSIBLE! Upon confirmation, you are not allowed to make changes of it until the next academic year
+          </p>
+          <p><i>This action requires verification. To proceed, please provide your details to authorize this action.</i></p>
+
+        <Form>
+          <Form.Group className="mb-3">
+            <Form.Label>Personnel Number</Form.Label>
+            <Form.Control
+              type="text"
+              name="personnelNumber"
+              placeholder="Personnel Number"
+              value={verify.personnelNumber}
+              onChange={handleVerify}
+            />
+          </Form.Group>
+          <Form.Group className="mb-3">
+            <Form.Label>Personnel Password</Form.Label>
+            <Form.Control
+              type="password"
+              name="password"
+              placeholder="Password"
+              value={verify.password}
+              onChange={handleVerify}
+            />
+          </Form.Group>
+        </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button className="border-success bg-white custom-color-green-font" variant="secondary" onClick={handleCloseFinalize}>
+            Close
+          </Button>
+          <Button variant="success" >
             Confirm
           </Button>
         </Modal.Footer>
