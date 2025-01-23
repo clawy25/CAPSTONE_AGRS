@@ -493,9 +493,6 @@ export default function HeadRegistrarAcademicYear() {
         
             if (nextAcademicYear.length > 0) {
               // Perform actions based on the resolved results
-              console.log('New academic year completed.');
-
-              //Fetch the newest timeline to up date the currentSemester
               fetchAcademicYears();
               //CLOSE MODAL
               handleCloseAddAcadYear();
@@ -790,7 +787,24 @@ export default function HeadRegistrarAcademicYear() {
     setVerify({ personnelNumber: '', password: ''});
   };
 
-  const handleFinalizePrograms = () => {
+  const handleFinalizePrograms = async () => {
+    
+    const updateCurrent = {//Set the current to false as new acad year is inserted
+      id: currentAcademicYear.id,
+      academicYear: currentAcademicYear.academicYear,
+      isCurrent: currentAcademicYear.isCurrent,
+      finalizedPrograms: true
+    };
+    const update = await AcademicYearModel.updateAcademicYear(updateCurrent.id, updateCurrent);
+    alert(updateCurrent.id);
+    alert(updateCurrent.academicYear);
+    alert(updateCurrent.isCurrent);
+    alert(updateCurrent.finalizedPrograms);
+    if(update){
+      
+      fetchAcademicYears();
+      handleCloseFinalize();
+    }
 
   };
 
@@ -967,7 +981,7 @@ export default function HeadRegistrarAcademicYear() {
         Add Program
       </Button>
 
-      <Button variant="success" className="mt-3 ms-3" onclick={handleShowFinalize}>
+      <Button variant="success" className="mt-3 ms-3" onClick={handleShowFinalize}>
         Finalize
       </Button>
       </>
@@ -1277,7 +1291,7 @@ export default function HeadRegistrarAcademicYear() {
             Are you sure you want to finalize the list of programs for <strong>{currentAcademicYear?.academicYear}</strong>?
           </p>
           <p>
-            WARNING! THIS ACTION IS IRREVERSIBLE! Upon confirmation, you are not allowed to make changes of it until the next academic year
+            WARNING! THIS ACTION IS IRREVERSIBLE! Upon confirmation, you are <strong>not allowed to make changes</strong> of it until the next academic year
           </p>
           <p><i>This action requires verification. To proceed, please provide your details to authorize this action.</i></p>
 
@@ -1308,7 +1322,7 @@ export default function HeadRegistrarAcademicYear() {
           <Button className="border-success bg-white custom-color-green-font" variant="secondary" onClick={handleCloseFinalize}>
             Close
           </Button>
-          <Button variant="success" >
+          <Button variant="success" onClick={handleFinalizePrograms}>
             Confirm
           </Button>
         </Modal.Footer>

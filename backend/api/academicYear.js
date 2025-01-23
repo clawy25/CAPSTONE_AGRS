@@ -46,12 +46,12 @@ router.post('/upload', async (req, res) => {
 
 router.put('/:id', async (req, res) => {
     const { id } = req.params;
-    const { academicYear, isCurrent} = req.body;
+    const { academicYear, isCurrent, finalizedPrograms} = req.body;
 
     try {
         const { data, error } = await supabase
             .from('academicYear')
-            .update({ academicYear, isCurrent})
+            .update({ academicYear, isCurrent, finalizedPrograms})
             .eq('id', id);
 
         if (error) {
