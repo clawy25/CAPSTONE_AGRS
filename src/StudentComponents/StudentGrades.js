@@ -97,10 +97,10 @@ export default function Grades() {
         courses,
       };
 
-      console.log("Fetched Student Data:", currentStudentData);
+     // console.log("Fetched Student Data:", currentStudentData);
 
       studentCache.set(studentNumber, currentStudentData); // Cache the fetched data
-      console.log('student cache', studentCache)
+      //console.log('student cache', studentCache)
       setStudentData(currentStudentData);
     } catch (error) {
       console.error("Failed to fetch student data:", error);

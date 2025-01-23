@@ -23,6 +23,53 @@ import ErrorPage from './ErrorPage';
 import ResetPassword from './ResetPassword';
 
 const App = () => {
+
+  document.addEventListener("contextmenu", (event) => event.preventDefault());
+
+let devtoolsOpen = false; // Keeps track of DevTools state
+
+const checkDevTools = () => {
+    const threshold = 160; // Threshold for detecting DevTools
+    const widthThreshold = window.outerWidth - window.innerWidth > threshold;
+    const heightThreshold = window.outerHeight - window.innerHeight > threshold;
+
+    if (widthThreshold || heightThreshold) {
+        if (!devtoolsOpen) {
+            devtoolsOpen = true; // Mark DevTools as open
+
+            // Persistently alert the user using a while loop
+          
+                alert("DevTools is open! Please close it to continue.");
+
+                // Recheck the state after the alert is dismissed
+                const newWidthThreshold = window.outerWidth - window.innerWidth > threshold;
+                const newHeightThreshold = window.outerHeight - window.innerHeight > threshold;
+
+                // Break out of the loop if DevTools is closed
+                if (!newWidthThreshold && !newHeightThreshold) {
+                    devtoolsOpen = false;
+                }
+            
+        }
+    } else {
+        devtoolsOpen = false; // Reset when DevTools is closed
+    }
+};
+
+// Check DevTools state every 500ms
+setInterval(checkDevTools, 500);
+
+document.addEventListener("keydown", (event) => {
+    if (
+        event.key === "F12" ||
+        (event.ctrlKey && event.shiftKey && event.key === "I") ||
+        (event.ctrlKey && event.key === "U")
+    ) {
+        event.preventDefault();
+        alert("Developer tools access is disabled.");
+    }
+});
+
   return (
     <UserProvider> {/* Wrap the whole app inside UserProvider */}
       <Routes>

@@ -94,7 +94,7 @@ export default function FacultyPage() {
 
     
     //Debugging
-    console.log('Account Number:', accountNumber);
+    //console.log('Account Number:', accountNumber);
     
     try {
       // Fetch the personnel data using the account number

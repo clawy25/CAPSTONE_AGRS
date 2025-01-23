@@ -173,7 +173,7 @@ useEffect(() => {
         selectedProgramNumber
       );
     
-      console.log(sectionData);
+      //console.log(sectionData);
       // Extract section numbers from sectionData and sort them in ascending order
       const sectionNumbers = sectionData
         .map((section) => section.sectionNumber)
@@ -211,7 +211,7 @@ useEffect(() => {
         sectionNumbers.includes(schedule.sectionNumber)
       );
 
-      console.log(filteredSchedules);
+     // console.log(filteredSchedules);
   
       // Fetch personnel data for the selected academic year
       const personnelData = await PersonnelModel.fetchAllPersonnel(selectedAcademicYear);
@@ -230,7 +230,7 @@ useEffect(() => {
         selectedProgramNumber
       );
 
-      console.log(courseData);
+      //console.log(courseData);
 
       const courseDetails = courseData.reduce((map, course) => {
         map[course.courseCode] = {
@@ -257,7 +257,7 @@ useEffect(() => {
         return map;
       }, Promise.resolve({}));
 
-      console.log(classDetails);
+     // console.log(classDetails);
       
       
   
@@ -293,7 +293,7 @@ useEffect(() => {
       }, {});
   
       // Save the grouped data to state for rendering
-      console.log(groupedData);
+      //console.log(groupedData);
       setGroupedData(groupedData);
     } catch (error) {
       console.error("Error fetching courses:", error);
@@ -338,7 +338,7 @@ useEffect(() => {
           index === self.findIndex((t) => t.studentNumber === value.studentNumber)
       );
 
-      console.log(distinctData);
+      //console.log(distinctData);
       // Set the distinct data to the state
       setCombinedData(distinctData);
   
@@ -426,7 +426,7 @@ useEffect(() => {
   const handleValidate = async () => {
     const scheduleNumbers = getScheduleNumbersForSection(groupedData, currentSection);
 
-    console.log(scheduleNumbers);
+   // console.log(scheduleNumbers);
 
     const verify = await Promise.all(
       scheduleNumbers.map(scheduleNumber => SubmissionModel.fetchSubmissionBySchedule(scheduleNumber))
@@ -442,7 +442,7 @@ useEffect(() => {
         }
       )));
 
-    console.log(submissionData);
+    //console.log(submissionData);
 
     // const updatedData = submissionData.map(data => {
     //   const { created_at, ...rest } = data; // Exclude created_at from the update payload
@@ -644,13 +644,13 @@ const printTable = () => {
             scheduleNumbers.map(scheduleNumber => SubmissionModel.fetchSubmissionBySchedule(scheduleNumber))
           );
 
-          console.log(verify);
+         // console.log(verify);
   
           // Filter and flatten the results
           const filteredVerify = verify.filter(submissions => submissions.length > 0)
                                         .flatMap(submissions => submissions);
 
-          console.log(filteredVerify);
+        //  console.log(filteredVerify);
           if(filteredVerify.length > 0){
             // Check if all submissions are verified
             const allVerified = filteredVerify.every(row => row.submissionStatus === "Verified");
@@ -676,7 +676,7 @@ const printTable = () => {
   
   const openModal = (student) => {
     setShowModal(true);
-    console.log('sstudent',student)
+   // console.log('sstudent',student)
     setSelectedStudent(student);
   };
 

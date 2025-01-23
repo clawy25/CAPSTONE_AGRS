@@ -124,7 +124,7 @@ function MasterlistOfGradesTable() {
       // Flatten the array if fetchSemGradeData returns arrays
       const semGradeData = semGradeDataArray.flat();
 
-      console.log(semGradeData);
+      //console.log(semGradeData);
 
   
       // Combine data from students, enrollment, and schedules
@@ -258,7 +258,7 @@ const fetchCurriculum = async (programNumber, batchYear) => {
       return acc;
     }, {});
 
-    console.log("Grouped Courses by Year and Semester:", groupedCourses);
+    //console.log("Grouped Courses by Year and Semester:", groupedCourses);
 
     // Dynamically generate academic years starting from the batchYear
     const academicYears = [];

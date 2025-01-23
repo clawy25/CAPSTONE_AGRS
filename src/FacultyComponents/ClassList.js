@@ -157,7 +157,7 @@ export default function ClassList() {
             }
           });
           
-          console.log(data);
+      //    console.log(data);
           setUserProgram(programDetails);
           setMappedData(data);
         }
@@ -311,9 +311,9 @@ export default function ClassList() {
         
         setSelectedSchedule(selectedSchedule);
   
-        console.log(selectedSchedule);
-        console.log("Mapped Data:", mappedData);
-        console.log("Filtered Results:", filteredResults);
+       // console.log(selectedSchedule);
+       // console.log("Mapped Data:", mappedData);
+        //console.log("Filtered Results:", filteredResults);
       } catch (error) {
         console.error("Error fetching class list data:", error);
         alert("An error occurred while fetching class list data. Please try again.");

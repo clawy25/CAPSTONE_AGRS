@@ -353,7 +353,7 @@ export default function RegistrarStudents() {
     const fetchCurrentAcadYear = async () => {
         try {
             const years = await AcademicYearModel.fetchExistingAcademicYears();
-            console.log(years);
+            //console.log(years);
     
             const currentYear = years.find((year) => year.isCurrent === true); 
             const check = await TimelineModel.fetchTimelineByAcademicYear(currentYear.academicYear);
@@ -389,7 +389,7 @@ export default function RegistrarStudents() {
                     }
                 })
 
-                console.log(trimmedProgramData);
+                //console.log(trimmedProgramData);
                 setPrograms(trimmedProgramData);
             } catch (error) {
                 console.error("Error fetching programs:", error);
@@ -404,7 +404,7 @@ export default function RegistrarStudents() {
         setLoading(true); 
         try {
             const existingStudents = await StudentModel.fetchExistingStudents();
-            console.log(existingStudents); 
+            //console.log(existingStudents); 
             setStudents(existingStudents);
         } catch (error) {
             console.error('Error fetching existing students:', error);
@@ -567,7 +567,7 @@ export default function RegistrarStudents() {
             }
 
             // Insert all valid records in bulk
-            console.log("New students to insert:", newStudents);
+           // console.log("New students to insert:", newStudents);
             let emailSet = new Set();
             let contactSet = new Set();
             let duplicateEmails = [];
@@ -590,8 +590,8 @@ export default function RegistrarStudents() {
             });
 
             if (duplicateEmails.length > 0 || duplicateContacts.length > 0) {
-                console.log('Duplicate Emails:', duplicateEmails);
-                console.log('Duplicate Contacts:', duplicateContacts);
+              //  console.log('Duplicate Emails:', duplicateEmails);
+               // console.log('Duplicate Contacts:', duplicateContacts);
                 return;
             } else {
                 await insertStudents(newStudents, timelineData);
@@ -662,7 +662,7 @@ const fetchCourseDetails = async (studentNumber) => {
       ProgramModel.fetchAllPrograms(),
     ]);
 
-    console.log("Fetched courses, enrollments, schedules, and program data");
+    //console.log("Fetched courses, enrollments, schedules, and program data");
 
     // Step 2: Filter enrollments for the given student
     const studentEnrollments = allEnrollments.filter(
@@ -674,7 +674,7 @@ const fetchCourseDetails = async (studentNumber) => {
       return;
     }
 
-    console.log(`Filtered ${studentEnrollments.length} enrollments for student ${studentNumber}`);
+   // console.log(`Filtered ${studentEnrollments.length} enrollments for student ${studentNumber}`);
 
     // Step 3: Create an index of enrollments by courseCode for quick lookup
     const enrollmentIndex = studentEnrollments.reduce((acc, enrollment) => {
@@ -682,7 +682,7 @@ const fetchCourseDetails = async (studentNumber) => {
       return acc;
     }, {});
 
-    console.log("Created enrollment index");
+   // console.log("Created enrollment index");
 
     // Step 4: Map through courses and fetch additional details
     const courseDetailsPromises = allCourses.map(async (course) => {
@@ -753,7 +753,7 @@ const fetchCourseDetails = async (studentNumber) => {
     // Step 5: Resolve all promises and filter out nulls
     const resolvedCourseDetails = (await Promise.all(courseDetailsPromises)).filter(Boolean);
 
-    console.log("Resolved course details:", resolvedCourseDetails);
+    //console.log("Resolved course details:", resolvedCourseDetails);
 
     // Step 6: Group courses by academicYear and courseSemester
     const groupedCourseDetails = resolvedCourseDetails.reduce((acc, course) => {
@@ -767,7 +767,7 @@ const fetchCourseDetails = async (studentNumber) => {
       return acc;
     }, {});
 
-    console.log("Grouped Course Details:", groupedCourseDetails);
+    //console.log("Grouped Course Details:", groupedCourseDetails);
 
     return groupedCourseDetails;
   } catch (error) {
@@ -895,7 +895,7 @@ const fetchCourseDetails = async (studentNumber) => {
     });
 
 // Log the final filtered students for debugging
-console.log('Filtered Students:', filteredStudents);
+//console.log('Filtered Students:', filteredStudents);
 
     //Page Layout
     return (

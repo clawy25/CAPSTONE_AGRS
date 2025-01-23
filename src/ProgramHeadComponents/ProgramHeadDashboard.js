@@ -77,7 +77,7 @@ export default function ProgramHeadDashboard() {
         try {
             // Fetch all academic years
             const academicYearData = await AcademicYearModel.fetchExistingAcademicYears();
-            console.log("Academic years:", academicYearData);
+           // console.log("Academic years:", academicYearData);
     
             // Find the current academic year
             const currentAcademicYear = academicYearData.find(year => year.isCurrent);
@@ -85,14 +85,14 @@ export default function ProgramHeadDashboard() {
                 console.error("No current academic year found");
                 return;
             }
-            console.log("Current academic year:", currentAcademicYear.academicYear);
+           // console.log("Current academic year:", currentAcademicYear.academicYear);
     
             // Fetch personnel data using programNumber and current academic year
             const personnelData = await PersonnelModel.getProfessorsbyProgram(user.programNumber, currentAcademicYear.academicYear);
-            console.log("Personnel data:", personnelData);
+          //  console.log("Personnel data:", personnelData);
 
             const findPersonnel = personnelData.find(personnel => personnel.personnelNumber === user.personnelNumber);
-            console.log("Personnel matched",findPersonnel)
+          //  console.log("Personnel matched",findPersonnel)
     
             if (findPersonnel) {
                 setPersonnelInfo(findPersonnel);
@@ -132,7 +132,7 @@ export default function ProgramHeadDashboard() {
 
   // Log user data when it changes
   useEffect(() => {
-    console.log('Fetched User Data:', user);
+    //console.log('Fetched User Data:', user);
   }, [user]);
 
   // Logout function

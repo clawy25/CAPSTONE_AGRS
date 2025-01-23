@@ -18,7 +18,7 @@ export default function RegistrarProfessor() {
     const fetchPrograms = async () => {
       try {
         const programData = await ProgramModel.fetchAllPrograms();
-        console.log('Program data:', programData); // Log the fetched data
+       // console.log('Program data:', programData); // Log the fetched data
         setPrograms(programData); // Set the fetched programs in state
         setLoading(false); // Set loading to false after data is fetched
       } catch (error) {

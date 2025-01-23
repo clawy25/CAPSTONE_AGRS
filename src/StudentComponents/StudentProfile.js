@@ -26,7 +26,7 @@ export default function StudentProfile() {
     try {
       // Fetch all academic years
       const academicYearData = await AcademicYearModel.fetchExistingAcademicYears();
-      console.log("Academic years:", academicYearData);
+      //console.log("Academic years:", academicYearData);
 
       // Find the current academic year
       const currentAcademicYear = academicYearData.find(year => year.isCurrent);
@@ -34,14 +34,14 @@ export default function StudentProfile() {
         console.error("No current academic year found");
         return;
       }
-      console.log("Current academic year:", currentAcademicYear.academicYear);
+     // console.log("Current academic year:", currentAcademicYear.academicYear);
 
       // Fetch student data using studentNumber
       const studentData = await StudentModel.fetchExistingStudents();
-      console.log("Student data:", studentData);
+      //console.log("Student data:", studentData);
 
       const findStudent = studentData.find(student => student.studentNumber === user.studentNumber);
-      console.log("Student matched", findStudent);
+     // console.log("Student matched", findStudent);
 
       if (findStudent) {
         setStudentInfo(findStudent);
@@ -91,7 +91,7 @@ export default function StudentProfile() {
     setIsSaving(true);
     try {
       await StudentModel.updateStudent(user.studentNumber, updatedFields);
-      console.log('Student data updated successfully:', updatedFields);
+      //console.log('Student data updated successfully:', updatedFields);
       setStudentInfo(editableStudentInfo); // Update with the latest data
       setIsUnchanged(true); // Reset to unchanged state
     } catch (error) {

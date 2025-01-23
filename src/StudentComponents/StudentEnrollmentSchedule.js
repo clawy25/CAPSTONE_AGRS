@@ -71,7 +71,7 @@ const ScheduleTable = () => {
       const studentData = await StudentModel.fetchExistingStudents();
   
       const student = studentData.find(student => student.studentNumber === studentNumber);
-      console.log(student.studentType)
+      //console.log(student.studentType)
       setstudentType(student.studentType);
       if (student.length > 0) {
         setStudentInfo(student);
@@ -147,7 +147,7 @@ const ScheduleTable = () => {
   const fetchPersonnelList = async () =>{
     try {
       const personnelData = await PersonnelModel.getProfessorsbyProgram(user.programNumber, currentAcademicYear[0].academicYear);
-      console.log(personnelData);
+      //console.log(personnelData);
       setProfessors(personnelData);
     } catch (error) {
       console.error('Error fetching personnel list:', error);
@@ -199,7 +199,7 @@ const ScheduleTable = () => {
   useEffect(() => {
     fetchAcademicYearsAndPrograms();
     fetchStudentInfo(user.studentNumber);
-    console.log(user.studentNumber)
+    //console.log(user.studentNumber)
   }, []);
   
   useEffect(() => {
@@ -226,7 +226,7 @@ const ScheduleTable = () => {
 // useEffect hook to trigger fetchCoursesAndSchedules call
 useEffect(() => {
   if (yearLevel && semester && program.length > 0 && currentAcademicYear.length > 0 && selectedSection) {
-    console.log (currentAcademicYear[0]?.academicYear, yearLevel, semester, program[0]?.programNumber, selectedSection);
+   // console.log (currentAcademicYear[0]?.academicYear, yearLevel, semester, program[0]?.programNumber, selectedSection);
     setCourses([]);
     setSchedules([]);
     setProfessors([]);

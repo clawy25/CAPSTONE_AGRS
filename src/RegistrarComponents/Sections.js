@@ -54,13 +54,13 @@ const Sections = () => {
 
       const current = fetchedAcademicYears.filter(acadYears => acadYears.isCurrent === true);
 
-      console.log(current);
+      //console.log(current);
       setCurrentAcadYear(current);
       setAcademicYears(fetchedAcademicYears);
   
       const allPrograms = await ProgramModel.fetchAllPrograms();
 
-      console.log(allPrograms);
+     // console.log(allPrograms);
       setPrograms(allPrograms);
   
       if (allPrograms.length > 0) {
@@ -116,7 +116,7 @@ const Sections = () => {
           }
         });
       
-        console.log(data);
+       // console.log(data);
         setMappedData(data);
       }
       
@@ -147,7 +147,7 @@ const Sections = () => {
           selectedSemester,
           selectedProgramNumber);
 
-          console.log(courseData);
+          //console.log(courseData);
           
         if(courseData){
           setCourses(courseData); // Update the courses state with fetched data
@@ -187,7 +187,7 @@ const Sections = () => {
   const fetchSchedules = async () => {
     try {
       const allSchedules = await ScheduleModel.fetchExistingschedule(selectedSection);
-      console.log(allSchedules);
+    //  console.log(allSchedules);
       setSchedules(allSchedules);
     } catch (error){
       console.error("Error fetching schedules:", error);
@@ -371,19 +371,19 @@ const Sections = () => {
     if (selectedAcademicYear && selectedProgram && selectedYearLevel && selectedSemester) {
         let nextSection;
 
-        console.log(sections);
+        //console.log(sections);
         if (sections.length === 0) {
             // Start with "A" if there are no sections
             nextSection = `${generateNextSectionNumber()}A`;
         } else {
             const lastSection = sections[sections.length - 1];
 
-            console.log(lastSection);
+            //console.log(lastSection);
             const lastCharacter = lastSection?.sectionNumber.charAt(lastSection.sectionNumber.length - 1);
 
-            console.log(lastCharacter);
+           // console.log(lastCharacter);
             const lastCharacterCode = lastCharacter?.charCodeAt(0);
-            console.log(lastCharacterCode);
+           //console.log(lastCharacterCode);
 
             // Check if the last character is 'Z' (ASCII 90) to avoid overflow
             const nextCharacterCode = lastCharacterCode === 90 ? 65 : lastCharacterCode + 1; // Wrap around after 'Z'

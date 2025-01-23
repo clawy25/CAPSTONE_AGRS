@@ -33,7 +33,7 @@ export default function RegistrarBatchYear({ selectedProgram }) {
         // Assuming YearLevelModel.fetchExistingYearLevels() works as expected
         const fetchedYearLevels = await YearLevelModel.fetchExistingYearLevels();
 
-        console.log('Fetched year levels:', fetchedYearLevels); // Debug fetched year levels
+        //console.log('Fetched year levels:', fetchedYearLevels); // Debug fetched year levels
 
         setYearLevels(fetchedYearLevels);
         setSections(dummySections); // Use dummy sections for now
@@ -75,7 +75,7 @@ const handleShowSOG = (semester) => {
         <Tabs
           activeKey={activeTab}
           onSelect={(k) => {
-            console.log('Main tab selected:', k); // Debug main tab switch
+           // console.log('Main tab selected:', k); // Debug main tab switch
             setActiveTab(k);
           }}
           id="main-tabs"
@@ -86,7 +86,7 @@ const handleShowSOG = (semester) => {
             <Tabs
               activeKey={activeYearTabMOG}
               onSelect={(k) => {
-                console.log('Year tab selected in MOG:', k); // Debug year tab switch for MOG
+               // console.log('Year tab selected in MOG:', k); // Debug year tab switch for MOG
                 setActiveYearTabMOG(k);
               }}
               id="mog-year-tabs"
@@ -133,7 +133,7 @@ const handleShowSOG = (semester) => {
             <Tabs
               activeKey={activeYearTabSOG}
               onSelect={(k) => {
-                console.log('Year tab selected in SOG:', k); // Debug year tab switch for SOG
+               // console.log('Year tab selected in SOG:', k); // Debug year tab switch for SOG
                 setActiveYearTabSOG(k);
               }}
               id="sog-year-tabs"

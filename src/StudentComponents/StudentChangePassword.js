@@ -54,10 +54,10 @@ export default function StudentChangePassword() {
 
   const updateStudentData = async (data) => {
     try {
-      console.log("Sending data to update student:", {
+      {/*console.log("Sending data to update student:", {
         studentNumber: user.studentNumber,
         ...data,
-      });
+      });*/}
 
       const response = await StudentModel.updateStudent(user.studentNumber, data);
 

@@ -95,7 +95,7 @@ const CurriculumPage = () => {
           }
         });
         
-        console.log(data);
+      //  console.log(data);
         setPrograms(data);
       }
     } catch (error) {
@@ -200,7 +200,7 @@ const CurriculumPage = () => {
   const handleCourseSubmit = async (e) => {
     e.preventDefault();
     
-    console.log(courses);
+   // console.log(courses);
   
     const form = e.target;
     const updatedCourse = {

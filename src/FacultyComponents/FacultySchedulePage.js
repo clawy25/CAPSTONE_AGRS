@@ -86,15 +86,15 @@ export default function FacultySchedulePage() {
     if (program && selectedAcademicYear && semester) {
       setLoading(true); // Start loading
       try {
-        console.log('Fetching schedules with:', {
+       {/* console.log('Fetching schedules with:', {
           academicYear: selectedAcademicYear,
           program: program,
           semester: semester,
           personnelNumber: user?.personnelNumber,
-        });
+        });*/}
   
         const fetchedSchedules = await ScheduleModel.fetchAllSchedules(selectedAcademicYear); // Fetch all schedules by academic year
-        console.log('Fetched Schedules:', fetchedSchedules); // Log the fetched schedules
+        //console.log('Fetched Schedules:', fetchedSchedules); // Log the fetched schedules
   
         if (fetchedSchedules && fetchedSchedules.length > 0) {
           setSchedule(fetchedSchedules); // Set fetched schedules
@@ -123,23 +123,23 @@ export default function FacultySchedulePage() {
 
   // Filter schedules based on selected academic year, semester, and personnelNumber
   useEffect(() => {
-    console.log('Filtering schedules with:', {
+    {/*console.log('Filtering schedules with:', {
       selectedAcademicYear,
       semester,
       personnelNumber: user?.personnelNumber,
     });
-
+  */}
     const filtered = schedule.filter((sched) => {
       const matches =
         (selectedAcademicYear ? sched.academicYear === selectedAcademicYear : true) &&
         (semester ? sched.semester === parseInt(semester) : true) &&  // Convert semester to integer for comparison
         (sched.personnelNumber === user?.personnelNumber);
 
-      console.log('Checking Schedule:', sched, 'Matches:', matches); // Debugging filtered schedules
+      //console.log('Checking Schedule:', sched, 'Matches:', matches); // Debugging filtered schedules
       return matches;
     });
 
-    console.log('Filtered Schedules:', filtered);
+    //console.log('Filtered Schedules:', filtered);
     setFilteredSchedules(filtered);
   }, [schedule, selectedAcademicYear, semester, user]);
 

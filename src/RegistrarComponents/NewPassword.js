@@ -54,15 +54,15 @@ export default function NewPassword() {
 
   const updatePersonnelData = async (data) => {
     try {
-      console.log("Sending data to update personnel:", {
+     {/* console.log("Sending data to update personnel:", {
         personnelNumber: user.personnelNumber,
         ...data,
-      });
+      });*/}
   
       const response = await PersonnelModel.updatePersonnel(user.personnelNumber, data);
   
       if (response && response.status === 204) {
-        console.log("Personnel data updated successfully (no content returned).");
+        console.log("Personnel data updated successfully.");
       } else {
         console.log("Personnel data updated successfully:", response?.data || "No additional data.");
       }

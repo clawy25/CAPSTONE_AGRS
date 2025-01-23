@@ -29,24 +29,24 @@ export default function ProgramHeadClassDesigTable() {
         console.log("Fetching year levels, sections, professors, courses, and schedules...");
   
         const fetchedYearLevels = await YearLevelModel.fetchExistingYearLevels();
-        console.log("Fetched Year Levels:", fetchedYearLevels);
+        //console.log("Fetched Year Levels:", fetchedYearLevels);
         setYearLevels(fetchedYearLevels);
   
         const fetchedSections = await SectionModel.fetchExistingSections();
-        console.log("Fetched Sections:", fetchedSections);
+       // console.log("Fetched Sections:", fetchedSections);
         setSections(fetchedSections);
   
         const fetchedProfessors = await PersonnelModel.getProfessors();
-        console.log("Fetched Professors:", fetchedProfessors);
+        //console.log("Fetched Professors:", fetchedProfessors);
         setProfessors(fetchedProfessors);
   
         const fetchedCourses = await CourseModel.getCoursesbyProgram();
-        console.log("Fetched Courses:", fetchedCourses);
+        //console.log("Fetched Courses:", fetchedCourses);
         setCourses(fetchedCourses);
   
         // Fetch schedules
         const fetchedSchedules = await ScheduleModel.fetchExistingschedule();
-        console.log("Fetched Schedules:", fetchedSchedules);
+        //("Fetched Schedules:", fetchedSchedules);
   
         // Initialize data structure with year and section data
         const initialData = {};
@@ -208,7 +208,7 @@ export default function ProgramHeadClassDesigTable() {
     }));
   
     // Log the data to check its structure
-    console.log('Schedule Data to be sent:', scheduleData);
+    //console.log('Schedule Data to be sent:', scheduleData);
   
     // Send the schedule data to the backend via the API
     try {

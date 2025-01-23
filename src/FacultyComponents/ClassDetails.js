@@ -29,11 +29,11 @@ const ClassDetails = ({classList , classDetails}) => {
   const navigate = useNavigate();
   const [students, setStudents] = useState(classList);
 
-  console.log("List of Students:", students);
+  //console.log("List of Students:", students);
   const [classInfo, setClassInfo] = useState(classDetails[0]);
-  console.log("Class Details:", classInfo);
-  console.log(classInfo.semester);
-  console.log(classInfo.academicYear);
+  //console.log("Class Details:", classInfo);
+  //console.log(classInfo.semester);
+  //console.log(classInfo.academicYear);
   
 
   const [currentAcademicYear, setCurrentAcademicYear] = useState();
@@ -119,8 +119,8 @@ const ClassDetails = ({classList , classDetails}) => {
         const check = await TimelineModel.fetchTimelineByAcademicYear(isCurrent.academicYear);
   
         const highestSemester = check.reduce((max, row) => Math.max(max, row.semester), 0);
-        console.log(isCurrent);
-        console.log(highestSemester);
+       // console.log(isCurrent);
+      //  console.log(highestSemester);
         // Set the current semester based on the highest value found
         setCurrentSemester(highestSemester || 1); // Default to 1 if no rows are present
   
@@ -1035,7 +1035,7 @@ const ClassDetails = ({classList , classDetails}) => {
           remarks
         };
       });
-      console.log(allGrades);
+      //console.log(allGrades);
 
       allGrades.forEach((student) => {
         semesterGradeData.push({
@@ -1057,7 +1057,7 @@ const ClassDetails = ({classList , classDetails}) => {
       });
 
       
-      console.log(semesterGradeData);
+   //   console.log(semesterGradeData);
 
       const verifyAll = semesterGradeData.find(row => 
         row.midtermCS === null || 
@@ -1077,12 +1077,12 @@ const ClassDetails = ({classList , classDetails}) => {
 
       if (verifyAll) {
         toast.error("Cannot submit as there is at least one student with no grade!");
-        console.log(verifyAll);
+        //console.log(verifyAll);
         return;
       } else {
         //Save the changes first
         const saveState = await handleSave('submit');
-        console.log(semesterGradeData);
+        //console.log(semesterGradeData);
 
         const semgrades = await SemGradeModel.updateSemGradeData(semesterGradeData);
 
@@ -1313,10 +1313,10 @@ const handlePrint = () => {
 
   {/* ATTENDANCE DECLARATION */}
   const [midtermAttendanceColumns, setmidtermAttendanceColumns] = useState([{ id: 1, grade: gradeArray }]); //Storing raw values (PLEA) for table rendering
-  console.log("Midterm Attendance Columns: ",midtermAttendanceColumns);
+  //console.log("Midterm Attendance Columns: ",midtermAttendanceColumns);
   const [midtermTotalAttendanceDays, setmidtermTotalAttendanceDays] = useState(0);
   const [midtermAttendanceData, setmidtermAttendanceData] = useState([]); //Storing raw values (PLEA) for calculations
-  console.log("Midterm Attendance Data: ", midtermAttendanceData);
+  //console.log("Midterm Attendance Data: ", midtermAttendanceData);
   const [midtermAttendancePercentage, setmidtermAttendancePercentage] = useState();
   //console.log(midtermAttendancePercentage);
   const [midtermAttendance, setmidtermAttendance] = useState([]); //Storing raw values (PLEA) for db upsertion
@@ -1326,7 +1326,7 @@ const handlePrint = () => {
   const [midtermAssignmentColumns, setmidtermAssignmentColumns] = useState([{ id: 1 , grade: gradeArray }]); //Storing raw values (50-100) for table rendering
   //console.log("Midterm Assignment Columns:",midtermAssignmentColumns);
   const [midtermAssignmentScores, setmidtermAssignmentScores] = useState([]); //Storing raw values (50-100) for calculations
-  console.log("Midterm Assignment Scores:", midtermAssignmentScores);
+  //console.log("Midterm Assignment Scores:", midtermAssignmentScores);
   const [midtermAssignmentPercentage, setmidtermAssignmentPercentage] = useState();
   const [invalidAssignmentScores, setInvalidAssignmentScores] = useState([]);
   const [midtermAssignment, setmidtermAssignment] = useState([]); //Storing raw values (50-100) for db upsertion
@@ -1335,7 +1335,7 @@ const handlePrint = () => {
   const [midtermQuizColumns, setmidtermQuizColumns] = useState([{ id: 1, grade: gradeArray }]); // Initialize quiz columns
   //console.log("Midterm Quiz Columns:",midtermQuizColumns);
   const [midtermQuizScores, setmidtermQuizScores] = useState([]); // Scores for each quiz
-  console.log("Midterm Quiz Scores:",midtermQuizScores);
+  //console.log("Midterm Quiz Scores:",midtermQuizScores);
   const [midtermQuizMaxScores, setmidtermQuizMaxScores] = useState([]); // Maximum scores for each quiz
   //console.log("Midterm Quiz Max:",midtermQuizMaxScores);
   const [midtermQuizPercentage, setmidtermQuizPercentage] = useState();
@@ -1357,7 +1357,7 @@ const handlePrint = () => {
    const [midtermPBAColumns, setmidtermPBAColumns] = useState([{ id: 1, grade: gradeArray }]);
    //console.log("Midterm PBA Columns: ", midtermPBAColumns);
    const [midtermPBAGradeScores, setmidtermPBAGradeScores] = useState([]);  // Store scores for each PBA column per student
-   console.log("Midterm PBA Scores: ", midtermPBAGradeScores);
+   //console.log("Midterm PBA Scores: ", midtermPBAGradeScores);
    const [midtermPBAGradePercentage, setmidtermPBAGradePercentage] = useState();
    const [invalidPBAScores, setInvalidPBAScores] = useState([]);
    const [midtermPBA, setmidtermPBA] = useState([]);
@@ -1366,7 +1366,7 @@ const handlePrint = () => {
 
    // MIDTERM EXAM DECLARATION
   const [midtermExamScores, setMidtermExamScores] = useState({});
-  console.log("Midterm Exam Scores: ",midtermExamScores);
+  //console.log("Midterm Exam Scores: ",midtermExamScores);
   const [midtermExamPercentage, setMidtermExamPercentage] = useState();
   const [midtermTotalItems, setmidtermTotalItems] = useState(); // Default total number of items is 100
   //console.log("Midterm Total Items: ",midtermTotalItems);
@@ -1577,7 +1577,7 @@ const removeAssignmentColumn = (index, setColumns, setAssignmentScores) => {
                                  + parseInt(midtermPBAGradePercentage ? midtermPBAGradePercentage : 0)
                                  + parseInt(midtermExamPercentage ? midtermExamPercentage : 0);
 
-      console.log(totalMidtermPercentage);
+      //console.log(totalMidtermPercentage);
       if(totalMidtermPercentage !== 100){
         toast.error('Total percentage of the components for Midterm is not 100%');
       } else {
@@ -1593,7 +1593,7 @@ const removeAssignmentColumn = (index, setColumns, setAssignmentScores) => {
           });
         });
 
-        console.log(weightData);
+       // console.log(weightData);
         setMidtermComponentWeights(weightData);
       };
     };
@@ -1605,7 +1605,7 @@ const removeAssignmentColumn = (index, setColumns, setAssignmentScores) => {
                                  + parseInt(finalsPBAGradePercentage ? finalsPBAGradePercentage : 0)
                                  + parseInt(finalsExamPercentage ? finalsExamPercentage : 0);
 
-      console.log(totalMidtermPercentage);
+     // console.log(totalMidtermPercentage);
       if(totalMidtermPercentage !== 100){
         toast.error('Total percentage of the components for Finals is not 100%');
       } else {
@@ -1621,7 +1621,7 @@ const removeAssignmentColumn = (index, setColumns, setAssignmentScores) => {
           });
         });
 
-        console.log(weightData);
+       // console.log(weightData);
         setFinalsComponentWeights(weightData);
       };
     };
@@ -1684,7 +1684,7 @@ const removeAssignmentColumn = (index, setColumns, setAssignmentScores) => {
     const AttendanceData = []; //For Database: gradeData
     const AttendanceColumns = []; //For Database: attendanceData
 
-    console.log(midtermAttendanceColumns);
+    //console.log(midtermAttendanceColumns);
     midtermAttendanceColumns?.forEach((column, index) => {
       AttendanceColumns.push({
           scheduleNumber: classInfo.scheduleNumber,
@@ -1705,7 +1705,7 @@ const removeAssignmentColumn = (index, setColumns, setAssignmentScores) => {
       });
     });
     
-    console.log("Rows for Database:",AttendanceData);
+    //console.log("Rows for Database:",AttendanceData);
     //console.log("List of Dates:", AttendanceColumns);
     setmidtermAttendance(AttendanceData); //Storing raw values
     setmidtermAttendanceLabels(AttendanceColumns);
@@ -1780,8 +1780,8 @@ const removeAssignmentColumn = (index, setColumns, setAssignmentScores) => {
       });
     });
     
-    console.log("Rows for Database:",AttendanceData);
-    console.log("List of Dates:", AttendanceColumns);
+    //console.log("Rows for Database:",AttendanceData);
+    //console.log("List of Dates:", AttendanceColumns);
     setfinalAttendance(AttendanceData); //Storing raw values
     setfinalAttendanceLabels(AttendanceColumns);
   }, [finalsAttendanceColumns, classInfo]);
@@ -1919,7 +1919,7 @@ const removeAssignmentColumn = (index, setColumns, setAssignmentScores) => {
 
     const filteredAssignment = AssignmentData.filter(assignment => (assignment.value <= 100 && assignment.value >= 50) || assignment.value === null);
     
-    console.log("Rows for Database:",filteredAssignment);
+    //console.log("Rows for Database:",filteredAssignment);
     setmidtermAssignment(filteredAssignment); //Storing raw values
   }, [midtermAssignmentColumns, classInfo]);
   
@@ -1999,7 +1999,7 @@ const removeAssignmentColumn = (index, setColumns, setAssignmentScores) => {
 
     const filteredAssignment = AssignmentData.filter(assignment => (assignment.value <= 100 && assignment.value >= 50) || assignment.value === null);
     
-    console.log("Rows for Database:",filteredAssignment);
+    //console.log("Rows for Database:",filteredAssignment);
     setfinalAssignment(filteredAssignment); //Storing raw values
   }, [finalsAssignmentColumns, classInfo]);
 
@@ -2201,8 +2201,8 @@ const removeAssignmentColumn = (index, setColumns, setAssignmentScores) => {
   
     const filteredQuiz = QuizData.filter(quiz => quiz.value > 0);
     
-    console.log("Rows for Database:",filteredQuiz);
-    console.log("List of Max Scores:", QuizColumns);
+    //console.log("Rows for Database:",filteredQuiz);
+    //console.log("List of Max Scores:", QuizColumns);
     setmidtermQuiz(filteredQuiz); //Storing raw values
     setmidtermQuizMax(QuizColumns);
   }, [midtermQuizColumns, classInfo]);
@@ -2291,8 +2291,8 @@ const removeAssignmentColumn = (index, setColumns, setAssignmentScores) => {
   
     const filteredQuiz = QuizData.filter(quiz => quiz.value > 0);
     
-    console.log("Rows for Database:",filteredQuiz);
-    console.log("List of Max Scores:", QuizColumns);
+    //console.log("Rows for Database:",filteredQuiz);
+    //console.log("List of Max Scores:", QuizColumns);
     setfinalQuiz(filteredQuiz); //Storing raw values
     setfinalQuizMax(QuizColumns);
   }, [finalsQuizColumns, classInfo]);
@@ -2437,7 +2437,7 @@ const removeAssignmentColumn = (index, setColumns, setAssignmentScores) => {
 
     const filteredRecitation = RecitationData.filter(assignment => (assignment.value <= 100 && assignment.value >= 50) || assignment.value === null);
     
-    console.log("Rows for Database:",filteredRecitation);
+    //console.log("Rows for Database:",filteredRecitation);
     setmidtermRecitation(filteredRecitation); //Storing raw values
   }, [midtermRecitationColumns, classInfo]);
   
@@ -2516,7 +2516,7 @@ const removeAssignmentColumn = (index, setColumns, setAssignmentScores) => {
 
     const filteredRecitation = RecitationData.filter(assignment => (assignment.value <= 100 && assignment.value >= 50) || assignment.value === null);
     
-    console.log("Rows for Database:",filteredRecitation);
+    //console.log("Rows for Database:",filteredRecitation);
     setfinalRecitation(filteredRecitation); //Storing raw values
   }, [finalsRecitationColumns, classInfo]);
   
@@ -2789,8 +2789,8 @@ const calculateTotalMidtermCSPercentage = () => {
           });
         });
         
-        console.log("Rows for Database:",PBAData);
-        console.log("List of PBA Labels:", PBAColumns);
+        //console.log("Rows for Database:",PBAData);
+        //console.log("List of PBA Labels:", PBAColumns);
         setmidtermPBA(PBAData); //Storing raw values
         setmidtermPBALabels(PBAColumns);
       }, [midtermPBAColumns, classInfo]);
@@ -2874,8 +2874,8 @@ const calculateTotalMidtermCSPercentage = () => {
           });
         });
         
-        console.log("Rows for Database:",PBAData);
-        console.log("List of PBA Labels:", PBAColumns);
+        //console.log("Rows for Database:",PBAData);
+       // console.log("List of PBA Labels:", PBAColumns);
         setfinalPBA(PBAData); //Storing raw values
         setfinalPBALabels(PBAColumns);
       }, [finalsPBAColumns, classInfo]);
@@ -2937,8 +2937,8 @@ const calculateTotalMidtermCSPercentage = () => {
   
     const filteredExam = examData.filter(exam => exam.value > 0);
     
-    console.log("Rows for Database:",filteredExam);
-    console.log("Midterm Exam Max Score:", examColumns);
+   // console.log("Rows for Database:",filteredExam);
+    //console.log("Midterm Exam Max Score:", examColumns);
     setmidtermExam(filteredExam); //Storing raw values
     setmidtermExamMax([examColumns]);
   }, [midtermExamScores, midtermTotalItems, classInfo]);
@@ -2993,8 +2993,8 @@ const calculateTotalMidtermCSPercentage = () => {
   
     const filteredExam = examData.filter(exam => exam.value > 0);
     
-    console.log("Rows for Database:",filteredExam);
-    console.log("Final Exam Max Score:", examColumns);
+    //console.log("Rows for Database:",filteredExam);
+    //console.log("Final Exam Max Score:", examColumns);
     setfinalExam(filteredExam); //Storing raw values
     setfinalExamMax([examColumns]);
   }, [finalsExamScores, finalsTotalItems, classInfo]);
@@ -4746,7 +4746,7 @@ const handlePercentageChange = (setter, value) => {
     
           {/* Right Section: Menu Dropdown */}
           <div>
-          <Dropdown className="custom-dropdown">
+         { /*<Dropdown className="custom-dropdown">
             <Dropdown.Toggle
               variant="link"
               id="dropdown-basic"
@@ -4772,7 +4772,7 @@ const handlePercentageChange = (setter, value) => {
                 </>
               ) : null}
             </Dropdown.Menu>
-          </Dropdown>
+          </Dropdown>*/}
           </div>
         </div>
           <div className="search-container">

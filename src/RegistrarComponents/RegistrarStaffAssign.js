@@ -71,7 +71,7 @@ export default function RegistrarStaffAssign({ onBack }) {
       try {
         const currentAcademicYear = await AcademicYearModel.fetchExistingAcademicYears();
         const filteredAcadYear = currentAcademicYear.find(acadYear => acadYear.isCurrent === true)
-        console.log(filteredAcadYear)
+       // console.log(filteredAcadYear)
         const programs = await ProgramModel.fetchAllPrograms();
         setPrograms(programs);
         const filteredProgrmByAcadYear = programs.filter(currentProgram => currentProgram.academicYear === filteredAcadYear.academicYear);
@@ -143,7 +143,7 @@ export default function RegistrarStaffAssign({ onBack }) {
   const generateNextPersonnelNumber = (personnelType) => {
     if (personnelType) {
       const personnelNumbers = filteredPersonnel.map(personnel => personnel.personnelNumber);
-      console.log(personnelNumbers);
+      //console.log(personnelNumbers);
   
       const year = currentAcadYear.split('-')[0];
       let typeNum;
@@ -220,7 +220,7 @@ export default function RegistrarStaffAssign({ onBack }) {
       setLoading(true); // Start loading
       
       const personnelProgram = programNumbers.filter(program => program.programNumber === Number(formData.programNumber));
-      console.log(personnelProgram);
+      //console.log(personnelProgram);
       
       const updatedFormData = {
         ...formData,
@@ -235,12 +235,12 @@ export default function RegistrarStaffAssign({ onBack }) {
       };
 
       const formattedData = [updatedFormData];
-      console.log('Submitting data:', formattedData);
+     //('Submitting data:', formattedData);
 
 
       await PersonnelModel.insertPersonnel(formattedData);
       fetchRegistrarStaff();
-      console.log('Personnel added successfully');
+      //console.log('Personnel added successfully');
       handleCloseAdd();
     } catch (error) {
       console.error('Error adding personnel:', error);

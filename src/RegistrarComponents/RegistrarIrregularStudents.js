@@ -185,7 +185,7 @@ export default function RegistrarIrregularStudents() {
     };
     //curriculum that student must take
     const fetchCurriculum = async (programNumber, studentNumber) => {
-        console.log("Fetching curriculum for Program:", programNumber, "Student:", studentNumber);
+       // console.log("Fetching curriculum for Program:", programNumber, "Student:", studentNumber);
         setLoadingStudent(true);
         // Validate inputs
         if (!programNumber || !studentNumber) {
@@ -207,7 +207,7 @@ export default function RegistrarIrregularStudents() {
                 (course) => String(course.programNumber) === String(programNumber)
             );
     
-            console.log(`Filtered ${programCourses.length} courses for program ${programNumber}`);
+          //  console.log(`Filtered ${programCourses.length} courses for program ${programNumber}`);
     
             // Step 3: Index enrollments by courseCode for quick lookup
             const enrollmentIndex = allEnrollments.reduce((acc, enrollment) => {
@@ -215,7 +215,7 @@ export default function RegistrarIrregularStudents() {
                 return acc;
             }, {});
     
-            console.log("Created enrollment index");
+           // console.log("Created enrollment index");
     
             // Step 4: Fetch grades in parallel and group curriculum
             const curriculumPromises = programCourses.map(async (course) => {
@@ -247,7 +247,7 @@ export default function RegistrarIrregularStudents() {
             // Resolve all promises
             const resolvedCurriculum = (await Promise.all(curriculumPromises)).filter(Boolean);
     
-            console.log("Resolved curriculum courses with grades");
+           // console.log("Resolved curriculum courses with grades");
     
             // Step 5: Group courses by year level and semester
             const groupedCurriculum = resolvedCurriculum.reduce((acc, course) => {
@@ -261,7 +261,7 @@ export default function RegistrarIrregularStudents() {
                 return acc;
             }, {});
     
-            console.log("Grouped Curriculum:", groupedCurriculum);
+          //  console.log("Grouped Curriculum:", groupedCurriculum);
     
             // Step 6: Update state
             setCurriculum(groupedCurriculum);
@@ -290,7 +290,7 @@ export default function RegistrarIrregularStudents() {
     }, [selectedStudent]);
   
     const fetchCourseDetails = async (studentNumber) => {
-        console.log("Fetching course details for Student:", studentNumber);
+       // console.log("Fetching course details for Student:", studentNumber);
       
         // Validate input
         if (!studentNumber) {
@@ -305,7 +305,7 @@ export default function RegistrarIrregularStudents() {
             EnrollmentModel.fetchAllEnrollment(),
           ]);
       
-          console.log("Fetched courses and enrollments");
+         // console.log("Fetched courses and enrollments");
       
           // Step 2: Filter enrollments for the given student
           const studentEnrollments = allEnrollments.filter(
@@ -317,7 +317,7 @@ export default function RegistrarIrregularStudents() {
             return;
           }
       
-          console.log(`Filtered ${studentEnrollments.length} enrollments for student ${studentNumber}`);
+         // console.log(`Filtered ${studentEnrollments.length} enrollments for student ${studentNumber}`);
       
           // Step 3: Create an index of enrollments by courseCode for quick lookup
           const enrollmentIndex = studentEnrollments.reduce((acc, enrollment) => {
@@ -357,7 +357,7 @@ export default function RegistrarIrregularStudents() {
           // Step 5: Resolve all promises and filter out nulls
           const resolvedCourseDetails = (await Promise.all(courseDetailsPromises)).filter(Boolean);
       
-          console.log("Resolved course details:", resolvedCourseDetails);
+        //  console.log("Resolved course details:", resolvedCourseDetails);
       
           // Step 6: Group courses by academicYear and courseSemester
           const groupedCourseDetails = resolvedCourseDetails.reduce((acc, course) => {
@@ -371,7 +371,7 @@ export default function RegistrarIrregularStudents() {
             return acc;
           }, {});
       
-          console.log("Grouped Course Details:", groupedCourseDetails);
+          //console.log("Grouped Course Details:", groupedCourseDetails);
       
           return groupedCourseDetails;
         } catch (error) {
@@ -403,7 +403,7 @@ export default function RegistrarIrregularStudents() {
     
     
     const fetchCoursesAndSchedules = async (programNumber) => {
-        console.log('programNumber', programNumber);
+       // console.log('programNumber', programNumber);
         try {
             // Fetch courses and filter by programNumber
             const courseData = await CourseModel.fetchAllCourses();
@@ -412,7 +412,7 @@ export default function RegistrarIrregularStudents() {
             const filteredCourses = courseData.filter(
                 (course) => course.programNumber === programNumber
             );
-            console.log('filteredCourses', filteredCourses);
+        //    console.log('filteredCourses', filteredCourses);
     
             setCourses(filteredCourses);
     
@@ -427,13 +427,13 @@ export default function RegistrarIrregularStudents() {
     
             // Fetch schedules for the current academic year
             const fetchedScheduleData = await ScheduleModel.fetchAllSchedules(currentAcademicYear.academicYear);
-            console.log('fetchedScheduleData', fetchedScheduleData);
+           // console.log('fetchedScheduleData', fetchedScheduleData);
     
             // Fetch personnel data for each schedule's personnelNumber
             const processedSchedules = await Promise.all(
                 fetchedScheduleData.map(async (schedule) => {
                     const personnelData = await PersonnelModel.getProfessorByPersonnelNumber(schedule.personnelNumber);
-                    console.log('personnelData', personnelData);  // Debugging line
+                    //console.log('personnelData', personnelData);  // Debugging line
 
                     return {
                         schedule: `${schedule.scheduleDay} ${schedule.startTime} - ${schedule.endTime}`,
@@ -446,7 +446,7 @@ export default function RegistrarIrregularStudents() {
                 })
             );
     
-            console.log('processedSchedules', processedSchedules);
+           // console.log('processedSchedules', processedSchedules);
     
             setSchedules(processedSchedules);
         } catch (error) {
@@ -489,10 +489,10 @@ export default function RegistrarIrregularStudents() {
                     return; // Prevent further processing if a record exists
                 }
                 else if(!isExisting){
-                    console.log("Inserting enrollment data:", enrollmentData); 
+                   // console.log("Inserting enrollment data:", enrollmentData); 
                     // Proceed to insert the data if no existing record is found
                     await EnrollmentModel.createAndInsertEnrollment(enrollmentData);
-                    console.log("Enrollment data inserted successfully:", enrollmentData);
+                    //console.log("Enrollment data inserted successfully:", enrollmentData);
                     alert("Enrollment successful!");
                 }
             }
@@ -521,7 +521,7 @@ export default function RegistrarIrregularStudents() {
             status: 'Ongoing', // Add status 'Ongoing'
         }));
     
-        console.log("Enrollment data:", enrollmentData); // Log the data to verify
+       // console.log("Enrollment data:", enrollmentData); // Log the data to verify
     
         try {
             await enrollStudents(enrollmentData);
@@ -572,7 +572,7 @@ export default function RegistrarIrregularStudents() {
 
     // Handle click on "Academic Record" button
     const handleAcademicRecordClick = (student) => {
-        console.log("Opening Academic Record Modal for:", student); // Added log
+       // console.log("Opening Academic Record Modal for:", student); // Added log
         setSelectedStudent(student); // Set the selected student
         setShowAcademicRecordModal(true); // Show the academic record modal
         fetchCurriculum(student.studentProgramNumber, student.studentNumber); // Pass studentNumber to fetchCurriculum
@@ -581,7 +581,7 @@ export default function RegistrarIrregularStudents() {
 
     // Handle click on "Enrollment" button
     const handleEnrollmentClick = (student) => {
-        console.log("Opening Enrollment Modal for:", student); // Added log
+      //  console.log("Opening Enrollment Modal for:", student); // Added log
         setSelectedStudent(student); // Set the selected student
         setShowEnrollmentModal(true); // Show the enrollment modal
         fetchCoursesAndSchedules(student.studentProgramNumber, student.studentNumber)

@@ -52,7 +52,7 @@ export default function RegistrarProfessor() {
   const fetchPersonnelList = async () =>{
     try {
       const personnelData = await PersonnelModel.getProfessorsbyProgram(user.programNumber, selectedAcademicYear);
-      console.log(personnelData);
+     // console.log(personnelData);
       setProfessors(personnelData);
     } catch (error) {
       console.error('Error fetching personnel list:', error);
@@ -187,15 +187,15 @@ const fetchDeadline = async () => {
   try {
     // Fetch schedule data based on the selected section
     const scheduleData = await ScheduleModel.fetchExistingschedule(selectedSection);
-    console.log('scheduleData deadline:', scheduleData);
+   // console.log('scheduleData deadline:', scheduleData);
 
     // Extract schedule numbers from fetched schedule data
     const scheduleNumberDeadline = scheduleData.map((sched) => sched.scheduleNumber);
-    console.log('scheduleNumberDeadline:', scheduleNumberDeadline);
+   // console.log('scheduleNumberDeadline:', scheduleNumberDeadline);
     
     // Fetch deadlines from the API using the fetched schedule numbers
     const deadlinesData = await DeadlineModel.fetchDeadlinesBySchedule(scheduleNumberDeadline);
-    console.log("Deadlines fetched:", deadlinesData);
+   // console.log("Deadlines fetched:", deadlinesData);
     setDeadlines(deadlinesData);
   } catch (error) {
     console.error("Error fetching deadline:", error);
@@ -271,7 +271,7 @@ const fetchDeadline = async () => {
           }
         });
       
-        console.log(data);
+       // console.log(data);
         setMappedData(data);
       }      
     } catch (error) {
@@ -319,7 +319,7 @@ const fetchDeadline = async () => {
   const handleSaveChanges = async () => {
     if (selectedDeadline) {
       try {
-        console.log("Validating selectedDeadline:", selectedDeadline);
+       // console.log("Validating selectedDeadline:", selectedDeadline);
   
         if (!selectedDeadline.id || !selectedDeadline.scheduleNumber) {
           console.warn("Invalid deadline data, cannot update.");
@@ -336,7 +336,7 @@ const fetchDeadline = async () => {
                 : deadline
             )
           );
-          console.log("Updated deadlines state:", deadlines);
+        //  console.log("Updated deadlines state:", deadlines);
         }
       } catch (error) {
         console.error("Error updating deadline:", error);
@@ -358,7 +358,7 @@ const fetchDeadline = async () => {
           [field]: value,
         },
       };
-      console.log('Updated FormData:', updatedFormData);
+     // console.log('Updated FormData:', updatedFormData);
       return updatedFormData;
     });
   };
@@ -413,7 +413,7 @@ const fetchDeadline = async () => {
   
       // Handle the response
       if (response.success) {
-        console.log("Deadlines added successfully:", response.data);
+        //console.log("Deadlines added successfully:", response.data);
         fetchDeadline();
       } else {
         alert(`Failed to add deadlines: ${response.message}`);

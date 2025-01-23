@@ -223,7 +223,7 @@ const MasterlistOfGradesTable = () => {
   
       // Save the grouped data to state for rendering
       setGroupedData(groupedData);
-      console.log('groupedData', groupedData);
+    //  console.log('groupedData', groupedData);
   
     } catch (error) {
       console.error("Error fetching courses:", error);
@@ -329,7 +329,7 @@ const MasterlistOfGradesTable = () => {
       }, []);
   
       // Set the distinct data to state
-      console.log(distinctData);
+      //console.log(distinctData);
       setCombinedData(distinctData);
   
       return distinctData;

@@ -236,8 +236,8 @@ export default function HeadRegistrarAcademicYear() {
           finalizedPrograms: currentAcademicYear.finalizedPrograms
         };
 
-        console.log(updateCurrent.academicYear); //Old row
-        console.log(newAcademicYear); //New row
+      //  console.log(updateCurrent.academicYear); //Old row
+       // console.log(newAcademicYear); //New row
 
         //Fetch all movable rows of the old academicYear
         const [timelines, personnels, courses, programs, students, semGrades, enrollments] = await Promise.all([
@@ -259,7 +259,7 @@ export default function HeadRegistrarAcademicYear() {
             enrollment.isLeaving === false
           );          
 
-          console.log(filteredTimelines);
+       //   console.log(filteredTimelines);
 
           const uniqueTimelines = Array.from(
             filteredTimelines.reduce((map, enrollment) => {
@@ -274,7 +274,7 @@ export default function HeadRegistrarAcademicYear() {
             }, new Map()).values()
           );
 
-          console.log(uniqueTimelines);
+         // console.log(uniqueTimelines);
           
                                                                   
           const studentNumbers = uniqueTimelines.map((enrollment) => enrollment.studentNumber);
@@ -312,7 +312,7 @@ export default function HeadRegistrarAcademicYear() {
             return student;
           }, {});
 
-          console.log("Student Grades: ",studentGrades);
+         // console.log("Student Grades: ",studentGrades);
 
           //FUNCTION FOR UPDATING RELATIVE ROWS IN RESPECT TO THEIR GRADE PERFORMANCE IN THE SEMESTER
           Object.entries(studentGrades).forEach(([studentNumber, student]) => {
@@ -451,15 +451,15 @@ export default function HeadRegistrarAcademicYear() {
           });
 
           //UPDATED ROWS
-          console.log("Students: ",enrolledStudents);// student
-          console.log("Old Timelines: ",uniqueTimelines);// timeline
-          console.log("New Timelines:", newTimelines); //timeline
-          console.log("Personnels: ",personnels);// personnel
-          console.log("Courses: ",courses);// course 
-          console.log("Programs: ",updatedPrograms);// program 
-          console.log("Enrollments: ",enrollments);// enrollment
-          console.log("Old Acad Year", updateCurrent); //old acadYear
-          console.log("New Acad Year", newAcademicYear); //new acadYear
+         // console.log("Students: ",enrolledStudents);// student
+        //  console.log("Old Timelines: ",uniqueTimelines);// timeline
+        //  console.log("New Timelines:", newTimelines); //timeline
+        //  console.log("Personnels: ",personnels);// personnel
+        //  console.log("Courses: ",courses);// course 
+         // console.log("Programs: ",updatedPrograms);// program 
+        //  console.log("Enrollments: ",enrollments);// enrollment
+        //  console.log("Old Acad Year", updateCurrent); //old acadYear
+          //console.log("New Acad Year", newAcademicYear); //new acadYear
 
           //UPDATING THE RELEVANT ROWS FOR THIS SEM AND PROCEED TO THE NEXT
           try {
@@ -467,7 +467,7 @@ export default function HeadRegistrarAcademicYear() {
               ...updatedPrograms.map(async (programData) => {
                 return ProgramModel.createAndInsertProgram([programData]);
               }),
-              console.log('END OF DEBUGGING'),
+             // console.log('END OF DEBUGGING'),
               ...enrolledStudents.map(async (item) => {
                     const studentData = { ...item }; // Avoid mutating the original
                     delete studentData.id; // Removing ids without modifying the enrolledStudents
@@ -489,7 +489,7 @@ export default function HeadRegistrarAcademicYear() {
             ]);
         
             // If Promise.all resolves, this block will execute
-            console.log('All updates succeeded:', nextAcademicYear);
+           // console.log('All updates succeeded:', nextAcademicYear);
         
             if (nextAcademicYear.length > 0) {
               // Perform actions based on the resolved results
@@ -547,7 +547,7 @@ export default function HeadRegistrarAcademicYear() {
             return student;
           }, {});
 
-          console.log("Student Grades: ",studentGrades);
+         // console.log("Student Grades: ",studentGrades);
 
           //FUNCTION FOR UPDATING RELATIVE ROWS IN RESPECT TO THEIR GRADE PERFORMANCE IN THE SEMESTER
           Object.entries(studentGrades).forEach(([studentNumber, student]) => {
@@ -559,7 +559,7 @@ export default function HeadRegistrarAcademicYear() {
                 && record.scheduleNumber === student.class
                 && record.courseCode === student.course);
 
-              console.log("Student's course details:", studentEnrollment);
+             // console.log("Student's course details:", studentEnrollment);
 
               if (studentEnrollment && studentEnrollment.length > 0) {
                 studentEnrollment.forEach(record => {
@@ -636,10 +636,10 @@ export default function HeadRegistrarAcademicYear() {
           });
 
           //UPDATED ROWS
-          console.log(newTimelines); //insert New timelines
-          console.log(filteredTimelines); //update Old timelines
-          console.log(enrollments); //Update Old enrollments
-          console.log(enrolledStudents);// Update students
+          //console.log(newTimelines); //insert New timelines
+          //console.log(filteredTimelines); //update Old timelines
+          //console.log(enrollments); //Update Old enrollments
+          //console.log(enrolledStudents);// Update students
 
           //UPDATING THE RELEVANT ROWS FOR THIS SEM AND PROCEED TO THE NEXT
           /*try {
@@ -699,7 +699,7 @@ export default function HeadRegistrarAcademicYear() {
         academicYear: selectedAcademicYear
       }));
 
-      console.log(newProgramsData);
+      //console.log(newProgramsData);
 
       try {
 
@@ -754,7 +754,7 @@ export default function HeadRegistrarAcademicYear() {
           academicYear: selectedAcademicYear
         }));
   
-        console.log(newProgramsData);
+       // console.log(newProgramsData);
         try {
           const response = await ProgramModel.createAndInsertProgram(newProgramsData);
       
