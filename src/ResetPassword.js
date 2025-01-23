@@ -10,13 +10,12 @@ export default function ResetPassword() {
     const [success, setSuccess] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [accessToken, setAccessToken] = useState('');
-    console.log(accessToken);
 
     // Extract access token from URL query parameters
     useEffect(() => {
         const queryParams = new URLSearchParams(location.search);
         const rawToken = queryParams.get('access_token'); // Extract the token from URL query parameters
-        
+        console.log(rawToken);
         if (rawToken) {
             setAccessToken(rawToken); // Pass the raw token
         }
