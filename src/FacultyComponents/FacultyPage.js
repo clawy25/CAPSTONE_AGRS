@@ -227,13 +227,13 @@ export default function FacultyPage() {
                         {loading ? 'Logging In...' : 'Login'}
                 </button>
 
-                <span
+                {/*<span
                   className="bg-transparent custom-color-font fs-5 fw-semibold mt-3 text-center pe-auto"
                   onClick={handleForgotpassword}
                   style={{ cursor: 'pointer' }}
                 >
                   Forgot Password
-                </span>
+                </span>*/}
 
             </form>
             
