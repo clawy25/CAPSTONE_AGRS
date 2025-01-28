@@ -50,6 +50,7 @@ const ScheduleTable = () => {
       // Fetch academic years and programs
       const fetchedAcademicYears = await AcademicYearModel.fetchExistingAcademicYears();
       const current = fetchedAcademicYears.filter(acadYears => acadYears.isCurrent === true);
+      console.log(current)
       setCurrentAcadYear(current);
   
       if (current.length > 0) {
@@ -81,7 +82,7 @@ const ScheduleTable = () => {
   
       if (student) {
         // Set the student's full name
-        const fullName = `${student.studentNameLast}, ${student.studentNameFirst}`;
+        const fullName = `${student.studentNameLast}, ${student.studentNameFirst} ${student.studentNameMiddle || ''}`;
         setStudentName(fullName.trim());
       } else {
         throw new Error("Student not found.");
@@ -331,11 +332,25 @@ useEffect(() => {
     // Return formatted time with day
     return `${day || 'No day'}, ${startHr}:${minutes} ${startampm} - ${endHr}:${endMin} ${endampm}`;
   }
+
+  const getSemesterText = (semester) => {
+    const sem = parseInt(semester, 10);
+    switch (sem) {
+      case 1:
+        return "First";
+      case 2:
+        return "Second";
+      case 3:
+        return "Summer";
+      default:
+        return `${sem}`;
+    }
+  };
   
   return (
     <section className='card bg-white'>
       <div className='card-header bg-white d-flex'>
-        <p className='custom-color-green-font mt-3 ms-1 fs-6 custom-color-green-font fw-bold text-nowrap'>{studentName} ({user.studentNumber})</p>
+        <p className='custom-color-green-font mt-3 ms-1 fs-6 custom-color-green-font fw-bold'>{studentName} ({user.studentNumber})</p>
         </div>
 
         {studentType !== 'Regular' ? (<div class="mt-4  mx- auto alert alert-warning text-center px-auto" role="alert">
@@ -421,12 +436,12 @@ useEffect(() => {
               const courseDetails = courses?.find(course => course.courseCode === schedule.courseCode);
               return (
                 <tr key={index}>
-                  <td>{index + 1}</td>
-                  <td>{courseDetails?.courseCode}</td>
-                  <td>{courseDetails?.courseDescriptiveTitle || 'N/A'}</td>
-                  <td>{courseDetails?.courseLecture || 'N/A'}</td>
-                  <td>{courseDetails?.courseLaboratory || 'N/A'}</td>
-                  <td>
+                  <td className='text-center'>{index + 1}</td>
+                  <td className='text-center'>{courseDetails?.courseCode}</td>
+                  <td className='text-center'>{courseDetails?.courseDescriptiveTitle || 'N/A'}</td>
+                  <td className='text-center'>{courseDetails?.courseLecture || 'N/A'}</td>
+                  <td className='text-center'>{courseDetails?.courseLaboratory || 'N/A'}</td>
+                  <td className='text-center'>
                     <ul className=' list-unstyled'>
                       <li>
                         {formatTime(schedule.scheduleDay, schedule.startTime, schedule.endTime)}
@@ -531,23 +546,27 @@ useEffect(() => {
 
       {/* Enrollment confirmation */}
       {isEnrolled && (
-        <Card className="mt-4 mx-3 mb-3">
+    <>
+                  <div class="mt-2  mx-auto w-100 alert alert-warning text-center px-auto" role="alert">
+                  Please be informed that you need to visit the Registrar's Office to obtain a copy of your Certificate of Registration.
+        </div>
+        <Card className="mt-2 mx-3 mb-3">
           <Card.Header className="bg-custom-color-green text-white">
             <strong>You are qualified for Free Higher Education Act.</strong>
           </Card.Header>
           <Card.Body className="text-center">
-          <div class="mt-4  mx- auto alert alert-warning text-center px-auto" role="alert">
-          Please be informed that you need to visit the Registrar's Office to obtain a copy of your Certificate of Registration.
-</div>
+
             <div className='mt-3 text-center'>
             <h3 className="text-success fs-3 custom-font mt-2">
               You are officially enrolled.
             </h3>
-            <p>(S.Y. 2425 - First Semester)</p>
+            <p>(S.Y. { currentAcademicYear[0].academicYear} - {getSemesterText(semester)} Semester)</p>
             </div>
             
           </Card.Body>
         </Card>
+    </>
+        
       )}
     </section>
   );

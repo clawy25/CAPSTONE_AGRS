@@ -110,6 +110,7 @@ export default function Schedule() {
               totalUnits,
               scheduleTime: `${matchedSchedule.scheduleDay} ${formatTimeTo12Hour(matchedSchedule.startTime)} - ${formatTimeTo12Hour(matchedSchedule.endTime)}`,
               professorName,
+              room: matchedSchedule.room,
             };
           }
         }
@@ -154,7 +155,7 @@ export default function Schedule() {
   return (
     <div className="card card-success rounded">
       <div className='card-header bg-white d-flex'>
-      <p className='custom-color-green-font mt-3 ms-1 fs-6 custom-color-green-font fw-bold text-nowrap'>{studentName} ({user.studentNumber})</p>
+      <p className='custom-color-green-font mt-3 ms-1 fs-6 custom-color-green-font fw-bold'>{studentName} ({user.studentNumber})</p>
       </div>
       <div className="card-body table-container">
         {loading ? (
@@ -177,6 +178,7 @@ export default function Schedule() {
                   <th className="text-success text-center">Total Units</th>
                   <th className="text-success text-center">Schedule</th>
                   <th className="text-success text-center">Professor</th>
+                  <th className="text-success text-center">Room Number</th>
                 </tr>
               </thead>
               <tbody className="bg-white">
@@ -190,11 +192,12 @@ export default function Schedule() {
                       <td className="text-center">{schedule.totalUnits}</td>
                       <td className="text-center">{schedule.scheduleTime}</td>
                       <td className="text-center">{schedule.professorName}</td>
+                      <td className="text-center">{schedule.room}</td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="7" className="text-center custom-font">
+                    <td colSpan="8" className="text-center custom-font">
                       No schedule found for this student.
                     </td>
                   </tr>

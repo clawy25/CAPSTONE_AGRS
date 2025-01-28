@@ -241,6 +241,7 @@ const formatTimeTo12Hour = (timeStr) => {
           <th className="custom-color-green-font text-center">Unit</th>
           <th className="custom-color-green-font text-center">Class</th>
           <th className="custom-color-green-font text-center">Schedule</th>
+          <th className="custom-color-green-font text-center">Room Number</th>
         </tr>
       </thead>
       <tbody>
@@ -253,14 +254,15 @@ const formatTimeTo12Hour = (timeStr) => {
             <tr key={sched.id}>
               <td className="text-center">{sched.courseCode}</td>
               <td className="text-center">{courseDetails.courseDescriptiveTitle || "N/A"}</td>
-              <td className="text-center">{courseDetails.courseLecture || "N/A"}</td>
-              <td className="text-center">{courseDetails.courseLaboratory || "N/A"}</td>
-              <td className="text-center">{totalUnits || "N/A"}</td>
+              <td className="text-center">{courseDetails.courseLecture || "0"}</td>
+              <td className="text-center">{courseDetails.courseLaboratory || "0"}</td>
+              <td className="text-center">{totalUnits || "0"}</td>
               <td className="text-center">{sched.sectionNumber || "N/A"}</td>
               <td className="text-center">
                 {sched.scheduleDay}, {formatTimeTo12Hour(sched.startTime)} -{" "}
                 {formatTimeTo12Hour(sched.endTime)}
               </td>
+              <td className="text-center">{sched.room || "N/A"}</td>
             </tr>
           );
         })}

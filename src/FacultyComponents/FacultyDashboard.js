@@ -557,7 +557,7 @@ export default function FacultyDashboard () {
         <nav className="menu mb-3">
         <Link
             to="/faculty-dashboard/classes"
-            className={`menu-item d-flex align-items-center mb-2 ${location.pathname === '/faculty-dashboard/classes' ? 'active' : ''}`}
+            className={`submenu-item d-flex align-items-center mb-2 ${location.pathname === '/faculty-dashboard/classes' ? 'active' : ''}`}
             onClick={(e) => {
               e.preventDefault();  // Prevent default Link behavior
               setSelectedClass(null);
@@ -570,7 +570,7 @@ export default function FacultyDashboard () {
           </Link>
           <Link
             to="/faculty-dashboard/schedules"
-            className={`menu-item d-flex align-items-center mb-2 ${location.pathname === '/faculty-dashboard/schedules' ? 'active' : ''}`}
+            className={`submenu-item d-flex align-items-center mb-2 ${location.pathname === '/faculty-dashboard/schedules' ? 'active' : ''}`}
             onClick={(e) => {navigate('/faculty-dashboard/schedules'); setShowSidebar(false); }}
           >
             <FontAwesomeIcon icon={faCalendar} className="me-2" />

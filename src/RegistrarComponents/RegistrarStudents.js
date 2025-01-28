@@ -348,7 +348,10 @@ export default function RegistrarStudents() {
         setShowModal(true);
       };
     
-      const handleCloseModal = () => setShowModal(false);
+      const handleCloseModal = () => {
+        setShowModal(false);  
+        setSelectedStudent(null);
+      };
 
     const fetchCurrentAcadYear = async () => {
         try {
@@ -621,10 +624,12 @@ export default function RegistrarStudents() {
 
     useEffect(() => {
         const fetchAndDisplayCourseDetails = async () => {
-          const courseDetails = await fetchCourseDetails(selectedStudent.studentNumber);
+          const courseDetails = await fetchCourseDetails(selectedStudent ?.studentNumber);
     
           if (courseDetails) {
             setGroupedCourseDetails(courseDetails);
+          } else {
+            setGroupedCourseDetails([]);
           }
         };
     
@@ -644,6 +649,15 @@ export default function RegistrarStudents() {
           return {};
         }
       };
+
+
+      const convertTo12HourFormat = (time) => {
+        const [hours, minutes] = time.split(":").map(Number);
+        const period = hours >= 12 ? "PM" : "AM";
+        const adjustedHours = hours % 12 || 12; // Convert 0 to 12 for midnight
+        return `${adjustedHours}:${String(minutes).padStart(2, "0")} ${period}`;
+      };
+      
       
 const fetchCourseDetails = async (studentNumber) => {
   console.log("Fetching course details for Student:", studentNumber);
@@ -671,7 +685,8 @@ const fetchCourseDetails = async (studentNumber) => {
 
     if (studentEnrollments.length === 0) {
       console.log(`No enrollments found for student ${studentNumber}`);
-      return;
+
+      return null;
     }
 
    // console.log(`Filtered ${studentEnrollments.length} enrollments for student ${studentNumber}`);
@@ -705,8 +720,8 @@ const fetchCourseDetails = async (studentNumber) => {
 
       // Fetch semGrade data for this course's schedule
       const semGradeData = await fetchSemGrade(scheduleNumber, studentNumber);
-      const numEq = semGradeData?.numEq || "N/A";
-      const remarks = semGradeData?.remarks || "N/A";
+      const numEq = semGradeData?.numEq ? parseFloat(semGradeData.numEq).toFixed(2) : "0.00";
+      const remarks = semGradeData?.remarks || "-";
 
       // Fetch schedule details for this course's scheduleNumber
       const scheduleData = allSchedules.find(
@@ -719,6 +734,10 @@ const fetchCourseDetails = async (studentNumber) => {
       }
 
       const { scheduleDay, startTime, endTime, personnelNumber, sectionNumber, room } = scheduleData;
+
+      const startTime12Hour = convertTo12HourFormat(startTime);
+const endTime12Hour = convertTo12HourFormat(endTime);
+
 
       // Fetch personnel details to get initials
       const personnel = await PersonnelModel.getProfessorByPersonnelNumber(personnelNumber);
@@ -738,10 +757,10 @@ const fetchCourseDetails = async (studentNumber) => {
         courseSemester,
         numEq,
         remarks,
-        credits: courseLecture + courseLaboratory || "N/A",
+        credits: (courseLecture + courseLaboratory || 0).toFixed(2),
         scheduleDay,
-        startTime,
-        endTime,
+        startTime: startTime12Hour,
+        endTime: endTime12Hour,
         personnelInitials,
         sectionNumber,
         programNumber,
@@ -775,7 +794,19 @@ const fetchCourseDetails = async (studentNumber) => {
   }
 };
 
-      
+const getSemesterText = (semester) => {
+  const sem = parseInt(semester, 10);
+  switch (sem) {
+    case 1:
+      return "First (1st)";
+    case 2:
+      return "Second (2nd)";
+    case 3:
+      return "Summer";
+    default:
+      return `${sem}`;
+  }
+};
       
     
     
@@ -1144,7 +1175,9 @@ const fetchCourseDetails = async (studentNumber) => {
           />
         </div>
         <hr/>
- <Table className="border-white table-upper">
+          {selectedStudent && (
+            <>
+             <Table className="border-white table-upper">
         <thead style={{textAlign: 'center' }}>
           <tr>
             <th colSpan="6" className="fs-5 text-center">OFFICE OF THE COLLEGE REGISTRAR</th>
@@ -1157,25 +1190,25 @@ const fetchCourseDetails = async (studentNumber) => {
   <tr>
     <td className="fs-6 fw-bold" style={{ fontWeight: 'bold' }}>FULL NAME:</td>
     <td className="fs-6">
-      {selectedStudent ? `${selectedStudent.studentNameLast}, ${selectedStudent.studentNameFirst} ${selectedStudent.studentNameMiddle}` : ""}
+      {selectedStudent ? `${selectedStudent?.studentNameLast}, ${selectedStudent?.studentNameFirst} ${selectedStudent?.studentNameMiddle}` : "N/A"}
     </td>
     <td></td>
     <td></td>
     <td className="fs-6 fw-bold" style={{ fontWeight: 'bold' }}>SCHOOL YEAR:</td>
-    <td className="fs-6">{Object.keys(groupedCourseDetails)[0] || "(ACADEMIC)"}</td>
+    <td className="fs-6">{Object.keys(groupedCourseDetails)[0] || "N/A"}</td>
   </tr>
   <tr>
     <td className="fs-6 fw-bold" style={{ fontWeight: 'bold' }}>STUDENT ID N#.:</td>
     <td className="fs-6">
-      {selectedStudent ? selectedStudent.studentNumber : "(Student Number of the Student)"}
+      {selectedStudent ? selectedStudent.studentNumber : "N/A"}
     </td>
     <td className="fs-6 fw-bold" style={{ fontWeight: 'bold' }}>SEX:</td>
-    <td className="fs-6">{selectedStudent ? selectedStudent.studentSex : ""}</td>
+    <td className="fs-6">{selectedStudent ? selectedStudent.studentSex : "N/A"}</td>
     <td className="fs-6 fw-bold" style={{ fontWeight: 'bold' }}>SEMESTER:</td>
     <td className="fs-6">
-      {Object.keys(groupedCourseDetails).length > 0
-        ? Object.keys(groupedCourseDetails[Object.keys(groupedCourseDetails)[0]])[0] || "(SEMESTER)"
-        : "(SEMESTER)"}
+    {getSemesterText(Object.keys(groupedCourseDetails).length > 0
+        ? Object.keys(groupedCourseDetails[Object.keys(groupedCourseDetails)[0]])[0]
+        : "N/A")}
     </td>
   </tr>
   <tr>
@@ -1185,27 +1218,27 @@ const fetchCourseDetails = async (studentNumber) => {
     {groupedCourseDetails && Object.keys(groupedCourseDetails).length > 0
         ? groupedCourseDetails[Object.keys(groupedCourseDetails)[0]][
             Object.keys(groupedCourseDetails[Object.keys(groupedCourseDetails)[0]])[0]
-          ][0]?.programName || ""
-        : ""}
+          ][0]?.programName || "N/A"
+        : "N/A"}
     </td>
     <td colSpan="2"></td>
     
     <td className="fs-6 fw-bold" style={{ fontWeight: 'bold' }}>YEAR LEVEL & SECTION:</td>
-    <td className="fs-6" style={{ fontWeight: 'bold' }}>
+    <td className="fs-6">
       {groupedCourseDetails && Object.keys(groupedCourseDetails).length > 0
         ? groupedCourseDetails[Object.keys(groupedCourseDetails)[0]][
             Object.keys(groupedCourseDetails[Object.keys(groupedCourseDetails)[0]])[0]
-          ][0]?.sectionNumber || "(3-A)"
-        : "(3-A)"}
+          ][0]?.sectionNumber || "N/A"
+        : "N/A"}
     </td>
   </tr>
   <tr>
     <td className="fs-6 fw-bold" style={{ fontWeight: 'bold' }}>PROGRAM CODE:</td>
-    <td className="fs-6">{selectedStudent ? selectedStudent.studentProgramNumber : ""}</td>
+    <td className="fs-6">{selectedStudent ? selectedStudent.studentProgramNumber : "N/A"}</td>
     <td></td>
     <td></td>
     <td className="fs-6 fw-bold" style={{ fontWeight: 'bold' }}>ADMISSION STATUS:</td>
-    <td className="fs-6">{selectedStudent ? selectedStudent.studentType : ""}</td>
+    <td className="fs-6">{selectedStudent ? selectedStudent.studentType : "N/A"}</td>
   </tr>
 </tbody>
 
@@ -1250,28 +1283,36 @@ const fetchCourseDetails = async (studentNumber) => {
     ))
   ) : (
     <tr>
-      <td colSpan="7" className="fs-6">No data available</td>
+      <td colSpan="8" className="fs-6">No data available</td>
     </tr>
   )}
 
 
   {/* Registrar Evaluator/Print Row */}
-  <tr>
-    <td className='fs-6'>Registrar Evaluator/Print:</td>
-    <td colSpan="2" className='fs-6' style={{textAlign: 'left'}}>{`${user.personnelNameFirst} ${user.personnelNameMiddle} ${user.personnelNameLast}`}</td>
-    <td  className="fs-6">Total Unit {Object.keys(groupedCourseDetails).reduce((total, academicYear) => {
+  <tr style={{border: 'none'}}>
+    <td className='fs-6' style={{border: 'none'}}>Registrar Evaluator/Print:</td>
+    <td colSpan="2" className='fs-6' style={{textAlign: 'left', border: 'none'}}>{`${user.personnelNameFirst} ${user.personnelNameMiddle} ${user.personnelNameLast}`}</td>
+    <td  className="fs-6" style={{border: 'none'}}>Total Unit {Object.keys(groupedCourseDetails).reduce((total, academicYear) => {
         return total + Object.keys(groupedCourseDetails[academicYear]).reduce((semesterTotal, semester) => {
           return semesterTotal + groupedCourseDetails[academicYear][semester].reduce((courseTotal, course) => {
             return courseTotal + (parseFloat(course.credits) || 0); // Add up credits for each course
           }, 0);
         }, 0);
       }, 0).toFixed(2)}</td>
-    <td className="fs-6 text-right">Date</td>
-    <td colSpan={3}></td>
+    <td className="fs-6 text-right" style={{border: 'none'}}>Date</td>
+    <td colSpan={3} style={{border: 'none'}}></td>
   </tr>
+  <tr style={{border: 'none'}}>
+  <td className='fs-6' style={{border: 'none'}}></td>
+    <td colSpan="2" className='fs-6' style={{textAlign: 'left', border: 'none', fontStyle: 'italic'}}>College Registrar</td>
+    <td colSpan={5} style={{border: 'none'}}></td>
+    
+    </tr>
 </tbody>
 
 </Table>
+            </>
+          )}
 
 
          </div>
@@ -1426,7 +1467,7 @@ const fetchCourseDetails = async (studentNumber) => {
                       <p style={{ fontSize: "0.7rem" }}>ACADEMIC PROGRAM:</p>
                     </td>
                     <td style={{ border: "none" }}>
-                      <p style={{ fontSize: "0.7rem" }}>{programName}</p>
+                      <p style={{ fontSize: "0.7rem" }}>{selectedStudent?.programName}</p>
                     </td>
                   </tr>
                   <tr>
@@ -1655,7 +1696,7 @@ style={{
                     fontSize: '0.8rem',
                   }}
                 >
-                  {course.credits || '-'}
+                  {course.numEq || '-'}
                 </div>
 
                 {/* COMPLETION */}
@@ -1679,7 +1720,7 @@ style={{
                     fontSize: '0.8rem',
                   }}
                 >
-                  {course.numEq || '0.00'}
+                  {course.credits || '0.00'}
                 </div>
               </React.Fragment>
             ))}

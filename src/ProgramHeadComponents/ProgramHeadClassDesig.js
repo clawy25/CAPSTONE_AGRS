@@ -177,10 +177,6 @@ const ProgramHeadClassDesig = () => {
   const createSchedules = async () => {
     try {
       await fetchCourses();
-      
-      console.log(courses);
-      console.log(selectedSection);
-
       const newSchedules = courses.map((course) => ({
         scheduleNumber: `${course.courseCode}-${selectedSection}`, 
         sectionNumber: selectedSection,
@@ -189,37 +185,28 @@ const ProgramHeadClassDesig = () => {
         semester: course.courseSemester,
         academicYear: course.academicYear,
       }));
-      
       await ScheduleModel.createAndInsertSchedules(newSchedules);
-
       fetchSchedules();
-    } catch (error){
+    } catch (error) {
       console.error("Error creating schedules:", error);
     }
   };
+  
 
   const updateSchedules = async () => {
     try {
-      // Validate schedules before proceeding
       const overlappingSchedules = await validateSchedules(schedules);
       if (overlappingSchedules.length > 0) {
         const overlappingInfo = overlappingSchedules
-          .map(
-            (schedule) =>
-              `Section: ${schedule.sectionNumber}, Course Code: ${schedule.courseCode}, Day: ${schedule.scheduleDay}, Time: ${schedule.startTime} - ${schedule.endTime}, Personnel: ${schedule.personnelNumber}`
-          )
+          .map((schedule) => `Section: ${schedule.sectionNumber}, Course Code: ${schedule.courseCode}, Room: ${schedule.room}`)
           .join("\n");
   
-        alert(
-          `Failed to update: The following overlapping schedules were detected:\n${overlappingInfo}`
-        );
+        alert(`Failed to update: Overlapping schedules detected:\n${overlappingInfo}`);
         return;
       }
-      setLoading(true)
-      // Call the update function with the modified schedules
-      await ScheduleModel.updateSchedules(schedules);
-  
-      // Fetch schedules after update
+      
+      setLoading(true);
+      await ScheduleModel.updateSchedules(schedules); // Ensure roomNumber is part of the schedule object
       await fetchSchedules();
     } catch (error) {
       console.error("Error updating schedules:", error);
@@ -227,6 +214,7 @@ const ProgramHeadClassDesig = () => {
       setLoading(false);
     }
   };
+  
   
   async function validateSchedules(schedules) {
     // Fetch all schedules for the selected academic year
@@ -397,6 +385,9 @@ const ProgramHeadClassDesig = () => {
       )
     );
   };
+
+
+  
 
   useEffect(() => {
     console.log('Updated schedules:', schedules);
@@ -582,13 +573,14 @@ const ProgramHeadClassDesig = () => {
             <th className='custom-color-green-font text-center'>Lab Units</th>
             <th className='custom-color-green-font text-center'>Schedule</th>
             <th className='custom-color-green-font text-center'>Professor</th>
+            <th className='custom-color-green-font text-center'>Room Number</th>
           </tr>
         </thead>
         <tbody>
           {schedules.length === 0 ? (
             <tr>
               
-              <td colSpan="6">
+              <td colSpan="7">
               <div className=" mx- auto alert alert-warning text-center px-auto" role="alert">
                  Please click the 'Generate List' button to generate schedules for the section.
                   </div>
@@ -661,6 +653,15 @@ const ProgramHeadClassDesig = () => {
                       ))}
                     </Form.Control>
                   </td>
+                  <td>
+                  <Form.Control
+                    type="text"
+                    value={schedule.room || ""}
+                    className='text-center'
+                    onChange={(e) => handleScheduleChange(index, "room", e.target.value)} // Update roomNumber
+                  />
+                </td>
+
                 </tr></>
               );
             })

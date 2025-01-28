@@ -251,7 +251,7 @@ export default function Grades() {
     <>
     <div className='card bg-white'>
       <div className='card-header bg-white d-flex'>
-        <p className='custom-color-green-font mt-3 ms-1 fs-6 custom-color-green-font fw-bold text-nowrap'>{user.studentNameLast}, {user.studentNameFirst} {user.studentNameMiddle || ''} ({user.studentNumber})</p>
+        <p className='custom-color-green-font mt-3 ms-1 fs-6 custom-color-green-font fw-bold'>{user.studentNameLast}, {user.studentNameFirst} {user.studentNameMiddle || ''} ({user.studentNumber})</p>
  
       </div>
       <div className='card-body card-success border-success rounded'>

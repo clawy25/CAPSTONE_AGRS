@@ -120,7 +120,7 @@ export default function RegistrarDashboard() {
         </div>
     <nav className="menu mb-3">
       <div 
-        className="menu-item d-flex align-items-center mb-2" 
+        className="submenu-item d-flex align-items-center mb-2" 
         onClick={() => {
           setShowStudentsSubMenu(!showStudentsSubMenu);
           navigate('/registrar-dashboard/students'); // Directly navigate to RegistrarStudents
@@ -152,7 +152,7 @@ export default function RegistrarDashboard() {
           </Link>
         </div>
       )}
-      <div className="menu-item d-flex align-items-center mb-2" onClick={() => setShowGradesSubMenu(!showGradesSubMenu)}>
+      <div className="submenu-item d-flex align-items-center mb-2" onClick={() => setShowGradesSubMenu(!showGradesSubMenu)}>
         <FontAwesomeIcon icon={faGraduationCap} className="me-2" />
         GRADES
         <FontAwesomeIcon icon={showGradesSubMenu ? faChevronUp : faChevronDown} className="ms-auto" />
@@ -179,7 +179,7 @@ export default function RegistrarDashboard() {
       )}
       <Link 
         to="/registrar-dashboard/grades-submission" 
-        className={`menu-item d-flex align-items-center mb-2 ${location.pathname === '/registrar-dashboard/grades-submission' ? 'active' : ''}`}
+        className={`submenu-item d-flex align-items-center mb-2 ${location.pathname === '/registrar-dashboard/grades-submission' ? 'active' : ''}`}
         onClick={() => {
           setShowGradesSubMenu(false);
           if (window.innerWidth <= 768) setShowSidebar(false); // Close sidebar on mobile
@@ -193,7 +193,7 @@ export default function RegistrarDashboard() {
         <>
           <Link 
             to="/registrar-dashboard/staff" 
-            className={`menu-item d-flex align-items-center mb-2 ${location.pathname.startsWith('/registrar-dashboard/staff') ? 'active' : ''}`}
+            className={`submenu-item d-flex align-items-center mb-2 ${location.pathname.startsWith('/registrar-dashboard/staff') ? 'active' : ''}`}
             onClick={() => {
               setShowGradesSubMenu(false);
               if (window.innerWidth <= 768) setShowSidebar(false);
@@ -204,7 +204,7 @@ export default function RegistrarDashboard() {
           </Link>
           <Link 
             to="/registrar-dashboard/academicYear" 
-            className={`menu-item d-flex align-items-center mb-2 ${location.pathname.startsWith('/registrar-dashboard/academicYear') ? 'active' : ''}`}
+            className={`submenu-item d-flex align-items-center mb-2 ${location.pathname.startsWith('/registrar-dashboard/academicYear') ? 'active' : ''}`}
             onClick={() => {
               setShowGradesSubMenu(false);
               if (window.innerWidth <= 768) setShowSidebar(false);

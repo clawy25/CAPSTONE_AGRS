@@ -211,7 +211,7 @@ export default function ProgramHeadDashboard() {
           {/* Grades Section */}
           <div className="menu-item-wrapper">
             <div
-              className={`menu-item d-flex align-items-center mb-2`}
+              className={`submenu-item d-flex align-items-center mb-2`}
               onClick={() => {
                 setShowGradesSubMenu(!showGradesSubMenu);
               }}
@@ -238,7 +238,7 @@ export default function ProgramHeadDashboard() {
 
           {/* Class Scheduling Section */}
           <div
-            className="menu-item d-flex align-items-center mb-2"
+            className="submenu-item d-flex align-items-center mb-2"
             onClick={() => {
               setShowClassDesignationSubMenu(!showClassDesignationSubMenu);
               navigate('/programHead-dashboard/class-scheduling');

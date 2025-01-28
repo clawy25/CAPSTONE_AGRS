@@ -4743,37 +4743,46 @@ const handlePercentageChange = (setter, value) => {
               Grade Sheet
             </Button>
           </div>
+
+          {selectedPeriod === 'summary' || selectedPeriod === 'gradeSheet' ? (
+
+
+
+<div>
+<Dropdown className="custom-dropdown">
+   <Dropdown.Toggle
+     variant="link"
+     id="dropdown-basic"
+     style={{
+       background: 'none',
+       border: 'none',
+       color: '#004d00',
+     }}
+   >
+     <FontAwesomeIcon icon={faBars} size="lg" />
+   </Dropdown.Toggle>
+   
+
+   <Dropdown.Menu>
+     {selectedPeriod === 'midterm' || selectedPeriod === 'finals' ? (
+       <>
+         <Dropdown.Item onClick={handleImport}>IMPORT</Dropdown.Item>
+         <Dropdown.Item onClick={handleExport}>EXPORT</Dropdown.Item>
+       </>
+     ) : selectedPeriod === 'summary' || selectedPeriod === 'gradeSheet' ? (
+       <>
+         <Dropdown.Item onClick={handleExport}>EXPORT</Dropdown.Item>
+         <Dropdown.Item onClick={handlePrint}>PRINT</Dropdown.Item>
+       </>
+     ) : null}
+   </Dropdown.Menu>
+ </Dropdown>
+ </div>
+) : null}
+
     
           {/* Right Section: Menu Dropdown */}
-          <div>
-         { /*<Dropdown className="custom-dropdown">
-            <Dropdown.Toggle
-              variant="link"
-              id="dropdown-basic"
-              style={{
-                background: 'none',
-                border: 'none',
-                color: '#004d00',
-              }}
-            >
-              <FontAwesomeIcon icon={faBars} size="lg" />
-            </Dropdown.Toggle>
 
-            <Dropdown.Menu>
-              {selectedPeriod === 'midterm' || selectedPeriod === 'finals' ? (
-                <>
-                  <Dropdown.Item onClick={handleImport}>IMPORT</Dropdown.Item>
-                  <Dropdown.Item onClick={handleExport}>EXPORT</Dropdown.Item>
-                </>
-              ) : selectedPeriod === 'summary' || selectedPeriod === 'gradeSheet' ? (
-                <>
-                  <Dropdown.Item onClick={handleExport}>EXPORT</Dropdown.Item>
-                  <Dropdown.Item onClick={handlePrint}>PRINT</Dropdown.Item>
-                </>
-              ) : null}
-            </Dropdown.Menu>
-          </Dropdown>*/}
-          </div>
         </div>
           <div className="search-container">
             <input

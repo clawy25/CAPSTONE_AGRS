@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { Table, Modal, Button, Form, Spinner, Alert, Row, Col } from 'react-bootstrap';
+import { Table, Modal, Button, Form, Spinner, Alert, Row, Col, Container } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import AcademicYearModel from '../ReactModels/AcademicYearModel';
 import ProgramModel from '../ReactModels/ProgramModel';
@@ -831,14 +831,90 @@ export default function HeadRegistrarAcademicYear() {
     );
   };
   
-  const renderProgramsTable = () => (
-    <Table bordered hover className="mt-2">
+
+
+  const getSemesterText = (sem) => {
+    switch (sem) {
+      case 1:
+        return "First Semester";
+      case 2:
+        return "Second Semester";
+      case 3:
+        return "Summer Semester";
+      default:
+        return `${sem}`;
+    }
+  };
+
+  return (
+<>
+<div class="mt-4 mx-auto alert alert-warning text-center px-auto" role="alert">
+    <span className='fw-bold fs-6'>Note: </span> The academic year page allows users to create a new academic year and transition to the next semester or academic year. This functionality ensures accurate tracking of academic periods and facilitates efficient planning and organization.
+</div>
+
+<div className='container-fluid bg-white p-4 rounded mt-3 table-responsive'>
+        <div className="d-flex justify-content-between align-items-center mt-2">
+          <h3 className="custom-color-green-font custom-font">Programs</h3>
+          <h4 className="custom-color-green-font custom-font">{getSemesterText(currentSemester)}</h4>
+        </div>
+        <Row className="g-3 align-items-center">
+          <Col xs={12} md={6}>
+            <Form.Group className="align-items-center w-100">
+              {/*<Form.Label className='custom-color-green-font custom-font'>Select Academic Year</Form.Label>*/}
+              <Form.Select 
+                className="p-2 mt-2" 
+                value={selectedAcademicYear} 
+                onChange={handleAcademicYearChange}
+              >
+                <option value="">Select Academic Year</option>
+                {academicYears
+                  .sort((a, b) => {
+                    let yearA = parseInt(a.academicYear.split('-')[0]);
+                    let yearB = parseInt(b.academicYear.split('-')[0]);
+                    return yearB - yearA; // Switch for ASC to DESC order
+                  })
+                  .map((year) => (
+                    <option key={year.id} value={year.academicYear}>
+                      {year.academicYear}
+                    </option>
+                  ))
+                }
+              </Form.Select>
+            </Form.Group>
+          </Col>
+          
+          <Col xs={12} md={6}>
+            <div className='w-100 d-flex justify-content-md-end justify-content-center'>
+            <Button 
+              variant="success" 
+              className="mt-2 mb-1 me-md-3 me-2 w-50" 
+              value="nextSem" 
+              onClick={handleAcademicYearChange} 
+              disabled={currentSemester === 3}
+            >
+              Proceed to Next Semester
+            </Button>
+            <Button 
+              variant="success" 
+              className="mt-2  mb-1 w-50" 
+              value="addNew" 
+              onClick={handleAcademicYearChange} 
+              disabled={currentSemester !== 3}
+            >
+              Proceed to Next Academic Year
+            </Button>
+            </div>
+          </Col>
+        </Row>
+
+    
+    <Table bordered hover className='mt-4'>
       <thead className='table-success'>
         <tr>
-          <th className="custom-font custom-color-green-font mb-3 mt-2">Programs</th>
-          <th className='custom-color-green-font custom-font'>Number of Years</th>
-          <th className='custom-color-green-font custom-font'>Year Levels with Summer</th>
-          <th className='custom-color-green-font custom-font'>Actions</th>
+          <th className="custom-font custom-color-green-font text-center">Programs</th>
+          <th className='custom-color-green-font custom-font text-center'>Number of Years</th>
+          <th className='custom-color-green-font custom-font text-center'>Year Levels with Summer</th>
+          <th className='custom-color-green-font custom-font text-center'>Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -893,83 +969,7 @@ export default function HeadRegistrarAcademicYear() {
       </tbody>
 
     </Table>
-  );
 
-  const getSemesterText = (sem) => {
-    switch (sem) {
-      case 1:
-        return "First Semester";
-      case 2:
-        return "Second Semester";
-      case 3:
-        return "Summer Semester";
-      default:
-        return `${sem}`;
-    }
-  };
-
-  return (
-<>
-<div class="mt-4 mx-auto alert alert-warning text-center px-auto" role="alert">
-    <span className='fw-bold fs-6'>Note: </span> The academic year page allows users to create a new academic year and transition to the next semester or academic year. This functionality ensures accurate tracking of academic periods and facilitates efficient planning and organization.
-</div>
-
-<div className='container-fluid bg-white p-4 rounded mt-3'>
-        <div className="d-flex justify-content-between align-items-center mt-2">
-          <h3 className="custom-color-green-font custom-font">Programs</h3>
-          <h4 className="custom-color-green-font custom-font">{getSemesterText(currentSemester)}</h4>
-        </div>
-        <Row className="g-3 align-items-center">
-  <Col xs={12} md={6}>
-    <Form.Group className="align-items-center w-100">
-      {/*<Form.Label className='custom-color-green-font custom-font'>Select Academic Year</Form.Label>*/}
-      <Form.Select 
-        className="p-2 mt-2" 
-        value={selectedAcademicYear} 
-        onChange={handleAcademicYearChange}
-      >
-        <option value="">Select Academic Year</option>
-        {academicYears
-          .sort((a, b) => {
-            let yearA = parseInt(a.academicYear.split('-')[0]);
-            let yearB = parseInt(b.academicYear.split('-')[0]);
-            return yearB - yearA; // Switch for ASC to DESC order
-          })
-          .map((year) => (
-            <option key={year.id} value={year.academicYear}>
-              {year.academicYear}
-            </option>
-          ))
-        }
-      </Form.Select>
-    </Form.Group>
-  </Col>
-  
-  <Col xs={12} md={6}>
-    <div className='w-100 d-flex justify-content-md-end justify-content-center'>
-    <Button 
-      variant="success" 
-      className="mt-2 mb-1 me-md-3 me-2 w-50" 
-      value="nextSem" 
-      onClick={handleAcademicYearChange} 
-      disabled={currentSemester === 3}
-    >
-      Proceed to Next Semester
-    </Button>
-    <Button 
-      variant="success" 
-      className="mt-2 me-md-3 mb-1 w-50" 
-      value="addNew" 
-      onClick={handleAcademicYearChange} 
-      disabled={currentSemester !== 3}
-    >
-      Proceed to Next Academic Year
-    </Button>
-    </div>
-  </Col>
-</Row>
-
-    {renderProgramsTable()}
     {selectedAcademicYear === academicYears.find(year => year.isCurrent)?.academicYear && (
       <>
       <Button variant="success" className="mt-3" onClick={handleShowProgramAdd} disabled={currentAcademicYear.finalizedPrograms === true}>

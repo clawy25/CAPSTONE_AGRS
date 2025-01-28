@@ -94,7 +94,7 @@ export default function LoginPage() {
               type="button"
               onClick={handleFacultyClick}
             >
-              Faculty
+              Personnel
             </button>
             
           </div>

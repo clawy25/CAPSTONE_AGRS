@@ -130,7 +130,7 @@ export default function StudentDashboard() {
               <nav className="menu mb-3">
                 <Link
                     to="/student-dashboard/enrollment" 
-                    className={`menu-item d-flex align-items-center mb-2 ${location.pathname === '/student-dashboard/enrollment' ? 'active' : ''}`}
+                    className={`submenu-item d-flex align-items-center mb-2 ${location.pathname === '/student-dashboard/enrollment' ? 'active' : ''}`}
                     onClick={() => {setShowSidebar(false);}}
                   >
                     <FontAwesomeIcon icon={faUser} className="me-2" />
@@ -138,7 +138,7 @@ export default function StudentDashboard() {
                 </Link>
                 <Link
                     to="/student-dashboard/schedule" 
-                    className={`menu-item d-flex align-items-center mb-2 ${location.pathname === '/student-dashboard/schedule' ? 'active' : ''}`}
+                    className={`submenu-item d-flex align-items-center mb-2 ${location.pathname === '/student-dashboard/schedule' ? 'active' : ''}`}
                     onClick={() => {setShowSidebar(false);}}
                   >
                     <FontAwesomeIcon icon={faCalendarAlt} className="me-2" />
@@ -146,7 +146,7 @@ export default function StudentDashboard() {
                 </Link>
                 <Link
                     to="/student-dashboard/grades"
-                    className={`menu-item d-flex align-items-center mb-2 ${location.pathname === '/student-dashboard/grades' ? 'active' : ''}`}
+                    className={`submenu-item d-flex align-items-center mb-2 ${location.pathname === '/student-dashboard/grades' ? 'active' : ''}`}
                     onClick={() => {setShowSidebar(false);}}
                   >
                     <FontAwesomeIcon icon={faGraduationCap} className="me-2" />

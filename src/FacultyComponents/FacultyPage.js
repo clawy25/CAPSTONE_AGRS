@@ -70,7 +70,7 @@ export default function FacultyPage() {
     // Student ID validation
     const personnelNumberPattern = /^\d{4}-\d{3}-PCC-\d{1}$/;
     if (!personnelNumberPattern.test(accountNumber)) {
-      setError('Faculty ID must follow the format (e.g., 2024-123-PCC-1)');
+      setError('Personnel ID must follow the format (e.g., 2024-123-PCC-1)');
       return;
     }
 
@@ -181,7 +181,7 @@ export default function FacultyPage() {
                     alt="PCC Logo"
                     style={{ maxWidth: '17%', height: 'auto' }}/>
                 <h1 className="custom-font text-light fs-1 fw-bold text-center mb-4">
-                    PARCOL-SIS <br />Faculty Module
+                    PARCOL-SIS <br />Personnel Module
                 </h1>
 
                 {error && ( // Conditionally render error message

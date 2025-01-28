@@ -15,6 +15,7 @@ import '../App.css'
 
 const Sections = () => {
   const [loading, setLoading] = useState(false); 
+  const [loadingSection, setLoadingSection] = useState(false); 
   const { user } = useContext(UserContext);
   const navigate = useNavigate();
   const [selectedAcademicYear, setSelectedAcademicYear] = useState('');
@@ -367,23 +368,19 @@ const Sections = () => {
   };
 
   const addSection = () => {
+    setLoadingSection(true); // Set loading to true before starting the process
 
     if (selectedAcademicYear && selectedProgram && selectedYearLevel && selectedSemester) {
         let nextSection;
 
-        //console.log(sections);
         if (sections.length === 0) {
             // Start with "A" if there are no sections
             nextSection = `${generateNextSectionNumber()}A`;
         } else {
             const lastSection = sections[sections.length - 1];
 
-            //console.log(lastSection);
             const lastCharacter = lastSection?.sectionNumber.charAt(lastSection.sectionNumber.length - 1);
-
-           // console.log(lastCharacter);
             const lastCharacterCode = lastCharacter?.charCodeAt(0);
-           //console.log(lastCharacterCode);
 
             // Check if the last character is 'Z' (ASCII 90) to avoid overflow
             const nextCharacterCode = lastCharacterCode === 90 ? 65 : lastCharacterCode + 1; // Wrap around after 'Z'
@@ -391,14 +388,16 @@ const Sections = () => {
 
             nextSection = `${generateNextSectionNumber()}${nextLetter}`;
         }
+
         setNewSection(nextSection); // Automatically fill the next section
         setShowModal(true); // Show the modal for adding the section       
     } else {
-      setShowModalAlert(true);
-      return;
+        setShowModalAlert(true);
     }
-    
-  };
+
+    setLoadingSection(false); // Set loading to false after the process is complete
+};
+
 
   const closeShowModalAlert = () => {
     setShowModalAlert(false);
@@ -408,7 +407,7 @@ const Sections = () => {
 
   const handleAddSection = async () => {
     // Set loading state to true
-    setLoading(true);
+    setLoadingSection(true);
   
     try {
       const program = programs.find(
@@ -437,7 +436,7 @@ const Sections = () => {
       console.error("Error adding section:", error);
     } finally {
       // Set loading state to false
-      setLoading(false);
+      setLoadingSection(false);
     }
   };
   
@@ -589,7 +588,7 @@ const Sections = () => {
           <Form.Group className='w-100' controlId="viewButton">
             <Form.Label className="custom-color-green-font text-nowrap">Action</Form.Label>
               <div className='d-flex'>
-              <Button className="btn-success w-100" onClick={addSection}>{loading ? 'Adding Section...' : 'Add Section'}</Button>        
+              <Button className="btn-success w-100" onClick={addSection}>{loadingSection ? 'Adding Section...' : 'Add Section'}</Button>        
               
             </div>
             </Form.Group>
@@ -766,7 +765,7 @@ const Sections = () => {
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={closeModal}>Close</Button>
-          <Button variant="primary" onClick={handleAddSection}>Add Section</Button>
+          <Button variant="primary" onClick={handleAddSection}>{loadingSection ? 'Adding New Section...' : 'Add Section'}</Button>
         </Modal.Footer>
       </Modal>
 
